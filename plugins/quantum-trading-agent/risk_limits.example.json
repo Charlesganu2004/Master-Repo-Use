@@ -1,0 +1,15 @@
+{
+  "paper_trading_only": true,
+  "require_human_approval": true,
+  "allowed_symbols": ["MSFT", "AAPL", "SPY", "QQQ"],
+  "max_order_value_usd": 1000.0,
+  "max_position_percent": 5.0,
+  "max_daily_loss_percent": 1.0,
+  "max_orders_per_day": 5,
+  "cooldown_seconds": 60,
+  "allow_short_selling": false,
+  "allow_options": false,
+  "allow_crypto": false,
+  "stale_quote_seconds": 60,
+  "kill_switch": false
+}

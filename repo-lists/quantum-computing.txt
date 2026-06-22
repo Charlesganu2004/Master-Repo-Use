@@ -1,0 +1,14 @@
+# Quantum Computing
+Qiskit/qiskit
+qiskit-community/qiskit-finance
+qiskit-community/qiskit-machine-learning
+qiskit-community/qiskit-optimization
+PennyLaneAI/pennylane
+PennyLaneAI/pennylane-qiskit
+quantumlib/Cirq
+microsoft/qsharp
+aws/amazon-braket-sdk-python
+dwavesystems/dwave-ocean-sdk
+unitaryfund/mitiq
+NVIDIA/cuda-quantum
+qosf/awesome-quantum-software

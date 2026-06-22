@@ -1,0 +1,21 @@
+# Quantum Finance / Quantum Trading / QML Trading
+Qiskit/qiskit
+qiskit-community/qiskit-finance
+qiskit-community/qiskit-machine-learning
+qiskit-community/qiskit-optimization
+PennyLaneAI/pennylane
+tensorflow/quantum
+mit-han-lab/torchquantum
+entropicalabs/openqaoa
+jpmorganchase/QOKit
+PaddlePaddle/Quantum
+qiskit-community/ibm-quantum-challenge-fall-2021
+VarunRathore137/The-Hybrid-Quantum-Portfolio-Optimizer
+BIKASH1002/QML-Stock-Predictor
+MonitSharma/Quantum-Finance-and-Numerical-Methods
+ChiraagNadig/Quantum-ML-Research
+DarkStarQuantumLab/Qauntum-trading-a-disturbance-in-the-force-of-supply-and-demand
+alejomonbar/Quantum-Counselor-for-Portfolio-Investment
+qBraid/nyc-haq-qbraid
+QuantaScriptor/Quantum-Based-Portfolio-Diversification-QBPD
+MrDecryptDecipher/Sentinel

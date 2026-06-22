@@ -1,0 +1,26 @@
+{
+  "name": "autonomous-day-trading-agent",
+  "version": "0.1.0",
+  "description": "Paper-first scaffold for autonomous day-trading signals, paper orders, investment allocation proposals, and risk-gated broker adapter experiments.",
+  "default_mode": "paper_trading",
+  "live_trading_default": false,
+  "entrypoint": "autonomous-day-trading-agent",
+  "capabilities": [
+    "strategy_signal",
+    "simple_backtest",
+    "investment_allocation_proposal",
+    "trade_proposal",
+    "risk_gate",
+    "paper_order",
+    "live_order_blocker",
+    "audit_output"
+  ],
+  "required_gates_for_live_trading": [
+    "paper_trading_only_false",
+    "human_approval_required",
+    "ALLOW_LIVE_TRADING_environment_variable",
+    "approved_risk_gate",
+    "audited_real_broker_adapter",
+    "strategy_backtest_reviewed"
+  ]
+}

@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="920" viewBox="0 0 1400 920" role="img" aria-labelledby="title desc">
+  <title id="title">Combination use-case map</title>
+  <desc id="desc">A readable map of useful combinations across agents, MCP, RAG, Copilot Studio, autonomous day trading, broker apps, quantum trading, apps, cloud, cost controls, and standalone pitch materials.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 36px Arial, sans-serif; fill: #142033; }
+      .subtitle { font: 400 18px Arial, sans-serif; fill: #526173; }
+      .hub { fill: #142033; rx: 20; }
+      .hubText { font: 700 21px Arial, sans-serif; fill: #ffffff; }
+      .box { fill: #ffffff; stroke: #cad7e4; stroke-width: 2; rx: 13; }
+      .agent { fill: #edf6ff; stroke: #83b7e3; }
+      .tool { fill: #edf9f3; stroke: #88c9a1; }
+      .data { fill: #fff7e8; stroke: #dfb85e; }
+      .side { fill: #f4f0ff; stroke: #b9a8ea; }
+      .market { fill: #eef8f6; stroke: #7fc7bd; }
+      .risk { fill: #fff1f4; stroke: #e0a0ad; }
+      .label { font: 700 18px Arial, sans-serif; fill: #1f2d3f; }
+      .small { font: 400 13px Arial, sans-serif; fill: #405266; }
+      .tag { font: 700 12px Arial, sans-serif; fill: #53657a; }
+      .line { stroke: #7189a3; stroke-width: 2.6; fill: none; marker-end: url(#arrow); }
+      .soft { stroke: #9cadbe; stroke-width: 2; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrowSoft); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7189a3"/>
+    </marker>
+    <marker id="arrowSoft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9cadbe"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1400" height="920"/>
+  <text class="title" x="56" y="62">Combinations And Uses</text>
+  <text class="subtitle" x="56" y="92">Build small combinations: one entry point, one tool path, one data source, one safety layer, one output.</text>
+
+  <rect class="hub" x="500" y="355" width="400" height="132" rx="20"/>
+  <text class="hubText" x="573" y="402">Integrated Agent Workflow</text>
+  <text class="hubText" x="548" y="435">agents + tools + data + controls</text>
+  <text class="hubText" x="602" y="468">paper-first for trading</text>
+
+  <rect class="box agent" x="70" y="160" width="260" height="118"/>
+  <text class="tag" x="98" y="190">ENTRY</text>
+  <text class="label" x="98" y="222">Copilot Studio / CLI</text>
+  <text class="small" x="98" y="248">custom connector, MCP,</text>
+  <text class="small" x="98" y="268">portable one-liners</text>
+
+  <rect class="box tool" x="390" y="160" width="260" height="118"/>
+  <text class="tag" x="418" y="190">TOOLS</text>
+  <text class="label" x="418" y="222">MCP Tool Belt</text>
+  <text class="small" x="418" y="248">filesystem, GitHub, browser,</text>
+  <text class="small" x="418" y="268">broker APIs, docs</text>
+
+  <rect class="box data" x="750" y="160" width="260" height="118"/>
+  <text class="tag" x="778" y="190">KNOWLEDGE</text>
+  <text class="label" x="778" y="222">RAG + Memory</text>
+  <text class="small" x="778" y="248">project docs, market docs,</text>
+  <text class="small" x="778" y="268">strategy decisions</text>
+
+  <rect class="box risk" x="1070" y="160" width="260" height="118"/>
+  <text class="tag" x="1098" y="190">SAFETY</text>
+  <text class="label" x="1098" y="222">Cost + Risk Gates</text>
+  <text class="small" x="1098" y="248">budget, context, allowlists,</text>
+  <text class="small" x="1098" y="268">human approval</text>
+
+  <rect class="box market" x="70" y="625" width="220" height="128"/>
+  <text class="tag" x="94" y="655">USE CASE</text>
+  <text class="label" x="94" y="687">Market Research</text>
+  <text class="small" x="94" y="713">OpenBB + yfinance</text>
+  <text class="small" x="94" y="733">RAG notes and charts</text>
+
+  <rect class="box market" x="335" y="625" width="220" height="128"/>
+  <text class="tag" x="359" y="655">USE CASE</text>
+  <text class="label" x="359" y="687">Autonomous Trading</text>
+  <text class="small" x="359" y="713">signals, backtests,</text>
+  <text class="small" x="359" y="733">invest-plan, paper orders</text>
+
+  <rect class="box market" x="600" y="625" width="220" height="128"/>
+  <text class="tag" x="624" y="655">USE CASE</text>
+  <text class="label" x="624" y="687">Broker App Agent</text>
+  <text class="small" x="624" y="713">Robinhood, Alpaca,</text>
+  <text class="small" x="624" y="733">IBKR, Schwab, Tradier</text>
+
+  <rect class="box side" x="865" y="625" width="220" height="128"/>
+  <text class="tag" x="889" y="655">USE CASE</text>
+  <text class="label" x="889" y="687">Quantum Trading</text>
+  <text class="small" x="889" y="713">Qiskit/PennyLane</text>
+  <text class="small" x="889" y="733">compare baseline first</text>
+
+  <rect class="box agent" x="1130" y="625" width="220" height="128"/>
+  <text class="tag" x="1154" y="655">OUTPUT</text>
+  <text class="label" x="1154" y="687">App / Cloud / Pitch</text>
+  <text class="small" x="1154" y="713">ship app or deck after</text>
+  <text class="small" x="1154" y="733">standalone validation</text>
+
+  <rect class="box" x="205" y="815" width="990" height="58"/>
+  <text class="label" x="238" y="850">Best path: prove one lane standalone, combine two lanes, then add safety/cost gates before user-facing automation.</text>
+
+  <path class="line" d="M 330 219 C 420 260, 470 330, 540 355"/>
+  <path class="line" d="M 520 278 C 550 310, 585 335, 625 355"/>
+  <path class="line" d="M 880 278 C 835 318, 790 340, 760 355"/>
+  <path class="line" d="M 1070 219 C 995 270, 930 320, 860 355"/>
+  <path class="line" d="M 575 487 C 410 535, 270 585, 180 625"/>
+  <path class="line" d="M 635 487 C 570 535, 500 585, 445 625"/>
+  <path class="line" d="M 700 487 C 705 535, 710 585, 710 625"/>
+  <path class="line" d="M 775 487 C 845 535, 925 585, 975 625"/>
+  <path class="line" d="M 835 487 C 960 540, 1130 585, 1240 625"/>
+  <path class="soft" d="M 445 753 C 520 795, 610 810, 700 815"/>
+  <path class="soft" d="M 975 753 C 900 795, 800 810, 700 815"/>
+</svg>

@@ -1,0 +1,13 @@
+# MCP Servers Extended
+modelcontextprotocol/servers
+modelcontextprotocol/typescript-sdk
+modelcontextprotocol/python-sdk
+modelcontextprotocol/inspector
+microsoft/mcp
+microsoftdocs/mcp
+microsoft/playwright-mcp
+github/github-mcp-server
+upstash/context7
+awslabs/mcp
+punkpeye/awesome-mcp-servers
+microsoft/lets-learn-mcp-python

@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+  <title id="title">Standalone setup flow</title>
+  <desc id="desc">A step-by-step standalone setup flow with path prompts, repo lists, dependency installation, smoke tests, notes, and integration readiness checks.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 36px Arial, sans-serif; fill: #142033; }
+      .subtitle { font: 400 18px Arial, sans-serif; fill: #526173; }
+      .box { fill: #ffffff; stroke: #cad7e4; stroke-width: 2; rx: 14; }
+      .choose { fill: #edf6ff; stroke: #83b7e3; }
+      .setup { fill: #edf9f3; stroke: #88c9a1; }
+      .run { fill: #fff7e8; stroke: #dfb85e; }
+      .gate { fill: #fff1f4; stroke: #e0a0ad; }
+      .done { fill: #f4f0ff; stroke: #b9a8ea; }
+      .label { font: 700 19px Arial, sans-serif; fill: #1f2d3f; }
+      .small { font: 400 13px Arial, sans-serif; fill: #405266; }
+      .tag { font: 700 12px Arial, sans-serif; fill: #53657a; }
+      .line { stroke: #7189a3; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .soft { stroke: #9cadbe; stroke-width: 2; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrowSoft); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7189a3"/>
+    </marker>
+    <marker id="arrowSoft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9cadbe"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1400" height="820"/>
+  <text class="title" x="56" y="62">Standalone Setup Before Integration</text>
+  <text class="subtitle" x="56" y="92">Each lane should work alone on a chosen computer path before it joins the larger agent system.</text>
+
+  <rect class="box choose" x="70" y="150" width="240" height="108"/>
+  <text class="tag" x="98" y="180">STEP 1</text>
+  <text class="label" x="98" y="212">Pick One Lane</text>
+  <text class="small" x="98" y="238">agent, RAG, MCP, quantum,</text>
+  <text class="small" x="98" y="258">broker, market, cost, pitch</text>
+
+  <rect class="box setup" x="370" y="150" width="240" height="108"/>
+  <text class="tag" x="398" y="180">STEP 2</text>
+  <text class="label" x="398" y="212">Choose A Path</text>
+  <text class="small" x="398" y="238">PowerShell Read-Host</text>
+  <text class="small" x="398" y="258">Bash read -rp</text>
+
+  <rect class="box setup" x="670" y="150" width="240" height="108"/>
+  <text class="tag" x="698" y="180">STEP 3</text>
+  <text class="label" x="698" y="212">Clone Repo List</text>
+  <text class="small" x="698" y="238">clone one category file</text>
+  <text class="small" x="698" y="258">keep master repo clean</text>
+
+  <rect class="box run" x="970" y="150" width="260" height="108"/>
+  <text class="tag" x="998" y="180">STEP 4</text>
+  <text class="label" x="998" y="212">Install Dependencies</text>
+  <text class="small" x="998" y="238">venv, npm, Docker, dotnet,</text>
+  <text class="small" x="998" y="258">broker SDK, quantum SDK</text>
+
+  <rect class="box run" x="220" y="355" width="250" height="118"/>
+  <text class="tag" x="248" y="385">STEP 5</text>
+  <text class="label" x="248" y="417">Run A Smoke Test</text>
+  <text class="small" x="248" y="443">hello world, notebook,</text>
+  <text class="small" x="248" y="463">paper order, MCP inspector</text>
+
+  <rect class="box gate" x="555" y="355" width="290" height="118"/>
+  <text class="tag" x="583" y="385">STEP 6</text>
+  <text class="label" x="583" y="417">Check Safety + Cost</text>
+  <text class="small" x="583" y="443">risk limits, paper mode,</text>
+  <text class="small" x="583" y="463">API budget, secrets outside repo</text>
+
+  <rect class="box done" x="930" y="355" width="250" height="118"/>
+  <text class="tag" x="958" y="385">STEP 7</text>
+  <text class="label" x="958" y="417">Save Notes</text>
+  <text class="small" x="958" y="443">commands, failures, outputs,</text>
+  <text class="small" x="958" y="463">what passed and what blocked</text>
+
+  <rect class="box" x="190" y="590" width="1020" height="116"/>
+  <text class="label" x="222" y="626">Ready To Integrate When...</text>
+  <text class="small" x="222" y="656">The lane runs standalone, the command works on a chosen path, tests pass, costs are known, and risky actions are blocked by default.</text>
+  <text class="small" x="222" y="682">Then connect through MCP, API bridge, Copilot Studio, agent framework, app UI, or cloud service.</text>
+
+  <path class="line" d="M 310 204 L 370 204"/>
+  <path class="line" d="M 610 204 L 670 204"/>
+  <path class="line" d="M 910 204 L 970 204"/>
+  <path class="line" d="M 1100 258 C 1085 315, 430 310, 345 355"/>
+  <path class="line" d="M 470 414 L 555 414"/>
+  <path class="line" d="M 845 414 L 930 414"/>
+  <path class="soft" d="M 1055 473 C 1040 540, 900 565, 805 590"/>
+  <path class="soft" d="M 345 473 C 370 540, 485 565, 585 590"/>
+</svg>

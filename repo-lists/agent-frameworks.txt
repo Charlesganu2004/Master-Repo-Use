@@ -1,0 +1,11 @@
+# Agent Frameworks
+bradygaster/squad
+bradygaster/Squad-IRL
+bradygaster/CustomAgent
+bradygaster/MultiAgent
+microsoft/agents
+OfficeDev/microsoft-365-agents-toolkit
+microsoft/Agents-for-net
+runagent-dev/runagent
+github/copilot-sdk
+github/copilot-cli

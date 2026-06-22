@@ -1,0 +1,22 @@
+{
+  "name": "quantum-trading-agent",
+  "version": "0.1.0",
+  "description": "Safe starter plugin scaffold for quantum-assisted trading research, paper trading, and risk-gated agent workflows.",
+  "default_mode": "paper_trading",
+  "live_trading_default": false,
+  "entrypoint": "quantum-trading-agent",
+  "capabilities": [
+    "portfolio_optimization_demo",
+    "trade_proposal",
+    "risk_gate",
+    "paper_order",
+    "audit_output"
+  ],
+  "required_gates_for_live_trading": [
+    "paper_trading_only_false",
+    "human_approval_required",
+    "ALLOW_LIVE_TRADING_environment_variable",
+    "approved_risk_gate",
+    "audited_real_broker_adapter"
+  ]
+}

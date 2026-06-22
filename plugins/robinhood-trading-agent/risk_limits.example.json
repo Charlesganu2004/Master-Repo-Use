@@ -1,0 +1,14 @@
+{
+  "paper_trading_only": true,
+  "require_human_approval": true,
+  "allowed_symbols": ["BTC-USD", "ETH-USD", "MSFT", "AAPL", "SPY", "QQQ"],
+  "allowed_asset_types": ["crypto", "stock", "etf"],
+  "max_order_value_usd": 500.0,
+  "max_daily_loss_percent": 1.0,
+  "max_orders_per_day": 3,
+  "cooldown_seconds": 120,
+  "allow_short_selling": false,
+  "allow_options": false,
+  "stale_quote_seconds": 30,
+  "kill_switch": false
+}

@@ -1,0 +1,52 @@
+openapi: 3.0.3
+info:
+  title: Market Research Agent Bridge
+  version: 0.1.0
+  description: Example OpenAPI shape for connecting Copilot Studio to a research-only market agent.
+paths:
+  /market/research:
+    post:
+      operationId: runMarketResearch
+      summary: Run research-only market analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - symbol
+                - mode
+              properties:
+                symbol:
+                  type: string
+                  example: MSFT
+                mode:
+                  type: string
+                  enum:
+                    - research_only
+                    - paper_trade
+                  example: research_only
+                question:
+                  type: string
+                  example: Summarize recent market context and risk notes.
+      responses:
+        "200":
+          description: Research summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: string
+                  sources:
+                    type: array
+                    items:
+                      type: string
+                  risk_notes:
+                    type: array
+                    items:
+                      type: string
+                  requires_human_approval:
+                    type: boolean

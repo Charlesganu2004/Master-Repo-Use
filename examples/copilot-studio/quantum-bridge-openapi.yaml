@@ -1,0 +1,46 @@
+openapi: 3.0.3
+info:
+  title: Quantum Experiment Bridge
+  version: 0.1.0
+  description: Example OpenAPI shape for connecting Copilot Studio to a bounded quantum experiment service.
+paths:
+  /quantum/experiment:
+    post:
+      operationId: runQuantumExperiment
+      summary: Run a simulator-first quantum experiment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - experiment
+              properties:
+                experiment:
+                  type: string
+                  enum:
+                    - portfolio_optimization_demo
+                    - qml_classifier_demo
+                    - circuit_smoke_test
+                use_paid_hardware:
+                  type: boolean
+                  default: false
+                notes:
+                  type: string
+      responses:
+        "200":
+          description: Quantum experiment result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: string
+                  classical_baseline:
+                    type: string
+                  quantum_result:
+                    type: string
+                  cost_note:
+                    type: string

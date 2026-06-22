@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-labelledby="title desc">
+  <title id="title">Broker app agent integration flow</title>
+  <desc id="desc">A detailed broker app integration map showing AI proposal, broker adapters, Robinhood Crypto, community Robinhood libraries, other broker apps, risk gates, paper mode, and human approval before live trading.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 36px Arial, sans-serif; fill: #142033; }
+      .subtitle { font: 400 18px Arial, sans-serif; fill: #526173; }
+      .box { fill: #ffffff; stroke: #cad7e4; stroke-width: 2; rx: 12; }
+      .agent { fill: #edf6ff; stroke: #83b7e3; }
+      .risk { fill: #fff7e8; stroke: #dfb85e; }
+      .paper { fill: #edf9f3; stroke: #88c9a1; }
+      .broker { fill: #f4f0ff; stroke: #b9a8ea; }
+      .stop { fill: #fff1f4; stroke: #e0a0ad; }
+      .label { font: 700 18px Arial, sans-serif; fill: #1f2d3f; }
+      .small { font: 400 13px Arial, sans-serif; fill: #405266; }
+      .tag { font: 700 12px Arial, sans-serif; fill: #53657a; }
+      .line { stroke: #7189a3; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .soft { stroke: #9cadbe; stroke-width: 2; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrowSoft); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7189a3"/>
+    </marker>
+    <marker id="arrowSoft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9cadbe"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1400" height="900"/>
+  <text class="title" x="56" y="62">Broker App Agent Integration</text>
+  <text class="subtitle" x="56" y="92">AI can research and propose. Broker execution stays behind paper mode, deterministic risk gates, and human approval.</text>
+
+  <rect class="box agent" x="70" y="145" width="245" height="118"/>
+  <text class="tag" x="98" y="175">AI LAYER</text>
+  <text class="label" x="98" y="207">Signal Proposal</text>
+  <text class="small" x="98" y="233">LLM, ML, rules, quantum,</text>
+  <text class="small" x="98" y="253">RAG-grounded research</text>
+
+  <rect class="box broker" x="365" y="145" width="245" height="118"/>
+  <text class="tag" x="393" y="175">ADAPTER</text>
+  <text class="label" x="393" y="207">Broker Route</text>
+  <text class="small" x="393" y="233">Robinhood, Alpaca, IBKR,</text>
+  <text class="small" x="393" y="253">Schwab, Tradier, Coinbase</text>
+
+  <rect class="box risk" x="660" y="145" width="245" height="118"/>
+  <text class="tag" x="688" y="175">CHECK</text>
+  <text class="label" x="688" y="207">Risk Gate</text>
+  <text class="small" x="688" y="233">allowlist, size cap, daily loss,</text>
+  <text class="small" x="688" y="253">cooldown, stale quote check</text>
+
+  <rect class="box paper" x="955" y="145" width="245" height="118"/>
+  <text class="tag" x="983" y="175">DEFAULT</text>
+  <text class="label" x="983" y="207">Paper Broker</text>
+  <text class="small" x="983" y="233">dry-run first, audit logs,</text>
+  <text class="small" x="983" y="253">no real order by prompt</text>
+
+  <rect class="box broker" x="80" y="380" width="260" height="126"/>
+  <text class="tag" x="108" y="410">ROBINHOOD OFFICIAL</text>
+  <text class="label" x="108" y="442">Crypto API</text>
+  <text class="small" x="108" y="468">official crypto route</text>
+  <text class="small" x="108" y="488">dry-run adapter in plugin</text>
+
+  <rect class="box stop" x="390" y="380" width="260" height="126"/>
+  <text class="tag" x="418" y="410">ROBINHOOD COMMUNITY</text>
+  <text class="label" x="418" y="442">Stocks / Options</text>
+  <text class="small" x="418" y="468">robin_stocks and similar</text>
+  <text class="small" x="418" y="488">research route, blocked live</text>
+
+  <rect class="box broker" x="700" y="380" width="260" height="126"/>
+  <text class="tag" x="728" y="410">OTHER BROKERS</text>
+  <text class="label" x="728" y="442">Alpaca / IBKR</text>
+  <text class="small" x="728" y="468">paper accounts and APIs</text>
+  <text class="small" x="728" y="488">better automation path</text>
+
+  <rect class="box broker" x="1010" y="380" width="260" height="126"/>
+  <text class="tag" x="1038" y="410">OTHER APPS</text>
+  <text class="label" x="1038" y="442">Schwab / Tradier / More</text>
+  <text class="small" x="1038" y="468">Tastytrade, SnapTrade,</text>
+  <text class="small" x="1038" y="488">Coinbase, aggregator paths</text>
+
+  <rect class="box risk" x="220" y="625" width="280" height="118"/>
+  <text class="tag" x="248" y="655">PLUGIN</text>
+  <text class="label" x="248" y="687">robinhood-trading-agent</text>
+  <text class="small" x="248" y="713">crypto dry-run, paper broker,</text>
+  <text class="small" x="248" y="733">community live blocker</text>
+
+  <rect class="box stop" x="560" y="625" width="280" height="118"/>
+  <text class="tag" x="588" y="655">LIVE GATE</text>
+  <text class="label" x="588" y="687">Human Approval</text>
+  <text class="small" x="588" y="713">approval token, environment flag,</text>
+  <text class="small" x="588" y="733">audited broker adapter</text>
+
+  <rect class="box stop" x="900" y="625" width="280" height="118"/>
+  <text class="tag" x="928" y="655">FAIL SAFE</text>
+  <text class="label" x="928" y="687">Kill Switch</text>
+  <text class="small" x="928" y="713">blocks all orders on drawdown,</text>
+  <text class="small" x="928" y="733">bad data, or manual stop</text>
+
+  <rect class="box" x="180" y="805" width="1040" height="58"/>
+  <text class="label" x="212" y="840">Depth rule: choose the broker route first, then prove paper mode, then add live execution only after gates and audit logs work.</text>
+
+  <path class="line" d="M 315 204 L 365 204"/>
+  <path class="line" d="M 610 204 L 660 204"/>
+  <path class="line" d="M 905 204 L 955 204"/>
+  <path class="line" d="M 1078 263 C 1040 330, 275 320, 210 380"/>
+  <path class="soft" d="M 1078 263 C 1045 335, 570 330, 520 380"/>
+  <path class="soft" d="M 1078 263 C 1070 335, 850 345, 830 380"/>
+  <path class="soft" d="M 1078 263 C 1125 335, 1140 350, 1140 380"/>
+  <path class="line" d="M 210 506 C 245 565, 310 595, 360 625"/>
+  <path class="line" d="M 520 506 C 575 565, 630 595, 700 625"/>
+  <path class="line" d="M 830 506 C 850 565, 950 595, 1040 625"/>
+  <path class="soft" d="M 1140 506 C 1090 565, 1050 595, 1040 625"/>
+</svg>

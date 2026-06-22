@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="920" viewBox="0 0 1400 920" role="img" aria-labelledby="title desc">
+  <title id="title">Quantum trading agent safety flow</title>
+  <desc id="desc">A detailed safe architecture for quantum trading research with market data, ML and LLM research, classical baselines, quantum sidecars, risk gates, paper brokers, human approval, and blocked live execution.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 36px Arial, sans-serif; fill: #142033; }
+      .subtitle { font: 400 18px Arial, sans-serif; fill: #526173; }
+      .box { fill: #ffffff; stroke: #cad7e4; stroke-width: 2; rx: 12; }
+      .data { fill: #edf6ff; stroke: #83b7e3; }
+      .train { fill: #edf9f3; stroke: #88c9a1; }
+      .quantum { fill: #f4f0ff; stroke: #b9a8ea; }
+      .risk { fill: #fff7e8; stroke: #dfb85e; }
+      .stop { fill: #fff1f4; stroke: #e0a0ad; }
+      .label { font: 700 18px Arial, sans-serif; fill: #1f2d3f; }
+      .small { font: 400 13px Arial, sans-serif; fill: #405266; }
+      .tag { font: 700 12px Arial, sans-serif; fill: #53657a; }
+      .line { stroke: #7189a3; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .soft { stroke: #9cadbe; stroke-width: 2; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrowSoft); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7189a3"/>
+    </marker>
+    <marker id="arrowSoft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9cadbe"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1400" height="920"/>
+  <text class="title" x="56" y="62">Quantum Trading Agent Safety Flow</text>
+  <text class="subtitle" x="56" y="92">Quantum is an experiment sidecar. Trading stays paper-first until every risk, cost, and approval gate passes.</text>
+
+  <rect class="box data" x="70" y="145" width="245" height="118"/>
+  <text class="tag" x="98" y="175">INPUT</text>
+  <text class="label" x="98" y="207">Market Data</text>
+  <text class="small" x="98" y="233">OHLCV, news, filings,</text>
+  <text class="small" x="98" y="253">broker data, watchlists</text>
+
+  <rect class="box train" x="365" y="145" width="245" height="118"/>
+  <text class="tag" x="393" y="175">FEATURES</text>
+  <text class="label" x="393" y="207">ML / LLM Research</text>
+  <text class="small" x="393" y="233">sentiment, regimes, labels,</text>
+  <text class="small" x="393" y="253">no future leakage</text>
+
+  <rect class="box train" x="660" y="145" width="245" height="118"/>
+  <text class="tag" x="688" y="175">BASELINE</text>
+  <text class="label" x="688" y="207">Classical Strategy</text>
+  <text class="small" x="688" y="233">buy-hold, rules, ML,</text>
+  <text class="small" x="688" y="253">walk-forward test</text>
+
+  <rect class="box quantum" x="955" y="145" width="275" height="118"/>
+  <text class="tag" x="983" y="175">SIDE CAR</text>
+  <text class="label" x="983" y="207">Quantum Optimizer / QML</text>
+  <text class="small" x="983" y="233">Qiskit, PennyLane, QAOA,</text>
+  <text class="small" x="983" y="253">simulator before hardware</text>
+
+  <rect class="box data" x="170" y="355" width="245" height="118"/>
+  <text class="tag" x="198" y="385">COMPARE</text>
+  <text class="label" x="198" y="417">Model Review</text>
+  <text class="small" x="198" y="443">Sharpe, drawdown, costs,</text>
+  <text class="small" x="198" y="463">slippage, regime stability</text>
+
+  <rect class="box risk" x="465" y="355" width="245" height="118"/>
+  <text class="tag" x="493" y="385">GATE 1</text>
+  <text class="label" x="493" y="417">Risk Limits</text>
+  <text class="small" x="493" y="443">symbol allowlist, order cap,</text>
+  <text class="small" x="493" y="463">daily loss, cooldown</text>
+
+  <rect class="box risk" x="760" y="355" width="245" height="118"/>
+  <text class="tag" x="788" y="385">GATE 2</text>
+  <text class="label" x="788" y="417">Paper Broker</text>
+  <text class="small" x="788" y="443">dry run, paper account,</text>
+  <text class="small" x="788" y="463">audit every proposal</text>
+
+  <rect class="box stop" x="1055" y="355" width="245" height="118"/>
+  <text class="tag" x="1083" y="385">GATE 3</text>
+  <text class="label" x="1083" y="417">Human Approval</text>
+  <text class="small" x="1083" y="443">approval token, kill switch,</text>
+  <text class="small" x="1083" y="463">explicit live unlock</text>
+
+  <rect class="box quantum" x="170" y="600" width="330" height="118"/>
+  <text class="tag" x="198" y="630">PLUGIN</text>
+  <text class="label" x="198" y="662">quantum-trading-agent</text>
+  <text class="small" x="198" y="688">optimizer placeholder, paper broker,</text>
+  <text class="small" x="198" y="708">risk gate, training plan</text>
+
+  <rect class="box data" x="535" y="600" width="330" height="118"/>
+  <text class="tag" x="563" y="630">BROKER ROUTE</text>
+  <text class="label" x="563" y="662">robinhood-trading-agent</text>
+  <text class="small" x="563" y="688">Robinhood Crypto dry-run,</text>
+  <text class="small" x="563" y="708">community stock route blocked</text>
+
+  <rect class="box stop" x="900" y="600" width="330" height="118"/>
+  <text class="tag" x="928" y="630">DEFAULT</text>
+  <text class="label" x="928" y="662">No Live Orders</text>
+  <text class="small" x="928" y="688">live adapter is intentionally blocked</text>
+  <text class="small" x="928" y="708">until audited and approved</text>
+
+  <rect class="box" x="210" y="790" width="980" height="62"/>
+  <text class="label" x="242" y="824">Depth rule: a quantum signal is only a proposal; deterministic risk gates and paper trading decide whether it can proceed.</text>
+
+  <path class="line" d="M 315 204 L 365 204"/>
+  <path class="line" d="M 610 204 L 660 204"/>
+  <path class="line" d="M 905 204 L 955 204"/>
+  <path class="line" d="M 1092 263 C 1040 315, 395 310, 292 355"/>
+  <path class="line" d="M 415 414 L 465 414"/>
+  <path class="line" d="M 710 414 L 760 414"/>
+  <path class="line" d="M 1005 414 L 1055 414"/>
+  <path class="line" d="M 1178 473 C 1135 548, 1080 570, 1065 600"/>
+  <path class="soft" d="M 587 473 C 540 540, 425 570, 335 600"/>
+  <path class="soft" d="M 882 473 C 845 540, 765 570, 700 600"/>
+</svg>

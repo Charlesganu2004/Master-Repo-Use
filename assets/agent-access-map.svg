@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
+  <title id="title">Agent access model</title>
+  <desc id="desc">A visual model for giving agents access to local folders, GitHub, MCP tools, and broker or cloud credentials through explicit boundaries and review gates.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 38px Arial, sans-serif; fill: #142033; }
+      .subtitle { font: 400 18px Arial, sans-serif; fill: #53657a; }
+      .section { font: 700 19px Arial, sans-serif; fill: #3b536d; letter-spacing: 0; }
+      .box { fill: #ffffff; stroke: #c8d6e5; stroke-width: 2; rx: 10; }
+      .safe { fill: #edf9f2; stroke: #8bcba2; }
+      .warn { fill: #fff7e8; stroke: #e2bc69; }
+      .risk { fill: #fff1f3; stroke: #df9cab; }
+      .entry { fill: #eef7ff; stroke: #85b8e8; }
+      .label { font: 700 20px Arial, sans-serif; fill: #1f2d3f; }
+      .small { font: 400 15px Arial, sans-serif; fill: #405266; }
+      .tiny { font: 400 13px Arial, sans-serif; fill: #53657a; }
+      .line { stroke: #6f8399; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .softLine { stroke: #a9b8c9; stroke-width: 2; fill: none; stroke-dasharray: 7 6; marker-end: url(#arrowSoft); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6f8399"/>
+    </marker>
+    <marker id="arrowSoft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a9b8c9"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1400" height="860"/>
+  <text class="title" x="56" y="68">Agent Access Model</text>
+  <text class="subtitle" x="56" y="100">Give the agent explicit places to work. Add more folders, GitHub scopes, and paid tools only after the task needs them.</text>
+
+  <text class="section" x="56" y="154">1. Choose Local Roots</text>
+  <rect class="box safe" x="56" y="176" width="252" height="116"/>
+  <text class="label" x="82" y="214">Workspace Only</text>
+  <text class="small" x="82" y="244">One repo folder</text>
+  <text class="small" x="82" y="266">Best default</text>
+
+  <rect class="box safe" x="338" y="176" width="252" height="116"/>
+  <text class="label" x="364" y="214">AgentLab Folder</text>
+  <text class="small" x="364" y="244">Multi-repo experiments</text>
+  <text class="small" x="364" y="266">Curated clone target</text>
+
+  <rect class="box warn" x="620" y="176" width="252" height="116"/>
+  <text class="label" x="646" y="214">Selected Folders</text>
+  <text class="small" x="646" y="244">Downloads, Documents,</text>
+  <text class="small" x="646" y="266">or a named project path</text>
+
+  <rect class="box risk" x="902" y="176" width="252" height="116"/>
+  <text class="label" x="928" y="214">Whole Drive</text>
+  <text class="small" x="928" y="244">Rare recovery or audit</text>
+  <text class="small" x="928" y="266">High review required</text>
+
+  <rect class="box risk" x="1184" y="176" width="160" height="116"/>
+  <text class="label" x="1210" y="214">Secrets</text>
+  <text class="small" x="1210" y="244">Keep out of</text>
+  <text class="small" x="1210" y="266">repo files</text>
+
+  <path class="softLine" d="M 308 234 L 338 234"/>
+  <path class="softLine" d="M 590 234 L 620 234"/>
+  <path class="softLine" d="M 872 234 L 902 234"/>
+  <path class="softLine" d="M 1154 234 L 1184 234"/>
+
+  <text class="section" x="56" y="374">2. Expose Access Through Tool Boundaries</text>
+  <rect class="box entry" x="56" y="396" width="300" height="136"/>
+  <text class="label" x="82" y="436">Filesystem MCP</text>
+  <text class="small" x="82" y="466">Allowed directories only</text>
+  <text class="small" x="82" y="488">Read-only when possible</text>
+  <text class="small" x="82" y="510">MCP Roots if supported</text>
+
+  <rect class="box entry" x="406" y="396" width="300" height="136"/>
+  <text class="label" x="432" y="436">GitHub MCP</text>
+  <text class="small" x="432" y="466">Token scopes and toolsets</text>
+  <text class="small" x="432" y="488">Repos, issues, PRs, CI</text>
+  <text class="small" x="432" y="510">Start read-only first</text>
+
+  <rect class="box entry" x="756" y="396" width="300" height="136"/>
+  <text class="label" x="782" y="436">API Or MCP Bridge</text>
+  <text class="small" x="782" y="466">Copilot Studio, apps,</text>
+  <text class="small" x="782" y="488">finance, quantum, cloud</text>
+  <text class="small" x="782" y="510">Small endpoints first</text>
+
+  <rect class="box warn" x="1106" y="396" width="238" height="136"/>
+  <text class="label" x="1132" y="436">Credential Store</text>
+  <text class="small" x="1132" y="466">Environment variables,</text>
+  <text class="small" x="1132" y="488">vaults, or host secrets</text>
+  <text class="small" x="1132" y="510">No committed keys</text>
+
+  <path class="line" d="M 206 292 L 206 396"/>
+  <path class="line" d="M 556 292 L 556 396"/>
+  <path class="line" d="M 1028 292 L 1225 396"/>
+
+  <text class="section" x="56" y="612">3. Let The Agent Work, Then Review Risky Actions</text>
+  <rect class="box" x="56" y="634" width="270" height="132"/>
+  <text class="label" x="82" y="674">Agent Host</text>
+  <text class="small" x="82" y="704">CLI, VS Code, Copilot,</text>
+  <text class="small" x="82" y="726">or app runtime</text>
+
+  <rect class="box" x="376" y="634" width="270" height="132"/>
+  <text class="label" x="402" y="674">Scoped Actions</text>
+  <text class="small" x="402" y="704">Read, search, edit,</text>
+  <text class="small" x="402" y="726">clone, test, summarize</text>
+
+  <rect class="box warn" x="696" y="634" width="270" height="132"/>
+  <text class="label" x="722" y="674">Review Gate</text>
+  <text class="small" x="722" y="704">Diffs, broker actions,</text>
+  <text class="small" x="722" y="726">cloud spend, hardware</text>
+
+  <rect class="box risk" x="1016" y="634" width="328" height="132"/>
+  <text class="label" x="1042" y="674">Blocked By Default</text>
+  <text class="small" x="1042" y="704">Live trades, secret edits,</text>
+  <text class="small" x="1042" y="726">whole-drive writes, paid jobs</text>
+
+  <path class="softLine" d="M 206 532 L 206 634"/>
+  <path class="softLine" d="M 556 532 L 511 634"/>
+  <path class="softLine" d="M 906 532 L 831 634"/>
+  <path class="softLine" d="M 1225 532 L 1180 634"/>
+  <path class="line" d="M 326 700 L 376 700"/>
+  <path class="line" d="M 646 700 L 696 700"/>
+  <path class="line" d="M 966 700 L 1016 700"/>
+
+  <text class="tiny" x="56" y="816">Best default: workspace plus AgentLab folders, GitHub MCP with narrow toolsets, credentials outside the repo, and manual approval before live trading, paid cloud, or broad filesystem writes.</text>
+</svg>

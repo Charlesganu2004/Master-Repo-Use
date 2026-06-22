@@ -1,0 +1,10 @@
+# Copilot Studio Integration
+microsoft/agents
+OfficeDev/microsoft-365-agents-toolkit
+microsoft/Agents-for-net
+microsoft/mcp
+microsoftdocs/mcp
+microsoft/playwright-mcp
+modelcontextprotocol/servers
+github/github-mcp-server
+upstash/context7

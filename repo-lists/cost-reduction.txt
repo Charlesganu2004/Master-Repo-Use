@@ -1,0 +1,20 @@
+# Cost Reduction / FinOps / Token Reduction
+Compresr-ai/Context-Gateway
+microsoft/LLMLingua
+ooples/token-optimizer-mcp
+yvgude/lean-ctx
+chopratejas/headroom
+infracost/infracost
+infracost/agent-skills
+opencost/opencost
+opencost/opencost-helm-chart
+cloud-custodian/cloud-custodian
+mlabouardy/komiser
+cloudquery/cloudquery
+turbot/steampipe
+phildougherty/infracost_mcp
+jasonwilbur/cloud-cost-mcp
+OptimNow/finops-mcp-resources
+OptimNow/cloud-finops-skills
+aarora79/aws-cost-explorer-mcp-server
+nozomi-koborinai/gcp-cost-mcp-server

@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "<PATH_TO_MASTER_REPO>",
+        "<PATH_TO_AGENT_LAB>"
+      ]
+    }
+  }
+}

@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
+  <title id="title">Cost reduction flow</title>
+  <desc id="desc">A layered workflow showing how to reduce model, MCP, API, cloud, market data, and quantum computing costs before running large agent workflows.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 38px Arial, sans-serif; fill: #142033; }
+      .subtitle { font: 400 18px Arial, sans-serif; fill: #53657a; }
+      .section { font: 700 19px Arial, sans-serif; fill: #3b536d; letter-spacing: 0; }
+      .box { fill: #ffffff; stroke: #c8d6e5; stroke-width: 2; rx: 10; }
+      .entry { fill: #eef7ff; stroke: #85b8e8; }
+      .control { fill: #f0fbf5; stroke: #8bcba2; }
+      .review { fill: #fff7e8; stroke: #e2bc69; }
+      .risk { fill: #fff1f3; stroke: #df9cab; }
+      .label { font: 700 20px Arial, sans-serif; fill: #1f2d3f; }
+      .small { font: 400 15px Arial, sans-serif; fill: #405266; }
+      .tiny { font: 400 13px Arial, sans-serif; fill: #53657a; }
+      .line { stroke: #6f8399; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .softLine { stroke: #a9b8c9; stroke-width: 2; fill: none; stroke-dasharray: 7 6; marker-end: url(#arrowSoft); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6f8399"/>
+    </marker>
+    <marker id="arrowSoft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a9b8c9"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1400" height="860"/>
+  <text class="title" x="56" y="68">Cost Reduction Flow</text>
+  <text class="subtitle" x="56" y="100">Treat cost as a gate in the workflow, not a cleanup task after the agent is already running.</text>
+
+  <text class="section" x="56" y="154">1. Request Comes In</text>
+  <rect class="box entry" x="56" y="176" width="232" height="118"/>
+  <text class="label" x="82" y="215">Agent Request</text>
+  <text class="small" x="82" y="245">CLI, Copilot Studio,</text>
+  <text class="small" x="82" y="267">app UI, automation</text>
+
+  <text class="section" x="348" y="154">2. Reduce The Context</text>
+  <rect class="box control" x="348" y="176" width="242" height="118"/>
+  <text class="label" x="374" y="215">Tool Allowlist</text>
+  <text class="small" x="374" y="245">Expose only tools</text>
+  <text class="small" x="374" y="267">needed for this task</text>
+
+  <rect class="box control" x="630" y="176" width="242" height="118"/>
+  <text class="label" x="656" y="215">Retrieval Filter</text>
+  <text class="small" x="656" y="245">Fetch focused docs,</text>
+  <text class="small" x="656" y="267">not entire folders</text>
+
+  <rect class="box control" x="912" y="176" width="242" height="118"/>
+  <text class="label" x="938" y="215">Summarize Output</text>
+  <text class="small" x="938" y="245">Compress logs, schemas,</text>
+  <text class="small" x="938" y="267">and repeated context</text>
+
+  <rect class="box control" x="1194" y="176" width="150" height="118"/>
+  <text class="label" x="1218" y="215">Cache</text>
+  <text class="small" x="1218" y="245">Batch and reuse</text>
+  <text class="small" x="1218" y="267">safe results</text>
+
+  <path class="line" d="M 288 235 L 348 235"/>
+  <path class="line" d="M 590 235 L 630 235"/>
+  <path class="line" d="M 872 235 L 912 235"/>
+  <path class="line" d="M 1154 235 L 1194 235"/>
+
+  <text class="section" x="56" y="375">3. Choose The Cheapest Safe Runtime</text>
+  <rect class="box" x="56" y="397" width="250" height="132"/>
+  <text class="label" x="82" y="437">Model Router</text>
+  <text class="small" x="82" y="467">Use small/local models</text>
+  <text class="small" x="82" y="489">when quality allows</text>
+
+  <rect class="box" x="346" y="397" width="250" height="132"/>
+  <text class="label" x="372" y="437">MCP Placement</text>
+  <text class="small" x="372" y="467">Run local/read-only</text>
+  <text class="small" x="372" y="489">before hosted tools</text>
+
+  <rect class="box" x="636" y="397" width="250" height="132"/>
+  <text class="label" x="662" y="437">Cloud Review</text>
+  <text class="small" x="662" y="467">Estimate infra before</text>
+  <text class="small" x="662" y="489">deploying or scaling</text>
+
+  <rect class="box" x="926" y="397" width="250" height="132"/>
+  <text class="label" x="952" y="437">Market Data</text>
+  <text class="small" x="952" y="467">Cache quotes and request</text>
+  <text class="small" x="952" y="489">only needed fields</text>
+
+  <rect class="box" x="1216" y="397" width="128" height="132"/>
+  <text class="label" x="1236" y="437">Quantum</text>
+  <text class="small" x="1236" y="467">Simulate first,</text>
+  <text class="small" x="1236" y="489">approve hardware</text>
+
+  <path class="softLine" d="M 1269 294 L 1269 397"/>
+  <path class="line" d="M 306 463 L 346 463"/>
+  <path class="line" d="M 596 463 L 636 463"/>
+  <path class="line" d="M 886 463 L 926 463"/>
+  <path class="line" d="M 1176 463 L 1216 463"/>
+
+  <text class="section" x="56" y="610">4. Gate, Log, And Learn</text>
+  <rect class="box review" x="56" y="632" width="300" height="132"/>
+  <text class="label" x="82" y="672">Budget Gate</text>
+  <text class="small" x="82" y="702">Ask before paid API, cloud,</text>
+  <text class="small" x="82" y="724">broker data, or hardware use</text>
+
+  <rect class="box review" x="406" y="632" width="300" height="132"/>
+  <text class="label" x="432" y="672">Usage Log</text>
+  <text class="small" x="432" y="702">Record tokens, tool calls,</text>
+  <text class="small" x="432" y="724">API calls, and cloud jobs</text>
+
+  <rect class="box review" x="756" y="632" width="300" height="132"/>
+  <text class="label" x="782" y="672">Cost Reports</text>
+  <text class="small" x="782" y="702">Infracost, OpenCost,</text>
+  <text class="small" x="782" y="724">Cloud Custodian, FinOps</text>
+
+  <rect class="box risk" x="1106" y="632" width="238" height="132"/>
+  <text class="label" x="1132" y="672">Stop Conditions</text>
+  <text class="small" x="1132" y="702">Kill switch, quota cap,</text>
+  <text class="small" x="1132" y="724">approval required</text>
+
+  <path class="softLine" d="M 1280 529 L 1280 584 L 206 584 L 206 632"/>
+  <path class="line" d="M 356 698 L 406 698"/>
+  <path class="line" d="M 706 698 L 756 698"/>
+  <path class="line" d="M 1056 698 L 1106 698"/>
+
+  <text class="tiny" x="56" y="815">Best default: narrow tools, small retrieved excerpts, local simulators, paper data, cached market calls, and explicit approval before paid or live actions.</text>
+</svg>

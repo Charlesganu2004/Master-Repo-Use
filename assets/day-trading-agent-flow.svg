@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-labelledby="title desc">
+  <title id="title">Autonomous day-trading agent flow</title>
+  <desc id="desc">A safe automation flow for day-trading and investing agents, showing market data, strategy signals, backtesting, risk gates, paper trading, audit logs, and human approval before live brokers.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 38px Arial, sans-serif; fill: #142033; }
+      .subtitle { font: 400 18px Arial, sans-serif; fill: #53657a; }
+      .section { font: 700 19px Arial, sans-serif; fill: #3b536d; letter-spacing: 0; }
+      .box { fill: #ffffff; stroke: #c8d6e5; stroke-width: 2; rx: 10; }
+      .data { fill: #eef7ff; stroke: #85b8e8; }
+      .agent { fill: #f0fbf5; stroke: #8bcba2; }
+      .review { fill: #fff7e8; stroke: #e2bc69; }
+      .risk { fill: #fff1f3; stroke: #df9cab; }
+      .label { font: 700 20px Arial, sans-serif; fill: #1f2d3f; }
+      .small { font: 400 15px Arial, sans-serif; fill: #405266; }
+      .tiny { font: 400 13px Arial, sans-serif; fill: #53657a; }
+      .line { stroke: #6f8399; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .softLine { stroke: #a9b8c9; stroke-width: 2; fill: none; stroke-dasharray: 7 6; marker-end: url(#arrowSoft); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6f8399"/>
+    </marker>
+    <marker id="arrowSoft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a9b8c9"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1400" height="900"/>
+  <text class="title" x="56" y="68">Autonomous Day-Trading And Investing Agent Flow</text>
+  <text class="subtitle" x="56" y="100">Automation can run research, signals, backtests, and paper trades. Profit is never guaranteed, so live brokerage actions stay gated.</text>
+
+  <text class="section" x="56" y="154">1. Inputs</text>
+  <rect class="box data" x="56" y="176" width="240" height="126"/>
+  <text class="label" x="82" y="216">Market Data</text>
+  <text class="small" x="82" y="246">Bars, quotes, news,</text>
+  <text class="small" x="82" y="268">filings, watchlists</text>
+
+  <rect class="box data" x="336" y="176" width="240" height="126"/>
+  <text class="label" x="362" y="216">Account State</text>
+  <text class="small" x="362" y="246">Cash, positions,</text>
+  <text class="small" x="362" y="268">buying power, limits</text>
+
+  <rect class="box data" x="616" y="176" width="240" height="126"/>
+  <text class="label" x="642" y="216">Strategy Rules</text>
+  <text class="small" x="642" y="246">Moving average, ML,</text>
+  <text class="small" x="642" y="268">LLM, RL, quantum</text>
+
+  <rect class="box data" x="896" y="176" width="240" height="126"/>
+  <text class="label" x="922" y="216">Broker Route</text>
+  <text class="small" x="922" y="246">Alpaca, Robinhood,</text>
+  <text class="small" x="922" y="268">IBKR, Schwab, crypto</text>
+
+  <rect class="box risk" x="1176" y="176" width="168" height="126"/>
+  <text class="label" x="1202" y="216">Secrets</text>
+  <text class="small" x="1202" y="246">Env vars or</text>
+  <text class="small" x="1202" y="268">vault only</text>
+
+  <path class="softLine" d="M 296 239 L 336 239"/>
+  <path class="softLine" d="M 576 239 L 616 239"/>
+  <path class="softLine" d="M 856 239 L 896 239"/>
+  <path class="softLine" d="M 1136 239 L 1176 239"/>
+
+  <text class="section" x="56" y="384">2. Agent Work Loop</text>
+  <rect class="box agent" x="56" y="406" width="250" height="138"/>
+  <text class="label" x="82" y="446">Signal Engine</text>
+  <text class="small" x="82" y="476">Generate buy, sell,</text>
+  <text class="small" x="82" y="498">hold, or rebalance</text>
+  <text class="small" x="82" y="520">with a reason</text>
+
+  <rect class="box agent" x="346" y="406" width="250" height="138"/>
+  <text class="label" x="372" y="446">Backtest Check</text>
+  <text class="small" x="372" y="476">Costs, slippage,</text>
+  <text class="small" x="372" y="498">drawdown, regimes</text>
+  <text class="small" x="372" y="520">before automation</text>
+
+  <rect class="box review" x="636" y="406" width="250" height="138"/>
+  <text class="label" x="662" y="446">Risk Gate</text>
+  <text class="small" x="662" y="476">Symbols, order size,</text>
+  <text class="small" x="662" y="498">daily loss, cooldown,</text>
+  <text class="small" x="662" y="520">position percent</text>
+
+  <rect class="box review" x="926" y="406" width="250" height="138"/>
+  <text class="label" x="952" y="446">Paper Broker</text>
+  <text class="small" x="952" y="476">Accepts approved</text>
+  <text class="small" x="952" y="498">paper orders only</text>
+  <text class="small" x="952" y="520">by default</text>
+
+  <rect class="box review" x="1216" y="406" width="128" height="138"/>
+  <text class="label" x="1236" y="446">Audit</text>
+  <text class="small" x="1236" y="476">Log signal,</text>
+  <text class="small" x="1236" y="498">risk, order,</text>
+  <text class="small" x="1236" y="520">approval</text>
+
+  <path class="line" d="M 306 475 L 346 475"/>
+  <path class="line" d="M 596 475 L 636 475"/>
+  <path class="line" d="M 886 475 L 926 475"/>
+  <path class="line" d="M 1176 475 L 1216 475"/>
+
+  <text class="section" x="56" y="636">3. Execution Modes</text>
+  <rect class="box agent" x="56" y="658" width="285" height="132"/>
+  <text class="label" x="82" y="698">Standalone Paper Agent</text>
+  <text class="small" x="82" y="728">Runs local CSV/data,</text>
+  <text class="small" x="82" y="750">signals, and paper orders</text>
+
+  <rect class="box agent" x="381" y="658" width="285" height="132"/>
+  <text class="label" x="407" y="698">MCP Or API Agent</text>
+  <text class="small" x="407" y="728">Expose bounded tools to</text>
+  <text class="small" x="407" y="750">CLI or Copilot Studio</text>
+
+  <rect class="box review" x="706" y="658" width="285" height="132"/>
+  <text class="label" x="732" y="698">Human Approval</text>
+  <text class="small" x="732" y="728">Required before live</text>
+  <text class="small" x="732" y="750">broker execution</text>
+
+  <rect class="box risk" x="1031" y="658" width="313" height="132"/>
+  <text class="label" x="1057" y="698">Live Broker Blocked</text>
+  <text class="small" x="1057" y="728">No direct AI-to-live order</text>
+  <text class="small" x="1057" y="750">without audited adapter</text>
+
+  <path class="softLine" d="M 1280 544 L 1280 604 L 199 604 L 199 658"/>
+  <path class="line" d="M 341 724 L 381 724"/>
+  <path class="line" d="M 666 724 L 706 724"/>
+  <path class="line" d="M 991 724 L 1031 724"/>
+
+  <text class="tiny" x="56" y="842">Best default: paper mode, small order caps, allowed symbols, backtests with costs, audit logs, kill switch, and no promise of profit.</text>
+</svg>

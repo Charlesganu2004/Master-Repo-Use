@@ -1,0 +1,21 @@
+{
+  "paper_trading_only": true,
+  "require_human_approval": true,
+  "allowed_symbols": ["SPY", "QQQ", "AAPL", "MSFT", "TSLA", "BTC-USD", "ETH-USD"],
+  "allowed_asset_types": ["stock", "etf", "crypto"],
+  "max_order_value_usd": 500.0,
+  "max_position_percent": 10.0,
+  "max_daily_loss_percent": 1.0,
+  "max_orders_per_day": 5,
+  "max_intraday_trades_per_symbol": 2,
+  "cooldown_seconds": 120,
+  "allow_short_selling": false,
+  "allow_options": false,
+  "stale_quote_seconds": 30,
+  "min_cash_reserve_usd": 100.0,
+  "require_backtest_pass": true,
+  "min_backtest_trades": 20,
+  "max_strategy_drawdown_percent": 8.0,
+  "min_strategy_sharpe": 0.5,
+  "kill_switch": false
+}

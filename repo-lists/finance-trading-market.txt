@@ -1,0 +1,18 @@
+# Finance / Trading / Market Analysis
+jmfernandes/robin_stocks
+siropkin/robinhood-ai-trading-bot
+tauricresearch/tradingagents
+HKUDS/AI-Trader
+MingyuJ666/Stockagent
+ai4finance-foundation/finrobot
+AI4Finance-Foundation/FinGPT
+AI4Finance-Foundation/FinRL
+OpenBB-finance/OpenBB
+quantconnect/Lean
+freqtrade/freqtrade
+mementum/backtrader
+ranaroussi/yfinance
+xgboosted/pandas-ta-classic
+bukosabino/ta
+matplotlib/mplfinance
+georgezouq/awesome-ai-in-finance

@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-labelledby="title desc">
+  <title id="title">Master Repo Use system map</title>
+  <desc id="desc">A layered map showing standalone lanes, the core agent runtime, safety controls, autonomous day trading, broker apps, quantum trading, and output surfaces.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 36px Arial, sans-serif; fill: #142033; }
+      .subtitle { font: 400 18px Arial, sans-serif; fill: #526173; }
+      .band { fill: #ffffff; stroke: #d4dee8; stroke-width: 2; rx: 18; }
+      .box { fill: #ffffff; stroke: #cad7e4; stroke-width: 2; rx: 12; }
+      .entry { fill: #edf6ff; stroke: #83b7e3; }
+      .tool { fill: #edf9f3; stroke: #88c9a1; }
+      .data { fill: #fff7e8; stroke: #dfb85e; }
+      .side { fill: #f4f0ff; stroke: #b9a8ea; }
+      .market { fill: #eef8f6; stroke: #7fc7bd; }
+      .risk { fill: #fff1f4; stroke: #e0a0ad; }
+      .label { font: 700 18px Arial, sans-serif; fill: #1f2d3f; }
+      .small { font: 400 13px Arial, sans-serif; fill: #405266; }
+      .tag { font: 700 12px Arial, sans-serif; fill: #53657a; }
+      .bandTitle { font: 700 16px Arial, sans-serif; fill: #27384d; }
+      .line { stroke: #7189a3; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .soft { stroke: #9cadbe; stroke-width: 2; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrowSoft); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7189a3"/>
+    </marker>
+    <marker id="arrowSoft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9cadbe"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1400" height="900"/>
+  <text class="title" x="54" y="62">Master Repo Use</text>
+  <text class="subtitle" x="54" y="92">Use each lane standalone first, then combine through agents, MCP/API tools, memory, safety gates, and cost controls.</text>
+
+  <rect class="band" x="50" y="125" width="1300" height="160"/>
+  <text class="bandTitle" x="78" y="156">1. Entry Points</text>
+  <rect class="box entry" x="80" y="175" width="210" height="82"/>
+  <text class="label" x="105" y="207">CLI / VS Code</text>
+  <text class="small" x="105" y="232">portable path prompts</text>
+  <rect class="box entry" x="330" y="175" width="210" height="82"/>
+  <text class="label" x="355" y="207">Copilot Studio</text>
+  <text class="small" x="355" y="232">REST action or MCP connector</text>
+  <rect class="box entry" x="580" y="175" width="210" height="82"/>
+  <text class="label" x="605" y="207">App / Cloud UI</text>
+  <text class="small" x="605" y="232">Expo, Aspire, API bridge</text>
+  <rect class="box entry" x="830" y="175" width="210" height="82"/>
+  <text class="label" x="855" y="207">Standalone Lab</text>
+  <text class="small" x="855" y="232">one lane, one folder</text>
+  <rect class="box entry" x="1080" y="175" width="210" height="82"/>
+  <text class="label" x="1105" y="207">Repo Lists</text>
+  <text class="small" x="1105" y="232">clone by category</text>
+
+  <rect class="band" x="50" y="325" width="1300" height="180"/>
+  <text class="bandTitle" x="78" y="356">2. Core Agent Runtime</text>
+  <rect class="box tool" x="80" y="378" width="220" height="92"/>
+  <text class="tag" x="105" y="405">ORCHESTRATE</text>
+  <text class="label" x="105" y="432">Agent Frameworks</text>
+  <text class="small" x="105" y="454">Squad, Microsoft Agents, Copilot CLI</text>
+  <rect class="box tool" x="350" y="378" width="220" height="92"/>
+  <text class="tag" x="375" y="405">CALL TOOLS</text>
+  <text class="label" x="375" y="432">MCP + APIs</text>
+  <text class="small" x="375" y="454">filesystem, GitHub, browser, broker</text>
+  <rect class="box data" x="620" y="378" width="220" height="92"/>
+  <text class="tag" x="645" y="405">GROUND</text>
+  <text class="label" x="645" y="432">RAG + Memory</text>
+  <text class="small" x="645" y="454">docs, data, durable decisions</text>
+  <rect class="box risk" x="890" y="378" width="220" height="92"/>
+  <text class="tag" x="915" y="405">CONTROL</text>
+  <text class="label" x="915" y="432">Risk + Cost Gates</text>
+  <text class="small" x="915" y="454">limits, approval, budgets, logs</text>
+  <rect class="box tool" x="1160" y="378" width="160" height="92"/>
+  <text class="tag" x="1185" y="405">OUTPUT</text>
+  <text class="label" x="1185" y="432">Result</text>
+  <text class="small" x="1185" y="454">PR, report, paper order</text>
+
+  <rect class="band" x="50" y="555" width="1300" height="180"/>
+  <text class="bandTitle" x="78" y="586">3. Specialist Lanes</text>
+  <rect class="box side" x="80" y="608" width="190" height="92"/>
+  <text class="label" x="100" y="640">Quantum</text>
+  <text class="small" x="100" y="664">Qiskit, PennyLane</text>
+  <text class="small" x="100" y="684">optimizer sidecar</text>
+  <rect class="box market" x="292" y="608" width="190" height="92"/>
+  <text class="label" x="312" y="640">Day Trading</text>
+  <text class="small" x="312" y="664">signals, backtests</text>
+  <text class="small" x="312" y="684">plugin: autonomous</text>
+  <rect class="box market" x="504" y="608" width="190" height="92"/>
+  <text class="label" x="524" y="640">Broker Apps</text>
+  <text class="small" x="524" y="664">Robinhood, Alpaca</text>
+  <text class="small" x="524" y="684">plugin: robinhood</text>
+  <rect class="box market" x="716" y="608" width="190" height="92"/>
+  <text class="label" x="736" y="640">Market Analysis</text>
+  <text class="small" x="736" y="664">OpenBB, yfinance</text>
+  <text class="small" x="736" y="684">research and charts</text>
+  <rect class="box side" x="928" y="608" width="190" height="92"/>
+  <text class="label" x="948" y="640">Apps + Cloud</text>
+  <text class="small" x="948" y="664">Expo, Aspire, APIs</text>
+  <text class="small" x="948" y="684">cost check first</text>
+  <rect class="box risk" x="1140" y="608" width="180" height="92"/>
+  <text class="label" x="1160" y="640">Pitch</text>
+  <text class="small" x="1160" y="664">Slidev, Marpit</text>
+  <text class="small" x="1160" y="684">standalone only</text>
+
+  <rect class="box" x="180" y="790" width="1040" height="62"/>
+  <text class="label" x="212" y="824">Reading order: standalone lane -> smoke test -> integration -> safety gates -> user-facing result.</text>
+
+  <path class="line" d="M 290 216 L 330 216"/>
+  <path class="line" d="M 540 216 L 580 216"/>
+  <path class="line" d="M 790 216 L 830 216"/>
+  <path class="line" d="M 1040 216 L 1080 216"/>
+  <path class="line" d="M 185 257 C 185 310, 190 340, 190 378"/>
+  <path class="line" d="M 300 424 L 350 424"/>
+  <path class="line" d="M 570 424 L 620 424"/>
+  <path class="line" d="M 840 424 L 890 424"/>
+  <path class="line" d="M 1110 424 L 1160 424"/>
+  <path class="soft" d="M 175 608 C 230 540, 315 492, 430 470"/>
+  <path class="soft" d="M 387 608 C 455 535, 565 492, 730 470"/>
+  <path class="soft" d="M 599 608 C 650 545, 780 500, 1000 470"/>
+  <path class="soft" d="M 811 608 C 820 548, 880 500, 1000 470"/>
+  <path class="soft" d="M 1023 608 C 1045 540, 1130 492, 1240 470"/>
+</svg>

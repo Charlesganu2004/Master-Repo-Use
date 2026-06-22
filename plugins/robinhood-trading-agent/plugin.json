@@ -1,0 +1,20 @@
+{
+  "name": "robinhood-trading-agent",
+  "version": "0.1.0",
+  "description": "Safe starter plugin scaffold for Robinhood Crypto and Robinhood-style trading agent workflows.",
+  "default_mode": "paper_trading",
+  "live_trading_default": false,
+  "official_supported_route": "Robinhood Crypto Trading API",
+  "community_routes": [
+    "robin_stocks",
+    "pyrh"
+  ],
+  "entrypoint": "robinhood-trading-agent",
+  "capabilities": [
+    "trade_proposal",
+    "risk_gate",
+    "paper_order",
+    "robinhood_crypto_dry_run_shape",
+    "live_order_blocker"
+  ]
+}

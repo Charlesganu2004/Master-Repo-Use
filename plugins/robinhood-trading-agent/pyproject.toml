@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robinhood-trading-agent"
+version = "0.1.0"
+description = "Safe starter plugin scaffold for Robinhood Crypto and Robinhood-style trading agent workflows."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+research = ["pandas", "numpy", "yfinance"]
+community-robinhood = ["robin_stocks"]
+
+[project.scripts]
+robinhood-trading-agent = "robinhood_trading_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
