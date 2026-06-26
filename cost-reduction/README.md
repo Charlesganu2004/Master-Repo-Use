@@ -1,4 +1,4 @@
-# Cost Reduction Lane
+﻿# Cost Reduction Lane
 
 This folder tracks ways to reduce MCP server cost, model/API cost, cloud cost, and agent workflow cost.
 
@@ -70,7 +70,7 @@ Agent request
 Clone cost-reduction repos, PowerShell:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LanePath = Read-Host "Folder where cost-reduction repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\cost-reduction.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LanePath ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LanePath = Read-Host "Folder where cost-reduction repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\cost-reduction.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LanePath ($_ -replace '/','-')) }
 ```
 
 Clone cost-reduction repos, WSL/Bash:

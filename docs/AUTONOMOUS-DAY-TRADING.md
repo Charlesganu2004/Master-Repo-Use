@@ -1,4 +1,4 @@
-# Autonomous Day-Trading And Investing Agents
+﻿# Autonomous Day-Trading And Investing Agents
 
 This guide covers agents, repos, and plugin scaffolds that can run market research, day-trading signals, paper orders, investment allocation proposals, and broker-adapter experiments.
 
@@ -141,7 +141,7 @@ Minimum acceptance checks before live:
 Clone autonomous day-trading repos, PowerShell:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LanePath = Read-Host "Folder where autonomous day-trading repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\autonomous-day-trading-agents.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LanePath ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LanePath = Read-Host "Folder where autonomous day-trading repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\autonomous-day-trading-agents.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LanePath ($_ -replace '/','-')) }
 ```
 
 Clone autonomous day-trading repos, WSL/Bash:

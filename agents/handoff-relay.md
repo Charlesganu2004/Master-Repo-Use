@@ -60,7 +60,7 @@ MCP Roots: `<REPO_ROOT>/issues/`
 ## Setup CLI
 
 ```powershell
-$IssuesPath = Join-Path (Read-Host "Path to Master-Repo-Use") "issues"; npx -y @modelcontextprotocol/server-filesystem $IssuesPath
+$IssuesPath = Join-Path (Get-Location).Path "issues"; npx -y @modelcontextprotocol/server-filesystem $IssuesPath  # run from repo root
 ```
 
 ---

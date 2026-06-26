@@ -1,4 +1,4 @@
-# MCP Servers
+﻿# MCP Servers
 
 MCP servers are adapters. They let an agent use tools through an explicit protocol instead of every agent inventing its own integration.
 
@@ -77,5 +77,5 @@ docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKE
 Clone MCP repos:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LanePath = Read-Host "Folder where MCP repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\mcp-servers-extended.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LanePath ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LanePath = Read-Host "Folder where MCP repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\mcp-servers-extended.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LanePath ($_ -replace '/','-')) }
 ```

@@ -1,4 +1,4 @@
-# CLI One-Liners
+﻿# CLI One-Liners
 
 These commands are built for different computers. Most of them ask where you want files to go instead of assuming a fixed path.
 
@@ -75,13 +75,13 @@ read -rp "Where should cloned experiment repos go? " lab_root; mkdir -p "$lab_ro
 PowerShell with GitHub CLI:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LabRoot = Read-Host "Folder where all repos should be cloned"; New-Item -ItemType Directory -Force $LabRoot | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\all-curated.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LabRoot ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LabRoot = Read-Host "Folder where all repos should be cloned"; New-Item -ItemType Directory -Force $LabRoot | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\all-curated.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LabRoot ($_ -replace '/','-')) }
 ```
 
 PowerShell with plain Git:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LabRoot = Read-Host "Folder where all repos should be cloned"; New-Item -ItemType Directory -Force $LabRoot | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\all-curated.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { git clone "https://github.com/$_.git" (Join-Path $LabRoot ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LabRoot = Read-Host "Folder where all repos should be cloned"; New-Item -ItemType Directory -Force $LabRoot | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\all-curated.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { git clone "https://github.com/$_.git" (Join-Path $LabRoot ($_ -replace '/','-')) }
 ```
 
 WSL/Bash with GitHub CLI:
@@ -101,7 +101,7 @@ read -rp "Path to Master-Repo-Use: " master_repo; read -rp "Folder where all rep
 PowerShell reusable category clone:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $ListName = Read-Host "Repo list file name, for example quantum-computing.txt"; $LabRoot = Read-Host "Folder where this category should be cloned"; New-Item -ItemType Directory -Force $LabRoot | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\$ListName") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LabRoot ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $ListName = Read-Host "Repo list file name, for example quantum-computing.txt"; $LabRoot = Read-Host "Folder where this category should be cloned"; New-Item -ItemType Directory -Force $LabRoot | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\$ListName") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LabRoot ($_ -replace '/','-')) }
 ```
 
 WSL/Bash reusable category clone:
@@ -221,13 +221,13 @@ $PluginPath = Read-Host "Path to plugins\autonomous-day-trading-agent"; Set-Loca
 Clone day-trading repos, PowerShell:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LanePath = Read-Host "Folder where day-trading repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\day-trading-bots.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { git clone "https://github.com/$_.git" (Join-Path $LanePath ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LanePath = Read-Host "Folder where day-trading repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\day-trading-bots.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { git clone "https://github.com/$_.git" (Join-Path $LanePath ($_ -replace '/','-')) }
 ```
 
 Clone autonomous day-trading agent repos, PowerShell:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LanePath = Read-Host "Folder where autonomous day-trading repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\autonomous-day-trading-agents.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { git clone "https://github.com/$_.git" (Join-Path $LanePath ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LanePath = Read-Host "Folder where autonomous day-trading repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\autonomous-day-trading-agents.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { git clone "https://github.com/$_.git" (Join-Path $LanePath ($_ -replace '/','-')) }
 ```
 
 Clone autonomous day-trading agent repos, WSL/Bash:
@@ -239,7 +239,7 @@ read -rp "Path to Master-Repo-Use: " master_repo; read -rp "Folder where autonom
 Clone broker app integration repos, PowerShell:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LanePath = Read-Host "Folder where broker integration repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\broker-app-integrations.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { git clone "https://github.com/$_.git" (Join-Path $LanePath ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LanePath = Read-Host "Folder where broker integration repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\broker-app-integrations.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { git clone "https://github.com/$_.git" (Join-Path $LanePath ($_ -replace '/','-')) }
 ```
 
 Clone quantum-finance trading repos, WSL/Bash:
@@ -303,7 +303,7 @@ docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKE
 Open the example REST bridge contracts, PowerShell:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; code (Join-Path $MasterRepo "examples\copilot-studio\market-research-openapi.yaml"); code (Join-Path $MasterRepo "examples\copilot-studio\quantum-bridge-openapi.yaml")
+$MasterRepo = (Get-Location).Path  # run from repo root; code (Join-Path $MasterRepo "examples\copilot-studio\market-research-openapi.yaml"); code (Join-Path $MasterRepo "examples\copilot-studio\quantum-bridge-openapi.yaml")
 ```
 
 Serve a chosen bridge folder locally:
@@ -389,7 +389,7 @@ Create a new agent `.md` from a template, PowerShell:
 
 ```powershell
 $AgentName = Read-Host "Agent file name (kebab-case, e.g. my-new-agent)"
-$RepoRoot = Read-Host "Path to Master-Repo-Use"
+$RepoRoot = (Get-Location).Path  # run from repo root
 $OutPath = Join-Path $RepoRoot "agents\$AgentName.md"
 @"
 # $((Get-Culture).TextInfo.ToTitleCase($AgentName.Replace('-',' ')))
@@ -479,7 +479,7 @@ done < "$issues_file"
 PowerShell:
 
 ```powershell
-$RepoRoot = Read-Host "Path to Master-Repo-Use"
+$RepoRoot = (Get-Location).Path  # run from repo root
 Start-Process (Join-Path $RepoRoot "assets\interactive-diagram.html")
 ```
 

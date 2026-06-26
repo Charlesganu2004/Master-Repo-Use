@@ -1,4 +1,4 @@
-# Sentinel — Security Auditor
+﻿# Sentinel — Security Auditor
 
 **Job:** Security Auditor
 **Category:** Security
@@ -79,7 +79,7 @@ MCP Roots: ALL repo directories (read-only for audit). Never write.
 ## Setup CLI
 
 ```powershell
-$RepoRoot = Read-Host "Path to Master-Repo-Use"
+$RepoRoot = (Get-Location).Path  # run from repo root
 npx -y @modelcontextprotocol/server-filesystem $RepoRoot
 ```
 

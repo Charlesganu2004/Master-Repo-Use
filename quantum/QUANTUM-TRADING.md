@@ -1,4 +1,4 @@
-# Quantum Trading And Investing
+﻿# Quantum Trading And Investing
 
 This guide expands the quantum lane into stock, portfolio, investment, day-trading, and research workflows. It is for engineering and research. It is not financial advice, and live order placement should stay disabled until a human reviews the model, broker permissions, compliance rules, and risk controls.
 
@@ -27,7 +27,7 @@ market data
 PowerShell:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LanePath = Read-Host "Folder for quantum trading repos"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\quantum-finance-trading.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { git clone "https://github.com/$_.git" (Join-Path $LanePath ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LanePath = Read-Host "Folder for quantum trading repos"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\quantum-finance-trading.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { git clone "https://github.com/$_.git" (Join-Path $LanePath ($_ -replace '/','-')) }
 ```
 
 WSL/Bash:

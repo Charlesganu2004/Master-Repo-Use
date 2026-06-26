@@ -1,4 +1,4 @@
-# Iris — Repo Issue Agent
+﻿# Iris — Repo Issue Agent
 
 **Job:** Repo Issue Agent
 **Category:** Orchestration & Coordination
@@ -87,7 +87,7 @@ MCP Roots allowed: `<REPO_ROOT>/issues/`, `<REPO_ROOT>/repo-lists/`, `<REPO_ROOT
 PowerShell — start Iris in propose mode:
 
 ```powershell
-$RepoRoot = Read-Host "Path to Master-Repo-Use"; New-Item -ItemType Directory -Force (Join-Path $RepoRoot "issues") | Out-Null; code (Join-Path $RepoRoot "agents\repo-issue-iris.md")
+$RepoRoot = (Get-Location).Path  # run from repo root; New-Item -ItemType Directory -Force (Join-Path $RepoRoot "issues") | Out-Null; code (Join-Path $RepoRoot "agents\repo-issue-iris.md")
 ```
 
 GitHub MCP server with issues toolset:
@@ -99,7 +99,7 @@ docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKE
 Filesystem MCP scoped to issues folder only:
 
 ```powershell
-$IssuesPath = Join-Path (Read-Host "Path to Master-Repo-Use") "issues"; npx -y @modelcontextprotocol/server-filesystem $IssuesPath
+$IssuesPath = Join-Path (Get-Location).Path "issues"; npx -y @modelcontextprotocol/server-filesystem $IssuesPath  # run from repo root
 ```
 
 ---

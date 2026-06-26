@@ -1,4 +1,4 @@
-# Trading And Market Agents
+﻿# Trading And Market Agents
 
 This section is for research, market analysis, paper trading, portfolio experiments, and agent engineering. It is not financial advice. Do not connect live order execution to an agent until permissions, audit logs, broker rules, risk controls, and compliance are reviewed.
 
@@ -122,7 +122,7 @@ The starter scaffold at [plugins/autonomous-day-trading-agent](../plugins/autono
 Clone finance/trading repos, PowerShell:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LanePath = Read-Host "Folder where finance/trading repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\finance-trading-market.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LanePath ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LanePath = Read-Host "Folder where finance/trading repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\finance-trading-market.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LanePath ($_ -replace '/','-')) }
 ```
 
 Clone finance/trading repos, WSL/Bash:

@@ -1,4 +1,4 @@
-# Plugins
+﻿# Plugins
 
 GitHub: https://github.com/Charlesganu2004/Master-Repo-Use
 
@@ -20,7 +20,7 @@ Plugins are self-contained agent + tool packages. Install one with a single comm
 
 ```powershell
 $PluginName = Read-Host "Plugin name (e.g. autonomous-day-trading-agent)"
-$RepoRoot = Read-Host "Path to Master-Repo-Use"
+$RepoRoot = (Get-Location).Path  # run from repo root
 $PluginPath = Join-Path $RepoRoot "plugins\$PluginName"
 Set-Location $PluginPath
 python -m venv .venv
@@ -63,7 +63,7 @@ Plugins can be used together. Example — autonomous day trading + Alpaca MCP:
 
 ```powershell
 # Install the plugin
-$RepoRoot = Read-Host "Path to Master-Repo-Use"
+$RepoRoot = (Get-Location).Path  # run from repo root
 Set-Location (Join-Path $RepoRoot "plugins\autonomous-day-trading-agent")
 python -m venv .venv; .\.venv\Scripts\Activate.ps1
 python -m pip install -e .

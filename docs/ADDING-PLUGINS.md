@@ -1,4 +1,4 @@
-# Adding Plugins
+﻿# Adding Plugins
 
 GitHub: https://github.com/Charlesganu2004/Master-Repo-Use
 
@@ -81,7 +81,7 @@ PowerShell:
 
 ```powershell
 $PluginName = Read-Host "Plugin name (kebab-case, e.g. my-research-agent)"
-$RepoRoot = Read-Host "Path to Master-Repo-Use"
+$RepoRoot = (Get-Location).Path  # run from repo root
 $PluginRoot = Join-Path $RepoRoot "plugins\$PluginName"
 New-Item -ItemType Directory -Force "$PluginRoot\src\$($PluginName -replace '-','_')" | Out-Null
 New-Item -ItemType File -Force "$PluginRoot\plugin.json" | Out-Null

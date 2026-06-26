@@ -1,4 +1,4 @@
-# Broker App Integrations
+﻿# Broker App Integrations
 
 This guide shows how to connect AI agents to Robinhood-style broker apps and broker APIs for research, day trading, investing, and portfolio workflows. It is engineering guidance, not financial advice. The default should be research or paper trading.
 
@@ -185,7 +185,7 @@ pip install coinbase-advanced-py; $env:CB_API_KEY = Read-Host "Coinbase API key 
 Clone broker integration repos, PowerShell:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LanePath = Read-Host "Folder where broker integration repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\broker-app-integrations.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { git clone "https://github.com/$_.git" (Join-Path $LanePath ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LanePath = Read-Host "Folder where broker integration repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\broker-app-integrations.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { git clone "https://github.com/$_.git" (Join-Path $LanePath ($_ -replace '/','-')) }
 ```
 
 Install the Robinhood trading plugin scaffold:

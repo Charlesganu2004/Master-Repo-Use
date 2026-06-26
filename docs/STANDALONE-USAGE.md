@@ -1,4 +1,4 @@
-# Standalone Usage
+﻿# Standalone Usage
 
 Every lane in this repo can be used by itself. The integration docs show how to combine the lanes, but you do not need the full stack to get value.
 
@@ -59,7 +59,7 @@ read -rp "Where should this standalone lane live? " lane_path; mkdir -p "$lane_p
 PowerShell:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LanePath = Read-Host "Folder for standalone agent framework repos"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\agent-frameworks.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LanePath ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LanePath = Read-Host "Folder for standalone agent framework repos"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\agent-frameworks.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LanePath ($_ -replace '/','-')) }
 ```
 
 ### RAG, Knowledge, And Memory

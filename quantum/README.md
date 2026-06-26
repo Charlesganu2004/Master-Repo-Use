@@ -1,4 +1,4 @@
-# Quantum Computing Lane
+﻿# Quantum Computing Lane
 
 Quantum is a standalone lane in this repo. It can also connect to the agent stack as an optional sidecar, especially for optimization, sampling, quantum machine learning, and portfolio research.
 
@@ -83,7 +83,7 @@ Integrated sidecar
 Clone quantum repos, PowerShell:
 
 ```powershell
-$MasterRepo = Read-Host "Path to Master-Repo-Use"; $LanePath = Read-Host "Folder where quantum repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\quantum-computing.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LanePath ($_ -replace '/','-')) }
+$MasterRepo = (Get-Location).Path  # run from repo root; $LanePath = Read-Host "Folder where quantum repos should be cloned"; New-Item -ItemType Directory -Force $LanePath | Out-Null; Get-Content (Join-Path $MasterRepo "repo-lists\quantum-computing.txt") | Where-Object { $_ -and $_ -notmatch '^#' } | ForEach-Object { gh repo clone $_ (Join-Path $LanePath ($_ -replace '/','-')) }
 ```
 
 Clone quantum repos, WSL/Bash:

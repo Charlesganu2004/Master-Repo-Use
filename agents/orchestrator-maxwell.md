@@ -1,4 +1,4 @@
-# Maxwell — Master Orchestrator
+﻿# Maxwell — Master Orchestrator
 
 **Job:** Master Orchestrator
 **Category:** Orchestration & Coordination
@@ -84,7 +84,7 @@ MCP Roots allowed: `<REPO_ROOT>/agents/`, `<REPO_ROOT>/issues/`, `<REPO_ROOT>/do
 Claude Code:
 
 ```powershell
-$RepoRoot = Read-Host "Path to Master-Repo-Use"; code (Join-Path $RepoRoot "agents\orchestrator-maxwell.md")
+$RepoRoot = (Get-Location).Path  # run from repo root; code (Join-Path $RepoRoot "agents\orchestrator-maxwell.md")
 ```
 
 Squad (wiring Maxwell as the router agent):

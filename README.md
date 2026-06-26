@@ -1,33 +1,36 @@
 # Master Repo Use
 
-**GitHub:** https://github.com/Charlesganu2004/Master-Repo-Use
+> **[Open Interactive Diagram →](https://charlesganu2004.github.io/Master-Repo-Use/)**
+> Click any node or agent chip to navigate directly into the repo. No setup needed — works in any browser.
+>
+> *(First time? Enable GitHub Pages once: repo **Settings → Pages → Branch: main → Folder: / (root) → Save**)*
+
+---
+
+**GitHub:** https://github.com/Charlesganu2004/Master-Repo-Use  
 Last curated: 2026-06-26
 
 A self-contained command center for agent frameworks, RAG, memory, MCP servers, token/context management, Microsoft Copilot Studio, autonomous trading agents, finance/trading, quantum computing, cloud/cost reduction, app templates, and hackathon resources.
 
 **You do not need to leave this repo to use any of these tools.** Every lane has install commands, usage instructions, and agent setups here.
 
-**Repo health:** [docs/REPO-HEALTH.md](docs/REPO-HEALTH.md) — run Iris to check which repos are still active.
+**Repo health:** [docs/REPO-HEALTH.md](docs/REPO-HEALTH.md) — run Iris to check which repos are still active.  
 **Security:** [docs/SECURITY.md](docs/SECURITY.md) — agent injection prevention, MCP scoping, secret scanning.
 
 ---
 
-## Interactive Diagrams
+## Interactive Diagram
 
-Open [assets/interactive-diagram.html](assets/interactive-diagram.html) in your browser for clickable flow diagrams:
+**[charlesganu2004.github.io/Master-Repo-Use](https://charlesganu2004.github.io/Master-Repo-Use/)** — 6 tabs, fully clickable, navigates directly into repo files:
 
-- **Main Flow** — click any node to see the tools, options, and standalone path for that layer
-- **Standalone Paths** — fastest path to working in each lane without the full stack
-- **Combinations** — named stack recipes with install commands (Core Agent, Microsoft, Trading, Quantum, Security, etc.)
-- **Trading & Finance** — the full safety gate flow from signal to live order
-- **Cost & Tokens** — token efficiency and /compact decision flow
-- **Agent Roster** — all 55 agents at a glance
-
-Open in browser:
-```powershell
-$RepoRoot = Read-Host "Path to Master-Repo-Use"
-Start-Process (Join-Path $RepoRoot "assets\interactive-diagram.html")
-```
+| Tab | What it shows |
+|---|---|
+| Main Flow | Click any layer node → tools, links, standalone option |
+| Standalone Paths | Fastest path to working in each lane solo |
+| Combinations | 8 named stack recipes with install commands |
+| Trading & Finance | Full safety gate flow: signal → Sage → human → live |
+| Cost & Tokens | Token efficiency and /compact decision flow |
+| Agent Roster | All 55 agents — click any chip to open the agent file |
 
 ---
 
