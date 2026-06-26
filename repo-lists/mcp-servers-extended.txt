@@ -11,3 +11,7 @@ upstash/context7
 awslabs/mcp
 punkpeye/awesome-mcp-servers
 microsoft/lets-learn-mcp-python
+alpacahq/alpaca-mcp-server
+ooples/token-optimizer-mcp
+yvgude/lean-ctx
+chopratejas/headroom

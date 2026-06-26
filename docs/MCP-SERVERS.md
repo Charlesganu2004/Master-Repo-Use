@@ -14,20 +14,24 @@ Agent host
 
 ## Repos To Know
 
-| Repo | Use it when | Cost/risk note |
-| --- | --- | --- |
-| [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) | You want reference servers such as filesystem, memory, fetch, Git, and other baseline integrations. | Use allowlisted folders and read-only mounts where possible. |
-| [modelcontextprotocol/typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk) | You want to build MCP servers in TypeScript. | Keep tool schemas tight to reduce context size. |
-| [modelcontextprotocol/python-sdk](https://github.com/modelcontextprotocol/python-sdk) | You want to build MCP servers in Python. | Good for data, finance, quantum, and notebook-adjacent tools. |
-| [modelcontextprotocol/inspector](https://github.com/modelcontextprotocol/inspector) | You want to test and debug MCP servers. | Use before attaching a server to a real agent. |
-| [microsoft/mcp](https://github.com/microsoft/mcp) | You want Microsoft's MCP catalog and guidance. | Good starting point for Microsoft ecosystem servers. |
-| [microsoftdocs/mcp](https://github.com/microsoftdocs/mcp) | You want Microsoft Learn source/docs for MCP. | Good for official docs tracking. |
-| [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp) | You want browser automation through MCP. | Browser tools can be expensive; scope tasks and screenshots. |
-| [github/github-mcp-server](https://github.com/github/github-mcp-server) | You want GitHub repo, issue, PR, Actions, and security tools. | Use selected toolsets and token scopes. |
-| [upstash/context7](https://github.com/upstash/context7) | You want fresh library docs available to agents. | Reduces wasted calls caused by stale docs. |
-| [awslabs/mcp](https://github.com/awslabs/mcp) | You want AWS-focused MCP servers. | Watch cloud API and hosted resource costs. |
-| [punkpeye/awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) | You want a broad community MCP server list. | Treat as discovery, not automatic install. |
-| [microsoft/lets-learn-mcp-python](https://github.com/microsoft/lets-learn-mcp-python) | You want a learning path for MCP in Python. | Good for building small custom servers. |
+| Repo | Use it when | Cost note | Status |
+| --- | --- | --- | --- |
+| [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) | You want reference servers such as filesystem, memory, fetch, Git, and other baseline integrations. | Free/local. No API cost beyond LLM tokens. | active |
+| [modelcontextprotocol/typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk) | You want to build MCP servers in TypeScript. | Free/local. | active |
+| [modelcontextprotocol/python-sdk](https://github.com/modelcontextprotocol/python-sdk) | You want to build MCP servers in Python. | Free/local. | active |
+| [modelcontextprotocol/inspector](https://github.com/modelcontextprotocol/inspector) | You want to test and debug MCP servers. | Free/local dev tool. | active |
+| [microsoft/mcp](https://github.com/microsoft/mcp) | You want Microsoft's MCP catalog and guidance. | Free/reference. | active |
+| [microsoftdocs/mcp](https://github.com/microsoftdocs/mcp) | You want Microsoft Learn source/docs for MCP. | Free/reference. | active |
+| [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp) | You want browser automation through MCP. | Free/local; browser sessions add token cost from screenshots. | active |
+| [github/github-mcp-server](https://github.com/github/github-mcp-server) | You want GitHub repo, issue, PR, Actions, and security tools. | Free/local with your PAT; API rate limits apply. | active |
+| [upstash/context7](https://github.com/upstash/context7) | You want fresh library docs available to agents. | Hosted; free tier available, paid above limits. | active |
+| [awslabs/mcp](https://github.com/awslabs/mcp) | You want AWS-focused MCP servers. | Free/local; AWS API calls incur AWS charges. | active |
+| [punkpeye/awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) | You want a broad community MCP server list. | Free/reference. Treat as discovery only. | active |
+| [microsoft/lets-learn-mcp-python](https://github.com/microsoft/lets-learn-mcp-python) | You want a learning path for MCP in Python. | Free/local learning resource. | active |
+| [alpacahq/alpaca-mcp-server](https://github.com/alpacahq/alpaca-mcp-server) | You want broker and account tools exposed through MCP for paper or live trading. | Free/local; live trades incur real broker costs. Paper mode is free. | active |
+| [ooples/token-optimizer-mcp](https://github.com/ooples/token-optimizer-mcp) | You want MCP-based token optimization experiments to reduce LLM token spend. | Free/local; reduces token cost over time. | experimental |
+| [yvgude/lean-ctx](https://github.com/yvgude/lean-ctx) | You want lean context engineering tools for trimming agent session bloat. | Free/local. | experimental |
+| [chopratejas/headroom](https://github.com/chopratejas/headroom) | You want headroom/context budget tracking for long agent sessions. | Free/local. | experimental |
 
 ## Common Combos
 

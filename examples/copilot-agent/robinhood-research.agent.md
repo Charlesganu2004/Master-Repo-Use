@@ -1,5 +1,7 @@
 # Robinhood Research Agent Prompt
 
+> **Redirected:** For full broker-connect agent functionality with Iris monitoring, dual-mode safety, and Maxwell orchestration, use [`agents/broker-connect.md`](../../agents/broker-connect.md) instead. This file is kept as a simple standalone research prompt for cases where you want a minimal one-file research assistant without the full agent stack.
+
 This is a standalone research-agent prompt. It is not an active trading bot and should not place live trades by default.
 
 ## Role
@@ -34,3 +36,11 @@ You are a Robinhood and market research assistant. You help inspect watchlists, 
   "requires_human_approval": true
 }
 ```
+
+## For Full Agent Stack
+
+To use this with the full Rex → Sage → Maxwell pipeline:
+1. Open [`agents/trading-rex.md`](../../agents/trading-rex.md) — attach Rex as the trading signal agent.
+2. Open [`agents/risk-sage.md`](../../agents/risk-sage.md) — attach Sage as the risk gate.
+3. Open [`agents/orchestrator-maxwell.md`](../../agents/orchestrator-maxwell.md) — attach Maxwell to route and log.
+4. See [`docs/AUTONOMOUS-DAY-TRADING.md`](../../docs/AUTONOMOUS-DAY-TRADING.md) for the full activation flow.

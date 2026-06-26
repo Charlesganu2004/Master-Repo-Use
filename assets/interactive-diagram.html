@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Repo Use — Interactive Diagram</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --accent: #238636;
+    --accent2: #1f6feb;
+    --accent3: #9e6a03;
+    --accent4: #8b949e;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --node-active: #238636;
+    --node-hover: #2ea043;
+    --danger: #f85149;
+    --warning: #e3b341;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+  }
+  h1 { font-size: 1.4rem; font-weight: 600; margin-bottom: 6px; color: #f0f6fc; }
+  .subtitle { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 24px; }
+  .tab-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    padding: 8px 16px; border-radius: 6px; cursor: pointer;
+    font-size: 0.82rem; font-weight: 500; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-dim); transition: all 0.15s;
+  }
+  .tab:hover { border-color: var(--accent2); color: var(--text); }
+  .tab.active { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+  .diagram-area {
+    display: none; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; overflow-x: auto;
+  }
+  .diagram-area.active { display: block; }
+  /* Flow node */
+  .flow { display: flex; flex-direction: column; align-items: flex-start; gap: 0; max-width: 640px; }
+  .flow-node {
+    position: relative; display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; border-radius: 7px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg); margin: 3px 0;
+    transition: all 0.15s; font-size: 0.88rem; width: 100%;
+  }
+  .flow-node:hover { border-color: var(--accent2); background: #1c2333; }
+  .flow-node.selected { border-color: var(--accent); background: #0d2818; }
+  .flow-node.entry { border-color: var(--accent2); }
+  .flow-node.gate { border-color: var(--warning); }
+  .flow-node.terminal { border-color: var(--accent4); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: var(--accent); }
+  .dot-blue { background: var(--accent2); }
+  .dot-yellow { background: var(--warning); }
+  .dot-gray { background: var(--accent4); }
+  .arrow { color: var(--text-dim); padding: 2px 0 2px 20px; font-size: 1rem; line-height: 1; }
+  .detail-panel {
+    margin-top: 20px; padding: 16px; background: #0d2818;
+    border: 1px solid var(--accent); border-radius: 8px; display: none; font-size: 0.85rem;
+  }
+  .detail-panel.active { display: block; }
+  .detail-panel h3 { color: #3fb950; margin-bottom: 8px; font-size: 0.95rem; }
+  .detail-panel ul { list-style: none; padding: 0; }
+  .detail-panel li { padding: 3px 0; color: var(--text); }
+  .detail-panel li::before { content: "→ "; color: var(--accent); }
+  .standalone-badge {
+    display: inline-block; margin-top: 10px; padding: 4px 10px;
+    background: #1f2d3d; border: 1px solid var(--accent2); border-radius: 4px;
+    font-size: 0.78rem; color: var(--accent2); cursor: pointer;
+  }
+  .standalone-badge:hover { background: var(--accent2); color: #fff; }
+  .combo-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px; margin-top: 4px;
+  }
+  .combo-card {
+    padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg); cursor: pointer; transition: all 0.15s; font-size: 0.82rem;
+  }
+  .combo-card:hover { border-color: var(--accent2); background: #1c2333; }
+  .combo-card.active-combo { border-color: var(--accent); background: #0d2818; }
+  .combo-card h4 { font-size: 0.85rem; margin-bottom: 4px; color: #f0f6fc; }
+  .combo-detail {
+    margin-top: 16px; padding: 14px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 8px; display: none; font-size: 0.83rem;
+  }
+  .combo-detail.active { display: block; }
+  .code-block {
+    background: #010409; border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 14px; font-family: monospace; font-size: 0.78rem;
+    color: #c9d1d9; margin: 8px 0; overflow-x: auto; white-space: pre;
+  }
+  .section-label { color: var(--text-dim); font-size: 0.78rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em; margin: 16px 0 8px; }
+  .chip {
+    display: inline-block; padding: 2px 8px; border-radius: 12px;
+    font-size: 0.72rem; font-weight: 500; margin: 2px;
+  }
+  .chip-green { background: #1a3a1a; color: #3fb950; border: 1px solid #2e6b2e; }
+  .chip-blue { background: #1a2a3a; color: #79c0ff; border: 1px solid #1f4a7a; }
+  .chip-yellow { background: #3a2e00; color: #e3b341; border: 1px solid #5a4a00; }
+</style>
+</head>
+<body>
+
+<h1>Master Repo Use — Interactive Diagrams</h1>
+<p class="subtitle">Click a path node to see details. Click a combination card to see the stack recipe.</p>
+
+<div class="tab-row">
+  <div class="tab active" onclick="showDiagram('main')">Main Flow</div>
+  <div class="tab" onclick="showDiagram('standalone')">Standalone Paths</div>
+  <div class="tab" onclick="showDiagram('combinations')">Combinations</div>
+  <div class="tab" onclick="showDiagram('trading')">Trading & Finance</div>
+  <div class="tab" onclick="showDiagram('cost')">Cost & Tokens</div>
+  <div class="tab" onclick="showDiagram('agents')">Agent Roster</div>
+</div>
+
+<!-- MAIN FLOW -->
+<div id="diagram-main" class="diagram-area active">
+  <div class="section-label">Click any node to see details and options</div>
+  <div class="flow">
+    <div class="flow-node entry" onclick="showDetail('entry')">
+      <div class="dot dot-blue"></div>
+      Entry Point — CLI · VS Code · Copilot Studio · App · Automation
+    </div>
+    <div class="arrow">↓</div>
+    <div class="flow-node" onclick="showDetail('framework')">
+      <div class="dot dot-green"></div>
+      Agent Framework — Squad · Microsoft Agents · RunAgent · Copilot CLI
+    </div>
+    <div class="arrow">↓</div>
+    <div class="flow-node" onclick="showDetail('mcp')">
+      <div class="dot dot-green"></div>
+      MCP Tools &amp; APIs — Filesystem · GitHub · Playwright · Context7 · Alpaca
+    </div>
+    <div class="arrow">↓</div>
+    <div class="flow-node" onclick="showDetail('rag')">
+      <div class="dot dot-green"></div>
+      RAG · Memory · Context Control — LightRAG · AgentMemory · LLMLingua
+    </div>
+    <div class="arrow">↓</div>
+    <div class="flow-node gate" onclick="showDetail('cost')">
+      <div class="dot dot-yellow"></div>
+      Cost Controls — Token budget · /compact · Model routing · Tool allowlist
+    </div>
+    <div class="arrow">↓</div>
+    <div class="flow-node terminal" onclick="showDetail('output')">
+      <div class="dot dot-gray"></div>
+      Output — App · Cloud · GitHub · Database · Local file
+    </div>
+  </div>
+
+  <div id="detail-entry" class="detail-panel">
+    <h3>Entry Point</h3>
+    <ul>
+      <li>CLI: Claude Code, GitHub Copilot CLI, RunAgent terminal</li>
+      <li>IDE: VS Code with MCP config in .vscode/mcp.json</li>
+      <li>Copilot Studio: Business-facing agent with topic flows</li>
+      <li>App: Mobile (Expo) or web app calling an agent API</li>
+      <li>Automation: GitHub Actions, Azure Pipeline, cron job</li>
+    </ul>
+    <div class="standalone-badge" onclick="showDiagram('standalone')">→ Standalone path for this layer</div>
+  </div>
+
+  <div id="detail-framework" class="detail-panel">
+    <h3>Agent Framework</h3>
+    <ul>
+      <li>Squad — multi-agent orchestration (.NET + TypeScript)</li>
+      <li>Microsoft Agents — enterprise .NET agent SDK</li>
+      <li>RunAgent — lightweight Python agent runner</li>
+      <li>GitHub Copilot CLI — terminal-native agent</li>
+      <li>Orchestrator: Maxwell (agents/orchestrator-maxwell.md)</li>
+    </ul>
+    <div class="standalone-badge" onclick="alert('Clone agent-frameworks.txt. Pick one. Run its hello-world. Add tools later.')">→ Standalone: try one framework first</div>
+  </div>
+
+  <div id="detail-mcp" class="detail-panel">
+    <h3>MCP Tools &amp; APIs</h3>
+    <ul>
+      <li>Filesystem MCP — scoped to allowed paths only, never root</li>
+      <li>GitHub MCP — limited toolsets (repos, issues, PRs)</li>
+      <li>Playwright MCP — browser automation for web research</li>
+      <li>Context7 — live library documentation lookup</li>
+      <li>Alpaca MCP — paper trading (never live without approval)</li>
+    </ul>
+    <div class="standalone-badge" onclick="alert('npx -y @modelcontextprotocol/server-filesystem YOUR_FOLDER')">→ Standalone: run one MCP server first</div>
+  </div>
+
+  <div id="detail-rag" class="detail-panel">
+    <h3>RAG · Memory · Context</h3>
+    <ul>
+      <li>LightRAG — graph-based RAG with entity awareness</li>
+      <li>Upstash vector-js — serverless vector store</li>
+      <li>AgentMemory — persistent durable memory</li>
+      <li>LLMLingua — prompt compression (reduce tokens before sending)</li>
+      <li>Context-Gateway — compression proxy layer</li>
+    </ul>
+    <div class="standalone-badge" onclick="alert('Index one folder with LightRAG. Ask questions. Add to agent only after retrieval quality is verified.')">→ Standalone: index one folder first</div>
+  </div>
+
+  <div id="detail-cost" class="detail-panel">
+    <h3>Cost Controls</h3>
+    <ul>
+      <li>/compact — compact session before context limit. Use Relay first to write a handoff note.</li>
+      <li>Token budget — set ANTHROPIC_MAX_TOKENS env var</li>
+      <li>Model routing — Haiku for simple tasks, Sonnet for most, Opus for deep reasoning</li>
+      <li>Tool allowlist — expose only tools the agent actually needs</li>
+      <li>Penny (token-penny.md) — audits bloated sessions</li>
+    </ul>
+    <div class="standalone-badge" onclick="showDiagram('cost')">→ See full cost diagram</div>
+  </div>
+
+  <div id="detail-output" class="detail-panel">
+    <h3>Output</h3>
+    <ul>
+      <li>Local file system — via filesystem MCP (scoped paths)</li>
+      <li>GitHub — issues, PRs, comments via GitHub MCP</li>
+      <li>Cloud service — Azure, AWS, GCP via Volt or Nimbus</li>
+      <li>Database — via data pipeline (Schema, Vector)</li>
+      <li>Broker — paper orders only unless live mode explicitly approved</li>
+    </ul>
+  </div>
+</div>
+
+<!-- STANDALONE PATHS -->
+<div id="diagram-standalone" class="diagram-area">
+  <div class="section-label">Pick your goal — each card shows the fastest path to working standalone</div>
+  <div class="combo-grid">
+    <div class="combo-card" onclick="showCombo('sa-agents')">
+      <h4>🤖 Try an Agent Framework</h4>
+      <p>Squad, Microsoft Agents, RunAgent, Copilot CLI</p>
+    </div>
+    <div class="combo-card" onclick="showCombo('sa-rag')">
+      <h4>📚 Index Docs &amp; Ask Questions</h4>
+      <p>LightRAG, Upstash, RAG CLI</p>
+    </div>
+    <div class="combo-card" onclick="showCombo('sa-mcp')">
+      <h4>🔧 Run an MCP Server</h4>
+      <p>Filesystem, GitHub, Playwright, Context7</p>
+    </div>
+    <div class="combo-card" onclick="showCombo('sa-trading')">
+      <h4>📈 Paper Trade</h4>
+      <p>Autonomous day-trading plugin, Alpaca paper</p>
+    </div>
+    <div class="combo-card" onclick="showCombo('sa-quantum')">
+      <h4>⚛️ Quantum Experiments</h4>
+      <p>Qiskit, PennyLane, simulator only</p>
+    </div>
+    <div class="combo-card" onclick="showCombo('sa-cost')">
+      <h4>💰 Reduce Cost</h4>
+      <p>Token efficiency, /compact, model routing</p>
+    </div>
+    <div class="combo-card" onclick="showCombo('sa-copilot')">
+      <h4>🏢 Copilot Studio</h4>
+      <p>One REST action or MCP connector</p>
+    </div>
+    <div class="combo-card" onclick="showCombo('sa-mobile')">
+      <h4>📱 Mobile App</h4>
+      <p>Expo, create-expo-stack</p>
+    </div>
+  </div>
+
+  <div id="combo-sa-agents" class="combo-detail">
+    <h3>Standalone: Agent Framework</h3>
+    <p>Get one agent running before adding RAG, MCP, or memory.</p>
+    <div class="code-block">npm install -g @bradygaster/squad-cli
+squad init my-first-agent
+squad run</div>
+    <p style="color:var(--text-dim);font-size:0.82rem;margin-top:8px">When it works standalone → add MCP tools → add RAG → connect to Maxwell.</p>
+    <p style="margin-top:8px"><span class="chip chip-blue">docs: STANDALONE-USAGE.md → Agent Frameworks</span></p>
+  </div>
+
+  <div id="combo-sa-rag" class="combo-detail">
+    <h3>Standalone: RAG</h3>
+    <div class="code-block">pip install lightrag-hku
+python -c "
+from lightrag import LightRAG
+rag = LightRAG('./storage')
+rag.insert_file('./my-docs')
+print(rag.query('What is the main topic?'))
+"</div>
+    <p style="color:var(--text-dim);font-size:0.82rem;margin-top:8px">When retrieval quality is verified → connect to an agent.</p>
+  </div>
+
+  <div id="combo-sa-mcp" class="combo-detail">
+    <h3>Standalone: MCP Server</h3>
+    <div class="code-block"># Filesystem — scoped to one folder
+$AllowedPath = Read-Host "Folder"
+npx -y @modelcontextprotocol/server-filesystem $AllowedPath
+
+# GitHub — limited toolsets
+docker run -i --rm \
+  -e GITHUB_PERSONAL_ACCESS_TOKEN="$TOKEN" \
+  -e GITHUB_TOOLSETS="repos,issues" \
+  ghcr.io/github/github-mcp-server</div>
+    <p style="color:var(--text-dim);font-size:0.82rem;margin-top:8px">Test each tool in MCP Inspector before connecting to an agent.</p>
+  </div>
+
+  <div id="combo-sa-trading" class="combo-detail">
+    <h3>Standalone: Paper Trading</h3>
+    <div class="code-block">cd plugins/autonomous-day-trading-agent
+python -m venv .venv && .\.venv\Scripts\Activate.ps1
+python -m pip install -e .
+autonomous-day-trading-agent smoke-test --risk risk_limits.example.json
+autonomous-day-trading-agent backtest --bars data/sample.csv
+autonomous-day-trading-agent paper-order --symbol AAPL --side buy --qty 1</div>
+    <p style="color:var(--text-dim);font-size:0.82rem;margin-top:8px">Paper mode only. Sage must approve before any live order.</p>
+  </div>
+
+  <div id="combo-sa-quantum" class="combo-detail">
+    <h3>Standalone: Quantum Lab</h3>
+    <div class="code-block">pip install qiskit qiskit-aer pennylane
+python -c "
+from qiskit import QuantumCircuit
+from qiskit_aer import Aer
+qc = QuantumCircuit(2, 2)
+qc.h(0); qc.cx(0, 1); qc.measure([0,1],[0,1])
+backend = Aer.get_backend('qasm_simulator')
+print(backend.run(qc, shots=1000).result().get_counts())
+"</div>
+    <p style="color:var(--text-dim);font-size:0.82rem;margin-top:8px">Simulator first. Compare to classical baseline. Hardware only with cost approval.</p>
+  </div>
+
+  <div id="combo-sa-cost" class="combo-detail">
+    <h3>Standalone: Cost Reduction</h3>
+    <p>Step 1: Check current context size with Lens (context-auditor-lens.md).</p>
+    <p>Step 2: If session is long, run /compact. Relay writes the handoff note first.</p>
+    <p>Step 3: Switch to Haiku 4.5 for tasks that do not need Sonnet.</p>
+    <p>Step 4: Slim MCP tool schemas — remove tools the agent never calls.</p>
+    <p>Step 5: Add prompt caching to the system prompt.</p>
+    <p style="margin-top:8px"><span class="chip chip-green">See docs/TOKEN-EFFICIENCY.md for the full checklist</span></p>
+  </div>
+
+  <div id="combo-sa-copilot" class="combo-detail">
+    <h3>Standalone: Copilot Studio</h3>
+    <p>Start with one REST action. Do not start with MCP until the REST action works.</p>
+    <div class="code-block"># Serve a local bridge for testing
+cd examples/copilot-studio
+python -m http.server 8787
+# Then add the URL as a custom connector in Copilot Studio</div>
+    <p style="color:var(--text-dim);font-size:0.82rem;margin-top:8px">See docs/COPILOT-STUDIO-INTEGRATION.md.</p>
+  </div>
+
+  <div id="combo-sa-mobile" class="combo-detail">
+    <h3>Standalone: Mobile App</h3>
+    <div class="code-block">npx create-expo-stack@latest my-app --expo-router --nativewind
+cd my-app && npx expo start</div>
+    <p style="color:var(--text-dim);font-size:0.82rem;margin-top:8px">Start the app alone. Add the agent API endpoint later. Keep secrets out of the bundle.</p>
+  </div>
+</div>
+
+<!-- COMBINATIONS -->
+<div id="diagram-combinations" class="diagram-area">
+  <div class="section-label">Named stack recipes — click to see repos, install commands, and wire-up steps</div>
+  <div class="combo-grid">
+    <div class="combo-card" onclick="showCombo('c-core')"><h4>Core Agent Stack</h4><p>Squad + LightRAG + AgentMemory + Filesystem MCP</p></div>
+    <div class="combo-card" onclick="showCombo('c-ms')"><h4>Microsoft Stack</h4><p>Microsoft Agents + Copilot Studio + Aspire + MCP</p></div>
+    <div class="combo-card" onclick="showCombo('c-cost')"><h4>Cost-Efficient LLM</h4><p>Context-Gateway + LLMLingua + token-optimizer-mcp</p></div>
+    <div class="combo-card" onclick="showCombo('c-market')"><h4>Market Research</h4><p>OpenBB + FinRobot + TradingAgents + yfinance</p></div>
+    <div class="combo-card" onclick="showCombo('c-trading')"><h4>Autonomous Trading</h4><p>Day-trading plugin + Alpaca MCP + Sage risk gate</p></div>
+    <div class="combo-card" onclick="showCombo('c-quantum')"><h4>Quantum Sidecar</h4><p>Qiskit + qiskit-finance + quantum-trading-agent</p></div>
+    <div class="combo-card" onclick="showCombo('c-mcp')"><h4>Full MCP Stack</h4><p>Filesystem + GitHub + Playwright + Context7</p></div>
+    <div class="combo-card" onclick="showCombo('c-security')"><h4>Security Stack</h4><p>Sentinel + Lock + Ghost + GitHub MCP</p></div>
+  </div>
+
+  <div id="combo-c-core" class="combo-detail">
+    <h3>Core Agent Stack</h3>
+    <p>Build an agent team that reasons over your codebase, remembers decisions, and calls tools safely.</p>
+    <div class="code-block">npm install -g @bradygaster/squad-cli @agentmemory/agentmemory
+pip install lightrag-hku
+npx -y @modelcontextprotocol/server-filesystem YOUR_PROJECT_PATH</div>
+    <p style="margin-top:8px"><span class="chip chip-blue">docs/COMBINING-REPOS.md → Recipe 1</span></p>
+  </div>
+
+  <div id="combo-c-ms" class="combo-detail">
+    <h3>Microsoft Stack</h3>
+    <p>Enterprise agent with Copilot Studio frontend and .NET backend.</p>
+    <div class="code-block">dotnet tool install -g Microsoft.Agents.CLI
+npm install -g @microsoft/m365agentstoolkit-cli
+agents init my-enterprise-agent</div>
+    <p style="margin-top:8px"><span class="chip chip-blue">docs/COMBINING-REPOS.md → Recipe 2</span></p>
+  </div>
+
+  <div id="combo-c-cost" class="combo-detail">
+    <h3>Cost-Efficient LLM Stack</h3>
+    <p>Compress, cache, and route to the cheapest model that works.</p>
+    <div class="code-block">pip install llmlingua
+npx -y ooples-token-optimizer-mcp
+# Then follow TOKEN-EFFICIENCY.md checklist</div>
+    <p style="margin-top:8px"><span class="chip chip-green">docs/TOKEN-EFFICIENCY.md</span> <span class="chip chip-blue">docs/COMBINING-REPOS.md → Recipe 3</span></p>
+  </div>
+
+  <div id="combo-c-market" class="combo-detail">
+    <h3>Market Research Stack</h3>
+    <p>Research stocks, sectors, and market trends using open data.</p>
+    <div class="code-block">pip install openbb yfinance pandas matplotlib ta
+# Wire: Orion (research) → Nova (allocation) → Sage (risk gate)</div>
+    <p style="margin-top:8px"><span class="chip chip-blue">docs/COMBINING-REPOS.md → Recipe 4</span></p>
+  </div>
+
+  <div id="combo-c-trading" class="combo-detail">
+    <h3>Autonomous Trading Stack</h3>
+    <p>Paper-trading with signal generation, backtesting, and risk gates. Paper mode only by default.</p>
+    <div class="code-block">cd plugins/autonomous-day-trading-agent
+python -m pip install -e .
+autonomous-day-trading-agent smoke-test --risk risk_limits.example.json
+# Wire: Rex → Sage (approval gate) → Maxwell (coordinator)</div>
+    <p style="margin-top:8px"><span class="chip chip-yellow">Paper mode. Sage approves. Human approves live.</span></p>
+  </div>
+
+  <div id="combo-c-quantum" class="combo-detail">
+    <h3>Quantum Sidecar Stack</h3>
+    <p>Quantum optimization alongside a classical workflow. Simulator first, always.</p>
+    <div class="code-block">pip install qiskit qiskit-finance qiskit-optimization pennylane
+# Wire: Helix (lab) → Qubit (finance) → Rex (paper execution)</div>
+    <p style="margin-top:8px"><span class="chip chip-blue">docs/COMBINING-REPOS.md → Recipe 6</span></p>
+  </div>
+
+  <div id="combo-c-mcp" class="combo-detail">
+    <h3>Full MCP Stack</h3>
+    <div class="code-block">npx -y @modelcontextprotocol/server-filesystem YOUR_PATH
+docker run -i --rm -e GITHUB_TOOLSETS="repos,issues" ghcr.io/github/github-mcp-server
+npx -y @microsoft/playwright-mcp
+npx -y @upstash/context7-mcp</div>
+    <p style="margin-top:8px"><span class="chip chip-blue">docs/MCP-SERVERS.md</span> <span class="chip chip-blue">docs/COMBINING-REPOS.md → Recipe 7</span></p>
+  </div>
+
+  <div id="combo-c-security" class="combo-detail">
+    <h3>Security Stack</h3>
+    <div class="code-block"># Run Lock before every commit
+detect-secrets scan > .secrets.baseline
+# Run Sentinel monthly
+# Wire: Lock (pre-commit) → Sentinel (monthly) → Ghost (threat modeling) → Lex (compliance)</div>
+    <p style="margin-top:8px"><span class="chip chip-blue">docs/SECURITY.md</span> <span class="chip chip-blue">docs/COMBINING-REPOS.md → Recipe 9</span></p>
+  </div>
+</div>
+
+<!-- TRADING FLOW -->
+<div id="diagram-trading" class="diagram-area">
+  <div class="section-label">Click any node to see the safety detail</div>
+  <div class="flow">
+    <div class="flow-node entry" onclick="showDetail('t-data')"><div class="dot dot-blue"></div>Market data · Watchlist · News — OpenBB · yfinance · broker API</div>
+    <div class="arrow">↓</div>
+    <div class="flow-node" onclick="showDetail('t-signal')"><div class="dot dot-green"></div>Strategy signal — momentum · mean-reversion · ML signal · Vibe-Trading</div>
+    <div class="arrow">↓</div>
+    <div class="flow-node" onclick="showDetail('t-backtest')"><div class="dot dot-green"></div>Backtest &amp; baseline — historical data · Backtrader · paper results</div>
+    <div class="arrow">↓</div>
+    <div class="flow-node gate" onclick="showDetail('t-risk')"><div class="dot dot-yellow"></div>Risk gates — Sage checks position size · daily loss · correlation</div>
+    <div class="arrow">↓</div>
+    <div class="flow-node gate" onclick="showDetail('t-paper')"><div class="dot dot-yellow"></div>Paper broker — Alpaca paper · audit log written · report to human</div>
+    <div class="arrow">↓</div>
+    <div class="flow-node gate" onclick="showDetail('t-approval')"><div class="dot dot-yellow"></div>Human approval gate — required before ANY live order</div>
+    <div class="arrow">↓</div>
+    <div class="flow-node terminal" onclick="showDetail('t-live')"><div class="dot dot-gray"></div>Optional live broker adapter — audited adapter only after full review</div>
+  </div>
+
+  <div id="detail-t-data" class="detail-panel"><h3>Market Data</h3><ul><li>OpenBB — multi-source market data platform (free tier)</li><li>yfinance — Yahoo Finance historical prices</li><li>Alpaca MCP — paper account state, recent orders</li><li>Always use public/free data first before paid data feeds</li></ul></div>
+  <div id="detail-t-signal" class="detail-panel"><h3>Strategy Signal</h3><ul><li>Rex (trading-rex.md) — the execution agent for signals</li><li>TradingAgents — multi-agent signal framework</li><li>Vibe-Trading — HKUDS market intelligence</li><li>Signals are data — not orders. They go to the risk gate first.</li></ul></div>
+  <div id="detail-t-backtest" class="detail-panel"><h3>Backtest</h3><ul><li>Run: autonomous-day-trading-agent backtest --bars data/sample.csv</li><li>Compare against a buy-and-hold baseline</li><li>Backtest results do not guarantee live performance</li></ul></div>
+  <div id="detail-t-risk" class="detail-panel"><h3>Risk Gates</h3><ul><li>Sage (risk-sage.md) is the mandatory approval layer</li><li>Checks: position size, daily loss limit, correlation, live mode</li><li>Returns: APPROVED / DENIED / ESCALATE</li><li>Can never be bypassed by Rex or any other agent</li></ul></div>
+  <div id="detail-t-paper" class="detail-panel"><h3>Paper Broker</h3><ul><li>Alpaca paper mode: set ALPACA_PAPER=true</li><li>Every order written to audit log</li><li>No real money involved at this stage</li></ul></div>
+  <div id="detail-t-approval" class="detail-panel"><h3>Human Approval Gate</h3><ul><li>Live trading requires: human types "Rex: live mode approved" in this conversation</li><li>Sage must return APPROVED for the specific order</li><li>Maxwell logs the approval</li><li>This gate cannot be automated — human must be in the loop</li></ul></div>
+  <div id="detail-t-live" class="detail-panel"><h3>Live Broker Adapter</h3><ul><li>Only after: smoke test, backtest, paper test, risk audit, human approval</li><li>Supported: Alpaca, IBKR, Schwab, Tradier, Tastytrade, Coinbase</li><li>See docs/BROKER-APP-INTEGRATIONS.md for setup</li></ul></div>
+</div>
+
+<!-- COST FLOW -->
+<div id="diagram-cost" class="diagram-area">
+  <div class="section-label">Token efficiency and cost control flow</div>
+  <div class="flow">
+    <div class="flow-node entry" onclick="showDetail('c-before')"><div class="dot dot-blue"></div>Before a run — check context, pick model tier, set token budget</div>
+    <div class="arrow">↓</div>
+    <div class="flow-node" onclick="showDetail('c-cache')"><div class="dot dot-green"></div>Prompt caching — cache system prompt and tool schemas</div>
+    <div class="arrow">↓</div>
+    <div class="flow-node" onclick="showDetail('c-compress')"><div class="dot dot-green"></div>Context compression — LLMLingua · Context-Gateway · RAG retrieval</div>
+    <div class="arrow">↓</div>
+    <div class="flow-node" onclick="showDetail('c-slim')"><div class="dot dot-green"></div>Tool schema slimming — expose only tools needed for this agent</div>
+    <div class="arrow">↓</div>
+    <div class="flow-node gate" onclick="showDetail('c-mid')"><div class="dot dot-yellow"></div>Mid-run — monitor token usage. Over 50%? Run /compact</div>
+    <div class="arrow">↓</div>
+    <div class="flow-node" onclick="showDetail('c-route')"><div class="dot dot-green"></div>Model routing — Haiku for simple tasks, Sonnet for most, Opus for deep</div>
+    <div class="arrow">↓</div>
+    <div class="flow-node terminal" onclick="showDetail('c-audit')"><div class="dot dot-gray"></div>Post-run audit — Penny reviews cost, flags for next session</div>
+  </div>
+
+  <div id="detail-c-before" class="detail-panel"><h3>Before a Run</h3><ul><li>Run Lens (context-auditor-lens.md) to check what is in context</li><li>Count tokens before sending a large prompt (anthropic.messages.count_tokens)</li><li>Set ANTHROPIC_MAX_TOKENS to cap the session</li><li>Choose the cheapest model that can do the task</li></ul></div>
+  <div id="detail-c-cache" class="detail-panel"><h3>Prompt Caching</h3><ul><li>Add cache_control: {type: "ephemeral"} to your system prompt</li><li>Cache TTL: 5 minutes in the Anthropic API</li><li>Saves: input token cost on every cached call</li><li>Best for: agent system prompts, tool schemas, stable repo catalogs</li></ul></div>
+  <div id="detail-c-compress" class="detail-panel"><h3>Context Compression</h3><ul><li>LLMLingua — compress long documents by 50% while preserving meaning</li><li>Context-Gateway — proxy layer that compresses before sending to LLM</li><li>RAG retrieval — retrieve top-3 chunks instead of loading whole documents</li></ul></div>
+  <div id="detail-c-slim" class="detail-panel"><h3>Tool Schema Slimming</h3><ul><li>Use GITHUB_TOOLSETS to limit which GitHub tools are exposed</li><li>Remove tool descriptions over 50 words — trim to the core</li><li>Remove optional parameters the agent never uses</li><li>Run MCP inspector to see actual schema sizes</li></ul></div>
+  <div id="detail-c-mid" class="detail-panel"><h3>Mid-Run /compact</h3><ul><li>Relay writes a handoff note first (agents/handoff-relay.md)</li><li>Type /compact in Claude Code</li><li>Context window resets, handoff note preserved</li><li>Session continues from the checkpoint</li></ul></div>
+  <div id="detail-c-route" class="detail-panel"><h3>Model Routing</h3><ul><li>Haiku 4.5 ($0.80/$4.00 per 1M): scanning, classification, summarization</li><li>Sonnet 4.6 ($3.00/$15.00 per 1M): code, analysis, most agent tasks</li><li>Opus 4.8 ($15.00/$75.00 per 1M): security, architecture, deep reasoning</li><li>Fable 5: long-form writing, narrative, pitch decks</li></ul></div>
+  <div id="detail-c-audit" class="detail-panel"><h3>Post-Run Audit</h3><ul><li>Penny reviews the session: system prompt size, tool schemas, model tier</li><li>Penny flags if Opus was used where Sonnet would suffice</li><li>Penny estimates cost per session and gives top 3 optimizations</li><li>Findings go to issues/ for next session</li></ul></div>
+</div>
+
+<!-- AGENTS ROSTER -->
+<div id="diagram-agents" class="diagram-area">
+  <div class="section-label">Full agent roster — click a category to expand</div>
+  <div style="font-size:0.85rem;line-height:1.8;">
+    <p><strong>Orchestration:</strong> <span class="chip chip-green">Maxwell</span> <span class="chip chip-green">Iris</span> <span class="chip chip-blue">Relay</span> <span class="chip chip-blue">Cron</span></p>
+    <p><strong>Research:</strong> <span class="chip chip-blue">Aria</span> <span class="chip chip-blue">Dex</span> <span class="chip chip-blue">Orion</span> <span class="chip chip-blue">Prism</span> <span class="chip chip-blue">Beacon</span></p>
+    <p><strong>Business:</strong> <span class="chip chip-blue">Clara</span> <span class="chip chip-blue">Rho</span> <span class="chip chip-blue">Spark</span> <span class="chip chip-blue">Deck</span> <span class="chip chip-blue">Funnel</span> <span class="chip chip-blue">Quill</span></p>
+    <p><strong>Dev:</strong> <span class="chip chip-green">Atlas</span> <span class="chip chip-green">Stack</span> <span class="chip chip-green">Canvas</span> <span class="chip chip-green">Build</span> <span class="chip chip-green">Pipe</span> <span class="chip chip-green">Probe</span> <span class="chip chip-green">Vera</span> <span class="chip chip-green">Trace</span></p>
+    <p><strong>Architecture:</strong> <span class="chip chip-blue">Eden</span> <span class="chip chip-blue">Nimbus</span> <span class="chip chip-blue">Schema</span> <span class="chip chip-blue">Bridge</span> <span class="chip chip-blue">Volt</span></p>
+    <p><strong>Security:</strong> <span class="chip chip-yellow">Sentinel</span> <span class="chip chip-yellow">Ghost</span> <span class="chip chip-yellow">Lex</span> <span class="chip chip-yellow">Lock</span></p>
+    <p><strong>Finance:</strong> <span class="chip chip-yellow">Rex</span> <span class="chip chip-yellow">Qubit</span> <span class="chip chip-yellow">Nova</span> <span class="chip chip-yellow">Sage</span> <span class="chip chip-yellow">Connect</span></p>
+    <p><strong>Infra/Cost:</strong> <span class="chip chip-blue">Cirrus</span> <span class="chip chip-blue">Penny</span> <span class="chip chip-blue">Forge</span></p>
+    <p><strong>Knowledge:</strong> <span class="chip chip-blue">Vector</span> <span class="chip chip-blue">Recall</span> <span class="chip chip-blue">Memo</span></p>
+    <p><strong>Copilot:</strong> <span class="chip chip-blue">Nexus</span> <span class="chip chip-blue">Weave</span></p>
+    <p><strong>Onboarding:</strong> <span class="chip chip-green">Guide</span> <span class="chip chip-green">Help</span></p>
+    <p><strong>Quantum:</strong> <span class="chip chip-blue">Helix</span></p>
+    <p><strong>Cross-cutting:</strong> <span class="chip chip-blue">Commit</span> <span class="chip chip-blue">Lens</span> <span class="chip chip-blue">Delta</span> <span class="chip chip-blue">Echo</span> <span class="chip chip-blue">Pulse</span> <span class="chip chip-blue">Tempo</span> <span class="chip chip-blue">Ally</span></p>
+    <br>
+    <p style="color:var(--text-dim)">See <code>agents/AGENTS-OVERVIEW.md</code> for the full table with links to each agent file, tools, and cost profiles.</p>
+  </div>
+</div>
+
+<script>
+function showDiagram(id) {
+  document.querySelectorAll('.diagram-area').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('diagram-' + id).classList.add('active');
+  event.target.classList.add('active');
+  closeAllDetails();
+}
+
+function showDetail(id) {
+  document.querySelectorAll('.detail-panel').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected'));
+  const panel = document.getElementById('detail-' + id);
+  if (panel) panel.classList.add('active');
+  event.currentTarget.classList.add('selected');
+}
+
+function showCombo(id) {
+  document.querySelectorAll('.combo-detail').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.combo-card').forEach(c => c.classList.remove('active-combo'));
+  const detail = document.getElementById('combo-' + id);
+  if (detail) detail.classList.add('active');
+  event.currentTarget.classList.add('active-combo');
+}
+
+function closeAllDetails() {
+  document.querySelectorAll('.detail-panel').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.combo-detail').forEach(d => d.classList.remove('active'));
+}
+</script>
+</body>
+</html>

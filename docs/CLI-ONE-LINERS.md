@@ -346,6 +346,150 @@ WSL/Bash:
 read -rp "Folder to search: " search_root; rg "context compaction|RAG|MCP|agent memory|quantum|trading|cost" "$search_root"
 ```
 
+## Repo Health Check
+
+Check one repo's status via GitHub API, PowerShell:
+
+```powershell
+$Repo = Read-Host "owner/repo (e.g. HKUDS/LightRAG)"
+$Headers = if ($env:GITHUB_TOKEN) { @{Authorization = "Bearer $env:GITHUB_TOKEN"} } else { @{} }
+$Info = Invoke-RestMethod "https://api.github.com/repos/$Repo" -Headers $Headers
+[PSCustomObject]@{Repo=$Repo; Archived=$Info.archived; LastPush=$Info.pushed_at; Stars=$Info.stargazers_count} | Format-Table
+```
+
+Bulk check all curated repos, WSL/Bash:
+
+```bash
+read -rp "Path to Master-Repo-Use: " master_repo
+grep -vE '^(#|$)' "$master_repo/repo-lists/all-curated.txt" | while read -r repo; do
+  result=$(gh api "repos/$repo" --jq '{archived:.archived,pushed:.pushed_at}' 2>/dev/null || echo "api-error")
+  echo "$repo | $result"
+done
+```
+
+## Token Counting Before a Run
+
+Count tokens without sending, Python:
+
+```python
+import anthropic
+client = anthropic.Anthropic()
+response = client.messages.count_tokens(
+    model="claude-sonnet-4-6",
+    system="Your system prompt here",
+    messages=[{"role": "user", "content": "Your message here"}]
+)
+print(f"Input tokens: {response.input_tokens}")
+print(f"Estimated cost (Sonnet): ${response.input_tokens / 1_000_000 * 3:.4f}")
+```
+
+## Agent File Scaffold
+
+Create a new agent `.md` from a template, PowerShell:
+
+```powershell
+$AgentName = Read-Host "Agent file name (kebab-case, e.g. my-new-agent)"
+$RepoRoot = Read-Host "Path to Master-Repo-Use"
+$OutPath = Join-Path $RepoRoot "agents\$AgentName.md"
+@"
+# $((Get-Culture).TextInfo.ToTitleCase($AgentName.Replace('-',' ')))
+
+**Job:** [Job title]
+**Category:** [Category]
+**Model tier:** Sonnet 4.6
+
+---
+
+## Persona
+
+[Describe the persona]
+
+## System Prompt
+
+``````text
+[System prompt here]
+``````
+
+## Knowledge Base Setup
+
+[What to index]
+
+## Tools To Attach
+
+| Tool | Purpose |
+|---|---|
+| filesystem (read/write) | [describe] |
+
+## Escalation Rules
+
+- [Rule 1]
+
+## Cost Profile
+
+| Item | Estimate |
+|---|---|
+| Model | Sonnet 4.6 |
+| Tokens per session | ~[range] |
+"@ | Out-File -FilePath $OutPath -Encoding utf8
+Write-Host "Agent scaffolded at $OutPath"
+```
+
+## MCP Server Start and Test
+
+Start filesystem MCP, then open inspector:
+
+```powershell
+$AllowedPath = Read-Host "Folder the MCP server may access"
+Start-Job { npx -y @modelcontextprotocol/server-filesystem $using:AllowedPath }
+npx @modelcontextprotocol/inspector npx @modelcontextprotocol/server-filesystem $AllowedPath
+```
+
+Start GitHub MCP with limited toolsets:
+
+```bash
+docker run -i --rm \
+  -e GITHUB_PERSONAL_ACCESS_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKEN" \
+  -e GITHUB_TOOLSETS="repos,issues" \
+  ghcr.io/github/github-mcp-server
+```
+
+## GitHub CLI Bulk Operations
+
+Fork all repos in a list:
+
+```bash
+read -rp "Repo list file (full path): " list_file
+grep -vE '^(#|$)' "$list_file" | while read -r repo; do
+  gh repo fork "$repo" --clone=false 2>/dev/null && echo "Forked: $repo" || echo "Skip (already forked or error): $repo"
+done
+```
+
+Create issues in bulk (one per line in a file):
+
+```bash
+read -rp "Target repo (owner/repo): " target_repo
+read -rp "Issues file (one title per line): " issues_file
+while IFS= read -r title; do
+  gh issue create --repo "$target_repo" --title "$title" --body "Auto-created by Iris health check."
+done < "$issues_file"
+```
+
+## Open Interactive Diagram
+
+PowerShell:
+
+```powershell
+$RepoRoot = Read-Host "Path to Master-Repo-Use"
+Start-Process (Join-Path $RepoRoot "assets\interactive-diagram.html")
+```
+
+WSL/Bash:
+
+```bash
+read -rp "Path to Master-Repo-Use: " repo_root
+xdg-open "$repo_root/assets/interactive-diagram.html" 2>/dev/null || open "$repo_root/assets/interactive-diagram.html"
+```
+
 ## Commit From Any Computer
 
 PowerShell:
