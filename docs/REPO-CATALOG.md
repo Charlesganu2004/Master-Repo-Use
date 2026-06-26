@@ -36,36 +36,48 @@ Pitch and hackathon stay standalone. They can consume summaries, screenshots, an
 
 Use [docs/STANDALONE-USAGE.md](STANDALONE-USAGE.md) when you want to try any lane by itself on a different computer before connecting it to the full stack.
 
-![Combination and use-case map](../assets/combination-use-map.svg)
+Open the interactive diagram: **[assets/interactive-diagram.html](../assets/interactive-diagram.html)** — 6 tabs covering main flow, standalone paths, combination stacks, trading safety gates, cost controls, and the 55-agent roster. Works offline in any browser.
 
-The map is the reading order for the catalog: choose a lane, inspect the first few repos in that lane, run the lane standalone, then connect it to the core runtime only when the sample works.
+```powershell
+# Open directly in default browser, PowerShell:
+Start-Process (Join-Path $PWD "assets\interactive-diagram.html")
+```
+
+```bash
+# WSL/Bash:
+xdg-open assets/interactive-diagram.html
+```
+
+The diagram is the reading order for the catalog: choose a lane, inspect the first few repos in that lane, run the lane standalone, then connect it to the core runtime only when the sample works.
 
 ## Agent Frameworks
 
-| Repo | Use it when | Fast start | Connects to |
-| --- | --- | --- | --- |
-| [bradygaster/squad](https://github.com/bradygaster/squad) | You want agent teams for projects and local automation. | `npm install -g @bradygaster/squad-cli` | Works well with repo lists, RAG, memory, and CLI workflows. |
-| [bradygaster/Squad-IRL](https://github.com/bradygaster/Squad-IRL) | You want real-world examples for Squad. | Clone and run the sample that matches your stack. | Companion examples for `squad`. |
-| [bradygaster/CustomAgent](https://github.com/bradygaster/CustomAgent) | You want a small custom-agent reference. | Clone, inspect scripts, adapt locally. | Good for prompt and persona experiments. |
-| [bradygaster/MultiAgent](https://github.com/bradygaster/MultiAgent) | You want a C# multi-agent sample. | Clone and run with the .NET SDK. | Good bridge to Microsoft agent and Aspire samples. |
-| [microsoft/agents](https://github.com/microsoft/agents) | You want the Microsoft 365 Agents SDK across channels. | Start from the samples folder or Microsoft quickstarts. | Teams, Microsoft 365 Copilot, Copilot Studio, Webchat. |
-| [OfficeDev/microsoft-365-agents-toolkit](https://github.com/OfficeDev/microsoft-365-agents-toolkit) | You want scaffolding, debugging, validation, and deployment tooling. | `npm install -g @microsoft/m365agentstoolkit-cli`; run `atk -h`. | Pairs with VS Code, Visual Studio, Microsoft 365 Agents SDK. |
-| [microsoft/Agents-for-net](https://github.com/microsoft/Agents-for-net) | You want .NET components for Microsoft 365 Agents SDK. | `dotnet new web`; `dotnet add package Microsoft.Agents.Hosting.AspNetCore`. | Best with .NET samples, Aspire, and Teams/M365 surfaces. |
-| [runagent-dev/runagent](https://github.com/runagent-dev/runagent) | You want a CLI-first way to run or deploy agents. | `pip install runagent` | Useful for terminal workflows and agent service packaging. |
-| [github/copilot-sdk](https://github.com/github/copilot-sdk) | You want to embed Copilot Agent behavior into apps/services. | Clone and follow the SDK docs for your platform. | Works with Copilot Agent, MCP, remote sessions, hooks. |
-| [github/copilot-cli](https://github.com/github/copilot-cli) | You want Copilot coding agent in the terminal. | `npm install -g @github/copilot` | Works with custom agents, MCP servers, `/context`, `/compact`, and session resume. |
+Status key: `active` = actively maintained · `experimental` = works but not production-hardened · `stale` = no recent activity, uncertain future · `deprecated` = officially replaced or unsupported
+
+| Repo | Use it when | Fast start | Connects to | Status |
+| --- | --- | --- | --- | --- |
+| [bradygaster/squad](https://github.com/bradygaster/squad) | You want agent teams for projects and local automation. | `npm install -g @bradygaster/squad-cli` | Works well with repo lists, RAG, memory, and CLI workflows. | active |
+| [bradygaster/Squad-IRL](https://github.com/bradygaster/Squad-IRL) | You want real-world examples for Squad. | Clone and run the sample that matches your stack. | Companion examples for `squad`. | active |
+| [bradygaster/CustomAgent](https://github.com/bradygaster/CustomAgent) | You want a small custom-agent reference. | Clone, inspect scripts, adapt locally. | Good for prompt and persona experiments. | experimental |
+| [bradygaster/MultiAgent](https://github.com/bradygaster/MultiAgent) | You want a C# multi-agent sample. | Clone and run with the .NET SDK. | Good bridge to Microsoft agent and Aspire samples. | active |
+| [microsoft/agents](https://github.com/microsoft/agents) | You want the Microsoft 365 Agents SDK across channels. | Start from the samples folder or Microsoft quickstarts. | Teams, Microsoft 365 Copilot, Copilot Studio, Webchat. | active |
+| [OfficeDev/microsoft-365-agents-toolkit](https://github.com/OfficeDev/microsoft-365-agents-toolkit) | You want scaffolding, debugging, validation, and deployment tooling. | `npm install -g @microsoft/m365agentstoolkit-cli`; run `atk -h`. | Pairs with VS Code, Visual Studio, Microsoft 365 Agents SDK. | active |
+| [microsoft/Agents-for-net](https://github.com/microsoft/Agents-for-net) | You want .NET components for Microsoft 365 Agents SDK. | `dotnet new web`; `dotnet add package Microsoft.Agents.Hosting.AspNetCore`. | Best with .NET samples, Aspire, and Teams/M365 surfaces. | active |
+| [runagent-dev/runagent](https://github.com/runagent-dev/runagent) | You want a CLI-first way to run or deploy agents. | `pip install runagent` | Useful for terminal workflows and agent service packaging. | experimental |
+| [github/copilot-sdk](https://github.com/github/copilot-sdk) | You want to embed Copilot Agent behavior into apps/services. | Clone and follow the SDK docs for your platform. | Works with Copilot Agent, MCP, remote sessions, hooks. | active |
+| [github/copilot-cli](https://github.com/github/copilot-cli) | You want Copilot coding agent in the terminal. | `npm install -g @github/copilot` | Works with custom agents, MCP servers, `/context`, `/compact`, and session resume. | active |
 
 ## RAG, Knowledge, And Memory
 
-| Repo | Use it when | Fast start | Connects to |
-| --- | --- | --- | --- |
-| [HKUDS/LightRAG](https://github.com/HKUDS/LightRAG) | You need fast retrieval-augmented generation over docs. | `uv tool install "lightrag-hku[api]"` | Feed agents with project docs and local knowledge. |
-| [bradygaster/AugmentR](https://github.com/bradygaster/AugmentR) | You want a .NET Aspire + Semantic Kernel + OpenAI RAG sample. | Clone and run with .NET/Aspire prerequisites. | Good for .NET agent backends. |
-| [varunon9/rag-langchain-nodejs](https://github.com/varunon9/rag-langchain-nodejs) | You want a Node.js LangChain RAG starter. | Clone, `npm install`, set provider/vector DB env vars. | Useful for JavaScript agent prototypes. |
-| [upstash/rag-chat](https://github.com/upstash/rag-chat) | You want a quick TypeScript SDK for RAG chat. | `pnpm add @upstash/rag-chat` or `npm i @upstash/rag-chat`. | Pairs with Upstash Vector. |
-| [upstash/vector-js](https://github.com/upstash/vector-js) | You need a TypeScript client for Upstash Vector. | `npm install @upstash/vector` | Use as vector storage under RAG apps. |
-| [satoshiman/rag-cli](https://github.com/satoshiman/rag-cli) | You want local-first RAG from the command line. | Clone, `npm install`, then use the CLI commands from its README. | Good for personal docs and local notes. |
-| [rohitg00/agentmemory](https://github.com/rohitg00/agentmemory) | You want persistent memory for coding agents. | `npm install -g @agentmemory/agentmemory` | Complements RAG by storing durable project facts and decisions. |
+| Repo | Use it when | Fast start | Connects to | Status |
+| --- | --- | --- | --- | --- |
+| [HKUDS/LightRAG](https://github.com/HKUDS/LightRAG) | You need fast retrieval-augmented generation over docs. | `uv tool install "lightrag-hku[api]"` | Feed agents with project docs and local knowledge. | active |
+| [bradygaster/AugmentR](https://github.com/bradygaster/AugmentR) | You want a .NET Aspire + Semantic Kernel + OpenAI RAG sample. | Clone and run with .NET/Aspire prerequisites. | Good for .NET agent backends. | experimental |
+| [varunon9/rag-langchain-nodejs](https://github.com/varunon9/rag-langchain-nodejs) | You want a Node.js LangChain RAG starter. | Clone, `npm install`, set provider/vector DB env vars. | Useful for JavaScript agent prototypes. | experimental |
+| [upstash/rag-chat](https://github.com/upstash/rag-chat) | You want a quick TypeScript SDK for RAG chat. | `pnpm add @upstash/rag-chat` or `npm i @upstash/rag-chat`. | Pairs with Upstash Vector. | active |
+| [upstash/vector-js](https://github.com/upstash/vector-js) | You need a TypeScript client for Upstash Vector. | `npm install @upstash/vector` | Use as vector storage under RAG apps. | active |
+| [satoshiman/rag-cli](https://github.com/satoshiman/rag-cli) | You want local-first RAG from the command line. | Clone, `npm install`, then use the CLI commands from its README. | Good for personal docs and local notes. | experimental |
+| [rohitg00/agentmemory](https://github.com/rohitg00/agentmemory) | You want persistent memory for coding agents. | `npm install -g @agentmemory/agentmemory` | Complements RAG by storing durable project facts and decisions. | experimental |
 
 ## Context And Token Management
 
@@ -119,26 +131,26 @@ Detailed guide: [docs/MCP-SERVERS.md](MCP-SERVERS.md).
 
 ## Finance, Trading, And Market Analysis
 
-| Repo or docs | Use it when | Connects to |
-| --- | --- | --- |
-| [jmfernandes/robin_stocks](https://github.com/jmfernandes/robin_stocks) | You want Robinhood research/account interactions from Python. | Standalone Robinhood research lane. |
-| [siropkin/robinhood-ai-trading-bot](https://github.com/siropkin/robinhood-ai-trading-bot) | You want a simple Robinhood bot example to study. | Educational bot patterns. |
-| [Robinhood Crypto API docs](https://docs.robinhood.com/crypto/trading/) | You want official Robinhood crypto API reference. | Official crypto trading API behavior. |
-| [OpenBB-finance/OpenBB](https://github.com/OpenBB-finance/OpenBB) | You need a financial data platform for analysts, quants, and AI agents. | Market research agents and Copilot Studio bridges. |
-| [tauricresearch/tradingagents](https://github.com/tauricresearch/tradingagents) | You want a multi-agent LLM trading framework. | Market agent workflows. |
-| [HKUDS/AI-Trader](https://github.com/HKUDS/AI-Trader) | You want agent-native automated trading research. | Paper-trading architecture. |
-| [MingyuJ666/Stockagent](https://github.com/MingyuJ666/Stockagent) | You want simulated stock-agent research. | Backtests and simulated markets. |
-| [ai4finance-foundation/finrobot](https://github.com/ai4finance-foundation/finrobot) | You want LLM financial analysis agents. | Reports, analysis, RAG. |
-| [AI4Finance-Foundation/FinGPT](https://github.com/AI4Finance-Foundation/FinGPT) | You want financial LLM research. | Sentiment and finance language tasks. |
-| [AI4Finance-Foundation/FinRL](https://github.com/AI4Finance-Foundation/FinRL) | You want financial reinforcement learning. | Backtesting and portfolio experiments. |
-| [quantconnect/Lean](https://github.com/quantconnect/Lean) | You want an algorithmic trading engine. | Strategy research and paper/live modes. |
-| [freqtrade/freqtrade](https://github.com/freqtrade/freqtrade) | You want crypto trading bot/backtesting tooling. | Crypto research and simulation. |
-| [mementum/backtrader](https://github.com/mementum/backtrader) | You want Python backtesting. | Historical strategy tests. |
-| [ranaroussi/yfinance](https://github.com/ranaroussi/yfinance) | You want quick market data. | Research scripts and notebooks. |
-| [xgboosted/pandas-ta-classic](https://github.com/xgboosted/pandas-ta-classic) | You want pandas technical analysis indicators. | Feature engineering. |
-| [bukosabino/ta](https://github.com/bukosabino/ta) | You want technical analysis indicators. | Feature engineering. |
-| [matplotlib/mplfinance](https://github.com/matplotlib/mplfinance) | You want financial charts. | Reports and decks. |
-| [georgezouq/awesome-ai-in-finance](https://github.com/georgezouq/awesome-ai-in-finance) | You want wider AI finance discovery. | Research queue. |
+| Repo or docs | Use it when | Connects to | Status |
+| --- | --- | --- | --- |
+| [jmfernandes/robin_stocks](https://github.com/jmfernandes/robin_stocks) | You want Robinhood research/account interactions from Python. | Standalone Robinhood research lane. | experimental |
+| [siropkin/robinhood-ai-trading-bot](https://github.com/siropkin/robinhood-ai-trading-bot) | You want a simple Robinhood bot example to study. | Educational bot patterns. | experimental |
+| [Robinhood Crypto API docs](https://docs.robinhood.com/crypto/trading/) | You want official Robinhood crypto API reference. | Official crypto trading API behavior. | active |
+| [OpenBB-finance/OpenBB](https://github.com/OpenBB-finance/OpenBB) | You need a financial data platform for analysts, quants, and AI agents. | Market research agents and Copilot Studio bridges. | active |
+| [tauricresearch/tradingagents](https://github.com/tauricresearch/tradingagents) | You want a multi-agent LLM trading framework. | Market agent workflows. | active |
+| [HKUDS/AI-Trader](https://github.com/HKUDS/AI-Trader) | You want agent-native automated trading research. | Paper-trading architecture. | experimental |
+| [MingyuJ666/Stockagent](https://github.com/MingyuJ666/Stockagent) | You want simulated stock-agent research. | Backtests and simulated markets. | experimental |
+| [ai4finance-foundation/finrobot](https://github.com/ai4finance-foundation/finrobot) | You want LLM financial analysis agents. | Reports, analysis, RAG. | active |
+| [AI4Finance-Foundation/FinGPT](https://github.com/AI4Finance-Foundation/FinGPT) | You want financial LLM research. | Sentiment and finance language tasks. | active |
+| [AI4Finance-Foundation/FinRL](https://github.com/AI4Finance-Foundation/FinRL) | You want financial reinforcement learning. | Backtesting and portfolio experiments. | active |
+| [quantconnect/Lean](https://github.com/quantconnect/Lean) | You want an algorithmic trading engine. | Strategy research and paper/live modes. | active |
+| [freqtrade/freqtrade](https://github.com/freqtrade/freqtrade) | You want crypto trading bot/backtesting tooling. | Crypto research and simulation. | active |
+| [mementum/backtrader](https://github.com/mementum/backtrader) | You want Python backtesting. | Historical strategy tests. | stale |
+| [ranaroussi/yfinance](https://github.com/ranaroussi/yfinance) | You want quick market data. | Research scripts and notebooks. | active |
+| [xgboosted/pandas-ta-classic](https://github.com/xgboosted/pandas-ta-classic) | You want pandas technical analysis indicators. | Feature engineering. | experimental |
+| [bukosabino/ta](https://github.com/bukosabino/ta) | You want technical analysis indicators. | Feature engineering. | stale |
+| [matplotlib/mplfinance](https://github.com/matplotlib/mplfinance) | You want financial charts. | Reports and decks. | active |
+| [georgezouq/awesome-ai-in-finance](https://github.com/georgezouq/awesome-ai-in-finance) | You want wider AI finance discovery. | Research queue. | active |
 
 Detailed guide: [docs/TRADING-MARKET-AGENTS.md](TRADING-MARKET-AGENTS.md).
 
@@ -148,15 +160,16 @@ Autonomous day-trading guide: [docs/AUTONOMOUS-DAY-TRADING.md](AUTONOMOUS-DAY-TR
 
 ## Autonomous Day-Trading And Investing Agents
 
-This lane is for agents and plugins that can generate trading signals, paper trade, and propose investment allocations. It cannot guarantee profit and should stay paper-first.
+This lane is for agents and plugins that can generate trading signals, paper trade, and propose investment allocations. It cannot guarantee profit and should stay paper-first. See [docs/AUTONOMOUS-DAY-TRADING.md](AUTONOMOUS-DAY-TRADING.md) for the full Rex → Sage → human approval flow.
 
-| Repo or docs | Use it when | Connects to |
-| --- | --- | --- |
-| [plugins/autonomous-day-trading-agent](../plugins/autonomous-day-trading-agent/README.md) | You want this repo's safe standalone plugin scaffold. | CSV signals, toy backtest, paper broker, invest-plan, risk gate. |
-| [HKUDS/Vibe-Trading](https://github.com/HKUDS/Vibe-Trading) | You want agentic trading experiments around Robinhood Agentic Trading/MCP ideas. | Broker app research and paper trading. |
-| [TradingAgents-AI/TradingAgents](https://github.com/TradingAgents-AI/TradingAgents) | You want another TradingAgents implementation to compare. | Multi-agent market research. |
-| [LIU-HONGYANG-GZU/Live_Trade_Bench](https://github.com/LIU-HONGYANG-GZU/Live_Trade_Bench) | You want a benchmark for LLM trading agents. | Evaluation before automation. |
-| [alpacahq/alpaca-mcp-server](https://github.com/alpacahq/alpaca-mcp-server) | You want broker tools exposed through MCP. | Paper broker tools before live toolsets. |
+| Repo or docs | Use it when | Connects to | Status |
+| --- | --- | --- | --- |
+| [plugins/autonomous-day-trading-agent](../plugins/autonomous-day-trading-agent/README.md) | You want this repo's safe standalone plugin scaffold. | CSV signals, toy backtest, paper broker, invest-plan, risk gate. | active |
+| [agents/trading-rex.md](../agents/trading-rex.md) | You want Rex, the paper-first trading agent. | Connects to Sage, Maxwell, Alpaca paper, and audit log. | active |
+| [HKUDS/Vibe-Trading](https://github.com/HKUDS/Vibe-Trading) | You want agentic trading experiments around Robinhood Agentic Trading/MCP ideas. | Broker app research and paper trading. | experimental |
+| [TradingAgents-AI/TradingAgents](https://github.com/TradingAgents-AI/TradingAgents) | You want another TradingAgents implementation to compare. | Multi-agent market research. | experimental |
+| [LIU-HONGYANG-GZU/Live_Trade_Bench](https://github.com/LIU-HONGYANG-GZU/Live_Trade_Bench) | You want a benchmark for LLM trading agents. | Evaluation before automation. | experimental |
+| [alpacahq/alpaca-mcp-server](https://github.com/alpacahq/alpaca-mcp-server) | You want broker tools exposed through MCP. | Paper broker tools before live toolsets. | active |
 | [Robinhood Agentic Trading](https://robinhood.com/us/en/support/articles/agentic-trading/) | You want Robinhood's agent-oriented route where available. | Official broker route review. |
 
 ## Quantum Computing

@@ -23,40 +23,40 @@ Market data, filings, news, watchlists, broker data
 
 ## Standalone Robinhood Lane
 
-| Repo or docs | Use it when | Note |
-| --- | --- | --- |
-| [jmfernandes/robin_stocks](https://github.com/jmfernandes/robin_stocks) | You want a Python library that can interact with Robinhood account, portfolio, stocks, options, and crypto data. | Community library; be careful with credentials and live orders. |
-| [siropkin/robinhood-ai-trading-bot](https://github.com/siropkin/robinhood-ai-trading-bot) | You want a small AI-powered Robinhood bot example to study. | Treat as educational, not production. |
-| [Robinhood Crypto API docs](https://docs.robinhood.com/crypto/trading/) | You want official Robinhood crypto trading API reference. | Prefer official APIs where available. |
-| [examples/copilot-agent/robinhood-research.agent.md](../examples/copilot-agent/robinhood-research.agent.md) | You want a standalone research-agent prompt. | Defaults to research and paper trading only. |
+| Repo or docs | Use it when | Note | Status |
+| --- | --- | --- | --- |
+| [jmfernandes/robin_stocks](https://github.com/jmfernandes/robin_stocks) | You want a Python library that can interact with Robinhood account, portfolio, stocks, options, and crypto data. | Community library; be careful with credentials and live orders. | experimental |
+| [siropkin/robinhood-ai-trading-bot](https://github.com/siropkin/robinhood-ai-trading-bot) | You want a small AI-powered Robinhood bot example to study. | Treat as educational, not production. | experimental |
+| [Robinhood Crypto API docs](https://docs.robinhood.com/crypto/trading/) | You want official Robinhood crypto trading API reference. | Prefer official APIs where available. | active |
+| [agents/broker-connect.md](../agents/broker-connect.md) | You want a dedicated broker-connect agent with Iris monitoring and paper-mode safety. | Replaces robinhood-research example for agent-based workflows. | active |
 
 ## Stock And Market Analysis Repos
 
-| Repo | Use it when | Connects to |
-| --- | --- | --- |
-| [OpenBB-finance/OpenBB](https://github.com/OpenBB-finance/OpenBB) | You need a financial data platform for analysts, quants, and AI agents. | RAG, Copilot Studio API bridge, notebooks. |
-| [ai4finance-foundation/finrobot](https://github.com/ai4finance-foundation/finrobot) | You want financial analysis agents using LLMs. | Market research agents and report generation. |
-| [AI4Finance-Foundation/FinGPT](https://github.com/AI4Finance-Foundation/FinGPT) | You want financial LLM research and models. | Domain language models and sentiment/research tasks. |
-| [LIU-HONGYANG-GZU/Live_Trade_Bench](https://github.com/LIU-HONGYANG-GZU/Live_Trade_Bench) | You want a benchmark for LLM financial trading agents. | Evaluate before automation. |
-| [ranaroussi/yfinance](https://github.com/ranaroussi/yfinance) | You want quick Yahoo Finance data access from Python. | Prototypes, notebooks, research. |
-| [matplotlib/mplfinance](https://github.com/matplotlib/mplfinance) | You want financial charting. | Reports, dashboards, pitch demos. |
-| [xgboosted/pandas-ta-classic](https://github.com/xgboosted/pandas-ta-classic) | You want technical analysis indicators in pandas. | Backtests and market feature pipelines. |
-| [bukosabino/ta](https://github.com/bukosabino/ta) | You want another technical-analysis library. | Feature engineering for agents and models. |
-| [georgezouq/awesome-ai-in-finance](https://github.com/georgezouq/awesome-ai-in-finance) | You want a broader AI-in-finance discovery list. | Research queue. |
+| Repo | Use it when | Connects to | Status |
+| --- | --- | --- | --- |
+| [OpenBB-finance/OpenBB](https://github.com/OpenBB-finance/OpenBB) | You need a financial data platform for analysts, quants, and AI agents. | RAG, Copilot Studio API bridge, notebooks. | active |
+| [ai4finance-foundation/finrobot](https://github.com/ai4finance-foundation/finrobot) | You want financial analysis agents using LLMs. | Market research agents and report generation. | active |
+| [AI4Finance-Foundation/FinGPT](https://github.com/AI4Finance-Foundation/FinGPT) | You want financial LLM research and models. | Domain language models and sentiment/research tasks. | active |
+| [LIU-HONGYANG-GZU/Live_Trade_Bench](https://github.com/LIU-HONGYANG-GZU/Live_Trade_Bench) | You want a benchmark for LLM financial trading agents. | Evaluate before automation. | experimental |
+| [ranaroussi/yfinance](https://github.com/ranaroussi/yfinance) | You want quick Yahoo Finance data access from Python. | Prototypes, notebooks, research. | active |
+| [matplotlib/mplfinance](https://github.com/matplotlib/mplfinance) | You want financial charting. | Reports, dashboards, pitch demos. | active |
+| [xgboosted/pandas-ta-classic](https://github.com/xgboosted/pandas-ta-classic) | You want technical analysis indicators in pandas. | Backtests and market feature pipelines. | experimental |
+| [bukosabino/ta](https://github.com/bukosabino/ta) | You want another technical-analysis library. | Feature engineering for agents and models. | stale |
+| [georgezouq/awesome-ai-in-finance](https://github.com/georgezouq/awesome-ai-in-finance) | You want a broader AI-in-finance discovery list. | Research queue. | active |
 
 ## Trading Agent And Backtesting Repos
 
-| Repo | Use it when | Connects to |
-| --- | --- | --- |
-| [tauricresearch/tradingagents](https://github.com/tauricresearch/tradingagents) | You want a multi-agent LLM financial trading framework. | Research agents, market debates, analysis workflows. |
-| [HKUDS/Vibe-Trading](https://github.com/HKUDS/Vibe-Trading) | You want agentic trading experiments around Robinhood Agentic Trading/MCP ideas. | Research and paper mode. |
-| [TradingAgents-AI/TradingAgents](https://github.com/TradingAgents-AI/TradingAgents) | You want another TradingAgents implementation to compare. | Research and paper mode. |
-| [HKUDS/AI-Trader](https://github.com/HKUDS/AI-Trader) | You want an agent-native automated trading research repo. | Research and paper-trading architecture. |
-| [MingyuJ666/Stockagent](https://github.com/MingyuJ666/Stockagent) | You want stock trading in simulated real-world environments. | Backtesting and simulated trading. |
-| [AI4Finance-Foundation/FinRL](https://github.com/AI4Finance-Foundation/FinRL) | You want financial reinforcement learning. | Training, simulation, portfolio experiments. |
-| [quantconnect/Lean](https://github.com/quantconnect/Lean) | You want an algorithmic trading engine for backtesting/live research. | Backtests, strategy research, paper trading. |
-| [mementum/backtrader](https://github.com/mementum/backtrader) | You want classic Python backtesting. | Historical strategy tests. |
-| [freqtrade/freqtrade](https://github.com/freqtrade/freqtrade) | You want crypto trading bot/backtesting tooling. | Crypto research and paper trading. |
+| Repo | Use it when | Connects to | Status |
+| --- | --- | --- | --- |
+| [tauricresearch/tradingagents](https://github.com/tauricresearch/tradingagents) | You want a multi-agent LLM financial trading framework. | Research agents, market debates, analysis workflows. | active |
+| [HKUDS/Vibe-Trading](https://github.com/HKUDS/Vibe-Trading) | You want agentic trading experiments around Robinhood Agentic Trading/MCP ideas. | Research and paper mode. | experimental |
+| [TradingAgents-AI/TradingAgents](https://github.com/TradingAgents-AI/TradingAgents) | You want another TradingAgents implementation to compare. | Research and paper mode. | experimental |
+| [HKUDS/AI-Trader](https://github.com/HKUDS/AI-Trader) | You want an agent-native automated trading research repo. | Research and paper-trading architecture. | experimental |
+| [MingyuJ666/Stockagent](https://github.com/MingyuJ666/Stockagent) | You want stock trading in simulated real-world environments. | Backtesting and simulated trading. | experimental |
+| [AI4Finance-Foundation/FinRL](https://github.com/AI4Finance-Foundation/FinRL) | You want financial reinforcement learning. | Training, simulation, portfolio experiments. | active |
+| [quantconnect/Lean](https://github.com/quantconnect/Lean) | You want an algorithmic trading engine for backtesting/live research. | Backtests, strategy research, paper trading. | active |
+| [mementum/backtrader](https://github.com/mementum/backtrader) | You want classic Python backtesting. | Historical strategy tests. | stale |
+| [freqtrade/freqtrade](https://github.com/freqtrade/freqtrade) | You want crypto trading bot/backtesting tooling. | Crypto research and paper trading. | active |
 
 ## Day Trading And Broker Tooling
 

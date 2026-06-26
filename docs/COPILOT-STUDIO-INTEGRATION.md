@@ -104,6 +104,32 @@ Copilot Studio + MCP cost is usually not a single line item. Watch these cost bu
 
 Keep the bridge boring: validate inputs, call one specialist service, return small structured output.
 
+## Named Agents That Support Copilot Studio Flows
+
+These agents from `agents/` are designed to work as Copilot Studio backends or connectors:
+
+| Agent | File | Copilot Studio role |
+| --- | --- | --- |
+| Nexus | [agents/integration-nexus.md](../agents/integration-nexus.md) | API bridge builder. Creates the connector between Copilot Studio topics and external services (MCP, REST, RAG). |
+| Bridge | [agents/platform-bridge.md](../agents/platform-bridge.md) | Multi-platform connector. Routes requests from Copilot Studio to the right backend (Microsoft Agent, Squad, RunAgent, or Claude Code agent). |
+| Weave | [agents/workflow-weave.md](../agents/workflow-weave.md) | Workflow connector builder. Designs and validates the OpenAPI action shape that Copilot Studio calls. |
+| Maxwell | [agents/orchestrator-maxwell.md](../agents/orchestrator-maxwell.md) | Master orchestrator. Can receive routed tasks from Copilot Studio via an API bridge and dispatch to Rex, Sentinel, Aria, etc. |
+| Penny | [agents/cost-penny.md](../agents/cost-penny.md) | Cost auditor. Use in cost-reduction workflows triggered from Copilot Studio. |
+
+### Penny Cost Tips for Copilot Studio
+
+When Penny reviews a Copilot Studio + MCP setup, she looks for:
+
+| Cost driver | Penny's recommendation |
+| --- | --- |
+| Large tool schemas | Slim to required fields only. Use `$schema` and remove unused enum values. |
+| Full-doc retrieval | Use retrieval-before-generation: retrieve top-3 chunks, not the whole document. |
+| Repeated market data calls | Cache with TTL. Never call live market APIs on every message turn. |
+| Playwright screenshots | Use only when a DOM-aware tool cannot answer. Screenshots are expensive tokens. |
+| Long tool output in context | Summarize before returning to the model. Use Copilot Studio's `Summarize` step or an API bridge summary. |
+| Copilot Studio session/message count | Limit active topics; archive unused topics. |
+| Model-tier mismatch | Use Haiku 4.5 for routing and classification; Sonnet 4.6 for reasoning; Opus 4.8 for security audits only. |
+
 ## Repos To Pair With Copilot Studio
 
 | Need | Repos |

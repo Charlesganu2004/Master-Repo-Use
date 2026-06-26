@@ -176,6 +176,74 @@ Use custom agents when you want repeatable behavior, for example:
 
 An inactive starter prompt lives at [examples/copilot-agent/repo-curator.agent.md](../examples/copilot-agent/repo-curator.agent.md).
 
+## Per-Agent Access Profiles
+
+Each named agent in `agents/` should be given only the MCP roots it needs. This table maps each major agent category to the minimum recommended access.
+
+| Agent | MCP Filesystem Roots | GitHub Toolsets | Notes |
+| --- | --- | --- | --- |
+| Maxwell (orchestrator) | `agents/`, `issues/`, `docs/` | `context,repos,issues` | Read-only on agents/; write to issues/ for logs. |
+| Iris (repo health) | `repo-lists/`, `docs/`, `issues/` | `repos,issues` | Reads lists and docs; writes draft reports to issues/. |
+| Relay (context handoff) | `issues/` | — | Write-only: appends handoff notes. No GitHub needed. |
+| Sentinel (security auditor) | `agents/`, `docs/`, `plugins/` | `code_security,repos` | Read-only. Escalates; never writes autonomously. |
+| Rex (trading) | `plugins/autonomous-day-trading-agent/` | — | Scoped to plugin folder only. No GitHub, no filesystem writes without approval. |
+| Sage (risk officer) | `plugins/*/risk_limits.json` paths | — | Read-only access to risk files. Never modifies limits. |
+| Ghost (red team) | Read-only, scoped path per engagement | `code_security` | Scoped per written authorization. No writes. |
+| Aria (research) | `docs/`, `repo-lists/` | `context,repos` | Read-only research. Writes summaries on request. |
+| Atlas (code) | `agents/`, `docs/`, workspace root | `repos,pull_requests,issues` | Writes code; PRs require human review. |
+| Penny (cost auditor) | `cost-reduction/`, `docs/` | — | Read-only cost review. Writes recommendations to issues/. |
+| Cron (scheduler) | `agents/`, `issues/` | `issues` | Read agent files; write schedule entries to issues/. |
+| Nexus/Bridge (API connector) | — | `context,repos` | No local filesystem; talks to APIs only. |
+| All others | Scoped to their work folder | Minimal toolset | Follow least-privilege: one folder, one toolset. |
+
+### MCP Roots Config Example (VS Code / Claude Code)
+
+```json
+{
+  "servers": {
+    "filesystem": {
+      "command": "cmd",
+      "args": [
+        "/c", "npx", "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:/Users/YOU/Downloads/Master-Repo-Use/agents",
+        "C:/Users/YOU/Downloads/Master-Repo-Use/issues",
+        "C:/Users/YOU/Downloads/Master-Repo-Use/docs"
+      ]
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "-e", "GITHUB_TOOLSETS=context,repos,issues",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github_token}"
+      }
+    }
+  }
+}
+```
+
+Swap the filesystem paths and `GITHUB_TOOLSETS` value to match the agent being configured. Rex gets the plugin folder; Sentinel gets agents/ and plugins/ read-only; Iris gets repo-lists/ and issues/.
+
+## Least-Privilege Checklist
+
+Before attaching any agent to MCP servers, check each item:
+
+- [ ] Filesystem roots are explicit named folders, not `/`, `C:\`, or `~`.
+- [ ] No secrets folders (`~/.ssh`, `~/.aws`, `~/.config/gh`, `AppData/Roaming`) are in the allowed list.
+- [ ] GitHub toolsets are named explicitly — not `*` or `all`.
+- [ ] The GitHub token has only the scopes the agent's toolset needs.
+- [ ] The token is in an environment variable or secret manager, not a committed file.
+- [ ] Write access on filesystem is only for folders where the agent must write (e.g., `issues/` for Iris).
+- [ ] All other folders are read-only or excluded.
+- [ ] The agent's system prompt is written before session start and cannot be overridden by tool output.
+- [ ] Destructive operations (delete, push, live order) require explicit human approval in the current conversation.
+- [ ] A Sentinel audit is scheduled or run before attaching new agents to production resources.
+
 ## Safety Checklist
 
 Before granting access:

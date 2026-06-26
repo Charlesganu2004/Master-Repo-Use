@@ -4,9 +4,24 @@ This file shows how the pieces fit together. Pitch and hackathon tools are stand
 
 Each lane can also run standalone. Use [Standalone usage](STANDALONE-USAGE.md) when you want to try one lane on a different computer before connecting it to the full stack.
 
-![Combination and use-case map](../assets/combination-use-map.svg)
+**Interactive diagram:** [assets/interactive-diagram.html](../assets/interactive-diagram.html) — click any node to see details, standalone options, and combination recipes.
 
 Read this diagram from the entry points into the shared core. CLI, VS Code, Copilot Studio, apps, and automations can all reach the same agent runtime, but every specialist lane should pass through MCP boundaries, RAG/memory, risk gates, and cost controls before it affects files, cloud resources, broker APIs, or quantum jobs.
+
+## Orchestrator Flow (Maxwell)
+
+```text
+User
+  -> CLI, VS Code, Copilot Studio, mobile app, web app, or automation
+  -> Maxwell (agents/orchestrator-maxwell.md) routes to specialist:
+      -> Aria (research), Atlas (code), Sentinel (security), Penny (cost),
+         Rex (paper trading), Helix (quantum), Iris (repo health), etc.
+      -> Maxwell collects outputs and writes a task log
+      -> Maxwell escalates to human for: money movement, secrets, destructive actions
+  -> Maxwell returns synthesized digest to user
+```
+
+Standalone version: skip Maxwell and route directly to the specialist you need.
 
 ## Core Agent Flow
 
@@ -162,6 +177,47 @@ Agent request
 Use cost controls before scaling a workflow across many repos or agents.
 
 Standalone version: run one cost tool against one repo, cloud account, Kubernetes cluster, or prompt sample.
+
+## Repo Health Monitoring Flow (Iris)
+
+```text
+Weekly schedule (or on demand)
+  -> Iris reads repo-lists/all-curated.txt
+  -> Iris checks GitHub API: archived flag, last push date, open security advisories
+  -> Iris writes draft report to issues/iris-YYYY-MM-DD.md (Propose mode)
+  -> Human reviews draft
+  -> Human approves → Iris acts: updates REPO-HEALTH.md, opens GitHub issues, flags catalog
+  -> Iris writes "DONE" log for every action taken
+```
+
+See [agents/repo-issue-iris.md](../agents/repo-issue-iris.md) and [docs/REPO-HEALTH.md](REPO-HEALTH.md).
+
+## Plugin Integration Flow
+
+```text
+Plugin (autonomous-day-trading-agent, quantum-trading-agent, robinhood-trading-agent)
+  -> plugin.json declares: commands, tools, MCP config, risk settings
+  -> install: python -m pip install -e .
+  -> smoke-test: [plugin-name] smoke-test --risk risk_limits.example.json
+  -> wire to MCP: npx -y @modelcontextprotocol/server-filesystem [plugin-path]
+  -> connect to agent: Rex (trading), Qubit (quantum), Connect (broker)
+  -> all orders go through Sage (risk gate) before execution
+  -> all actions logged to audit log
+```
+
+See [plugins/README.md](../plugins/README.md) and [docs/ADDING-PLUGINS.md](ADDING-PLUGINS.md).
+
+## Context Handoff Flow (Relay + /compact)
+
+```text
+Session approaching context limit
+  -> User asks Relay (agents/handoff-relay.md) to write a handoff note
+  -> Relay writes: decisions made, work completed, blocked/pending, next steps
+  -> Relay saves note to issues/relay-YYYY-MM-DD-HH.md
+  -> User types /compact in Claude Code
+  -> Context window resets — handoff note is the checkpoint
+  -> Next session reads the handoff note and continues
+```
 
 ## Standalone Pitch And Hackathon Flow
 

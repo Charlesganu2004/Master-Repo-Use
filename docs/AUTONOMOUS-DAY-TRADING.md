@@ -162,6 +162,35 @@ Run the autonomous plugin smoke test:
 $PluginPath = Read-Host "Path to plugins\autonomous-day-trading-agent"; Set-Location $PluginPath; autonomous-day-trading-agent smoke-test --risk risk_limits.example.json
 ```
 
+## Agent Cross-References
+
+The agents in `agents/` are designed to work as a team around this lane. Here is how each fits:
+
+| Agent | File | Role in trading lane |
+| --- | --- | --- |
+| Rex | [agents/trading-rex.md](../agents/trading-rex.md) | Generates signals, proposes paper orders, tracks positions. Never places live orders without explicit human activation. |
+| Sage | [agents/risk-sage.md](../agents/risk-sage.md) | Reviews every Rex proposal against `risk_limits.json`. Returns APPROVED / DENIED / ESCALATE. Hard limit: never approve live orders without human conversation confirmation. |
+| Maxwell | [agents/orchestrator-maxwell.md](../agents/orchestrator-maxwell.md) | Routes tasks between Rex, Sage, Aria (research), and Penny (cost). Logs audit trail to `issues/`. |
+| Iris | [agents/repo-issue-iris.md](../agents/repo-issue-iris.md) | Monitors broker API repos (alpaca-py, Vibe-Trading, etc.) for deprecation, security advisories, and status changes. Writes draft reports to `issues/`; waits for human approval before acting. |
+| Aria | [agents/research-aria.md](../agents/research-aria.md) | Pulls market research, news, and filings. Supplies Rex with context. |
+| Penny | [agents/cost-penny.md](../agents/cost-penny.md) | Audits token and API spend from market data calls. Flags expensive data sources. |
+| Sentinel | [agents/security-sentinel.md](../agents/security-sentinel.md) | Reviews broker integrations and plugin code for security vulnerabilities. Required before any live adapter goes active. |
+| Ghost | [agents/redteam-ghost.md](../agents/redteam-ghost.md) | Threat-models the trading pipeline on request. Requires written authorization scope. |
+
+### Activation Flow
+
+```text
+Aria: market research
+  -> Rex: signal proposal (paper mode)
+  -> Sage: risk gate check against risk_limits.json
+  -> Maxwell: route decision + audit log entry to issues/
+  -> human: review issues/ folder
+  -> [human types "Rex: live mode approved" in current conversation]
+  -> Rex: live order via broker adapter
+```
+
+No step in this chain can be bypassed by a prompt. Sage cannot approve live orders without the human message. Rex cannot place live orders without Sage approval.
+
 ## Guardrails
 
 - Paper trading is the default.

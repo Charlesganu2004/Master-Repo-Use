@@ -88,6 +88,98 @@ LLM / ML / quantum research
 9. Add human approval.
 10. Only then consider a live broker adapter.
 
+## Per-Broker Setup CLI One-Liners
+
+Each block installs the Python SDK, sets credentials as environment variables, and runs a read-only smoke test. **Never hard-code credentials in scripts or committed files.**
+
+### Alpaca (Recommended First Route — Paper Trading)
+
+PowerShell:
+
+```powershell
+pip install alpaca-py; $env:APCA_API_KEY_ID = Read-Host "Alpaca paper key ID"; $env:APCA_API_SECRET_KEY = Read-Host "Alpaca paper secret key"; python -c "from alpaca.trading.client import TradingClient; c = TradingClient('$env:APCA_API_KEY_ID','$env:APCA_API_SECRET_KEY',paper=True); print(c.get_account())"
+```
+
+WSL/Bash:
+
+```bash
+pip install alpaca-py && read -rp "Alpaca paper key ID: " key && read -rsp "Alpaca paper secret: " secret && python3 -c "from alpaca.trading.client import TradingClient; c=TradingClient('$key','$secret',paper=True); print(c.get_account())"
+```
+
+Alpaca MCP server (paper mode, Docker):
+
+```bash
+docker run -i --rm -e ALPACA_API_KEY_ID="$APCA_API_KEY_ID" -e ALPACA_API_SECRET_KEY="$APCA_API_SECRET_KEY" -e ALPACA_PAPER=true ghcr.io/alpacahq/alpaca-mcp-server
+```
+
+### Robinhood Crypto (Official API)
+
+PowerShell:
+
+```powershell
+pip install requests cryptography; $env:RH_API_KEY = Read-Host "Robinhood API key"; $env:RH_PRIVATE_KEY = Read-Host "Robinhood private key (base64)"; python -c "import os; print('Credentials set. Use the Robinhood Crypto REST API with these keys.')"
+```
+
+See official docs: [docs.robinhood.com/crypto/trading](https://docs.robinhood.com/crypto/trading/)
+
+### Robinhood Stocks/Options (Community Library — Research Only)
+
+```powershell
+pip install robin_stocks; $env:RH_USER = Read-Host "Robinhood username"; $env:RH_PASS = Read-Host -AsSecureString "Robinhood password"; python -c "import robin_stocks.robinhood as r; r.login('$env:RH_USER','$env:RH_PASS'); print(r.load_portfolio_profile())"
+```
+
+Note: Community library — treat as research only. Never automate live orders through this route.
+
+### Interactive Brokers (IBKR)
+
+```powershell
+pip install ib_async; python -c "from ib_async import IB; ib = IB(); ib.connect('127.0.0.1', 7497, clientId=1); print(ib.accountValues()[:3]); ib.disconnect()"
+```
+
+Requires TWS or IB Gateway running locally on port 7497 (paper) or 7496 (live). Keep paper port until tested.
+
+### Schwab
+
+```powershell
+pip install schwabdev; $env:SCHWAB_APP_KEY = Read-Host "Schwab app key"; $env:SCHWAB_APP_SECRET = Read-Host "Schwab app secret"; python -c "import schwabdev; c = schwabdev.Client('$env:SCHWAB_APP_KEY','$env:SCHWAB_APP_SECRET'); print(c.account_details_all())"
+```
+
+### Tradier
+
+```powershell
+pip install requests; $env:TRADIER_TOKEN = Read-Host "Tradier sandbox token"; python -c "import requests, os; r = requests.get('https://sandbox.tradier.com/v1/user/profile', headers={'Authorization': f'Bearer {os.environ[chr(84)+chr(82)+chr(65)+chr(68)+chr(73)+chr(69)+chr(82)+chr(95)+chr(84)+chr(79)+chr(75)+chr(69)+chr(78)]}', 'Accept': 'application/json'}}).json(); print(r)"
+```
+
+Simpler one-liner using uvatradier:
+
+```bash
+pip install uvatradier && python3 -c "from uvatradier import Tradier; t = Tradier('SANDBOX_TOKEN', live=False); print(t.account.get_account_balance())"
+```
+
+### Tastytrade
+
+```powershell
+pip install tastytrade; $env:TT_USER = Read-Host "Tastytrade username"; $env:TT_PASS = Read-Host "Tastytrade password"; python -c "from tastytrade import Session; s = Session('$env:TT_USER','$env:TT_PASS'); print(s.get_customer())"
+```
+
+CLI (tastyware):
+
+```bash
+pip install tastytrade-cli && tastytrade --username "$TT_USER" --password "$TT_PASS" accounts
+```
+
+### SnapTrade (Multi-Broker Aggregator)
+
+```bash
+pip install snaptrade-python-sdk && python3 -c "from snaptrade.api_client import ApiClient; from snaptrade.configuration import Configuration; cfg = Configuration(); cfg.api_key['clientId']='YOUR_CLIENT_ID'; cfg.api_key['consumerKey']='YOUR_CONSUMER_KEY'; print('SnapTrade SDK ready')"
+```
+
+### Coinbase Advanced Trade
+
+```powershell
+pip install coinbase-advanced-py; $env:CB_API_KEY = Read-Host "Coinbase API key name"; $env:CB_API_SECRET = Read-Host "Coinbase private key"; python -c "from coinbase.rest import RESTClient; c = RESTClient(api_key='$env:CB_API_KEY', api_secret='$env:CB_API_SECRET'); print(c.get_accounts())"
+```
+
 ## One-Liners
 
 Clone broker integration repos, PowerShell:
