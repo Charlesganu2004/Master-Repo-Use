@@ -1,0 +1,12 @@
+# Spatial Reasoning VLMs & World Models
+# Vetted 2026-08-05 - see docs/VETTING-REPORT.md for scan results
+allenai/molmoact
+EvolvingLMMs-Lab/lmms-eval  # license needs manual read
+facebookresearch/vjepa2
+FlagOpen/RoboBrain2.5
+NVIDIA/cosmos  # license needs manual read
+Physical-Intelligence/openpi
+remyxai/VQASynth
+SkyworkAI/Matrix-Game
+vision-x-nyu/thinking-in-space
+wentaoyuan/RoboPoint

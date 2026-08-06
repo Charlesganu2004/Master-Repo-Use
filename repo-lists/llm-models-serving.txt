@@ -1,0 +1,12 @@
+# Open-Weight LLMs & Serving Stacks
+# Vetted 2026-08-05 - see docs/VETTING-REPORT.md for scan results
+BerriAI/litellm  # license needs manual read
+EleutherAI/lm-evaluation-harness
+ggml-org/llama.cpp
+NVIDIA-NeMo/Nemotron
+QwenLM/Qwen3.6
+sgl-project/sglang
+unslothai/unsloth
+vllm-project/llm-compressor
+vllm-project/vllm
+zai-org/GLM-5

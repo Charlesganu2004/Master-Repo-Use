@@ -30,7 +30,7 @@ A self-contained command center for agent frameworks, RAG, memory, MCP servers, 
 | Combinations | 8 named stack recipes with install commands |
 | Trading & Finance | Full safety gate flow: signal → Sage → human → live |
 | Cost & Tokens | Token efficiency and /compact decision flow |
-| Agent Roster | All 55 agents — click any chip to open the agent file |
+| Agent Roster | All 59 agents — click any chip to open the agent file |
 
 ---
 
@@ -46,6 +46,10 @@ A self-contained command center for agent frameworks, RAG, memory, MCP servers, 
 | Data scientist | [Agent: Dex](agents/data-dex.md) + [Repo Catalog → RAG](docs/REPO-CATALOG.md) |
 | New user | [Agent: Guide](agents/onboarding-guide.md) + [Standalone Usage](docs/STANDALONE-USAGE.md) |
 | Cost optimization | [Token Efficiency](docs/TOKEN-EFFICIENCY.md) + [Cost Reduction](cost-reduction/README.md) |
+| Spatial / 3D / robotics | [Spatial Models](docs/SPATIAL-MODELS.md) + [Agent: Scout](agents/spatial-scout.md) |
+| Live / streaming RAG | [Live RAG](docs/LIVE-RAG.md) + [Agent: Stream](agents/rag-stream.md) |
+| Picking an LLM or serving stack | [LLM Models & Serving](docs/LLM-MODELS.md) + [Agent: Picker](agents/model-picker.md) |
+| Vetting a third-party repo | [Security Scanning](docs/SECURITY-SCANNING.md) + [Agent: Vault](agents/scanner-vault.md) |
 | Copilot Studio | [Copilot Studio Integration](docs/COPILOT-STUDIO-INTEGRATION.md) + [Agent: Nexus](agents/copilot-nexus.md) |
 
 ---
@@ -61,7 +65,7 @@ A self-contained command center for agent frameworks, RAG, memory, MCP servers, 
 | Use any lane standalone | [Standalone usage](docs/STANDALONE-USAGE.md) |
 | Copy one-liners for PowerShell, WSL, GitHub CLI | [CLI one-liners](docs/CLI-ONE-LINERS.md) |
 | Reduce token and API cost | [Token efficiency](docs/TOKEN-EFFICIENCY.md) + [Cost reduction](cost-reduction/README.md) |
-| Browse the full agent roster (55 agents) | [Agents overview](agents/AGENTS-OVERVIEW.md) |
+| Browse the full agent roster (59 agents) | [Agents overview](agents/AGENTS-OVERVIEW.md) |
 | Check if a repo is still active | [Repo health](docs/REPO-HEALTH.md) |
 | Add a plugin | [Adding plugins](docs/ADDING-PLUGINS.md) |
 | Browse available plugins | [Plugins](plugins/README.md) |
@@ -75,6 +79,12 @@ A self-contained command center for agent frameworks, RAG, memory, MCP servers, 
 | Add market analysis repos | [Trading and market agents](docs/TRADING-MARKET-AGENTS.md) |
 | Reduce cloud and API cost | [Cost reduction guide](cost-reduction/README.md) |
 | Use curated repo lists in scripts | [repo-lists/all-curated.txt](repo-lists/all-curated.txt) |
+| Add spatial, 3D, world-model, or SLAM repos | [Spatial models](docs/SPATIAL-MODELS.md) |
+| Keep a RAG index fresh as data changes | [Live RAG](docs/LIVE-RAG.md) |
+| Choose an open-weight model or serving stack | [LLM models & serving](docs/LLM-MODELS.md) |
+| Scan a repo before depending on it | [Security scanning](docs/SECURITY-SCANNING.md) |
+| See why a repo was accepted or rejected | [Vetting report](docs/VETTING-REPORT.md) |
+| Use portable anti-hallucination skills | [skills/](skills/README.md) |
 
 ---
 
@@ -313,7 +323,7 @@ See [docs/AGENT-ACCESS.md](docs/AGENT-ACCESS.md) and [docs/SECURITY.md](docs/SEC
 .
 ├── README.md                          (this file)
 ├── agents/
-│   ├── AGENTS-OVERVIEW.md             (master agent index — 55 agents)
+│   ├── AGENTS-OVERVIEW.md             (master agent index — 59 agents)
 │   ├── orchestrator-maxwell.md        (routes all tasks)
 │   ├── repo-issue-iris.md             (repo health monitoring)
 │   ├── handoff-relay.md               (context handoff for /compact)

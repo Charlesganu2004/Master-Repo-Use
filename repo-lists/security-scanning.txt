@@ -1,0 +1,16 @@
+# Security Scanning Tools (free)
+# Vetted 2026-08-05 - see docs/VETTING-REPORT.md for scan results
+anchore/syft
+aquasecurity/trivy
+bridgecrewio/checkov
+cisco-ai-defense/mcp-scanner
+DataDog/guarddog
+gitleaks/gitleaks
+google/osv-scanner
+NVIDIA/garak
+opengrep/opengrep  # copyleft: LGPL-2.1
+ossf/scorecard
+semgrep/semgrep  # copyleft: LGPL-2.1
+sigstore/cosign
+snyk/cli  # license needs manual read
+trufflesecurity/trufflehog  # copyleft: AGPL-3.0

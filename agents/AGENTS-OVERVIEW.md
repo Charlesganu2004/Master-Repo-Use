@@ -100,8 +100,21 @@ This directory contains ready-to-use agent personas. Each file gives you a compl
 | File | Name | Job |
 |---|---|---|
 | [rag-vector.md](rag-vector.md) | Vector | RAG & Embedding Manager — indexes docs, manages vector stores |
+| [rag-stream.md](rag-stream.md) | Stream | Live & Incremental RAG Engineer — freshness SLAs, incremental re-index, staleness gating |
 | [memory-recall.md](memory-recall.md) | Recall | Long-Term Memory Agent — stores decisions, surfaces context |
 | [knowledge-memo.md](knowledge-memo.md) | Memo | Knowledge Base Manager — curates team knowledge |
+
+### Spatial & Perception
+
+| File | Name | Job |
+|---|---|---|
+| [spatial-scout.md](spatial-scout.md) | Scout | Spatial & 3D Model Selector — reconstruction, world models, SLAM; code vs weights licensing |
+
+### Models & Inference
+
+| File | Name | Job |
+|---|---|---|
+| [model-picker.md](model-picker.md) | Picker | LLM Selection & Serving Advisor — model choice, serving stack, hosted vs self-hosted cost |
 
 ### Copilot Studio & Integration
 
