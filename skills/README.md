@@ -14,6 +14,7 @@ open-weight model. See [PORTABLE-USAGE.md](PORTABLE-USAGE.md) for how to load th
 | [self-consistency-check](self-consistency-check/SKILL.md) | High-stakes answer where being wrong is expensive |
 | [scope-guard](scope-guard/SKILL.md) | Request is ambiguous, or larger than it first appears |
 | [dep-audit](dep-audit/SKILL.md) | Adding a third-party repo, package, or MCP server |
+| [catalog-freshness](catalog-freshness/SKILL.md) | Checking whether catalogued repos are still maintained |
 
 The first four target hallucination and unsupported confidence from different angles:
 
@@ -28,8 +29,13 @@ verify-before-complete    "done" requires observed output, not inference
 ```
 
 `scope-guard` covers a different failure — answering a question nobody asked, or quietly
-answering a smaller one. `dep-audit` is the supply-chain procedure used to vet every repo in
-this catalog; it is the same pipeline documented in [docs/SECURITY-SCANNING.md](../docs/SECURITY-SCANNING.md).
+answering a smaller one.
+
+`dep-audit` and `catalog-freshness` are the two halves of keeping this catalog trustworthy:
+`dep-audit` gates what comes in, `catalog-freshness` catches what rots after it is already
+here. Both are backed by runnable tooling — [docs/SECURITY-SCANNING.md](../docs/SECURITY-SCANNING.md)
+and [scripts/check_freshness.py](../scripts/check_freshness.py), the latter running weekly via
+[.github/workflows/repo-freshness.yml](../.github/workflows/repo-freshness.yml).
 
 ## What these do, and what they don't
 

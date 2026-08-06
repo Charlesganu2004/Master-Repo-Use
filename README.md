@@ -67,6 +67,7 @@ A self-contained command center for agent frameworks, RAG, memory, MCP servers, 
 | Reduce token and API cost | [Token efficiency](docs/TOKEN-EFFICIENCY.md) + [Cost reduction](cost-reduction/README.md) |
 | Browse the full agent roster (59 agents) | [Agents overview](agents/AGENTS-OVERVIEW.md) |
 | Check if a repo is still active | [Repo health](docs/REPO-HEALTH.md) |
+| Check catalog freshness automatically | `python scripts/check_freshness.py` + [skills/catalog-freshness](skills/catalog-freshness/SKILL.md) |
 | Add a plugin | [Adding plugins](docs/ADDING-PLUGINS.md) |
 | Browse available plugins | [Plugins](plugins/README.md) |
 | Secure agents and MCP setup | [Security guide](docs/SECURITY.md) |

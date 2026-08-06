@@ -1,4 +1,8 @@
 ﻿# Quantum Trading And Investing
+> **Freshness note.** Some repos referenced below were removed from the catalog for being
+> unmaintained (18+ months without a commit) or missing. See the removals table in
+> [docs/REPO-HEALTH.md](../docs/REPO-HEALTH.md#removed--unmaintained-or-missing) before relying on
+> anything here. Replacements are listed there where a maintained successor exists.
 
 This guide expands the quantum lane into stock, portfolio, investment, day-trading, and research workflows. It is for engineering and research. It is not financial advice, and live order placement should stay disabled until a human reviews the model, broker permissions, compliance rules, and risk controls.
 
@@ -69,7 +73,7 @@ $LabPath = Read-Host "Folder for quantum trading lab"; New-Item -ItemType Direct
 | Repo | Use it when | Safety default |
 | --- | --- | --- |
 | [alpacahq/alpaca-py](https://github.com/alpacahq/alpaca-py) | You want Alpaca's current Python SDK. | Paper trading first. |
-| [alpacahq/alpaca-trade-api-python](https://github.com/alpacahq/alpaca-trade-api-python) | You need legacy Alpaca Python examples. | Prefer paper account. |
+| [alpacahq/alpaca-py](https://github.com/alpacahq/alpaca-py) | You need legacy Alpaca Python examples. | Prefer paper account. |
 | [alpacahq/alpaca-mcp-server](https://github.com/alpacahq/alpaca-mcp-server) | You want an MCP server for Alpaca tools. | Expose paper tools before live tools. |
 | [Lumiwealth/lumibot](https://github.com/Lumiwealth/lumibot) | You want a Python trading/backtesting framework. | Backtest, paper, then review. |
 | [nautechsystems/nautilus_trader](https://github.com/nautechsystems/nautilus_trader) | You want a professional-grade trading/backtesting engine. | Treat live mode as high risk. |
@@ -78,7 +82,7 @@ $LabPath = Read-Host "Folder for quantum trading lab"; New-Item -ItemType Direct
 | [kernc/backtesting.py](https://github.com/kernc/backtesting.py) | You want simple Python backtesting. | Good first baseline. |
 | [pmorissette/bt](https://github.com/pmorissette/bt) | You want flexible backtesting. | Good for portfolio strategies. |
 | [gbeced/pyalgotrade](https://github.com/gbeced/pyalgotrade) | You want classic algorithmic trading examples. | Research/backtest only. |
-| [erdewit/ib_insync](https://github.com/erdewit/ib_insync) | You want Interactive Brokers Python integration. | Strong permissions required. |
+| [ib-api-reloaded/ib_async](https://github.com/ib-api-reloaded/ib_async) | You want Interactive Brokers Python integration. | Strong permissions required. |
 | [Jesse-ai/jesse](https://github.com/Jesse-ai/jesse) | You want crypto strategy research/backtesting. | Paper/simulation first. |
 | [tejaslinge/Alpaca-ROC-Trading-Bot](https://github.com/tejaslinge/Alpaca-ROC-Trading-Bot) | You want an Alpaca ROC bot example. | Study pattern, do not copy to live. |
 | [tejaslinge/Alpaca-StochRSI-EMA-Trading-Bot](https://github.com/tejaslinge/Alpaca-StochRSI-EMA-Trading-Bot) | You want an Alpaca indicator bot example. | Study pattern, do not copy to live. |

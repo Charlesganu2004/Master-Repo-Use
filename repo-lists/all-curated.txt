@@ -10,8 +10,6 @@ runagent-dev/runagent
 github/copilot-sdk
 github/copilot-cli
 HKUDS/LightRAG
-bradygaster/AugmentR
-varunon9/rag-langchain-nodejs
 upstash/rag-chat
 upstash/vector-js
 satoshiman/rag-cli
@@ -25,9 +23,7 @@ obytes/react-native-template-obytes
 roninoss/create-expo-stack
 github/docs
 bradygaster/Aspiregregator
-bradygaster/Aspire.Hosting.Facepunch.Rust
 bradygaster/dotnet-cloud-native-build-2023
-bradygaster/ASPNETCoreWithYarpOnAzureContainerApps
 HappyHackingSpace/awesome-hackathon
 slidevjs/slidev
 marp-team/marpit
@@ -53,18 +49,10 @@ qosf/awesome-quantum-software
 # Quantum finance / quantum trading / QML trading
 tensorflow/quantum
 mit-han-lab/torchquantum
-entropicalabs/openqaoa
 jpmorganchase/QOKit
-PaddlePaddle/Quantum
 qiskit-community/ibm-quantum-challenge-fall-2021
 VarunRathore137/The-Hybrid-Quantum-Portfolio-Optimizer
 BIKASH1002/QML-Stock-Predictor
-MonitSharma/Quantum-Finance-and-Numerical-Methods
-ChiraagNadig/Quantum-ML-Research
-DarkStarQuantumLab/Qauntum-trading-a-disturbance-in-the-force-of-supply-and-demand
-alejomonbar/Quantum-Counselor-for-Portfolio-Investment
-qBraid/nyc-haq-qbraid
-QuantaScriptor/Quantum-Based-Portfolio-Diversification-QBPD
 MrDecryptDecipher/Sentinel
 
 # Finance / trading / market analysis
@@ -79,19 +67,16 @@ AI4Finance-Foundation/FinRL
 OpenBB-finance/OpenBB
 quantconnect/Lean
 freqtrade/freqtrade
-mementum/backtrader
 ranaroussi/yfinance
 xgboosted/pandas-ta-classic
 bukosabino/ta
-matplotlib/mplfinance
 georgezouq/awesome-ai-in-finance
 
 # Day trading / broker SDKs / ML trading
 HKUDS/Vibe-Trading
 TradingAgents-AI/TradingAgents
-LIU-HONGYANG-GZU/Live_Trade_Bench
 alpacahq/alpaca-py
-alpacahq/alpaca-trade-api-python
+alpacahq/alpaca-py  # replaces alpacahq/alpaca-trade-api-python (unmaintained)
 alpacahq/alpaca-mcp-server
 Lumiwealth/lumibot
 nautechsystems/nautilus_trader
@@ -99,39 +84,24 @@ AsyncAlgoTrading/aat
 vnpy/vnpy
 kernc/backtesting.py
 pmorissette/bt
-gbeced/pyalgotrade
-erdewit/ib_insync
+ib-api-reloaded/ib_async  # replaces erdewit/ib_insync (unmaintained)
 Jesse-ai/jesse
-tejaslinge/Alpaca-ROC-Trading-Bot
-tejaslinge/Alpaca-StochRSI-EMA-Trading-Bot
-Acciorocketships/algo-trader
 tradingstrategy-ai/getting-started
 TradingGoose/TradingGoose.github.io
 marcozanetti-dev/intraday-mean-reversion-costs-aware
-huseinzol05/Stock-Prediction-Models
-Albert-Z-Guo/Deep-Reinforcement-Stock-Trading
 ebrahimpichka/DeepRL-trade
 RezaSoleymanifar/neuralHFT
 oyi77/Crypto-RL-Trading-Bot
 fsaavedra0003/Agentic-AI-Trading-Bot-with-LLM-reasoning-sentiment-analysis
 padmarajkore/Ai-crypto-trading-system
-AxelGard/cira
 
 # Broker app integrations / Robinhood alternatives
-robinhood-unofficial/pyrh
 DhruvaBansal00/robin_stocks_v2
-hakantekgul/ML_Automated_Trading_Robinhood
-sanko/robinhood
 ib-api-reloaded/ib_async
-PythonForForex/ib_insync-guide-interactive-brokers
 tylerebowers/Schwabdev
 alexgolec/schwab-py
-itsjafer/schwab-api
 thammo4/uvatradier
 Lumiwealth/lumiwealth-tradier
-sargun/tradier
-timpalpant/go-tradier
-pushshift/tradier
 passiv/snaptrade-sdks
 passiv/snaptrade-cli
 passiv/snaptrade-react
@@ -147,7 +117,6 @@ qmyhd/LLM-portfolio-project
 
 # Trading agent MCP / memory / risk tools
 financial-datasets/mcp-server
-System-R-AI/systemr-python
 mnemox-ai/tradememory-protocol
 wshobson/maverick-mcp
 aitrados/finance-trading-ai-agents-mcp

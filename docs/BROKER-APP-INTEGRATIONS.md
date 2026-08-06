@@ -1,4 +1,8 @@
 ﻿# Broker App Integrations
+> **Freshness note.** Some repos referenced below were removed from the catalog for being
+> unmaintained (18+ months without a commit) or missing. See the removals table in
+> [docs/REPO-HEALTH.md](REPO-HEALTH.md#removed--unmaintained-or-missing) before relying on
+> anything here. Replacements are listed there where a maintained successor exists.
 
 This guide shows how to connect AI agents to Robinhood-style broker apps and broker APIs for research, day trading, investing, and portfolio workflows. It is engineering guidance, not financial advice. The default should be research or paper trading.
 
@@ -38,7 +42,7 @@ Robinhood has an official Crypto Trading API. Stock/options automation is usuall
 | App/API | Repos | Use it when |
 | --- | --- | --- |
 | Alpaca | [alpacahq/alpaca-py](https://github.com/alpacahq/alpaca-py), [alpacahq/alpaca-mcp-server](https://github.com/alpacahq/alpaca-mcp-server) | You want paper trading, equities, crypto, and broker APIs designed for automation. |
-| Interactive Brokers | [ib-api-reloaded/ib_async](https://github.com/ib-api-reloaded/ib_async), [erdewit/ib_insync](https://github.com/erdewit/ib_insync) | You want a powerful broker API with broad market access. |
+| Interactive Brokers | [ib-api-reloaded/ib_async](https://github.com/ib-api-reloaded/ib_async), [ib-api-reloaded/ib_async](https://github.com/ib-api-reloaded/ib_async) | You want a powerful broker API with broad market access. |
 | Schwab | [tylerebowers/Schwabdev](https://github.com/tylerebowers/Schwabdev), [alexgolec/schwab-py](https://github.com/alexgolec/schwab-py), [itsjafer/schwab-api](https://github.com/itsjafer/schwab-api) | You want Schwab API experiments and clients. |
 | Tradier | [thammo4/uvatradier](https://github.com/thammo4/uvatradier), [sargun/tradier](https://github.com/sargun/tradier), [timpalpant/go-tradier](https://github.com/timpalpant/go-tradier) | You want stocks/options trading API examples. |
 | Tastytrade | [tastytrade/tastytrade-api-js](https://github.com/tastytrade/tastytrade-api-js), [tastytrade/tastytrade-sdk-python](https://github.com/tastytrade/tastytrade-sdk-python), [tastyware/tastytrade-cli](https://github.com/tastyware/tastytrade-cli) | You want options-focused trading API tooling. |

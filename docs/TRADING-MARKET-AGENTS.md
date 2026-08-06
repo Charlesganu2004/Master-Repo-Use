@@ -1,4 +1,8 @@
 ﻿# Trading And Market Agents
+> **Freshness note.** Some repos referenced below were removed from the catalog for being
+> unmaintained (18+ months without a commit) or missing. See the removals table in
+> [docs/REPO-HEALTH.md](REPO-HEALTH.md#removed--unmaintained-or-missing) before relying on
+> anything here. Replacements are listed there where a maintained successor exists.
 
 This section is for research, market analysis, paper trading, portfolio experiments, and agent engineering. It is not financial advice. Do not connect live order execution to an agent until permissions, audit logs, broker rules, risk controls, and compliance are reviewed.
 

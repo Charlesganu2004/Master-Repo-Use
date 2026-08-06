@@ -80,8 +80,7 @@ Status key: `active` = actively maintained · `experimental` = works but not pro
 | Repo | Use it when | Fast start | Connects to | Status |
 | --- | --- | --- | --- | --- |
 | [HKUDS/LightRAG](https://github.com/HKUDS/LightRAG) | You need fast retrieval-augmented generation over docs. | `uv tool install "lightrag-hku[api]"` | Feed agents with project docs and local knowledge. | active |
-| [bradygaster/AugmentR](https://github.com/bradygaster/AugmentR) | You want a .NET Aspire + Semantic Kernel + OpenAI RAG sample. | Clone and run with .NET/Aspire prerequisites. | Good for .NET agent backends. | experimental |
-| [varunon9/rag-langchain-nodejs](https://github.com/varunon9/rag-langchain-nodejs) | You want a Node.js LangChain RAG starter. | Clone, `npm install`, set provider/vector DB env vars. | Useful for JavaScript agent prototypes. | experimental |
+
 | [upstash/rag-chat](https://github.com/upstash/rag-chat) | You want a quick TypeScript SDK for RAG chat. | `pnpm add @upstash/rag-chat` or `npm i @upstash/rag-chat`. | Pairs with Upstash Vector. | active |
 | [upstash/vector-js](https://github.com/upstash/vector-js) | You need a TypeScript client for Upstash Vector. | `npm install @upstash/vector` | Use as vector storage under RAG apps. | active |
 | [satoshiman/rag-cli](https://github.com/satoshiman/rag-cli) | You want local-first RAG from the command line. | Clone, `npm install`, then use the CLI commands from its README. | Good for personal docs and local notes. | experimental |
@@ -153,11 +152,11 @@ Detailed guide: [docs/MCP-SERVERS.md](MCP-SERVERS.md).
 | [AI4Finance-Foundation/FinRL](https://github.com/AI4Finance-Foundation/FinRL) | You want financial reinforcement learning. | Backtesting and portfolio experiments. | active |
 | [quantconnect/Lean](https://github.com/quantconnect/Lean) | You want an algorithmic trading engine. | Strategy research and paper/live modes. | active |
 | [freqtrade/freqtrade](https://github.com/freqtrade/freqtrade) | You want crypto trading bot/backtesting tooling. | Crypto research and simulation. | active |
-| [mementum/backtrader](https://github.com/mementum/backtrader) | You want Python backtesting. | Historical strategy tests. | stale |
+
 | [ranaroussi/yfinance](https://github.com/ranaroussi/yfinance) | You want quick market data. | Research scripts and notebooks. | active |
 | [xgboosted/pandas-ta-classic](https://github.com/xgboosted/pandas-ta-classic) | You want pandas technical analysis indicators. | Feature engineering. | experimental |
 | [bukosabino/ta](https://github.com/bukosabino/ta) | You want technical analysis indicators. | Feature engineering. | stale |
-| [matplotlib/mplfinance](https://github.com/matplotlib/mplfinance) | You want financial charts. | Reports and decks. | active |
+
 | [georgezouq/awesome-ai-in-finance](https://github.com/georgezouq/awesome-ai-in-finance) | You want wider AI finance discovery. | Research queue. | active |
 
 Detailed guide: [docs/TRADING-MARKET-AGENTS.md](TRADING-MARKET-AGENTS.md).
@@ -176,7 +175,7 @@ This lane is for agents and plugins that can generate trading signals, paper tra
 | [agents/trading-rex.md](../agents/trading-rex.md) | You want Rex, the paper-first trading agent. | Connects to Sage, Maxwell, Alpaca paper, and audit log. | active |
 | [HKUDS/Vibe-Trading](https://github.com/HKUDS/Vibe-Trading) | You want agentic trading experiments around Robinhood Agentic Trading/MCP ideas. | Broker app research and paper trading. | experimental |
 | [TradingAgents-AI/TradingAgents](https://github.com/TradingAgents-AI/TradingAgents) | You want another TradingAgents implementation to compare. | Multi-agent market research. | experimental |
-| [LIU-HONGYANG-GZU/Live_Trade_Bench](https://github.com/LIU-HONGYANG-GZU/Live_Trade_Bench) | You want a benchmark for LLM trading agents. | Evaluation before automation. | experimental |
+
 | [alpacahq/alpaca-mcp-server](https://github.com/alpacahq/alpaca-mcp-server) | You want broker tools exposed through MCP. | Paper broker tools before live toolsets. | active |
 | [Robinhood Agentic Trading](https://robinhood.com/us/en/support/articles/agentic-trading/) | You want Robinhood's agent-oriented route where available. | Official broker route review. |
 
@@ -243,9 +242,8 @@ Detailed guide: [cost-reduction/README.md](../cost-reduction/README.md).
 | Repo | Use it when | Fast start | Connects to |
 | --- | --- | --- | --- |
 | [bradygaster/Aspiregregator](https://github.com/bradygaster/Aspiregregator) | You want a .NET Aspire RSS reader sample. | Clone and run with .NET Aspire prerequisites. | Shows service orchestration patterns. |
-| [bradygaster/Aspire.Hosting.Facepunch.Rust](https://github.com/bradygaster/Aspire.Hosting.Facepunch.Rust) | You want Aspire hosting ideas around Rust server hosting. | Clone and inspect sample host code. | Cloud/game/server hosting experiments. |
+
 | [bradygaster/dotnet-cloud-native-build-2023](https://github.com/bradygaster/dotnet-cloud-native-build-2023) | You want .NET cloud-native sample material. | Clone and follow the repo workshop/sample flow. | Good learning path for cloud-native .NET. |
-| [bradygaster/ASPNETCoreWithYarpOnAzureContainerApps](https://github.com/bradygaster/ASPNETCoreWithYarpOnAzureContainerApps) | You want ASP.NET Core + YARP + Azure Container Apps reference. | Clone and inspect deployment/runtime configuration. | Useful for agent API gateways. |
 
 ## Hackathon, Pitch, And Slides Standalone
 

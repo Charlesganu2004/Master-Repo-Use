@@ -3,7 +3,6 @@ HKUDS/Vibe-Trading
 HKUDS/AI-Trader
 tauricresearch/tradingagents
 TradingAgents-AI/TradingAgents
-LIU-HONGYANG-GZU/Live_Trade_Bench
 ai4finance-foundation/finrobot
 AI4Finance-Foundation/FinGPT
 AI4Finance-Foundation/FinRL
@@ -11,7 +10,6 @@ MingyuJ666/Stockagent
 qmyhd/LLM-portfolio-project
 fsaavedra0003/Agentic-AI-Trading-Bot-with-LLM-reasoning-sentiment-analysis
 padmarajkore/Ai-crypto-trading-system
-AxelGard/cira
 alpacahq/alpaca-py
 alpacahq/alpaca-mcp-server
 quantconnect/Lean
@@ -21,6 +19,5 @@ AsyncAlgoTrading/aat
 vnpy/vnpy
 kernc/backtesting.py
 pmorissette/bt
-mementum/backtrader
 freqtrade/freqtrade
 Jesse-ai/jesse

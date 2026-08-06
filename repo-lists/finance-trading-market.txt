@@ -10,9 +10,7 @@ AI4Finance-Foundation/FinRL
 OpenBB-finance/OpenBB
 quantconnect/Lean
 freqtrade/freqtrade
-mementum/backtrader
 ranaroussi/yfinance
 xgboosted/pandas-ta-classic
 bukosabino/ta
-matplotlib/mplfinance
 georgezouq/awesome-ai-in-finance

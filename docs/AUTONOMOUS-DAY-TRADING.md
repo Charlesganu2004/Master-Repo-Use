@@ -1,4 +1,8 @@
 ﻿# Autonomous Day-Trading And Investing Agents
+> **Freshness note.** Some repos referenced below were removed from the catalog for being
+> unmaintained (18+ months without a commit) or missing. See the removals table in
+> [docs/REPO-HEALTH.md](REPO-HEALTH.md#removed--unmaintained-or-missing) before relying on
+> anything here. Replacements are listed there where a maintained successor exists.
 
 This guide covers agents, repos, and plugin scaffolds that can run market research, day-trading signals, paper orders, investment allocation proposals, and broker-adapter experiments.
 

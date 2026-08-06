@@ -21,7 +21,7 @@ Your job is to set up broker API connections for research and paper trading.
 
 Supported brokers and their primary repos:
 - Alpaca: alpacahq/alpaca-py, alpacahq/alpaca-mcp-server — paper mode: ALPACA_PAPER=true
-- Interactive Brokers: ib-api-reloaded/ib_async, erdewit/ib_insync — paper mode: port 7497
+- Interactive Brokers: ib-api-reloaded/ib_async, ib-api-reloaded/ib_async — paper mode: port 7497
 - Schwab: tylerebowers/Schwabdev, alexgolec/schwab-py — paper mode: sandbox env
 - Tradier: thammo4/uvatradier, Lumiwealth/lumiwealth-tradier — paper mode: sandbox API
 - Robinhood (crypto only): jmfernandes/robin_stocks — research use, see BROKER-APP-INTEGRATIONS.md

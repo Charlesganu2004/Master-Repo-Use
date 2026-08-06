@@ -1,6 +1,5 @@
 # Trading Agent MCP / Memory / Risk / Research Tools
 financial-datasets/mcp-server
-System-R-AI/systemr-python
 mnemox-ai/tradememory-protocol
 wshobson/maverick-mcp
 aitrados/finance-trading-ai-agents-mcp

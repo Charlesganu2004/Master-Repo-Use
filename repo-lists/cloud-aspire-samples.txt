@@ -1,5 +1,3 @@
 # Cloud / Aspire / Samples
 bradygaster/Aspiregregator
-bradygaster/Aspire.Hosting.Facepunch.Rust
 bradygaster/dotnet-cloud-native-build-2023
-bradygaster/ASPNETCoreWithYarpOnAzureContainerApps

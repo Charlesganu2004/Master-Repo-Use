@@ -144,3 +144,20 @@ Non-zero counts are not disqualifying on their own. Large actively-developed rep
 ## Limits
 
 A clean scan is the absence of evidence from four tools, not proof of safety. None of this detects a deliberate backdoor written to look like ordinary code. Re-audit on major version bumps — a repo that passed at one version is not a repo that passed at the next.
+
+## Addendum — replacements for removed repos (2026-08-06)
+
+Two repos removed as unmaintained had maintained successors. Both were vetted before
+being added. GitHub's REST API was rate-limited at the time, so Stage A metadata was
+confirmed directly from the repository page and raw `LICENSE` instead — the checks
+performed are the same, only the source differs.
+
+| Repo | Replaces | License | Last push | Archived | Canonical name | Scan summary |
+| --- | --- | --- | --- | --- | --- | --- |
+| [alpacahq/alpaca-py](https://github.com/alpacahq/alpaca-py) | `alpacahq/alpaca-trade-api-python` | Apache-2.0 | 2026-08-04 | no | matches | gl 11 · tv 2 · osv 55 · sg 5 · hooks 1 |
+| [ib-api-reloaded/ib_async](https://github.com/ib-api-reloaded/ib_async) | `erdewit/ib_insync` | BSD-2-Clause | 2025-12-06 | no | matches | gl 0 · tv 0 · osv 0 · sg 7 · hooks 0 |
+
+`ib_async` is the community continuation of `ib_insync`, which stopped after its author's
+death. Confirm the fork's provenance yourself before depending on it — a successor fork is
+exactly the shape a supply-chain attack imitates, and "the community moved here" is a claim
+worth checking rather than assuming.
