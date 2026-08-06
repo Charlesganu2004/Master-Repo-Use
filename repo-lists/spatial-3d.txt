@@ -1,0 +1,9 @@
+# 3D Reconstruction & Scene Representation
+# Vetted 2026-08-05 - see docs/VETTING-REPORT.md for scan results
+ByteDance-Seed/Depth-Anything-3
+colmap/colmap  # license needs manual read
+facebookresearch/map-anything
+facebookresearch/vggt  # license needs manual read
+MrNeRF/LichtFeld-Studio  # copyleft: GPL-3.0
+nerfstudio-project/nerfstudio
+playcanvas/supersplat

@@ -18,6 +18,10 @@ Use this file as the detailed reading path. Each row explains what the repo is f
 | Quantum sidecar | Standalone quantum learning plus optional optimization/QML experiments | `Qiskit`, `PennyLane`, `Cirq`, `qiskit-finance` |
 | Cost reduction | Reduce token, API, MCP, and cloud spend | `Infracost`, `OpenCost`, `Cloud Custodian`, `token-optimizer-mcp` |
 | Demo and story | Standalone hackathon resources, Markdown slides, pitch decks | `awesome-hackathon`, `slidev`, `marpit`, `pitch-deck` |
+| Spatial and 3D perception | Reconstruct scenes, reason about space, map in real time | `vggt`, `Depth-Anything-3`, `gsplat`, `Open3D`, `stella_vslam` |
+| Live retrieval | Keep a RAG index fresh as the corpus changes | `graphiti`, `pathway`, `vespa`, `ragflow`, `pylate` |
+| Models and serving | Choose an open-weight model and a serving stack | `vllm`, `sglang`, `llama.cpp`, `litellm`, `Qwen3.6` |
+| Supply-chain security | Scan a dependency before you trust it | `gitleaks`, `trivy`, `osv-scanner`, `semgrep`, `scorecard` |
 | Access | Give agents safe paths to files and GitHub | MCP filesystem server, GitHub MCP server |
 
 ## Integration Flow
@@ -304,6 +308,108 @@ The topic is small and experimental. Repos worth scanning:
 | [guorunjie/codex-relay-baton-guardian](https://github.com/guorunjie/codex-relay-baton-guardian) | Codex long-task handoff and recovery idea. |
 | [YuhaoLin2005/compact-counter-concept](https://github.com/YuhaoLin2005/compact-counter-concept) | Compaction count as a context health metric. |
 | [RyanWeb31110/codex-thread-handoff](https://github.com/RyanWeb31110/codex-thread-handoff) | Codex thread recovery and handoff skill. |
+
+## Spatial: 3D Reconstruction And Scene Representation
+
+Full guide: [docs/SPATIAL-MODELS.md](SPATIAL-MODELS.md) · Security verdicts: [docs/VETTING-REPORT.md](VETTING-REPORT.md)
+
+| Repo | What it is | License | Status |
+| --- | --- | --- | --- |
+| [ByteDance-Seed/Depth-Anything-3](https://github.com/ByteDance-Seed/Depth-Anything-3) | Single plain-transformer model that recovers spatially consistent geometry from any number of views, posed or unposed — monocular… | Apache-2.0 — FLAG — the largest/Giant checkpoints are CC BY-NC 4 | vetted |
+| [colmap/colmap](https://github.com/colmap/colmap) | General-purpose Structure-from-Motion and Multi-View Stereo pipeline with GUI and CLI, for ordered and unordered image… | NOASSERTION | vetted, see notes |
+| [facebookresearch/map-anything](https://github.com/facebookresearch/map-anything) | End-to-end transformer that regresses factored metric 3D geometry from images, calibration, poses and/or depth, covering 12+… | Apache-2.0 — FLAG — default released model weights are CC-BY-NC 4 | vetted, see notes |
+| [facebookresearch/vggt](https://github.com/facebookresearch/vggt) | Feed-forward transformer that infers camera parameters, depth maps, point maps and 3D point tracks from 1 to hundreds of unposed… | NOASSERTION — FLAG — custom Meta license (GitHub reports NOASSERTION) | vetted, see notes |
+| [MrNeRF/LichtFeld-Studio](https://github.com/MrNeRF/LichtFeld-Studio) | Native C++23/CUDA application to train, inspect, edit, automate and export 3D Gaussian Splatting scenes, with a real-time… | GPL-3.0 — FLAG — GPL-3 | vetted, see notes |
+| [nerfstudio-project/nerfstudio](https://github.com/nerfstudio-project/nerfstudio) | Modular PyTorch framework for neural radiance fields — a common API across NeRF variants plus data parsers, a web viewer, and… | Apache-2.0 | vetted, see notes |
+| [playcanvas/supersplat](https://github.com/playcanvas/supersplat) | Free, open-source, browser-based 3D Gaussian Splat editor for inspecting, cleaning, compressing, cropping and publishing splat… | MIT | vetted |
+
+## Spatial: Reasoning VLMs And World Models
+
+Full guide: [docs/SPATIAL-MODELS.md](SPATIAL-MODELS.md) · Security verdicts: [docs/VETTING-REPORT.md](VETTING-REPORT.md)
+
+| Repo | What it is | License | Status |
+| --- | --- | --- | --- |
+| [allenai/molmoact](https://github.com/allenai/molmoact) | Ai2's action reasoning model: a VLA that emits explicit spatial reasoning traces — depth perception tokens and 2D visual trace… | Apache-2.0 | vetted, see notes |
+| [EvolvingLMMs-Lab/lmms-eval](https://github.com/EvolvingLMMs-Lab/lmms-eval) | One-for-all multimodal evaluation toolkit spanning text, image, video and audio tasks — a unified harness with hundreds of… | NOASSERTION | vetted, see notes |
+| [facebookresearch/vjepa2](https://github.com/facebookresearch/vjepa2) | Meta's self-supervised video world model — PyTorch code and weights for learning predictive latent representations from video,… | MIT | vetted |
+| [FlagOpen/RoboBrain2.5](https://github.com/FlagOpen/RoboBrain2.5) | BAAI's embodied brain VLM ('Depth in Sight, Time in Mind') for unified spatial perception, affordance/pointing prediction,… | Apache-2.0 | vetted, see notes |
+| [NVIDIA/cosmos](https://github.com/NVIDIA/cosmos) | Open platform of world foundation models, datasets and tools for Physical AI — the Cosmos 3 omnimodal family (Super 64B / Nano… | NOASSERTION — FLAG: this is an open model/data license, not a standard OSI permissive license like… | vetted, see notes |
+| [Physical-Intelligence/openpi](https://github.com/Physical-Intelligence/openpi) | Physical Intelligence's official open-source VLA models and packages: π₀ (flow-based VLA), π₀-FAST (autoregressive VLA using the… | Apache-2.0 — FLAG: ships a separate LICENSE_GEMMA | vetted |
+| [remyxai/VQASynth](https://github.com/remyxai/VQASynth) | Open pipeline for synthesizing spatial VQA training data — lifts 2D images into metric 3D via depth/segmentation/point clouds,… | Apache-2.0 | vetted |
+| [SkyworkAI/Matrix-Game](https://github.com/SkyworkAI/Matrix-Game) | Real-time streaming interactive world model with long-horizon memory — generates controllable, explorable video environments… | MIT — FLAG: verify the Hugging Face model card separately, as Skywork weight releases sometimes… | vetted, see notes |
+| [vision-x-nyu/thinking-in-space](https://github.com/vision-x-nyu/thinking-in-space) | Official repo and evaluation implementation of VSI-Bench: 288 real indoor video sequences (ScanNet, ScanNet++, ARKitScenes) and… | Apache-2.0 | vetted |
+| [wentaoyuan/RoboPoint](https://github.com/wentaoyuan/RoboPoint) | VLM fine-tuned for spatial affordance prediction — takes a language instruction and returns 2D image keypoints indicating where… | Apache-2.0 — FLAG: built on the LLaVA/Vicuna stack, so released checkpoints inherit Llama community… | vetted, see notes |
+
+## Spatial: AR, Robotics Mapping, And SLAM
+
+Full guide: [docs/SPATIAL-MODELS.md](SPATIAL-MODELS.md) · Security verdicts: [docs/VETTING-REPORT.md](VETTING-REPORT.md)
+
+| Repo | What it is | License | Status |
+| --- | --- | --- | --- |
+| [borglab/gtsam](https://github.com/borglab/gtsam) | C++/Python factor-graph optimization library for smoothing and mapping — batch and incremental (iSAM2) solvers, IMU… | NOASSERTION | vetted, see notes |
+| [isl-org/Open3D](https://github.com/isl-org/Open3D) | Modern C++/Python library for 3D data processing: point clouds, meshes, registration/ICP, RGB-D odometry and integration, plus a… | NOASSERTION | vetted, see notes |
+| [koide3/glim](https://github.com/koide3/glim) | Versatile range-based 3D mapping framework: GPU-accelerated LiDAR / LiDAR-inertial SLAM with global trajectory optimization,… | MIT | vetted |
+| [MIT-SPARK/Hydra](https://github.com/MIT-SPARK/Hydra) | Builds hierarchical 3D scene graphs (objects, places, rooms, buildings) from live sensor data in real time, with loop closure… | BSD-2-Clause | vetted |
+| [nerfstudio-project/gsplat](https://github.com/nerfstudio-project/gsplat) | CUDA-accelerated 3D Gaussian splatting rasterization library with a PyTorch API — the rendering engine behind Nerfstudio's… | Apache-2.0 — non-commercial | vetted |
+| [nvidia-isaac/nvblox](https://github.com/nvidia-isaac/nvblox) | GPU-accelerated TSDF and ESDF volumetric mapping library for robots with RGB-D or LiDAR input, producing distance fields suitable… | NOASSERTION | vetted, see notes |
+| [rerun-io/rerun](https://github.com/rerun-io/rerun) | Rust-based logging and visualization SDK/viewer for multimodal spatial and temporal data — point clouds, transforms/TF trees,… | Apache-2.0 | vetted |
+| [rmurai0610/MASt3R-SLAM](https://github.com/rmurai0610/MASt3R-SLAM) | Real-time dense monocular SLAM that uses the MASt3R two-view 3D reconstruction prior for tracking, dense pointmap fusion, and… | NOASSERTION — CC BY-NC-SA 4 | vetted, see notes |
+| [rpng/open_vins](https://github.com/rpng/open_vins) | Filter-based (MSCKF) visual-inertial odometry/navigation platform with sliding-window state estimation, online calibration, and… | GPL-3.0 — GPL-3.0 — FLAG | vetted, see notes |
+| [stella-cv/stella_vslam](https://github.com/stella-cv/stella_vslam) | Real-time monocular / stereo / RGB-D visual SLAM framework (the maintained continuation of OpenVSLAM) with map save-load and… | NOASSERTION | vetted, see notes |
+
+## Live, Streaming, And Incremental RAG
+
+Full guide: [docs/LIVE-RAG.md](LIVE-RAG.md) · Security verdicts: [docs/VETTING-REPORT.md](VETTING-REPORT.md)
+
+| Repo | What it is | License | Status |
+| --- | --- | --- | --- |
+| [AnswerDotAI/rerankers](https://github.com/AnswerDotAI/rerankers) | Lightweight, low-dependency unified Python API over essentially every reranking and cross-encoder | Apache-2.0 — non-commercial | vetted |
+| [confident-ai/deepeval](https://github.com/confident-ai/deepeval) | Pytest-style LLM evaluation framework with RAG-specific metrics: faithfulness, answer relevancy, contextual… | Apache-2.0 | vetted, see notes |
+| [getzep/graphiti](https://github.com/getzep/graphiti) | Framework for building temporal knowledge graphs that AI agents query, where every edge carries a validity | Apache-2.0 | vetted, see notes |
+| [infiniflow/ragflow](https://github.com/infiniflow/ragflow) | Open-source RAG engine built on deep document understanding (DeepDoc OCR / table / layout recognition), fused with agent… | Apache-2.0 | vetted, see notes |
+| [langchain-ai/open_deep_research](https://github.com/langchain-ai/open_deep_research) | Production-grade multi-agent deep-research system using a supervisor/researcher architecture with parallel isolated-context… | MIT | vetted |
+| [lightonai/pylate](https://github.com/lightonai/pylate) | Library for training, fine-tuning, and serving late-interaction (ColBERT-family) multi-vector retrieval models, built on Sentence… | MIT | vetted |
+| [onyx-dot-app/onyx](https://github.com/onyx-dot-app/onyx) | Self-hostable AI search and chat platform with 40+ enterprise connectors (Slack, Drive, Confluence, Jira, GitHub, | NOASSERTION — FLAG - mixed | vetted, see notes |
+| [paradedb/paradedb](https://github.com/paradedb/paradedb) | Postgres extension suite adding BM25 full-text search, vector retrieval, and analytics inside the | AGPL-3.0 — FLAG - AGPL-3 | vetted, see notes |
+| [pathwaycom/pathway](https://github.com/pathwaycom/pathway) | Python ETL/stream-processing framework on a Rust Differential Dataflow engine, with LLM tooling and an in-memory real-time vector… | NOASSERTION — FLAG - Business Source License 1 | vetted, see notes |
+| [vespa-engine/vespa](https://github.com/vespa-engine/vespa) | Big-data serving and AI search platform combining vector, lexical, and structured retrieval with learned | Apache-2.0 | vetted, see notes |
+
+## Open-Weight LLMs And Serving Stacks
+
+Full guide: [docs/LLM-MODELS.md](LLM-MODELS.md) · Security verdicts: [docs/VETTING-REPORT.md](VETTING-REPORT.md)
+
+| Repo | What it is | License | Status |
+| --- | --- | --- | --- |
+| [BerriAI/litellm](https://github.com/BerriAI/litellm) | Unified OpenAI-format SDK and deployable proxy/gateway fronting 100+ LLM providers, with routing, fallbacks, retries, rate… | NOASSERTION — FLAG if you plan to use enterprise features | vetted, see notes |
+| [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) | Few-shot evaluation framework covering 60+ academic benchmarks with pluggable backends (HF Transformers, vLLM, SGLang,… | MIT | vetted, see notes |
+| [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) | C/C++ LLM inference with minimal setup, GGUF weights, and an included OpenAI-compatible server; runs CPU-only or GPU-accelerated… | MIT | vetted, see notes |
+| [QwenLM/Qwen3.6](https://github.com/QwenLM/Qwen3.6) | Official repo for the Qwen3.5 and Qwen3.6 model generations - dense and MoE open-weight models spanning roughly 0.8B to 35B-A3B,… | Apache-2.0 | vetted |
+| [sgl-project/sglang](https://github.com/sgl-project/sglang) | Serving framework for LLMs and multimodal models built around RadixAttention prefix caching and a structured-generation frontend… | Apache-2.0 | vetted, see notes |
+| [unslothai/unsloth](https://github.com/unslothai/unsloth) | Fine-tuning and RL post-training framework with hand-written Triton kernels, giving roughly 2x faster training and ~70% less VRAM… | Apache-2.0 — AGPL-3 | vetted, see notes |
+| [vllm-project/llm-compressor](https://github.com/vllm-project/llm-compressor) | Transformers-compatible library for applying quantisation and compression algorithms (GPTQ, AWQ, SmoothQuant, FP8/NVFP4,… | Apache-2.0 | vetted, see notes |
+| [vllm-project/vllm](https://github.com/vllm-project/vllm) | High-throughput, memory-efficient LLM inference and serving engine with an OpenAI-compatible API | Apache-2.0 | vetted, see notes |
+| [zai-org/GLM-5](https://github.com/zai-org/GLM-5) | Official repo for the GLM-5 series - a 744B-parameter MoE with ~40B active per token, 1M-token context, released in BF16 and FP8,… | Apache-2.0 | vetted |
+
+## Security Scanning Tools
+
+Full guide: [docs/SECURITY-SCANNING.md](SECURITY-SCANNING.md) · Security verdicts: [docs/VETTING-REPORT.md](VETTING-REPORT.md)
+
+| Repo | What it is | License | Status |
+| --- | --- | --- | --- |
+| [anchore/syft](https://github.com/anchore/syft) | CLI and Go library that generates a Software Bill of Materials from container images, filesystems, and archives across dozens of… | Apache-2.0 | vetted, see notes |
+| [aquasecurity/trivy](https://github.com/aquasecurity/trivy) | All-in-one scanner covering container images, filesystems, git repos, VM images, Kubernetes clusters and cloud accounts for CVEs,… | Apache-2.0 | vetted, see notes |
+| [bridgecrewio/checkov](https://github.com/bridgecrewio/checkov) | Policy-as-code static analyzer for infrastructure as code — Terraform, CloudFormation, Kubernetes manifests, Helm, ARM, Bicep,… | Apache-2.0 | vetted, see notes |
+| [cisco-ai-defense/mcp-scanner](https://github.com/cisco-ai-defense/mcp-scanner) | Python CLI and REST server that scans MCP servers and their tool definitions for prompt injection, tool poisoning, rug pulls, and… | Apache-2.0 | vetted, see notes |
+| [DataDog/guarddog](https://github.com/DataDog/guarddog) | CLI that identifies malicious packages by combining Semgrep source-code heuristics with package-metadata analysis, across PyPI,… | Apache-2.0 | vetted, see notes |
+| [gitleaks/gitleaks](https://github.com/gitleaks/gitleaks) | Go CLI that detects hardcoded secrets (API keys, tokens, passwords) in git history, working trees, files, and | MIT | vetted, see notes |
+| [google/osv-scanner](https://github.com/google/osv-scanner) | Go scanner that resolves your lockfiles, SBOMs, and container images against the OSV.dev distributed vulnerability | Apache-2.0 | vetted |
+| [NVIDIA/garak](https://github.com/NVIDIA/garak) | LLM vulnerability scanner that probes a model or LLM application with generated attacks for prompt injection, jailbreaks, data… | Apache-2.0 | vetted |
+| [opengrep/opengrep](https://github.com/opengrep/opengrep) | Community fork of the Semgrep engine created after Semgrep moved critical analysis features behind a commercial | LGPL-2.1 | vetted |
+| [ossf/scorecard](https://github.com/ossf/scorecard) | Automated assessment that scores a repository 0-10 across ~18 supply-chain security heuristics: branch protection, pinned… | Apache-2.0 | vetted, see notes |
+| [semgrep/semgrep](https://github.com/semgrep/semgrep) | Fast multi-language static analysis engine that matches patterns written in the syntax of the target language itself across 30+… | LGPL-2.1 | vetted, see notes |
+| [sigstore/cosign](https://github.com/sigstore/cosign) | Signs, verifies, and attaches attestations/SBOMs to container images and arbitrary artifacts, with keyless signing backed by the… | Apache-2.0 | vetted, see notes |
+| [snyk/cli](https://github.com/snyk/cli) | CLI front-end to Snyk's commercial platform, covering open-source dependency CVEs, SAST (Snyk Code), container images, and | NOASSERTION | vetted, see notes |
+| [trufflesecurity/trufflehog](https://github.com/trufflesecurity/trufflehog) | Secret scanner with 800+ detectors that additionally makes a live API call to VERIFY whether each found credential is actually… | AGPL-3.0 — AGPL-3 | vetted, see notes |
 
 ## Source Links
 

@@ -1,0 +1,12 @@
+# AR / Robotics Mapping & SLAM
+# Vetted 2026-08-05 - see docs/VETTING-REPORT.md for scan results
+borglab/gtsam  # license needs manual read
+isl-org/Open3D  # license needs manual read
+koide3/glim
+MIT-SPARK/Hydra
+nerfstudio-project/gsplat
+nvidia-isaac/nvblox  # license needs manual read
+rerun-io/rerun
+rmurai0610/MASt3R-SLAM  # license needs manual read
+rpng/open_vins  # copyleft: GPL-3.0
+stella-cv/stella_vslam  # license needs manual read

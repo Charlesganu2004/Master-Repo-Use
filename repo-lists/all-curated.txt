@@ -216,3 +216,78 @@ soolaugust/0CompactMem
 guorunjie/codex-relay-baton-guardian
 YuhaoLin2005/compact-counter-concept
 RyanWeb31110/codex-thread-handoff
+
+# Spatial Reasoning VLMs & World Models (added 2026-08-05, vetted)
+allenai/molmoact
+EvolvingLMMs-Lab/lmms-eval
+facebookresearch/vjepa2
+FlagOpen/RoboBrain2.5
+NVIDIA/cosmos
+Physical-Intelligence/openpi
+remyxai/VQASynth
+SkyworkAI/Matrix-Game
+vision-x-nyu/thinking-in-space
+wentaoyuan/RoboPoint
+
+# Live / Streaming / Incremental RAG (added 2026-08-05, vetted)
+AnswerDotAI/rerankers
+confident-ai/deepeval
+getzep/graphiti
+langchain-ai/open_deep_research
+lightonai/pylate
+onyx-dot-app/onyx
+paradedb/paradedb
+pathwaycom/pathway
+
+# Security Scanning Tools (free) (added 2026-08-05, vetted)
+anchore/syft
+cisco-ai-defense/mcp-scanner
+DataDog/guarddog
+gitleaks/gitleaks
+google/osv-scanner
+NVIDIA/garak
+opengrep/opengrep
+ossf/scorecard
+sigstore/cosign
+snyk/cli
+trufflesecurity/trufflehog
+
+# 3D Reconstruction & Scene Representation (added 2026-08-05, vetted)
+ByteDance-Seed/Depth-Anything-3
+colmap/colmap
+facebookresearch/map-anything
+facebookresearch/vggt
+MrNeRF/LichtFeld-Studio
+nerfstudio-project/nerfstudio
+playcanvas/supersplat
+
+# AR / Robotics Mapping & SLAM (added 2026-08-05, vetted)
+borglab/gtsam
+isl-org/Open3D
+koide3/glim
+MIT-SPARK/Hydra
+nerfstudio-project/gsplat
+nvidia-isaac/nvblox
+rerun-io/rerun
+rmurai0610/MASt3R-SLAM
+rpng/open_vins
+stella-cv/stella_vslam
+
+# Live / Streaming / Incremental RAG (added 2026-08-05, vetted)
+vespa-engine/vespa
+
+# Open-Weight LLMs & Serving Stacks (added 2026-08-05, vetted)
+BerriAI/litellm
+EleutherAI/lm-evaluation-harness
+ggml-org/llama.cpp
+QwenLM/Qwen3.6
+sgl-project/sglang
+unslothai/unsloth
+vllm-project/llm-compressor
+vllm-project/vllm
+zai-org/GLM-5
+
+# Security Scanning Tools (free) (added 2026-08-05, vetted)
+aquasecurity/trivy
+bridgecrewio/checkov
+semgrep/semgrep
