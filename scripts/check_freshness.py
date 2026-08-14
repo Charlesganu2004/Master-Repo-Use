@@ -20,6 +20,7 @@ Auth:
   a catalog of ~250 repos cannot be checked in one pass.
 """
 import argparse
+import concurrent.futures
 import datetime
 import json
 import os
@@ -178,8 +179,9 @@ def render(rows):
     out.append("| Repo | Status | Last push | Stars |")
     out.append("| --- | --- | --- | --- |")
     for r in sorted(rows, key=lambda x: (order.index(x["status"]), x["repo"].lower())):
-        out.append("| [%s](https://github.com/%s) | `%s` | %s | %s |" % (
-            r["repo"], r["repo"], r["status"], r["pushed"] or "—",
+        mark = " †" if r.get("source") == "atom" else ""
+        out.append("| [%s](https://github.com/%s) | `%s` | %s%s | %s |" % (
+            r["repo"], r["repo"], r["status"], r["pushed"] or "—", mark,
             r["stars"] if r["stars"] is not None else "—"))
     out.append("")
     out.append(END)
@@ -204,6 +206,8 @@ def main():
     ap.add_argument("--check-only", action="store_true", help="do not write REPO-HEALTH.md")
     ap.add_argument("--json", metavar="PATH", help="also write machine-readable results")
     ap.add_argument("--limit", type=int, help="check at most N repos (for testing)")
+    ap.add_argument("--jobs", type=int, default=8,
+                    help="concurrent API requests (default 8; 1 = serial)")
     args = ap.parse_args()
 
     token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
@@ -221,19 +225,35 @@ def main():
               "         this run will hit it. Set GITHUB_TOKEN for a complete check.\n"
               % len(names), file=sys.stderr)
 
+    # Each repo costs one HTTP round-trip and nothing else. Checked serially, a
+    # 234-repo catalog spends most of a minute asleep on sockets. urllib releases
+    # the GIL while waiting, so threads convert that wait into overlap. Kept
+    # deliberately modest: GitHub throttles aggressive concurrency, and the point
+    # is to stop idling, not to flood the API.
+    results = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
+        pending = {pool.submit(fetch, r, token): r for r in names}
+        done = 0
+        for fut in concurrent.futures.as_completed(pending):
+            results[pending[fut]] = fut.result()
+            done += 1
+            if done % 25 == 0:
+                print("  checked %d/%d" % (done, len(names)), file=sys.stderr)
+
+    # Rate limiting is discovered mid-flight rather than at a known index, so the
+    # fallback is a second pass over exactly the repos that hit it.
+    limited = [r for r, (_i, err) in results.items() if err and "rate limited" in err]
+    if limited:
+        print("REST budget exhausted on %d/%d - falling back to Atom feeds "
+              "(commit dates only, no archived flag)" % (len(limited), len(names)),
+              file=sys.stderr)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
+            for repo, res in zip(limited, pool.map(fetch_atom, limited)):
+                results[repo] = res
+
     rows, errors = [], []
-    atom_only = False
-    for i, repo in enumerate(names, 1):
-        if atom_only:
-            info, err = fetch_atom(repo)
-        else:
-            info, err = fetch(repo, token)
-            if err and "rate limited" in err:
-                print("REST budget exhausted at %d/%d - falling back to Atom feeds "
-                      "(commit dates only, no archived flag)" % (i, len(names)),
-                      file=sys.stderr)
-                atom_only = True
-                info, err = fetch_atom(repo)
+    for repo in names:                       # names order keeps runs reproducible
+        info, err = results[repo]
         status, age = classify(info)
         if err and err != "not found":
             errors.append("%s: %s" % (repo, err))
@@ -244,10 +264,9 @@ def main():
             "pushed": (info or {}).get("pushed_at", "")[:10] or None,
             "stars": (info or {}).get("stargazers_count"),
             "archived": bool((info or {}).get("archived")),
+            "source": (info or {}).get("_source", "rest"),
             "lists": repos[repo],
         })
-        if i % 25 == 0:
-            print("  checked %d/%d" % (i, len(names)), file=sys.stderr)
 
     block = render(rows)
     if not args.check_only:
