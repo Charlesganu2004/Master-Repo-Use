@@ -8,7 +8,22 @@
 ---
 
 **GitHub:** https://github.com/Charlesganu2004/Master-Repo-Use  
-Last curated: 2026-06-26
+Last curated: 2026-08-14 · **234 repos** across 27 lanes · 59 agents · every entry vetted
+
+### What this repo is
+
+A **catalog**. It holds links, vetting verdicts, health status and usage notes for
+repositories worth depending on. It vendors no third-party code — every entry is a URL
+plus the evidence behind its verdict.
+
+### What it is not
+
+The application. [AI-Hub](https://github.com/Charlesganu2004/AI-Hub) is the agentic
+pipeline and AI agent hub — the desktop app that runs local interchangeable models,
+hosts agents, skills and pipelines, and later becomes the SaaS. AI-Hub *consumes* this
+catalog: its intake gate imports the rejections recorded in
+[docs/VETTING-REPORT.md](docs/VETTING-REPORT.md) as pre-banned, and exports new ones
+back. Curation lives here; execution lives there.
 
 A self-contained command center for agent frameworks, RAG, memory, MCP servers, token/context management, Microsoft Copilot Studio, autonomous trading agents, finance/trading, quantum computing, cloud/cost reduction, app templates, and hackathon resources.
 
@@ -68,6 +83,9 @@ A self-contained command center for agent frameworks, RAG, memory, MCP servers, 
 | Browse the full agent roster (59 agents) | [Agents overview](agents/AGENTS-OVERVIEW.md) |
 | Check if a repo is still active | [Repo health](docs/REPO-HEALTH.md) |
 | Check catalog freshness automatically | `python scripts/check_freshness.py` + [skills/catalog-freshness](skills/catalog-freshness/SKILL.md) |
+| Vet a repo before trusting it (no scanners to install) | `python scripts/static_audit.py <clones-dir>` |
+| Use Codex CLI or portable agent skills | [repo-lists/codex-agent-skills.txt](repo-lists/codex-agent-skills.txt) |
+| Monitor what your agents are doing | [repo-lists/agent-observability-setup.txt](repo-lists/agent-observability-setup.txt) |
 | Add a plugin | [Adding plugins](docs/ADDING-PLUGINS.md) |
 | Browse available plugins | [Plugins](plugins/README.md) |
 | Secure agents and MCP setup | [Security guide](docs/SECURITY.md) |
@@ -130,7 +148,7 @@ Pitch/hackathon -> standalone demo/story materials
 
 ## Agents
 
-55 named agents with system prompts, tools, knowledge base setup, and setup CLI. Each is ready to paste into Claude, Copilot Studio, Squad, or any compatible framework.
+59 named agents with system prompts, tools, knowledge base setup, and setup CLI. Each is ready to paste into Claude, Copilot Studio, Squad, or any compatible framework.
 
 | Category | Agents |
 |---|---|
@@ -162,7 +180,7 @@ Use this when you want agents that can reason over a repo, call tools, remember 
 - Agent frameworks: Squad, Microsoft Agents, Copilot CLI, RunAgent.
 - Knowledge: LightRAG, Upstash, AugmentR, RAG CLI.
 - Memory: AgentMemory, mem0, durable handoff prompts.
-- Context/cost: Context Gateway, LLMLingua, token optimizer MCP servers.
+- Context/cost: LLMLingua, headroom, token optimizer MCP servers.
 - MCP access: filesystem, GitHub, Playwright, docs, databases, cloud tools.
 - Orchestrator: Maxwell routes to Aria, Atlas, Sentinel, Penny, and 51 more specialists.
 
@@ -400,13 +418,18 @@ See [docs/AGENT-ACCESS.md](docs/AGENT-ACCESS.md) and [docs/SECURITY.md](docs/SEC
 │   ├── COPILOT-STUDIO-INTEGRATION.md
 │   ├── INTEGRATION-FLOWS.md
 │   ├── MCP-SERVERS.md
+│   ├── LIVE-RAG.md
+│   ├── LLM-MODELS.md
 │   ├── REPO-CATALOG.md
 │   ├── REPO-HEALTH.md                 (repo status tracking)
 │   ├── REPO-INSTRUCTIONS.md           (per-repo install/run guides)
 │   ├── SECURITY.md                    (security guide)
+│   ├── SECURITY-SCANNING.md           (vetting procedure + false-positive shapes)
+│   ├── SPATIAL-MODELS.md
 │   ├── STANDALONE-USAGE.md
 │   ├── TOKEN-EFFICIENCY.md            (token efficiency and /compact)
-│   └── TRADING-MARKET-AGENTS.md
+│   ├── TRADING-MARKET-AGENTS.md
+│   └── VETTING-REPORT.md              (every verdict, accepted and rejected)
 ├── examples/
 ├── issues/                            (Iris draft reports, Maxwell logs, Relay handoffs)
 ├── plugins/
@@ -417,7 +440,14 @@ See [docs/AGENT-ACCESS.md](docs/AGENT-ACCESS.md) and [docs/SECURITY.md](docs/SEC
 ├── quantum/
 │   ├── QUANTUM-TRADING.md
 │   └── README.md
-└── repo-lists/
+├── scripts/
+│   ├── check_freshness.py             (catalog health, concurrent GitHub checks)
+│   └── static_audit.py                (Stage B vetting gate, standard library only)
+├── skills/                            (7 portable grounding & supply-chain skills)
+├── .github/workflows/
+│   └── repo-freshness.yml             (weekly health check + tracking issue)
+├── index.html                         (GitHub Pages entry for the diagram)
+└── repo-lists/                        (27 lanes; all-curated.txt is the union)
 ```
 
 ---
