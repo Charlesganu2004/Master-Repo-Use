@@ -266,3 +266,9 @@ hoangsonww/Claude-Code-Agent-Monitor
 simple10/agents-observe
 centminmod/my-claude-code-setup
 rebelytics/one-skill-to-rule-them-all
+openai/codex
+RoggeOhta/awesome-codex-cli
+VoltAgent/awesome-agent-skills
+addyosmani/agent-skills
+alirezarezvani/claude-skills
+NVIDIA/skills

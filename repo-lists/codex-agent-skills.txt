@@ -1,0 +1,9 @@
+# Codex CLI & Portable Agent Skills
+# Vetted 2026-08-14 - see docs/VETTING-REPORT.md
+# SKILL.md / AGENTS.md are portable: these load into Codex, Claude Code, Gemini CLI and Cursor.
+openai/codex
+RoggeOhta/awesome-codex-cli  # CC0-1.0; last push 125d - slow
+VoltAgent/awesome-agent-skills
+addyosmani/agent-skills
+alirezarezvani/claude-skills
+NVIDIA/skills

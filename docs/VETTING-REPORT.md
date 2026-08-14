@@ -7,7 +7,8 @@ Procedure: [docs/SECURITY-SCANNING.md](SECURITY-SCANNING.md) · Portable version
 
 **Round 1 — 2026-08-05** · Candidates 61 · Accepted 57 · Rejected 4  
 **Round 2 — 2026-08-14** · Candidates 9 · Accepted 9 · Rejected 0  
-**Catalog total:** 228 repos. Round 1 rejections and the quarantined legacy entry are
+**Round 3 — 2026-08-14** · Candidates 6 · Accepted 6 · Rejected 0 (Codex CLI & portable skills)  
+**Catalog total:** 234 repos. Round 1 rejections and the quarantined legacy entry are
 recorded below so the same candidates are not re-proposed.
 
 ## Method
@@ -101,6 +102,29 @@ and read; the triage is recorded rather than summarised away.
   from source hits — a repo testing its own defences is not a repo attacking you.
 - English prose containing "update"/"delete" no longer matches; the keyword must be
   followed by real SQL syntax.
+
+## Round 3 — Codex CLI and portable agent skills (2026-08-14)
+
+**Candidates:** 6 · **Accepted:** 6 · **Rejected:** 0 · **Blocking findings:** 0
+
+`SKILL.md` and `AGENTS.md` are portable formats, so these load into Codex, Claude Code,
+Gemini CLI and Cursor alike. Vetted with the same gate as round 2.
+
+| Repo | Verdict | License | Stars | Findings triaged |
+| --- | --- | --- | --- | --- |
+| [openai/codex](https://github.com/openai/codex) | PASS | Apache-2.0 | 106k | 5 fetch-and-exec are install docs (`rustup`, Codex's own installer); `cla.yml` `pull_request_target` checks out base |
+| [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | PASS | MIT | 87k | clean on every check |
+| [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) | PASS | MIT | 30k | clean; index repo, skills live in linked sources — vet each before install |
+| [alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) | PASS | MIT | 24k | `enforce-pr-target.yml` checks out base |
+| [NVIDIA/skills](https://github.com/NVIDIA/skills) | PASS-WITH-NOTE | Apache-2.0 | 2.9k | 5 fetch-and-exec inside skill reference docs (`ollama`, `uv` installers) — read the skill before running it |
+| [RoggeOhta/awesome-codex-cli](https://github.com/RoggeOhta/awesome-codex-cli) | PASS-WITH-NOTE | CC0-1.0 | 471 | clean, but `slow` — last push 125 days ago; it is an index, so entries need individual vetting |
+
+**Standing caveat for index repos.** `awesome-*` lists and marketplaces pass trivially —
+they are two files of links. The gate says nothing about what they point at. Vet each
+skill you actually install.
+
+**Held, not rejected** — licence unidentified, so no permission to use:
+`aiskillstore/marketplace`, `bradAGI/awesome-cli-coding-agents` (both NOASSERTION).
 
 ## Accepted
 
