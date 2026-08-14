@@ -211,7 +211,6 @@ pathwaycom/pathway
 # Security Scanning Tools (free) (added 2026-08-05, vetted)
 anchore/syft
 cisco-ai-defense/mcp-scanner
-DataDog/guarddog
 gitleaks/gitleaks
 google/osv-scanner
 NVIDIA/garak

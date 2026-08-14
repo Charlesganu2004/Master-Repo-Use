@@ -5,7 +5,8 @@ Rejections are recorded so the same candidate is not re-proposed later.
 
 Procedure: [docs/SECURITY-SCANNING.md](SECURITY-SCANNING.md) · Portable version: [skills/dep-audit](../skills/dep-audit/SKILL.md) · Agent: [Vault](../agents/scanner-vault.md)
 
-**Vetted:** 2026-08-05 · **Candidates:** 61 · **Accepted:** 61 · **Rejected:** 0
+**Vetted:** 2026-08-05 · **Candidates:** 61 · **Accepted:** 60 · **Rejected:** 1  
+**Revised:** 2026-08-14 — DataDog/guarddog withdrawn after it triggered antivirus on clone.
 
 ## Method
 
@@ -30,9 +31,34 @@ Verdicts:
 - **PASS-WITH-NOTE** — accepted, but carries something you should know (license terms, install-time hooks, dependency CVEs, quiet maintenance)
 - **REJECT** — excluded from the catalog
 
-## Rejected (0)
+## Antivirus detections during vetting
 
-None.
+Stage B shallow-clones each candidate to disk. On a Windows host with Defender real-time
+protection on, that clone is scanned as it lands, and **repos whose test suites contain real
+malware samples will be quarantined**. This is the scanner working correctly, not an infection:
+the files are inert test fixtures that are never executed by the vetting procedure.
+
+Recorded on 2026-08-05 (Defender, real-time protection, files remediated automatically —
+no execution, no persistence, no installed artefact):
+
+| Repo | File | Defender name |
+| --- | --- | --- |
+| DataDog/guarddog | `tests/analyzer/sourcecode/npm-exfiltrate-sensitive-data.js` | `Trojan:NPM/MiniShaiHrd.ZA!MTB` |
+| DataDog/guarddog | `tests/analyzer/sourcecode/threat-runtime-obfuscation-dynamic-eval.js` | `Trojan:Win32/DownNPM.YAB!MTB` |
+
+Both files are guarddog's own detection fixtures — the corpus its Semgrep rules are unit-tested
+against. Any malware-detection tool ships something equivalent. Expect the same from
+`trufflesecurity/trufflehog`, `semgrep/semgrep` and `NVIDIA/garak` if their fixtures grow.
+
+**If you clone this catalog's security lane:** do it in a directory excluded from real-time
+scanning, or accept that fixture files will disappear from the working tree. Do not add a
+blanket antivirus exclusion for your whole source directory to make the alert go away.
+
+## Rejected (1)
+
+| Repo | Verdict | Reason |
+| --- | --- | --- |
+| [DataDog/guarddog](https://github.com/DataDog/guarddog) | REJECT | Not malicious — a legitimate Apache-2.0 DataDog supply-chain scanner. Withdrawn on operational grounds: its `tests/analyzer/sourcecode/` corpus contains live malware samples, so cloning it triggers resident antivirus and the working tree gets silently modified by quarantine. See [Antivirus detections during vetting](#antivirus-detections-during-vetting). Equivalent coverage is available from the remaining lane members without the AV interaction. |
 
 ## Accepted
 
@@ -116,7 +142,6 @@ None.
 | [aquasecurity/trivy](https://github.com/aquasecurity/trivy) | PASS-WITH-NOTE | Apache-2.0 | 2026-08-05 | gl 15 · tv 0 · osv 1188 · sg 12 · hooks 1 | gitleaks: 15 in non-test paths (e.g. .github/actions/trivy-triage/config.json); install-time execution: shell-installer (contrib/install.sh) |
 | [bridgecrewio/checkov](https://github.com/bridgecrewio/checkov) | PASS-WITH-NOTE | Apache-2.0 | 2026-08-02 | gl 1 · tv 0 · osv 423 · sg 7 · hooks 0 | gitleaks: 1 in non-test paths (e.g. integration_tests/run_integration_tests.sh) |
 | [cisco-ai-defense/mcp-scanner](https://github.com/cisco-ai-defense/mcp-scanner) | PASS-WITH-NOTE | Apache-2.0 | 2026-08-05 | gl 5 · tv 19 · osv 116 · sg 37 · hooks 0 | gitleaks: 5 in non-test paths (e.g. evals/remote/benign/azure_tools.py) |
-| [DataDog/guarddog](https://github.com/DataDog/guarddog) | PASS-WITH-NOTE | Apache-2.0 | 2026-08-04 | gl 25 · tv 2 · osv 52 · sg 6 · hooks 0 | gitleaks hits are malicious-package detection samples, inherent to the tool [verified] |
 | [gitleaks/gitleaks](https://github.com/gitleaks/gitleaks) | PASS-WITH-NOTE | MIT | 2026-07-29 | gl 2 · tv 11 · osv 35 · sg 34 · hooks 0 | self-match against its own rule fixtures [verified] |
 | [google/osv-scanner](https://github.com/google/osv-scanner) | PASS | Apache-2.0 | 2026-08-05 | gl 0 · tv 0 · osv 6 · sg 39 · hooks 0 | clean |
 | [NVIDIA/garak](https://github.com/NVIDIA/garak) | PASS | Apache-2.0 | 2026-08-04 | gl 0 · tv 0 · osv 105 · sg 2 · hooks 0 | clean |

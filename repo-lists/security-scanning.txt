@@ -4,7 +4,6 @@ anchore/syft
 aquasecurity/trivy
 bridgecrewio/checkov
 cisco-ai-defense/mcp-scanner
-DataDog/guarddog
 gitleaks/gitleaks
 google/osv-scanner
 NVIDIA/garak

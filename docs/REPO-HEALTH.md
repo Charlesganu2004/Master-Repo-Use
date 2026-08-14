@@ -126,7 +126,7 @@ Repos with open security advisories are flagged Critical by Sentinel. See [agent
 
 <!-- FRESHNESS:START -->
 
-**Last automated check:** 2026-08-10 · **Repos:** 225 · archived 3 · stale 9 · slow 40 · active 173
+**Last automated check:** 2026-08-10 · **Repos:** 224 · archived 3 · stale 9 · slow 40 · active 172
 
 Regenerate with `python scripts/check_freshness.py`. Runs weekly via `.github/workflows/repo-freshness.yml`.
 
@@ -233,7 +233,6 @@ Regenerate with `python scripts/check_freshness.py`. Runs weekly via `.github/wo
 | [Compresr-ai/Context-Gateway](https://github.com/Compresr-ai/Context-Gateway) | `active` | 2026-08-02 | 632 |
 | [confident-ai/deepeval](https://github.com/confident-ai/deepeval) | `active` | 2026-08-10 | 17494 |
 | [crewAIInc/crewAI](https://github.com/crewAIInc/crewAI) | `active` | 2026-08-10 | 56885 |
-| [DataDog/guarddog](https://github.com/DataDog/guarddog) | `active` | 2026-08-04 | 1179 |
 | [DhruvaBansal00/robin_stocks_v2](https://github.com/DhruvaBansal00/robin_stocks_v2) | `active` | 2026-08-08 | 7 |
 | [dwavesystems/dwave-ocean-sdk](https://github.com/dwavesystems/dwave-ocean-sdk) | `active` | 2026-07-23 | 534 |
 | [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) | `active` | 2026-08-09 | 13583 |
