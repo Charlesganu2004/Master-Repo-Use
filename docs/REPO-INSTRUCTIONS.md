@@ -4,6 +4,10 @@ GitHub: https://github.com/Charlesganu2004/Master-Repo-Use
 
 Per-repo setup instructions. For combining repos, see [COMBINING-REPOS.md](COMBINING-REPOS.md). For CLI one-liners, see [CLI-ONE-LINERS.md](CLI-ONE-LINERS.md).
 
+Security placeholder: replace `REVIEWED_VERSION` with an exact release version checked against the
+package's official registry and source repository. The examples intentionally fail until it is
+replaced; do not substitute `latest` or an automatic-yes flag.
+
 ---
 
 ## Agent Frameworks
@@ -74,12 +78,13 @@ runagent run agent.py
 
 Install:
 ```powershell
-npm install -g @github/copilot-cli
+npm install -g @github/copilot@REVIEWED_VERSION
 ```
 
 Authenticate:
 ```bash
-github-copilot-cli auth login
+copilot
+# Then run /login in the interactive session.
 ```
 
 ---
@@ -174,17 +179,6 @@ rag query "What is the main topic?"
 
 ## Context & Token Management
 
-### Compresr-ai/Context-Gateway
-
-**What it is:** Compression proxy for LLM context — reduce tokens before sending.
-
-Install (WSL/Bash):
-```bash
-curl -fsSL https://compresr.ai/api/install | sh && context-gateway
-```
-
----
-
 ### microsoft/LLMLingua
 
 **What it is:** Microsoft's prompt compression library — removes redundancy while preserving meaning.
@@ -212,7 +206,7 @@ print(result["compressed_prompt"])
 
 Install:
 ```bash
-npx -y ooples-token-optimizer-mcp
+npx @ooples/token-optimizer-mcp@REVIEWED_VERSION
 ```
 
 ---
@@ -225,7 +219,7 @@ npx -y ooples-token-optimizer-mcp
 
 Run with chosen path:
 ```powershell
-$AllowedPath = Read-Host "Folder to expose"; npx -y @modelcontextprotocol/server-filesystem $AllowedPath
+$AllowedPath = Read-Host "Folder to expose"; npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $AllowedPath
 ```
 
 ---
@@ -248,15 +242,9 @@ docker run -i --rm \
 
 **What it is:** Browser automation MCP server using Playwright.
 
-Install:
+Run a reviewed version:
 ```bash
-npm install -g @microsoft/playwright-mcp
-npx playwright install chromium
-```
-
-Run:
-```bash
-playwright-mcp
+npx @playwright/mcp@REVIEWED_VERSION
 ```
 
 ---
@@ -267,7 +255,7 @@ playwright-mcp
 
 Run:
 ```bash
-npx -y @upstash/context7-mcp
+npx @upstash/context7-mcp@REVIEWED_VERSION
 ```
 
 ---
@@ -315,7 +303,7 @@ Run in paper mode:
 export ALPACA_API_KEY=your_paper_key
 export ALPACA_SECRET_KEY=your_paper_secret
 export ALPACA_PAPER=true
-npx -y alpaca-mcp-server
+uvx alpaca-mcp-server==REVIEWED_VERSION
 ```
 
 ---
@@ -410,9 +398,9 @@ pip install pennylane
 Create a new app:
 ```powershell
 $AppPath = Read-Host "Where should the app be created?"
-npx create-expo-app@latest $AppPath
+npx create-expo-app@REVIEWED_VERSION $AppPath
 cd $AppPath
-npx expo start
+npm exec --offline -- expo start
 ```
 
 ---
@@ -423,7 +411,7 @@ npx expo start
 
 Create:
 ```bash
-npx create-expo-stack@latest my-app
+npx create-expo-stack@REVIEWED_VERSION my-app
 ```
 
 ---

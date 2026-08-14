@@ -2,6 +2,8 @@
 
 This file shows how the pieces fit together. Pitch and hackathon tools are standalone support, not part of the main runtime stack.
 
+Replace `REVIEWED_VERSION` with an exact package release you inspected; never use `latest` or automatic yes.
+
 Each lane can also run standalone. Use [Standalone usage](STANDALONE-USAGE.md) when you want to try one lane on a different computer before connecting it to the full stack.
 
 **Interactive diagram:** [assets/interactive-diagram.html](../assets/interactive-diagram.html) — click any node to see details, standalone options, and combination recipes.
@@ -199,7 +201,7 @@ Plugin (autonomous-day-trading-agent, quantum-trading-agent, robinhood-trading-a
   -> plugin.json declares: commands, tools, MCP config, risk settings
   -> install: python -m pip install -e .
   -> smoke-test: [plugin-name] smoke-test --risk risk_limits.example.json
-  -> wire to MCP: npx -y @modelcontextprotocol/server-filesystem [plugin-path]
+  -> wire to MCP: npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION [plugin-path]
   -> connect to agent: Rex (trading), Qubit (quantum), Connect (broker)
   -> all orders go through Sage (risk gate) before execution
   -> all actions logged to audit log

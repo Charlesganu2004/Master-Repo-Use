@@ -2,6 +2,10 @@
 
 These commands are built for different computers. Most of them ask where you want files to go instead of assuming a fixed path.
 
+Security placeholder: replace `REVIEWED_VERSION` with an exact release version checked against the
+package's official registry and source repository. The examples intentionally fail until it is
+replaced; do not substitute `latest` or an automatic-yes flag.
+
 ## Path Prompt Pattern
 
 PowerShell path prompt:
@@ -260,24 +264,18 @@ Cloud/API cost tools:
 python -m pip install --user c7n llmlingua; npm install -g @agentmemory/agentmemory
 ```
 
-Context Gateway in WSL/Bash:
-
-```bash
-curl -fsSL https://compresr.ai/api/install | sh && context-gateway
-```
-
 ## MCP With Chosen Folders
 
 Filesystem server, PowerShell:
 
 ```powershell
-$AllowedOne = Read-Host "First folder the agent may access"; $AllowedTwo = Read-Host "Second folder the agent may access, or press Enter to skip"; if ($AllowedTwo) { npx -y @modelcontextprotocol/server-filesystem $AllowedOne $AllowedTwo } else { npx -y @modelcontextprotocol/server-filesystem $AllowedOne }
+$AllowedOne = Read-Host "First folder the agent may access"; $AllowedTwo = Read-Host "Second folder the agent may access, or press Enter to skip"; if ($AllowedTwo) { npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $AllowedOne $AllowedTwo } else { npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $AllowedOne }
 ```
 
 Filesystem server, WSL/Bash:
 
 ```bash
-read -rp "First folder the agent may access: " allowed_one; read -rp "Second folder the agent may access, or press Enter to skip: " allowed_two; if [ -n "$allowed_two" ]; then npx -y @modelcontextprotocol/server-filesystem "$allowed_one" "$allowed_two"; else npx -y @modelcontextprotocol/server-filesystem "$allowed_one"; fi
+read -rp "First folder the agent may access: " allowed_one; read -rp "Second folder the agent may access, or press Enter to skip: " allowed_two; if [ -n "$allowed_two" ]; then npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION "$allowed_one" "$allowed_two"; else npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION "$allowed_one"; fi
 ```
 
 Docker filesystem server with a chosen local folder:
@@ -387,7 +385,7 @@ print(f"Estimated cost (Sonnet): ${response.input_tokens / 1_000_000 * 3:.4f}")
 
 Create a new agent `.md` from a template, PowerShell:
 
-```powershell
+```````powershell
 $AgentName = Read-Host "Agent file name (kebab-case, e.g. my-new-agent)"
 $RepoRoot = (Get-Location).Path  # run from repo root
 $OutPath = Join-Path $RepoRoot "agents\$AgentName.md"
@@ -432,7 +430,7 @@ $OutPath = Join-Path $RepoRoot "agents\$AgentName.md"
 | Tokens per session | ~[range] |
 "@ | Out-File -FilePath $OutPath -Encoding utf8
 Write-Host "Agent scaffolded at $OutPath"
-```
+```````
 
 ## MCP Server Start and Test
 
@@ -440,8 +438,8 @@ Start filesystem MCP, then open inspector:
 
 ```powershell
 $AllowedPath = Read-Host "Folder the MCP server may access"
-Start-Job { npx -y @modelcontextprotocol/server-filesystem $using:AllowedPath }
-npx @modelcontextprotocol/inspector npx @modelcontextprotocol/server-filesystem $AllowedPath
+Start-Job { npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $using:AllowedPath }
+npx @modelcontextprotocol/inspector@REVIEWED_VERSION npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $AllowedPath
 ```
 
 Start GitHub MCP with limited toolsets:

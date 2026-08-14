@@ -52,9 +52,11 @@ After completing a feature:
 
 ## Setup CLI
 
+Replace `REVIEWED_VERSION` with an exact package release you inspected before running this command.
+
 ```powershell
 $AppPath = Read-Host "Where should the Expo app be created?"
-npx create-expo-app@latest $AppPath --template
+npx create-expo-app@REVIEWED_VERSION $AppPath --template
 ```
 
 ---

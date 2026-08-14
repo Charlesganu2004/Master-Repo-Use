@@ -2,6 +2,8 @@
 
 Every lane in this repo can be used by itself. The integration docs show how to combine the lanes, but you do not need the full stack to get value.
 
+Replace `REVIEWED_VERSION` with an exact package release you inspected; never use `latest` or automatic yes.
+
 ![Standalone setup flow](../assets/standalone-setup-flow.svg)
 
 Read this diagram as the simplest repeatable setup path: pick one lane, choose a local folder for that computer, clone only the matching repo list, run one smoke test, then connect it to the larger stack after it works by itself.
@@ -93,7 +95,7 @@ read -rp "Path to Master-Repo-Use: " master_repo; read -rp "Folder for standalon
 PowerShell:
 
 ```powershell
-$AllowedPath = Read-Host "Folder the MCP server may access"; npx -y @modelcontextprotocol/server-filesystem $AllowedPath
+$AllowedPath = Read-Host "Folder the MCP server may access"; npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $AllowedPath
 ```
 
 ### Copilot Studio

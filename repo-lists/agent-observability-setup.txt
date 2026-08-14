@@ -1,0 +1,6 @@
+# Agent Observability & Setup
+# Vetted 2026-08-14 - see docs/VETTING-REPORT.md
+hoangsonww/Claude-Code-Agent-Monitor
+simple10/agents-observe
+centminmod/my-claude-code-setup
+rebelytics/one-skill-to-rule-them-all  # CC-BY-4.0 (docs licence)

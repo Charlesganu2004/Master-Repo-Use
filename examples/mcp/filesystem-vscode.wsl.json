@@ -1,10 +1,9 @@
 {
   "servers": {
     "filesystem": {
-      "command": "npx",
+      "command": "node",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
+        "<PATH_TO_MCP_TOOLS>/node_modules/@modelcontextprotocol/server-filesystem/dist/index.js",
         "<PATH_TO_MASTER_REPO>",
         "<PATH_TO_AGENT_LAB>"
       ]

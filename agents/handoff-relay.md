@@ -59,8 +59,10 @@ MCP Roots: `<REPO_ROOT>/issues/`
 
 ## Setup CLI
 
+Replace `REVIEWED_VERSION` with an exact package release you inspected before running this command.
+
 ```powershell
-$IssuesPath = Join-Path (Get-Location).Path "issues"; npx -y @modelcontextprotocol/server-filesystem $IssuesPath  # run from repo root
+$IssuesPath = Join-Path (Get-Location).Path "issues"; npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $IssuesPath  # run from repo root
 ```
 
 ---

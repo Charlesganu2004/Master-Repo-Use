@@ -2,6 +2,8 @@
 
 MCP servers are adapters. They let an agent use tools through an explicit protocol instead of every agent inventing its own integration.
 
+Replace `REVIEWED_VERSION` with an exact package release you inspected; never use `latest` or automatic yes.
+
 ## Core Pattern
 
 ```text
@@ -59,13 +61,13 @@ Agent host
 Filesystem server, PowerShell:
 
 ```powershell
-$AllowedOne = Read-Host "First folder the agent may access"; $AllowedTwo = Read-Host "Second folder the agent may access, or press Enter to skip"; if ($AllowedTwo) { npx -y @modelcontextprotocol/server-filesystem $AllowedOne $AllowedTwo } else { npx -y @modelcontextprotocol/server-filesystem $AllowedOne }
+$AllowedOne = Read-Host "First folder the agent may access"; $AllowedTwo = Read-Host "Second folder the agent may access, or press Enter to skip"; if ($AllowedTwo) { npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $AllowedOne $AllowedTwo } else { npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $AllowedOne }
 ```
 
 Filesystem server, WSL/Bash:
 
 ```bash
-read -rp "First folder the agent may access: " allowed_one; read -rp "Second folder the agent may access, or press Enter to skip: " allowed_two; if [ -n "$allowed_two" ]; then npx -y @modelcontextprotocol/server-filesystem "$allowed_one" "$allowed_two"; else npx -y @modelcontextprotocol/server-filesystem "$allowed_one"; fi
+read -rp "First folder the agent may access: " allowed_one; read -rp "Second folder the agent may access, or press Enter to skip: " allowed_two; if [ -n "$allowed_two" ]; then npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION "$allowed_one" "$allowed_two"; else npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION "$allowed_one"; fi
 ```
 
 GitHub MCP server with selected toolsets:

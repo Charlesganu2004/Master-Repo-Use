@@ -22,9 +22,9 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
 
@@ -34,9 +34,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -o pipefail
           set +e
           python scripts/check_freshness.py --json freshness.json | tee report.txt
-          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          status=${PIPESTATUS[0]}
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          if [ "$status" -gt 1 ]; then
+            exit "$status"
+          fi
 
       - name: Commit refreshed REPO-HEALTH.md
         run: |
@@ -52,7 +57,7 @@ jobs:
 
       - name: Open or update the tracking issue
         if: steps.check.outputs.exit_code == '1'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const fs = require('fs');
@@ -103,7 +108,7 @@ jobs:
 
       - name: Close the tracking issue when everything is healthy
         if: steps.check.outputs.exit_code == '0'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const open = await github.rest.issues.listForRepo({

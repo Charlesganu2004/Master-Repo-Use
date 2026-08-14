@@ -151,7 +151,7 @@ pip install schwabdev; $env:SCHWAB_APP_KEY = Read-Host "Schwab app key"; $env:SC
 ### Tradier
 
 ```powershell
-pip install requests; $env:TRADIER_TOKEN = Read-Host "Tradier sandbox token"; python -c "import requests, os; r = requests.get('https://sandbox.tradier.com/v1/user/profile', headers={'Authorization': f'Bearer {os.environ[chr(84)+chr(82)+chr(65)+chr(68)+chr(73)+chr(69)+chr(82)+chr(95)+chr(84)+chr(79)+chr(75)+chr(69)+chr(78)]}', 'Accept': 'application/json'}}).json(); print(r)"
+pip install requests; $env:TRADIER_TOKEN = Read-Host "Tradier sandbox token"; python -c "import os, requests; r = requests.get('https://sandbox.tradier.com/v1/user/profile', headers={'Authorization': 'Bearer ' + os.environ['TRADIER_TOKEN'], 'Accept': 'application/json'}).json(); print(r)"
 ```
 
 Simpler one-liner using uvatradier:

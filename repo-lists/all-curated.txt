@@ -14,7 +14,6 @@ upstash/rag-chat
 upstash/vector-js
 satoshiman/rag-cli
 rohitg00/agentmemory
-Compresr-ai/Context-Gateway
 microsoft/LLMLingua
 ZongqianLi/Prompt-Compression-Survey
 expo/examples
@@ -138,7 +137,7 @@ microsoft/lets-learn-mcp-python
 # Cost reduction / FinOps / token reduction
 ooples/token-optimizer-mcp
 yvgude/lean-ctx
-chopratejas/headroom
+headroomlabs-ai/headroom
 infracost/infracost
 infracost/agent-skills
 opencost/opencost
@@ -245,12 +244,10 @@ stella-cv/stella_vslam
 vespa-engine/vespa
 
 # Open-Weight LLMs & Serving Stacks (added 2026-08-05, vetted)
-BerriAI/litellm
 EleutherAI/lm-evaluation-harness
 ggml-org/llama.cpp
 QwenLM/Qwen3.6
 sgl-project/sglang
-unslothai/unsloth
 vllm-project/llm-compressor
 vllm-project/vllm
 zai-org/GLM-5
@@ -261,4 +258,11 @@ bridgecrewio/checkov
 semgrep/semgrep
 
 # Open-Weight LLMs & Serving Stacks (added 2026-08-05, vetted)
-NVIDIA-NeMo/Nemotron
+omnigent-ai/omnigent
+getomnico/omni
+YeQing17-2026/OmniAgent
+thedotmack/claude-mem
+hoangsonww/Claude-Code-Agent-Monitor
+simple10/agents-observe
+centminmod/my-claude-code-setup
+rebelytics/one-skill-to-rule-them-all

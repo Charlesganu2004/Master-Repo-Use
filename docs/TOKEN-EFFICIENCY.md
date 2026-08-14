@@ -158,7 +158,6 @@ This exposes only repos and issues tools instead of the full 40+ tool schema.
 
 | Repo | What it does | When to use |
 |---|---|---|
-| [Compresr-ai/Context-Gateway](https://github.com/Compresr-ai/Context-Gateway) | Compression layer for LLM context | Long documents before indexing |
 | [microsoft/LLMLingua](https://github.com/microsoft/LLMLingua) | Prompt compression | Long prompts with redundant content |
 | [ooples/token-optimizer-mcp](https://github.com/ooples/token-optimizer-mcp) | MCP server for token optimization | In-agent token counting and trimming |
 | [yvgude/lean-ctx](https://github.com/yvgude/lean-ctx) | Lean context management | Keeping context minimal per session |

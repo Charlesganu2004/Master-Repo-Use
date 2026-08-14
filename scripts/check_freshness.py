@@ -57,7 +57,7 @@ def read_lists():
             continue
         with open(os.path.join(LISTS, fn), encoding="utf-8") as f:
             for line in f:
-                line = line.strip().lstrip("﻿")
+                line = line.strip().lstrip("\ufeff")
                 if not line or line.startswith("#"):
                     continue
                 repo = line.split("#")[0].split()[0].strip()

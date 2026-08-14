@@ -193,3 +193,54 @@ Re-audit on major version bumps. A repo that passed at v1.2 is not a repo that p
 A clean scan is the absence of evidence from four specific tools. It is not proof of safety.
 None of this detects a deliberate backdoor written to look like ordinary code, and none of it
 substitutes for reading what you are about to install.
+
+## Stage B without installing scanners
+
+`scripts/static_audit.py` runs the four checks that actually gate this catalog, using
+only the Python standard library — no gitleaks/Trivy/Semgrep download, no network:
+
+```bash
+mkdir -p /tmp/vet && cd /tmp/vet
+git clone --depth 1 https://github.com/OWNER/NAME.git OWNER_NAME
+python scripts/static_audit.py /tmp/vet
+```
+
+| Class | Blocking? | What it catches |
+| --- | --- | --- |
+| hidden unicode | yes | zero-width, bidi override, Unicode tag chars, soft hyphen in **source** paths |
+| unsafe pr_target | yes | `pull_request_target` that checks out `pull_request.head` — runs fork code with write tokens |
+| hidden (fixture) | no | the same characters under `tests/`, `fixtures/`, `testdata/` |
+| sql injection | no | queries built by concatenation, f-string, or `.format()` |
+| fetch-and-exec | no | `curl … \| sh`, `iwr … \| iex` |
+| install hooks | no | npm lifecycle, `setup.py`/`pyproject` build hooks |
+| malware fixtures | no | paths that look like a shipped malware corpus |
+
+A non-zero count is not a verdict. **Open every finding and read it.** Only the two
+blocking classes stop a repo automatically, and even those get a human look.
+
+### Known false-positive shapes
+
+Recorded from real runs so they are not re-litigated each time:
+
+- **Parameterised SQL with a constant interpolated.** `f"SELECT {COLS} FROM t WHERE id = ANY($1)"`
+  is safe — user data goes through `$1`. The scanner skips a match when a bound-parameter
+  marker (`?`, `$1`, `%s`, `:name`) sits nearby.
+- **`U+200D` between emoji.** That is a ZWJ sequence rendering one glyph, not concealment.
+  Only counted when neither neighbour is pictographic.
+- **Hidden characters in test fixtures.** A repo that ships invisible-character samples is
+  usually testing its own detector. Reported in a separate bucket, never blocking.
+- **Dangerous strings in blocklists.** `"wget * | sh"` inside a `DANGEROUS_COMMANDS` set is
+  a control, not a call. Always read the surrounding lines.
+- **`curl … | sh` in README/Dockerfile.** Install documentation, not repo behaviour. What
+  matters is whether *your* install path executes it.
+- **English prose.** "update", "delete" in a sentence are not SQL. The keyword must be
+  followed by real SQL syntax to match.
+
+### Two things that are always checked by hand
+
+1. **Canonical name.** Ask the API for the repo and compare `full_name` to what you typed.
+   A mismatch means the project moved org — as `chopratejas/headroom` →
+   `headroomlabs-ai/headroom` did. Update the slug. A stale slug is a live supply-chain
+   hole: abandoned org names can be re-registered by anyone.
+2. **Licence.** `NOASSERTION` means GitHub could not identify one. Read the LICENSE file
+   before use; no licence means no permission.

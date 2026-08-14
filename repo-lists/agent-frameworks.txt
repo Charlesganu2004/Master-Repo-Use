@@ -9,3 +9,6 @@ microsoft/Agents-for-net
 runagent-dev/runagent
 github/copilot-sdk
 github/copilot-cli
+omnigent-ai/omnigent
+getomnico/omni
+YeQing17-2026/OmniAgent  # license NOASSERTION - read before use

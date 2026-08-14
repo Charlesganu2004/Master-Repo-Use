@@ -78,9 +78,11 @@ MCP Roots: ALL repo directories (read-only for audit). Never write.
 
 ## Setup CLI
 
+Replace `REVIEWED_VERSION` with an exact package release you inspected before running this command.
+
 ```powershell
 $RepoRoot = (Get-Location).Path  # run from repo root
-npx -y @modelcontextprotocol/server-filesystem $RepoRoot
+npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $RepoRoot
 ```
 
 Note: give Sentinel read access to the full repo, but the MCP server must be configured read-only.

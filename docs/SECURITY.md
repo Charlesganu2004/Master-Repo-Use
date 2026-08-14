@@ -4,6 +4,10 @@ GitHub: https://github.com/Charlesganu2004/Master-Repo-Use
 
 This file covers how the repo protects itself and its agents from attack. Read this before setting up any agent, plugin, or MCP server.
 
+Commands use `REVIEWED_VERSION` as a fail-closed placeholder. Replace it only with an exact release
+version verified against the official package registry and source repository; never replace it with
+`latest` or an automatic-yes flag.
+
 ---
 
 ## Threat Model
@@ -48,10 +52,10 @@ Every MCP server in this repo follows these rules:
 
    ```powershell
    # Correct — scoped to the agents folder
-   npx -y @modelcontextprotocol/server-filesystem C:\Users\Me\Master-Repo-Use\agents
+   npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION C:\Users\Me\Master-Repo-Use\agents
 
    # Wrong — exposes the entire drive
-   npx -y @modelcontextprotocol/server-filesystem C:\
+   npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION C:\
    ```
 
 2. **Minimum toolsets for GitHub MCP** — never enable all toolsets. Use only what the agent needs:

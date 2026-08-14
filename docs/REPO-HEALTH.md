@@ -126,7 +126,7 @@ Repos with open security advisories are flagged Critical by Sentinel. See [agent
 
 <!-- FRESHNESS:START -->
 
-**Last automated check:** 2026-08-10 · **Repos:** 224 · archived 3 · stale 9 · slow 40 · active 172
+**Last automated check:** 2026-08-10 · **Repos:** 220 · archived 3 · stale 9 · slow 40 · active 168
 
 Regenerate with `python scripts/check_freshness.py`. Runs weekly via `.github/workflows/repo-freshness.yml`.
 
@@ -215,7 +215,6 @@ Regenerate with `python scripts/check_freshness.py`. Runs weekly via `.github/wo
 | [atilaahmettaner/tradingview-mcp](https://github.com/atilaahmettaner/tradingview-mcp) | `active` | 2026-08-07 | 3904 |
 | [aws/amazon-braket-sdk-python](https://github.com/aws/amazon-braket-sdk-python) | `active` | 2026-08-03 | 373 |
 | [awslabs/mcp](https://github.com/awslabs/mcp) | `active` | 2026-08-08 | 9578 |
-| [BerriAI/litellm](https://github.com/BerriAI/litellm) | `active` | 2026-08-10 | 55994 |
 | [BIKASH1002/QML-Stock-Predictor](https://github.com/BIKASH1002/QML-Stock-Predictor) | `active` | 2026-06-25 | 8 |
 | [borglab/gtsam](https://github.com/borglab/gtsam) | `active` | 2026-08-10 | 3624 |
 | [bradygaster/Aspiregregator](https://github.com/bradygaster/Aspiregregator) | `active` | 2026-08-08 | 1 |
@@ -224,13 +223,12 @@ Regenerate with `python scripts/check_freshness.py`. Runs weekly via `.github/wo
 | [browser-use/browser-use](https://github.com/browser-use/browser-use) | `active` | 2026-08-06 | 108542 |
 | [ByteDance-Seed/Depth-Anything-3](https://github.com/ByteDance-Seed/Depth-Anything-3) | `active` | 2026-07-27 | 6080 |
 | [CherryHQ/cherry-studio](https://github.com/CherryHQ/cherry-studio) | `active` | 2026-08-10 | 50202 |
-| [chopratejas/headroom](https://github.com/chopratejas/headroom) | `active` | 2026-08-10 | 65698 |
+| [headroomlabs-ai/headroom](https://github.com/headroomlabs-ai/headroom) | `active` | 2026-08-10 | 65698 |
 | [cisco-ai-defense/mcp-scanner](https://github.com/cisco-ai-defense/mcp-scanner) | `active` | 2026-08-07 | 1014 |
 | [cloud-custodian/cloud-custodian](https://github.com/cloud-custodian/cloud-custodian) | `active` | 2026-08-07 | 6043 |
 | [cloudquery/cloudquery](https://github.com/cloudquery/cloudquery) | `active` | 2026-08-10 | 6478 |
 | [coinbase/coinbase-advanced-py](https://github.com/coinbase/coinbase-advanced-py) | `active` | 2026-06-19 | 355 |
 | [colmap/colmap](https://github.com/colmap/colmap) | `active` | 2026-08-08 | 12428 |
-| [Compresr-ai/Context-Gateway](https://github.com/Compresr-ai/Context-Gateway) | `active` | 2026-08-02 | 632 |
 | [confident-ai/deepeval](https://github.com/confident-ai/deepeval) | `active` | 2026-08-10 | 17494 |
 | [crewAIInc/crewAI](https://github.com/crewAIInc/crewAI) | `active` | 2026-08-10 | 56885 |
 | [DhruvaBansal00/robin_stocks_v2](https://github.com/DhruvaBansal00/robin_stocks_v2) | `active` | 2026-08-08 | 7 |
@@ -300,7 +298,6 @@ Regenerate with `python scripts/check_freshness.py`. Runs weekly via `.github/wo
 | [nerfstudio-project/gsplat](https://github.com/nerfstudio-project/gsplat) | `active` | 2026-07-24 | 5509 |
 | [nozomi-koborinai/gcp-cost-mcp-server](https://github.com/nozomi-koborinai/gcp-cost-mcp-server) | `active` | 2026-07-19 | 22 |
 | [nvidia-isaac/nvblox](https://github.com/nvidia-isaac/nvblox) | `active` | 2026-07-03 | 1264 |
-| [NVIDIA-NeMo/Nemotron](https://github.com/NVIDIA-NeMo/Nemotron) | `active` | 2026-08-03 | 1843 |
 | [NVIDIA/cosmos](https://github.com/NVIDIA/cosmos) | `active` | 2026-08-07 | 11425 |
 | [NVIDIA/cuda-quantum](https://github.com/NVIDIA/cuda-quantum) | `active` | 2026-08-10 | 1108 |
 | [NVIDIA/garak](https://github.com/NVIDIA/garak) | `active` | 2026-08-07 | 8746 |
@@ -363,7 +360,6 @@ Regenerate with `python scripts/check_freshness.py`. Runs weekly via `.github/wo
 | [turbot/steampipe](https://github.com/turbot/steampipe) | `active` | 2026-08-09 | 7909 |
 | [tylerebowers/Schwabdev](https://github.com/tylerebowers/Schwabdev) | `active` | 2026-08-09 | 848 |
 | [unitaryfund/mitiq](https://github.com/unitaryfund/mitiq) | `active` | 2026-08-07 | 442 |
-| [unslothai/unsloth](https://github.com/unslothai/unsloth) | `active` | 2026-08-10 | 69777 |
 | [upstash/context7](https://github.com/upstash/context7) | `active` | 2026-08-10 | 60516 |
 | [vespa-engine/vespa](https://github.com/vespa-engine/vespa) | `active` | 2026-08-10 | 7044 |
 | [vllm-project/llm-compressor](https://github.com/vllm-project/llm-compressor) | `active` | 2026-08-10 | 3652 |

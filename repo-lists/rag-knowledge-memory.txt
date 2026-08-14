@@ -4,3 +4,4 @@ upstash/rag-chat
 upstash/vector-js
 satoshiman/rag-cli
 rohitg00/agentmemory
+thedotmack/claude-mem

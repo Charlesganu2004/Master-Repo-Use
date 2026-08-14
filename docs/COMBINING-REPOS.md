@@ -4,6 +4,8 @@ GitHub: https://github.com/Charlesganu2004/Master-Repo-Use
 
 Named stack recipes for common combinations. Each recipe tells you exactly what to clone, install, and connect. Use [STANDALONE-USAGE.md](STANDALONE-USAGE.md) to try one lane first, then combine using the recipes here.
 
+Replace `REVIEWED_VERSION` with an exact package release you inspected; never use `latest` or automatic yes.
+
 ---
 
 ## Recipe 1 — Core Agent Stack
@@ -28,7 +30,7 @@ python -m pip install --upgrade pip lightrag-hku
 **Start the MCP server:**
 ```powershell
 $WorkspacePath = Read-Host "Folder the agent may access"
-npx -y @modelcontextprotocol/server-filesystem $WorkspacePath
+npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $WorkspacePath
 ```
 
 **Wire up:**
@@ -69,7 +71,6 @@ npm install -g @microsoft/m365agentstoolkit-cli
 **Use case:** Maximize work per dollar — compress, cache, and route to the cheapest model that works.
 
 **Repos:**
-- `Compresr-ai/Context-Gateway` — compression proxy
 - `microsoft/LLMLingua` — prompt compression
 - `ooples/token-optimizer-mcp` — MCP token optimizer
 - `yvgude/lean-ctx` — lean context management
@@ -77,15 +78,13 @@ npm install -g @microsoft/m365agentstoolkit-cli
 **Install:**
 ```bash
 pip install llmlingua
-npx -y ooples-token-optimizer-mcp
-curl -fsSL https://compresr.ai/api/install | sh
+npx @ooples/token-optimizer-mcp@REVIEWED_VERSION
 ```
 
 **Wire up:**
 1. Route all large prompts through LLMLingua before sending to the model.
 2. Start the token-optimizer-mcp server and add it to your agent's tool list.
-3. Use Context-Gateway as a proxy layer between your agent and the LLM API.
-4. Follow the checklist in [TOKEN-EFFICIENCY.md](TOKEN-EFFICIENCY.md).
+3. Follow the checklist in [TOKEN-EFFICIENCY.md](TOKEN-EFFICIENCY.md).
 
 ---
 
@@ -187,16 +186,16 @@ python -m pip install --upgrade pip qiskit qiskit-finance qiskit-optimization pe
 ```bash
 # Terminal 1 — filesystem
 read -rp "Folder for filesystem MCP: " fs_path
-npx -y @modelcontextprotocol/server-filesystem "$fs_path"
+npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION "$fs_path"
 
 # Terminal 2 — GitHub (limited toolsets)
 docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKEN" -e GITHUB_TOOLSETS="repos,issues" ghcr.io/github/github-mcp-server
 
 # Terminal 3 — browser
-npx -y @microsoft/playwright-mcp
+npx @playwright/mcp@REVIEWED_VERSION
 
 # Terminal 4 — docs
-npx -y @upstash/context7-mcp
+npx @upstash/context7-mcp@REVIEWED_VERSION
 ```
 
 **Wire up:** Add each server's connection URL to your agent's MCP config. Use minimum toolsets for each. See [docs/MCP-SERVERS.md](MCP-SERVERS.md) for the full reference.
@@ -215,8 +214,8 @@ npx -y @upstash/context7-mcp
 
 **Create the app:**
 ```bash
-npx create-expo-stack@latest my-app --expo-router --nativewind
-cd my-app && npx expo start
+npx create-expo-stack@REVIEWED_VERSION my-app --expo-router --nativewind
+cd my-app && npm exec --offline -- expo start
 ```
 
 **Create the RAG backend:**

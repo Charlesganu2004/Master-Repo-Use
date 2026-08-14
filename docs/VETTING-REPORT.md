@@ -5,8 +5,10 @@ Rejections are recorded so the same candidate is not re-proposed later.
 
 Procedure: [docs/SECURITY-SCANNING.md](SECURITY-SCANNING.md) · Portable version: [skills/dep-audit](../skills/dep-audit/SKILL.md) · Agent: [Vault](../agents/scanner-vault.md)
 
-**Vetted:** 2026-08-05 · **Candidates:** 61 · **Accepted:** 60 · **Rejected:** 1  
-**Revised:** 2026-08-14 — DataDog/guarddog withdrawn after it triggered antivirus on clone.
+**Round 1 — 2026-08-05** · Candidates 61 · Accepted 57 · Rejected 4  
+**Round 2 — 2026-08-14** · Candidates 9 · Accepted 9 · Rejected 0  
+**Catalog total:** 228 repos. Round 1 rejections and the quarantined legacy entry are
+recorded below so the same candidates are not re-proposed.
 
 ## Method
 
@@ -50,15 +52,55 @@ Both files are guarddog's own detection fixtures — the corpus its Semgrep rule
 against. Any malware-detection tool ships something equivalent. Expect the same from
 `trufflesecurity/trufflehog`, `semgrep/semgrep` and `NVIDIA/garak` if their fixtures grow.
 
-**If you clone this catalog's security lane:** do it in a directory excluded from real-time
-scanning, or accept that fixture files will disappear from the working tree. Do not add a
-blanket antivirus exclusion for your whole source directory to make the alert go away.
+Do not create antivirus exclusions to make a clone succeed. This catalog excludes repositories
+whose fixtures trigger resident antivirus; inspect such repositories only in a disposable,
+isolated analysis environment when there is a specific need.
 
-## Rejected (1)
+## Rejected (4)
 
 | Repo | Verdict | Reason |
 | --- | --- | --- |
 | [DataDog/guarddog](https://github.com/DataDog/guarddog) | REJECT | Not malicious — a legitimate Apache-2.0 DataDog supply-chain scanner. Withdrawn on operational grounds: its `tests/analyzer/sourcecode/` corpus contains live malware samples, so cloning it triggers resident antivirus and the working tree gets silently modified by quarantine. See [Antivirus detections during vetting](#antivirus-detections-during-vetting). Equivalent coverage is available from the remaining lane members without the AV interaction. |
+| [BerriAI/litellm](https://github.com/BerriAI/litellm) | REJECT | No malware claim. Held out of automatic recommendation because Semgrep scanned zero of 9,385 files, the repo exposes a shell installer, and the remaining scans reported 25 non-test secret-pattern hits plus a critical Trivy finding. Reconsider only after a complete, version-specific review. |
+| [NVIDIA-NeMo/Nemotron](https://github.com/NVIDIA-NeMo/Nemotron) | REJECT | No malware claim. The reduced Semgrep ruleset and large unresolved dependency surface (362 Trivy HIGH/CRITICAL findings and 1,258 OSV findings in the captured scan) do not meet this catalog's unattended-install threshold. Reconsider a pinned subcomponent after a scoped review. |
+| [unslothai/unsloth](https://github.com/unslothai/unsloth) | REJECT | No malware claim. The run-code audit found remote-evaluation/shell-installer behavior and five install-time hooks. That is too much install-time execution for an automatic recommendation without a version-specific manual review. |
+
+### Quarantined legacy entry (outside the 61-candidate run)
+
+| Repo | Verdict | Reason |
+| --- | --- | --- |
+| [Compresr-ai/Context-Gateway](https://github.com/Compresr-ai/Context-Gateway) | QUARANTINE | No malware claim and no matching installed artifact was found on this host. Removed from active guidance because the catalog told users to pipe a mutable remote installer directly into a shell for a component positioned between agents and model APIs. It requires a separate source, release, and installer audit before reconsideration. |
+
+## Round 2 — agent tooling (2026-08-14)
+
+**Candidates:** 9 · **Accepted:** 9 · **Rejected:** 0
+
+Stage B ran on [`scripts/static_audit.py`](../scripts/static_audit.py) — standard-library
+only, no scanner install. It covers hidden Unicode, SQL injection, fetch-and-exec,
+install-time hooks and shipped malware fixtures. Every non-clean result below was opened
+and read; the triage is recorded rather than summarised away.
+
+| Repo | Verdict | License | Stars | Last push | Findings triaged |
+| --- | --- | --- | --- | --- | --- |
+| [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | PASS | Apache-2.0 | 90.7k | 2026-08-14 | SQL all parameterised (`.prepare().run(?,?)`); ZWJ is an emoji sequence in `plugin/modes/law-study.json`; 47 `curl\|bash` are install docs |
+| [headroomlabs-ai/headroom](https://github.com/headroomlabs-ai/headroom) | PASS-WITH-NOTE | Apache-2.0 | 66.3k | 2026-08-14 | **moved org** from `chopratejas/headroom` — catalog slug updated; ZWSP at `headroom/learn/analyzer.py:494` breaks up a fenced block inside a docstring; `pull_request_target` checks out `base.sha` |
+| [omnigent-ai/omnigent](https://github.com/omnigent-ai/omnigent) | PASS | Apache-2.0 | 8.8k | 2026-08-14 | 12 SQL hits are Alembic DDL migrations with constant table names; hidden Unicode is in two test fixtures; all `pull_request_target` workflows check out base and SHA-pin `actions/checkout` |
+| [getomnico/omni](https://github.com/getomnico/omni) | PASS | Apache-2.0 | 758 | 2026-08-09 | `ANY($1)` asyncpg binding — only a module constant is interpolated; ZWSP in a test text corpus |
+| [rebelytics/one-skill-to-rule-them-all](https://github.com/rebelytics/one-skill-to-rule-them-all) | PASS | CC-BY-4.0 | 1.8k | 2026-08-14 | fully clean (10 files); CC-BY is a docs licence — attribute if redistributed |
+| [centminmod/my-claude-code-setup](https://github.com/centminmod/my-claude-code-setup) | PASS-WITH-NOTE | MIT | 2.6k | 2026-08-01 | **ships invisible-character fixtures on purpose** in `.claude/commands/security/test-examples/` for prompt-injection detection — same class as guarddog, but inert text, no executable payload, so no antivirus interaction |
+| [hoangsonww/Claude-Code-Agent-Monitor](https://github.com/hoangsonww/Claude-Code-Agent-Monitor) | PASS-WITH-NOTE | MIT | 909 | 2026-08-13 | ZWSP in `README-VN.md` (Vietnamese text) and vendored `mermaid.min.js`; npm lifecycle hooks in 3 `package.json` |
+| [simple10/agents-observe](https://github.com/simple10/agents-observe) | PASS | MIT | 645 | 2026-07-22 | clean on every check |
+| [YeQing17-2026/OmniAgent](https://github.com/YeQing17-2026/OmniAgent) | PASS-WITH-NOTE | NOASSERTION | 2.6k | 2026-07-27 | **licence unidentified — read it before any use.** The `wget * \| sh` hit is an entry in a `DANGEROUS_COMMANDS` blocklist, i.e. a control, not a call |
+
+**False-positive shapes found this round**, now handled in the scanner:
+
+- `f"...{col} FROM t WHERE id = ANY($1)"` — interpolating a *constant* beside a bound
+  parameter is safe. The rule now skips a match when a bound-parameter marker is nearby.
+- `U+200D` between two pictographic codepoints is an emoji sequence, not concealment.
+- Hidden characters under `tests/`, `fixtures/`, `testdata/` are reported separately
+  from source hits — a repo testing its own defences is not a repo attacking you.
+- English prose containing "update"/"delete" no longer matches; the keyword must be
+  followed by real SQL syntax.
 
 ## Accepted
 
@@ -123,13 +165,10 @@ blanket antivirus exclusion for your whole source directory to make the alert go
 
 | Repo | Verdict | License | Last push | Scan summary | Notes |
 | --- | --- | --- | --- | --- | --- |
-| [BerriAI/litellm](https://github.com/BerriAI/litellm) | PASS-WITH-NOTE | NOASSERTION | 2026-08-05 | gl 25 · tv 6 · osv 123 · sg 0 · hooks 1 | license NOASSERTION - needs manual read; gitleaks: 25 in non-test paths (e.g. cookbook/litellm_proxy_server/braintrust_prompt_wrapper_server.py); install-time execution: shell-installer (scripts/install.sh); trivy 1 CRIT |
 | [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) | PASS-WITH-NOTE | MIT | 2026-07-13 | gl 1 · tv 0 · osv 0 · sg 20 · hooks 0 | gitleaks: 1 in non-test paths (e.g. lm_eval/models/megatron_lm.py) |
 | [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) | PASS-WITH-NOTE | MIT | 2026-08-05 | gl 1 · tv 4 · osv 1240 · sg 16 · hooks 0 | gitleaks: 1 in non-test paths (e.g. tools/server/README.md); npm lifecycle hooks: 1 |
-| [NVIDIA-NeMo/Nemotron](https://github.com/NVIDIA-NeMo/Nemotron) | PASS-WITH-NOTE | Apache-2.0 | 2026-08-03 | gl 1 · tv 362 · osv 1258 · sg 2 · hooks 0 | gitleaks: 1 in non-test paths (e.g. skills/nemotron-retrieval-recipes/references/rerank.md) |
 | [QwenLM/Qwen3.6](https://github.com/QwenLM/Qwen3.6) | PASS | Apache-2.0 | 2026-06-03 | gl 0 · tv 0 · osv 0 · sg 0 · hooks 0 | clean |
 | [sgl-project/sglang](https://github.com/sgl-project/sglang) | PASS-WITH-NOTE | Apache-2.0 | 2026-08-05 | gl 9 · tv 14 · osv 8 · sg 381 · hooks 0 | gitleaks: 9 in non-test paths (e.g. .github/workflows/pr-test-sgl-router.yml); trivy 2 CRITICAL (of 14 HIGH+) |
-| [unslothai/unsloth](https://github.com/unslothai/unsloth) | PASS-WITH-NOTE | Apache-2.0 | 2026-08-05 | gl 0 · tv 5 · osv 68 · sg 132 · hooks 5 | install-time execution: remote-eval,shell-installer (install.sh) |
 | [vllm-project/llm-compressor](https://github.com/vllm-project/llm-compressor) | PASS-WITH-NOTE | Apache-2.0 | 2026-08-05 | gl 1 · tv 0 · osv 0 · sg 5 · hooks 0 | gitleaks: 1 in non-test paths (e.g. src/llmcompressor/modeling/deepseekv32/model.py) |
 | [vllm-project/vllm](https://github.com/vllm-project/vllm) | PASS-WITH-NOTE | Apache-2.0 | 2026-08-05 | gl 20 · tv 2 · osv 33 · sg 64 · hooks 0 | gitleaks: 20 in non-test paths (e.g. .buildkite/test_areas/fault_tolerance.yaml) |
 | [zai-org/GLM-5](https://github.com/zai-org/GLM-5) | PASS | Apache-2.0 | 2026-07-15 | gl 0 · tv 0 · osv 10 · sg 0 · hooks 0 | clean |
@@ -152,9 +191,9 @@ blanket antivirus exclusion for your whole source directory to make the alert go
 | [snyk/cli](https://github.com/snyk/cli) | PASS-WITH-NOTE | NOASSERTION | 2026-08-05 | gl 0 · tv 0 · osv 6068 · sg 14 · hooks 4 | license NOASSERTION - needs manual read; install-time execution: make-pipe-exec,npm-lifecycle (cliv2/Makefile); npm lifecycle hooks: 3 |
 | [trufflesecurity/trufflehog](https://github.com/trufflesecurity/trufflehog) | PASS-WITH-NOTE | AGPL-3.0 | 2026-08-05 | gl 25 · tv 5 · osv 22 · sg 11 · hooks 1 | copyleft: AGPL-3.0; install-time execution: shell-installer (scripts/install.sh); gitleaks hits are detector example credentials, inherent to a secret-scanning tool [verified] |
 
-## Not fully vetted — held back
+## Coverage gap that caused rejection
 
-These repos completed Stage A and the rest of Stage B, but **Semgrep returned zero scanned files** — its per-file timeout was exceeded on a large tree. Secrets, dependency CVEs, and the run-code audit still ran and are reported above; the code-pattern layer specifically is missing for them.
+The repository below completed Stage A and the rest of Stage B, but **Semgrep returned zero scanned files** — its per-file timeout was exceeded on a large tree. Secrets, dependency CVEs, and the run-code audit still ran; the missing code-pattern layer is why it is rejected rather than accepted with a note.
 
 | Repo | Files in repo | Semgrep files scanned |
 | --- | --- | --- |

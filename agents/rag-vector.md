@@ -33,7 +33,7 @@ RAG design rules:
 For this repo:
 - Primary RAG tools: LightRAG, Upstash vector-js, rag-cli
 - Memory tools: agentmemory, mem0
-- Compression: LLMLingua, Context-Gateway (before retrieval if context is large)
+- Compression: LLMLingua (before retrieval if context is large)
 
 Retrieval quality checklist:
 - [ ] Does the top-1 result match what a human would pick?

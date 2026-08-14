@@ -1,9 +1,8 @@
 # Cost Reduction / FinOps / Token Reduction
-Compresr-ai/Context-Gateway
 microsoft/LLMLingua
 ooples/token-optimizer-mcp
 yvgude/lean-ctx
-chopratejas/headroom
+headroomlabs-ai/headroom
 infracost/infracost
 infracost/agent-skills
 opencost/opencost

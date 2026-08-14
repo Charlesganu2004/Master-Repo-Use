@@ -4,6 +4,8 @@ GitHub: https://github.com/Charlesganu2004/Master-Repo-Use
 
 A plugin is a self-contained agent + tool package. It can be installed into any project with one command and immediately runs its smoke test. This guide shows how to scaffold, document, and publish a new plugin.
 
+Replace `REVIEWED_VERSION` with an exact package release you inspected; never use `latest` or automatic yes.
+
 ---
 
 ## Plugin Structure
@@ -196,7 +198,7 @@ Add the plugin's allowed paths to the MCP server startup:
 ```powershell
 $PluginPath = Read-Host "Path to plugin folder"
 $DataPath = Join-Path $PluginPath "data"
-npx -y @modelcontextprotocol/server-filesystem $DataPath
+npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $DataPath
 ```
 
 ---

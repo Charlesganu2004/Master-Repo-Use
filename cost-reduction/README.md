@@ -32,7 +32,6 @@ Agent request
 
 | Repo | Use it when | Connects to |
 | --- | --- | --- |
-| [Compresr-ai/Context-Gateway](https://github.com/Compresr-ai/Context-Gateway) | You want context compression in front of agent workflows. | MCP/tool output reduction and long sessions. |
 | [microsoft/LLMLingua](https://github.com/microsoft/LLMLingua) | You want prompt compression research/tools. | Custom RAG and API pipelines. |
 | [ooples/token-optimizer-mcp](https://github.com/ooples/token-optimizer-mcp) | You want an MCP server focused on token optimization. | MCP cost reduction experiments. |
 | [yvgude/lean-ctx](https://github.com/yvgude/lean-ctx) | You want a context engineering / lean context utility. | Agent context cleanup. |
@@ -85,11 +84,8 @@ Install Infracost CLI with Chocolatey:
 choco install infracost
 ```
 
-Install Infracost CLI with script, WSL/Bash:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
-```
+For other platforms, use a versioned release from Infracost's official release page and verify
+the published checksum before installing. Do not pipe a mutable remote script directly to a shell.
 
 Run Infracost in a Terraform folder:
 

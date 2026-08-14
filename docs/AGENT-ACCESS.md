@@ -4,6 +4,9 @@ This guide is for the "let the agent go more places on the computer depending on
 
 The short version: use explicit allowed directories. Do not give an agent the whole machine unless you have a very specific reason and you are comfortable with the risk.
 
+Replace `REVIEWED_VERSION` in every command or JSON example with an exact package release you have
+verified. It is deliberately not a working `latest` alias.
+
 ![Agent access model](../assets/agent-access-map.svg)
 
 Read this diagram as a permission ladder. Start with one repo folder, add an AgentLab folder for multi-repo experiments, then add personal folders or broader paths only when the task truly needs them.
@@ -62,6 +65,16 @@ Why this repo matters:
 - It restricts operations to allowed directories.
 - MCP Roots can update allowed directories at runtime when the host supports it.
 
+Install the exact reviewed package into a dedicated tools folder before configuring a host:
+
+```powershell
+$McpTools = Read-Host "Dedicated folder for reviewed MCP packages"
+npm install --prefix $McpTools @modelcontextprotocol/server-filesystem@REVIEWED_VERSION
+```
+
+The host examples below run that installed entry point directly. They never download packages at
+host startup; replace both placeholders before use.
+
 ### Windows VS Code MCP Config Example
 
 Use this as a template, not a secret-bearing file. Put it in your MCP host config if your host supports this shape.
@@ -70,12 +83,9 @@ Use this as a template, not a secret-bearing file. Put it in your MCP host confi
 {
   "servers": {
     "filesystem": {
-      "command": "cmd",
+      "command": "node",
       "args": [
-        "/c",
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
+        "<PATH_TO_MCP_TOOLS>/node_modules/@modelcontextprotocol/server-filesystem/dist/index.js",
         "<PATH_TO_MASTER_REPO>",
         "<PATH_TO_AGENT_LAB>"
       ]
@@ -90,10 +100,9 @@ Use this as a template, not a secret-bearing file. Put it in your MCP host confi
 {
   "servers": {
     "filesystem": {
-      "command": "npx",
+      "command": "node",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
+        "<PATH_TO_MCP_TOOLS>/node_modules/@modelcontextprotocol/server-filesystem/dist/index.js",
         "<PATH_TO_MASTER_REPO>",
         "<PATH_TO_AGENT_LAB>"
       ]
@@ -202,10 +211,9 @@ Each named agent in `agents/` should be given only the MCP roots it needs. This 
 {
   "servers": {
     "filesystem": {
-      "command": "cmd",
+      "command": "node",
       "args": [
-        "/c", "npx", "-y",
-        "@modelcontextprotocol/server-filesystem",
+        "<PATH_TO_MCP_TOOLS>/node_modules/@modelcontextprotocol/server-filesystem/dist/index.js",
         "C:/Users/YOU/Downloads/Master-Repo-Use/agents",
         "C:/Users/YOU/Downloads/Master-Repo-Use/issues",
         "C:/Users/YOU/Downloads/Master-Repo-Use/docs"

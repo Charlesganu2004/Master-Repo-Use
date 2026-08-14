@@ -4,6 +4,9 @@ GitHub: https://github.com/Charlesganu2004/Master-Repo-Use
 
 Plugins are self-contained agent + tool packages. Install one with a single command, run the smoke test, and it is ready. Each plugin has its own risk limits, audit log, and paper-mode default.
 
+Replace `REVIEWED_VERSION` with an exact package release you inspected. The placeholder deliberately
+fails; never turn it into `latest` or add an automatic-yes flag.
+
 ---
 
 ## Plugin Index
@@ -72,7 +75,7 @@ python -m pip install -e .
 $env:ALPACA_API_KEY = Read-Host "Alpaca paper API key"
 $env:ALPACA_SECRET_KEY = Read-Host "Alpaca paper secret"
 $env:ALPACA_PAPER = "true"
-npx -y alpaca-mcp-server
+uvx alpaca-mcp-server==REVIEWED_VERSION
 ```
 
 Then wire the plugin's commands to the Alpaca MCP server in your agent config.
@@ -99,7 +102,7 @@ Then wire the plugin's commands to the Alpaca MCP server in your agent config.
 Add the plugin folder to the MCP allowed paths:
 ```powershell
 $PluginPath = Read-Host "Path to plugin"
-npx -y @modelcontextprotocol/server-filesystem $PluginPath
+npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $PluginPath
 ```
 
 ---

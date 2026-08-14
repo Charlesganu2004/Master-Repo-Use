@@ -28,7 +28,7 @@ satisfied.
 | VRAM ceiling (one consumer card) | Smallest model that passes your eval, on [llama.cpp](https://github.com/ggml-org/llama.cpp) with a quantised GGUF | Single-stream runtime, low overhead, runs CPU-only if it has to |
 | VRAM ceiling (one or more datacentre GPUs, multi-user) | [vLLM](https://github.com/vllm-project/vllm) with a quantised checkpoint from [llm-compressor](https://github.com/vllm-project/llm-compressor) | Paged KV cache is what makes the memory budget stretch across concurrent requests |
 | p99 latency, interactive, many users | [SGLang](https://github.com/sgl-project/sglang) or vLLM, tuned for concurrency | Prefix caching and continuous batching hold tail latency under load |
-| Cost per million tokens, low volume | Hosted API behind [LiteLLM](https://github.com/BerriAI/litellm) | Below a few million tokens a month, self-hosting rarely wins once engineering time counts |
+| Cost per million tokens, low volume | Hosted API, optionally behind a separately audited and version-pinned gateway | Below a few million tokens a month, self-hosting rarely wins once engineering time counts |
 | Cost per million tokens, high steady volume | Self-host vLLM or SGLang on reserved GPUs | Utilisation is the whole argument; idle GPUs destroy it |
 | Data residency / air-gapped | Any open-weight family below, self-hosted, licence checked | Non-negotiable: it eliminates hosted APIs outright |
 | Legal / redistribution risk | Apache-2.0 or MIT weights only — see the licence table | Restricted weight licences are the most common late-stage blocker |
@@ -77,7 +77,6 @@ throughput server for one desktop user adds operational weight for nothing.
 | [vllm-project/vllm](https://github.com/vllm-project/vllm) | You need a multi-user, OpenAI-compatible endpoint with high throughput and memory-efficient KV cache handling. | `pip install vllm` then `vllm serve <model-id>` | Apache-2.0 |
 | [sgl-project/sglang](https://github.com/sgl-project/sglang) | Your traffic shares long prefixes (system prompts, RAG context, agent loops), or you need an RL rollout backend or structured-generation frontend. | `pip install "sglang[all]"` then `python -m sglang.launch_server --model-path <model-id>` | Apache-2.0 |
 | [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) | You are serving one machine — laptop, workstation, edge box — possibly CPU-only, and want minimal setup with GGUF weights. | `llama-server -m ./model.gguf --port 8080` (build per README) | MIT |
-| [BerriAI/litellm](https://github.com/BerriAI/litellm) | You want one OpenAI-format interface over many providers, with routing, fallbacks, retries, rate limiting and spend tracking. | `pip install "litellm[proxy]"` then `litellm --config config.yaml` | MIT, **except** `enterprise/`, which is under a separate commercial LiteLLM Enterprise licence |
 
 ### Which class is which
 
@@ -86,18 +85,17 @@ throughput server for one desktop user adds operational weight for nothing.
 | vLLM | Throughput server | Concurrent requests, continuous batching, paged KV cache | Single-user desktop use |
 | SGLang | Throughput server | Prefix-cache reuse across requests, structured generation | Single-user desktop use |
 | llama.cpp | Local runtime | One stream, low setup cost, CPU or mixed CPU/GPU | Production multi-user serving |
-| LiteLLM | Gateway / router | Provider abstraction, failover, cost accounting | It is not an inference engine; it needs one behind it |
 
 ### Supporting tooling
 
 | Repo | Use it when | Fast start | License |
 |---|---|---|---|
 | [vllm-project/llm-compressor](https://github.com/vllm-project/llm-compressor) | You need to quantise or sparsify a checkpoint (GPTQ, AWQ, SmoothQuant, FP8/NVFP4) into something vLLM can load. | `pip install llmcompressor` | Apache-2.0 |
-| [unslothai/unsloth](https://github.com/unslothai/unsloth) | You have decided fine-tuning or RL post-training is genuinely necessary and want it to fit on modest VRAM. | `pip install unsloth` | Split: Apache-2.0 for the core library (`unsloth/`, `tests/`, `scripts/`); **AGPL-3.0** for optional components including `studio/`. Check which parts you actually import. |
 | [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) | You want standard academic benchmarks as a sanity check, with HF / vLLM / SGLang / OpenAI-compatible backends. | `pip install lm-eval` then `lm_eval --model hf --model_args pretrained=<model-id> --tasks <task>` | MIT |
 
 Fine-tuning is usually the wrong first move. Prompting, retrieval, and a larger base model are
-cheaper to try and easier to reverse. Reach for unsloth after those fail on a measured case.
+cheaper to try and easier to reverse. Evaluate a version-pinned fine-tuning tool only after those
+options fail on a measured case and its install-time behavior has been reviewed.
 
 ---
 
@@ -109,7 +107,6 @@ The licence column is the point of this table. Read it before the description.
 |---|---|---|---|
 | [QwenLM/Qwen3.6](https://github.com/QwenLM/Qwen3.6) | You want permissive small-to-mid dense and MoE open weights (roughly 0.8B to 35B-A3B) and need a clean commercial licence with no strings. | Weights on Hugging Face; serve with `vllm serve <model-id>` (ids listed in the repo README) | **Apache-2.0 for all open-weight Qwen3.5/3.6 models** — no user-count cap, no acceptable-use rider. Code and weights alike. |
 | [zai-org/GLM-5](https://github.com/zai-org/GLM-5) | You need frontier-scale capability self-hosted — 744B MoE, ~40B active per token, 1M-token context, BF16 and FP8 releases — and can supply the hardware. | Weights on Hugging Face; multi-GPU vLLM or SGLang deployment per the repo README | **Split but both permissive:** Apache-2.0 for repository code, MIT for the model weights (verified for GLM-5.2 on Hugging Face; no regional restriction found). |
-| [NVIDIA-NeMo/Nemotron](https://github.com/NVIDIA-NeMo/Nemotron) | You need reproducible end-to-end training recipes and open training data alongside the weights — Nano (~31.6B), Super (~120B), Ultra (~550B). | Recipes and asset pointers in the repo; weights on Hugging Face | **FLAG — split licensing.** Repository code is Apache-2.0, but the **model weights are under the NVIDIA Open Model License**, a separate non-OSI open-model licence with its own terms. Do not treat this family as Apache-2.0. Read the weight licence before any commercial deployment. |
 
 ### Licence at a glance
 
@@ -117,7 +114,6 @@ The licence column is the point of this table. Read it before the description.
 |---|---|---|---|
 | Qwen3.5 / Qwen3.6 | Apache-2.0 | Apache-2.0 | Yes |
 | GLM-5 | Apache-2.0 | MIT | Yes |
-| Nemotron 3 | Apache-2.0 | NVIDIA Open Model License | **Read it first** — not OSI, separate terms |
 
 Rules that hold across the lane:
 
@@ -198,9 +194,9 @@ failures at 3am.
 | Licence or vendor-independence requirement | Self-host, with the weight licence verified for your exact deployment. |
 | Unclear volume | Ship on hosted first, measure real token volume for a month, then revisit. |
 
-Put [LiteLLM](https://github.com/BerriAI/litellm) in front either way. It keeps the switch between
-hosted and self-hosted a config change instead of a rewrite, and it gives you the spend numbers
-the comparison above needs.
+If provider abstraction is necessary, place a separately audited, version-pinned gateway in front.
+Keep credentials scoped to the minimum providers and record spend independently so the hosted versus
+self-hosted comparison remains measurable.
 
 ---
 

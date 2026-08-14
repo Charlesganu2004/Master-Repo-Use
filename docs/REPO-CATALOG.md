@@ -2,13 +2,15 @@
 
 Use this file as the detailed reading path. Each row explains what the repo is for, how to get started, and where it fits in the bigger system.
 
+Replace `REVIEWED_VERSION` with an exact package release you inspected; never use `latest` or automatic yes.
+
 ## System View
 
 | Layer | Job | Repos to inspect first |
 | --- | --- | --- |
 | Agent orchestration | Agent roles, teams, tools, task routing | `squad`, `microsoft/agents`, `Agents-for-net`, `copilot-cli` |
 | Knowledge and memory | Search docs, retrieve facts, keep durable project memory | `LightRAG`, `AugmentR`, `rag-chat`, `vector-js`, `agentmemory` |
-| Context control | Reduce token pressure and keep long sessions coherent | `Context-Gateway`, `LLMLingua`, `Prompt-Compression-Survey` |
+| Context control | Reduce token pressure and keep long sessions coherent | `LLMLingua`, `Prompt-Compression-Survey`, `lean-ctx` |
 | MCP server layer | Connect tools through explicit, scoped server boundaries | `modelcontextprotocol/servers`, `github-mcp-server`, `playwright-mcp`, `context7` |
 | Copilot Studio front door | Connect business-facing agents to APIs, MCP, and code agents | `microsoft/agents`, `Agents-for-net`, MCP connector docs |
 | Product surface | Mobile/web app shell, docs structure, user experience | `expo`, `create-expo-stack`, `github/docs` |
@@ -90,7 +92,6 @@ Status key: `active` = actively maintained · `experimental` = works but not pro
 
 | Repo or article | Use it when | Fast start | Connects to |
 | --- | --- | --- | --- |
-| [Compresr-ai/Context-Gateway](https://github.com/Compresr-ai/Context-Gateway) | You want a proxy that compresses agent history/tool output before context gets too large. | In WSL/Bash: `curl -fsSL https://compresr.ai/api/install \| sh`; then `context-gateway`. | Works between coding agents and model APIs. |
 | [microsoft/LLMLingua](https://github.com/microsoft/LLMLingua) | You want prompt compression research and Python tooling. | `pip install llmlingua` | Useful for custom RAG/context pipelines. |
 | [ZongqianLi/Prompt-Compression-Survey](https://github.com/ZongqianLi/Prompt-Compression-Survey) | You want the research map before choosing a compression method. | Read the survey and linked papers. | Helps compare prompt compression strategies. |
 | [GitHub Copilot CLI context docs](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/context-management) | You want to understand `/context`, `/compact`, checkpoints, and long CLI sessions. | Install Copilot CLI, then use `/context` and `/compact` inside sessions. | Directly relevant to CLI agent usage. |
@@ -209,7 +210,7 @@ Quantum trading and investing guide: [quantum/QUANTUM-TRADING.md](../quantum/QUA
 | --- | --- | --- |
 | [ooples/token-optimizer-mcp](https://github.com/ooples/token-optimizer-mcp) | You want MCP token optimization experiments. | MCP cost control. |
 | [yvgude/lean-ctx](https://github.com/yvgude/lean-ctx) | You want lean context engineering tools. | Agent context cleanup. |
-| [chopratejas/headroom](https://github.com/chopratejas/headroom) | You want headroom/context tracking ideas. | Long sessions and budget checks. |
+| [headroomlabs-ai/headroom](https://github.com/headroomlabs-ai/headroom) | You want headroom/context tracking ideas. | Long sessions and budget checks. |
 | [infracost/infracost](https://github.com/infracost/infracost) | You want infrastructure cost estimates. | PR review, CI, GitHub MCP. |
 | [infracost/agent-skills](https://github.com/infracost/agent-skills) | You want Infracost agent skills. | Coding-agent cost review. |
 | [opencost/opencost](https://github.com/opencost/opencost) | You want Kubernetes cost monitoring. | K8s and cloud agents. |
@@ -260,7 +261,7 @@ Pitch and hackathon tools are standalone support. They can consume project summa
 
 | Repo | Use it when | Fast start | Connects to |
 | --- | --- | --- | --- |
-| [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) | You need reference MCP servers, especially filesystem access. | Filesystem command: `npx -y @modelcontextprotocol/server-filesystem <allowed-dir>` | Lets agents read/write only approved local directories. |
+| [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) | You need reference MCP servers, especially filesystem access. | Filesystem command: `npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION [allowed-dir]` | Lets agents read/write only approved local directories. |
 | [github/github-mcp-server](https://github.com/github/github-mcp-server) | You want agents to work with GitHub repos, issues, PRs, Actions, and security tools. | Docker: `docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN ghcr.io/github/github-mcp-server` | Add GitHub capabilities with token scopes and toolsets. |
 
 ## Article And Topic Discoveries
@@ -382,12 +383,10 @@ Full guide: [docs/LLM-MODELS.md](LLM-MODELS.md) · Security verdicts: [docs/VETT
 
 | Repo | What it is | License | Status |
 | --- | --- | --- | --- |
-| [BerriAI/litellm](https://github.com/BerriAI/litellm) | Unified OpenAI-format SDK and deployable proxy/gateway fronting 100+ LLM providers, with routing, fallbacks, retries, rate… | NOASSERTION — FLAG if you plan to use enterprise features | vetted, see notes |
 | [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) | Few-shot evaluation framework covering 60+ academic benchmarks with pluggable backends (HF Transformers, vLLM, SGLang,… | MIT | vetted, see notes |
 | [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) | C/C++ LLM inference with minimal setup, GGUF weights, and an included OpenAI-compatible server; runs CPU-only or GPU-accelerated… | MIT | vetted, see notes |
 | [QwenLM/Qwen3.6](https://github.com/QwenLM/Qwen3.6) | Official repo for the Qwen3.5 and Qwen3.6 model generations - dense and MoE open-weight models spanning roughly 0.8B to 35B-A3B,… | Apache-2.0 | vetted |
 | [sgl-project/sglang](https://github.com/sgl-project/sglang) | Serving framework for LLMs and multimodal models built around RadixAttention prefix caching and a structured-generation frontend… | Apache-2.0 | vetted, see notes |
-| [unslothai/unsloth](https://github.com/unslothai/unsloth) | Fine-tuning and RL post-training framework with hand-written Triton kernels, giving roughly 2x faster training and ~70% less VRAM… | Apache-2.0 — AGPL-3 | vetted, see notes |
 | [vllm-project/llm-compressor](https://github.com/vllm-project/llm-compressor) | Transformers-compatible library for applying quantisation and compression algorithms (GPTQ, AWQ, SmoothQuant, FP8/NVFP4,… | Apache-2.0 | vetted, see notes |
 | [vllm-project/vllm](https://github.com/vllm-project/vllm) | High-throughput, memory-efficient LLM inference and serving engine with an OpenAI-compatible API | Apache-2.0 | vetted, see notes |
 | [zai-org/GLM-5](https://github.com/zai-org/GLM-5) | Official repo for the GLM-5 series - a 744B-parameter MoE with ~40B active per token, 1M-token context, released in BF16 and FP8,… | Apache-2.0 | vetted |
@@ -483,13 +482,10 @@ Full guide: [docs/LLM-MODELS.md](LLM-MODELS.md) · Security verdicts: [docs/VETT
 
 | Repo | What it is | License | Status |
 | --- | --- | --- | --- |
-| [BerriAI/litellm](https://github.com/BerriAI/litellm) | Unified OpenAI-format SDK and deployable proxy/gateway fronting 100+ LLM providers, with routing, fallbacks, retries, rate… | NOASSERTION — FLAG if you plan to use enterprise features | vetted, see notes |
 | [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) | Few-shot evaluation framework covering 60+ academic benchmarks with pluggable backends (HF Transformers, vLLM, SGLang,… | MIT | vetted, see notes |
 | [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) | C/C++ LLM inference with minimal setup, GGUF weights, and an included OpenAI-compatible server; runs CPU-only or GPU-accelerated… | MIT | vetted, see notes |
-| [NVIDIA-NeMo/Nemotron](https://github.com/NVIDIA-NeMo/Nemotron) | Developer asset hub for the Nemotron 3 family (Nano ~31.6B, Super ~120B, Ultra ~550B) - reproducible end-to-end training recipes,… | Apache-2.0 — FLAG - split licensing: repository code is Apache-2 | vetted, see notes |
 | [QwenLM/Qwen3.6](https://github.com/QwenLM/Qwen3.6) | Official repo for the Qwen3.5 and Qwen3.6 model generations - dense and MoE open-weight models spanning roughly 0.8B to 35B-A3B,… | Apache-2.0 | vetted |
 | [sgl-project/sglang](https://github.com/sgl-project/sglang) | Serving framework for LLMs and multimodal models built around RadixAttention prefix caching and a structured-generation frontend… | Apache-2.0 | vetted, see notes |
-| [unslothai/unsloth](https://github.com/unslothai/unsloth) | Fine-tuning and RL post-training framework with hand-written Triton kernels, giving roughly 2x faster training and ~70% less VRAM… | Apache-2.0 — AGPL-3 | vetted, see notes |
 | [vllm-project/llm-compressor](https://github.com/vllm-project/llm-compressor) | Transformers-compatible library for applying quantisation and compression algorithms (GPTQ, AWQ, SmoothQuant, FP8/NVFP4,… | Apache-2.0 | vetted, see notes |
 | [vllm-project/vllm](https://github.com/vllm-project/vllm) | High-throughput, memory-efficient LLM inference and serving engine with an OpenAI-compatible API | Apache-2.0 | vetted, see notes |
 | [zai-org/GLM-5](https://github.com/zai-org/GLM-5) | Official repo for the GLM-5 series - a 744B-parameter MoE with ~40B active per token, 1M-token context, released in BF16 and FP8,… | Apache-2.0 | vetted |

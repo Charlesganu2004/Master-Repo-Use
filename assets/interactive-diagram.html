@@ -113,13 +113,14 @@
 
 <h1>Master Repo Use — Interactive Diagrams</h1>
 <p class="subtitle">Click a path node to see details. Click a combination card to see the stack recipe.</p>
+<p class="subtitle"><strong>Command safety:</strong> replace REVIEWED_VERSION with an exact package release you inspected; install it deliberately before using a noninteractive host.</p>
 
 <div class="tab-row">
   <div class="tab active" onclick="showDiagram('main')">Main Flow</div>
   <div class="tab" onclick="showDiagram('standalone')">Standalone Paths</div>
   <div class="tab" onclick="showDiagram('combinations')">Combinations</div>
-  <div class="tab" onclick="showDiagram('trading')">Trading & Finance</div>
-  <div class="tab" onclick="showDiagram('cost')">Cost & Tokens</div>
+  <div class="tab" onclick="showDiagram('trading')">Trading &amp; Finance</div>
+  <div class="tab" onclick="showDiagram('cost')">Cost &amp; Tokens</div>
   <div class="tab" onclick="showDiagram('agents')">Agent Roster</div>
 </div>
 
@@ -191,7 +192,7 @@
       <li>Context7 — live library documentation lookup</li>
       <li>Alpaca MCP — paper trading (never live without approval)</li>
     </ul>
-    <div class="standalone-badge" onclick="alert('npx -y @modelcontextprotocol/server-filesystem YOUR_FOLDER')">→ Standalone: run one MCP server first</div>
+    <div class="standalone-badge" onclick="alert('npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION YOUR_FOLDER')">→ Standalone: run one MCP server first</div>
   </div>
 
   <div id="detail-rag" class="detail-panel">
@@ -201,7 +202,6 @@
       <li>Upstash vector-js — serverless vector store</li>
       <li>AgentMemory — persistent durable memory</li>
       <li>LLMLingua — prompt compression (reduce tokens before sending)</li>
-      <li>Context-Gateway — compression proxy layer</li>
     </ul>
     <div class="standalone-badge" onclick="alert('Index one folder with LightRAG. Ask questions. Add to agent only after retrieval quality is verified.')">→ Standalone: index one folder first</div>
   </div>
@@ -294,7 +294,7 @@ print(rag.query('What is the main topic?'))
     <h3>Standalone: MCP Server</h3>
     <div class="code-block"># Filesystem — scoped to one folder
 $AllowedPath = Read-Host "Folder"
-npx -y @modelcontextprotocol/server-filesystem $AllowedPath
+npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION $AllowedPath
 
 # GitHub — limited toolsets
 docker run -i --rm \
@@ -307,7 +307,7 @@ docker run -i --rm \
   <div id="combo-sa-trading" class="combo-detail">
     <h3>Standalone: Paper Trading</h3>
     <div class="code-block">cd plugins/autonomous-day-trading-agent
-python -m venv .venv && .\.venv\Scripts\Activate.ps1
+python -m venv .venv &amp;&amp; .\.venv\Scripts\Activate.ps1
 python -m pip install -e .
 autonomous-day-trading-agent smoke-test --risk risk_limits.example.json
 autonomous-day-trading-agent backtest --bars data/sample.csv
@@ -351,8 +351,8 @@ python -m http.server 8787
 
   <div id="combo-sa-mobile" class="combo-detail">
     <h3>Standalone: Mobile App</h3>
-    <div class="code-block">npx create-expo-stack@latest my-app --expo-router --nativewind
-cd my-app && npx expo start</div>
+    <div class="code-block">npx create-expo-stack@REVIEWED_VERSION my-app --expo-router --nativewind
+cd my-app &amp;&amp; npm exec --offline -- expo start</div>
     <p style="color:var(--text-dim);font-size:0.82rem;margin-top:8px">Start the app alone. Add the agent API endpoint later. Keep secrets out of the bundle.</p>
   </div>
 </div>
@@ -363,7 +363,7 @@ cd my-app && npx expo start</div>
   <div class="combo-grid">
     <div class="combo-card" onclick="showCombo('c-core')"><h4>Core Agent Stack</h4><p>Squad + LightRAG + AgentMemory + Filesystem MCP</p></div>
     <div class="combo-card" onclick="showCombo('c-ms')"><h4>Microsoft Stack</h4><p>Microsoft Agents + Copilot Studio + Aspire + MCP</p></div>
-    <div class="combo-card" onclick="showCombo('c-cost')"><h4>Cost-Efficient LLM</h4><p>Context-Gateway + LLMLingua + token-optimizer-mcp</p></div>
+    <div class="combo-card" onclick="showCombo('c-cost')"><h4>Cost-Efficient LLM</h4><p>LLMLingua + token-optimizer-mcp + lean-ctx</p></div>
     <div class="combo-card" onclick="showCombo('c-market')"><h4>Market Research</h4><p>OpenBB + FinRobot + TradingAgents + yfinance</p></div>
     <div class="combo-card" onclick="showCombo('c-trading')"><h4>Autonomous Trading</h4><p>Day-trading plugin + Alpaca MCP + Sage risk gate</p></div>
     <div class="combo-card" onclick="showCombo('c-quantum')"><h4>Quantum Sidecar</h4><p>Qiskit + qiskit-finance + quantum-trading-agent</p></div>
@@ -376,7 +376,7 @@ cd my-app && npx expo start</div>
     <p>Build an agent team that reasons over your codebase, remembers decisions, and calls tools safely.</p>
     <div class="code-block">npm install -g @bradygaster/squad-cli @agentmemory/agentmemory
 pip install lightrag-hku
-npx -y @modelcontextprotocol/server-filesystem YOUR_PROJECT_PATH</div>
+npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION YOUR_PROJECT_PATH</div>
     <p style="margin-top:8px"><span class="chip chip-blue">docs/COMBINING-REPOS.md → Recipe 1</span></p>
   </div>
 
@@ -393,7 +393,7 @@ agents init my-enterprise-agent</div>
     <h3>Cost-Efficient LLM Stack</h3>
     <p>Compress, cache, and route to the cheapest model that works.</p>
     <div class="code-block">pip install llmlingua
-npx -y ooples-token-optimizer-mcp
+npx @ooples/token-optimizer-mcp@REVIEWED_VERSION
 # Then follow TOKEN-EFFICIENCY.md checklist</div>
     <p style="margin-top:8px"><span class="chip chip-green">docs/TOKEN-EFFICIENCY.md</span> <span class="chip chip-blue">docs/COMBINING-REPOS.md → Recipe 3</span></p>
   </div>
@@ -426,10 +426,10 @@ autonomous-day-trading-agent smoke-test --risk risk_limits.example.json
 
   <div id="combo-c-mcp" class="combo-detail">
     <h3>Full MCP Stack</h3>
-    <div class="code-block">npx -y @modelcontextprotocol/server-filesystem YOUR_PATH
+    <div class="code-block">npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION YOUR_PATH
 docker run -i --rm -e GITHUB_TOOLSETS="repos,issues" ghcr.io/github/github-mcp-server
-npx -y @microsoft/playwright-mcp
-npx -y @upstash/context7-mcp</div>
+npx @playwright/mcp@REVIEWED_VERSION
+npx @upstash/context7-mcp@REVIEWED_VERSION</div>
     <p style="margin-top:8px"><span class="chip chip-blue">docs/MCP-SERVERS.md</span> <span class="chip chip-blue">docs/COMBINING-REPOS.md → Recipe 7</span></p>
   </div>
 
@@ -479,7 +479,7 @@ detect-secrets scan > .secrets.baseline
     <div class="arrow">↓</div>
     <div class="flow-node" onclick="showDetail('c-cache')"><div class="dot dot-green"></div>Prompt caching — cache system prompt and tool schemas</div>
     <div class="arrow">↓</div>
-    <div class="flow-node" onclick="showDetail('c-compress')"><div class="dot dot-green"></div>Context compression — LLMLingua · Context-Gateway · RAG retrieval</div>
+    <div class="flow-node" onclick="showDetail('c-compress')"><div class="dot dot-green"></div>Context compression — LLMLingua · lean-ctx · RAG retrieval</div>
     <div class="arrow">↓</div>
     <div class="flow-node" onclick="showDetail('c-slim')"><div class="dot dot-green"></div>Tool schema slimming — expose only tools needed for this agent</div>
     <div class="arrow">↓</div>
@@ -492,7 +492,7 @@ detect-secrets scan > .secrets.baseline
 
   <div id="detail-c-before" class="detail-panel"><h3>Before a Run</h3><ul><li>Run Lens (context-auditor-lens.md) to check what is in context</li><li>Count tokens before sending a large prompt (anthropic.messages.count_tokens)</li><li>Set ANTHROPIC_MAX_TOKENS to cap the session</li><li>Choose the cheapest model that can do the task</li></ul></div>
   <div id="detail-c-cache" class="detail-panel"><h3>Prompt Caching</h3><ul><li>Add cache_control: {type: "ephemeral"} to your system prompt</li><li>Cache TTL: 5 minutes in the Anthropic API</li><li>Saves: input token cost on every cached call</li><li>Best for: agent system prompts, tool schemas, stable repo catalogs</li></ul></div>
-  <div id="detail-c-compress" class="detail-panel"><h3>Context Compression</h3><ul><li>LLMLingua — compress long documents by 50% while preserving meaning</li><li>Context-Gateway — proxy layer that compresses before sending to LLM</li><li>RAG retrieval — retrieve top-3 chunks instead of loading whole documents</li></ul></div>
+  <div id="detail-c-compress" class="detail-panel"><h3>Context Compression</h3><ul><li>LLMLingua — compress long documents before loading them into context</li><li>lean-ctx — keep session context minimal</li><li>RAG retrieval — retrieve top-3 chunks instead of loading whole documents</li></ul></div>
   <div id="detail-c-slim" class="detail-panel"><h3>Tool Schema Slimming</h3><ul><li>Use GITHUB_TOOLSETS to limit which GitHub tools are exposed</li><li>Remove tool descriptions over 50 words — trim to the core</li><li>Remove optional parameters the agent never uses</li><li>Run MCP inspector to see actual schema sizes</li></ul></div>
   <div id="detail-c-mid" class="detail-panel"><h3>Mid-Run /compact</h3><ul><li>Relay writes a handoff note first (agents/handoff-relay.md)</li><li>Type /compact in Claude Code</li><li>Context window resets, handoff note preserved</li><li>Session continues from the checkpoint</li></ul></div>
   <div id="detail-c-route" class="detail-panel"><h3>Model Routing</h3><ul><li>Haiku 4.5 ($0.80/$4.00 per 1M): scanning, classification, summarization</li><li>Sonnet 4.6 ($3.00/$15.00 per 1M): code, analysis, most agent tasks</li><li>Opus 4.8 ($15.00/$75.00 per 1M): security, architecture, deep reasoning</li><li>Fable 5: long-form writing, narrative, pitch decks</li></ul></div>

@@ -8,4 +8,3 @@ VictorVVedtion/trading-skills
 alpacahq/alpaca-mcp-server
 infracost/infracost
 opencost/opencost
-Compresr-ai/Context-Gateway

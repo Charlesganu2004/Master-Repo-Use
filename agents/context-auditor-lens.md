@@ -28,7 +28,6 @@ When asked to audit the current context:
 Compression options to recommend:
 - /compact — summarize the conversation
 - LLMLingua — compress long documents before loading into context
-- Context-Gateway — route to compression layer
 - Remove already-processed tool output — it served its purpose
 - Replace full file with function excerpt — if only one function is relevant
 

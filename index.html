@@ -97,6 +97,7 @@
   <div>
     <h1>Master Repo Use — Interactive Command Center</h1>
     <p style="color:var(--text-dim);font-size:0.80rem;margin-top:3px">Click any node or agent chip to navigate directly into the repo.</p>
+    <p style="color:var(--warning);font-size:0.76rem;margin-top:3px"><strong>Command safety:</strong> replace REVIEWED_VERSION with an exact package release you inspected; install it deliberately before using a noninteractive host.</p>
   </div>
   <div class="header-links">
     <a class="btn btn-primary" href="https://github.com/Charlesganu2004/Master-Repo-Use" target="_blank">View on GitHub</a>
@@ -184,7 +185,6 @@
       <li>Upstash vector-js — serverless vector store</li>
       <li>AgentMemory — persistent durable memory across sessions</li>
       <li>LLMLingua — prompt compression (reduce tokens before sending)</li>
-      <li>Context-Gateway — compression proxy layer</li>
     </ul>
     <div class="panel-links">
       <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/REPO-CATALOG.md#rag-knowledge-and-memory" target="_blank">→ RAG &amp; Memory catalog</a>
@@ -267,7 +267,7 @@ print(rag.query('What is the main topic?'))
   <div id="combo-sa-mcp" class="combo-detail">
     <h3>Standalone: MCP Server</h3>
     <div class="code-block"># Filesystem — scoped to one explicit folder
-npx -y @modelcontextprotocol/server-filesystem C:/your/project
+npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION C:/your/project
 
 # GitHub — limited toolsets only
 docker run -i --rm \
@@ -284,7 +284,7 @@ docker run -i --rm \
   <div id="combo-sa-trading" class="combo-detail">
     <h3>Standalone: Paper Trading</h3>
     <div class="code-block">cd plugins/autonomous-day-trading-agent
-python -m venv .venv && .\.venv\Scripts\Activate.ps1
+python -m venv .venv &amp;&amp; .\.venv\Scripts\Activate.ps1
 python -m pip install -e .
 autonomous-day-trading-agent smoke-test --risk risk_limits.example.json
 autonomous-day-trading-agent paper-order --symbol AAPL --side buy --qty 1</div>
@@ -340,8 +340,8 @@ python -m http.server 8787
 
   <div id="combo-sa-mobile" class="combo-detail">
     <h3>Standalone: Mobile App</h3>
-    <div class="code-block">npx create-expo-stack@latest my-app --expo-router --nativewind
-cd my-app && npx expo start</div>
+    <div class="code-block">npx create-expo-stack@REVIEWED_VERSION my-app --expo-router --nativewind
+cd my-app &amp;&amp; npm exec --offline -- expo start</div>
     <p class="note">Start the app alone. Add the agent API endpoint later. Keep secrets out of the bundle.</p>
     <div class="panel-links">
       <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/mobile-stack.md" target="_blank">→ Stack (mobile agent)</a>
@@ -355,7 +355,7 @@ cd my-app && npx expo start</div>
   <div class="combo-grid">
     <div class="combo-card" onclick="showCombo('c-core',this)"><h4>Core Agent Stack</h4><p>Squad + LightRAG + AgentMemory + Filesystem MCP</p></div>
     <div class="combo-card" onclick="showCombo('c-ms',this)"><h4>Microsoft Stack</h4><p>Microsoft Agents + Copilot Studio + Aspire + MCP</p></div>
-    <div class="combo-card" onclick="showCombo('c-cost',this)"><h4>Cost-Efficient LLM</h4><p>Context-Gateway + LLMLingua + token-optimizer-mcp</p></div>
+    <div class="combo-card" onclick="showCombo('c-cost',this)"><h4>Cost-Efficient LLM</h4><p>LLMLingua + token-optimizer-mcp + lean-ctx</p></div>
     <div class="combo-card" onclick="showCombo('c-market',this)"><h4>Market Research</h4><p>OpenBB + FinRobot + TradingAgents + yfinance</p></div>
     <div class="combo-card" onclick="showCombo('c-trading',this)"><h4>Autonomous Trading</h4><p>Day-trading plugin + Alpaca MCP + Sage risk gate</p></div>
     <div class="combo-card" onclick="showCombo('c-quantum',this)"><h4>Quantum Sidecar</h4><p>Qiskit + qiskit-finance + quantum-trading-agent</p></div>
@@ -365,7 +365,7 @@ cd my-app && npx expo start</div>
 
   <div id="combo-c-core" class="combo-detail"><h3>Core Agent Stack</h3><p>Build an agent team that reasons over your codebase, remembers decisions, and calls tools safely.</p><div class="code-block">npm install -g @bradygaster/squad-cli @agentmemory/agentmemory
 pip install "lightrag-hku[api]"
-npx -y @modelcontextprotocol/server-filesystem YOUR_PROJECT_PATH</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/COMBINING-REPOS.md" target="_blank">→ Full recipe in COMBINING-REPOS.md</a></div></div>
+npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION YOUR_PROJECT_PATH</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/COMBINING-REPOS.md" target="_blank">→ Full recipe in COMBINING-REPOS.md</a></div></div>
 
   <div id="combo-c-ms" class="combo-detail"><h3>Microsoft Stack</h3><p>Enterprise agent with Copilot Studio frontend and .NET backend.</p><div class="code-block">dotnet tool install -g Microsoft.Agents.CLI
 npm install -g @microsoft/m365agentstoolkit-cli
@@ -385,10 +385,10 @@ autonomous-day-trading-agent smoke-test --risk risk_limits.example.json
   <div id="combo-c-quantum" class="combo-detail"><h3>Quantum Sidecar Stack</h3><p>Quantum optimization alongside a classical workflow. Simulator first, always.</p><div class="code-block">pip install qiskit qiskit-finance qiskit-optimization pennylane
 # Wire: Helix (lab) → Qubit (finance) → Rex (paper execution)</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/quantum-lab-helix.md" target="_blank">→ Helix agent</a></div></div>
 
-  <div id="combo-c-mcp" class="combo-detail"><h3>Full MCP Stack</h3><div class="code-block">npx -y @modelcontextprotocol/server-filesystem YOUR_PATH
+  <div id="combo-c-mcp" class="combo-detail"><h3>Full MCP Stack</h3><div class="code-block">npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION YOUR_PATH
 docker run -i --rm -e GITHUB_TOOLSETS="repos,issues" ghcr.io/github/github-mcp-server
-npx -y @microsoft/playwright-mcp
-npx -y @upstash/context7-mcp</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/MCP-SERVERS.md" target="_blank">→ MCP Servers guide</a></div></div>
+npx @playwright/mcp@REVIEWED_VERSION
+npx @upstash/context7-mcp@REVIEWED_VERSION</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/MCP-SERVERS.md" target="_blank">→ MCP Servers guide</a></div></div>
 
   <div id="combo-c-security" class="combo-detail"><h3>Security Stack</h3><div class="code-block">pip install detect-secrets
 detect-secrets scan > .secrets.baseline
@@ -437,7 +437,7 @@ detect-secrets scan > .secrets.baseline
     <div class="arrow">↓</div>
     <div class="flow-node" onclick="showDetail('c-cache',this)"><div class="dot dot-green"></div>Prompt caching — cache system prompt and tool schemas</div>
     <div class="arrow">↓</div>
-    <div class="flow-node" onclick="showDetail('c-compress',this)"><div class="dot dot-green"></div>Context compression — LLMLingua · Context-Gateway · RAG retrieval</div>
+    <div class="flow-node" onclick="showDetail('c-compress',this)"><div class="dot dot-green"></div>Context compression — LLMLingua · lean-ctx · RAG retrieval</div>
     <div class="arrow">↓</div>
     <div class="flow-node" onclick="showDetail('c-slim',this)"><div class="dot dot-green"></div>Tool schema slimming — expose only tools needed for this agent</div>
     <div class="arrow">↓</div>
@@ -452,7 +452,7 @@ detect-secrets scan > .secrets.baseline
 
   <div id="detail-c-cache" class="detail-panel"><h3>Prompt Caching</h3><ul><li>Add cache_control: {type: "ephemeral"} to your system prompt</li><li>Cache TTL: 5 minutes in the Anthropic API</li><li>Saves input token cost on every cached call</li><li>Best for: agent system prompts, tool schemas, stable repo catalogs</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TOKEN-EFFICIENCY.md#prompt-caching" target="_blank">→ Caching guide with code</a></div></div>
 
-  <div id="detail-c-compress" class="detail-panel"><h3>Context Compression</h3><ul><li>LLMLingua — compress long documents by ~50% while preserving meaning</li><li>Context-Gateway — proxy layer that compresses before sending to LLM</li><li>RAG retrieval — retrieve top-3 chunks instead of loading whole documents</li></ul></div>
+  <div id="detail-c-compress" class="detail-panel"><h3>Context Compression</h3><ul><li>LLMLingua — compress long documents before loading them into context</li><li>lean-ctx — keep session context minimal</li><li>RAG retrieval — retrieve top-3 chunks instead of loading whole documents</li></ul></div>
 
   <div id="detail-c-slim" class="detail-panel"><h3>Tool Schema Slimming</h3><ul><li>Use GITHUB_TOOLSETS to limit which GitHub tools are exposed</li><li>Remove tool descriptions over 50 words — trim to the core</li><li>Remove optional parameters the agent never uses</li><li>Run MCP inspector to see actual schema sizes</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/AGENT-ACCESS.md" target="_blank">→ Agent access profiles</a></div></div>
 
