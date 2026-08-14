@@ -1,0 +1,27 @@
+# Normalise line endings so the repository has one answer, not one per machine.
+#
+# Without this, Windows git (core.autocrlf=true) checks files out with CRLF while
+# Linux/WSL git reads them as-is, so each reports the entire tree as modified and
+# `git add -A` stages hundreds of files containing no real change.
+* text=auto eol=lf
+
+# Windows shells require CRLF in batch files.
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Shell scripts and git hooks break with a bad-interpreter error if given CRLF.
+*.sh   text eol=lf
+
+# Never transform binaries.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.gz   binary
+*.exe  binary
+*.dll  binary
+*.woff binary
+*.woff2 binary
