@@ -7,16 +7,14 @@ alpacahq/alpaca-py  # replaces alpacahq/alpaca-trade-api-python (unmaintained)
 alpacahq/alpaca-mcp-server
 ib-api-reloaded/ib_async
 ib-api-reloaded/ib_async  # replaces erdewit/ib_insync (unmaintained)
-tylerebowers/Schwabdev
-alexgolec/schwab-py
+tylerebowers/Schwabdev  # replaces stale alexgolec/schwab-py
 thammo4/uvatradier
 Lumiwealth/lumiwealth-tradier
 passiv/snaptrade-sdks
 passiv/snaptrade-cli
 passiv/snaptrade-react
 tastytrade/tastytrade-api-js
-tastytrade/tastytrade-sdk-python
-tastyware/tastytrade
+tastyware/tastytrade  # maintained Python alternative; old tastytrade/tastytrade-sdk-python is archived
 tastyware/tastytrade-cli
 ferdousbhai/tasty-agent
 coinbase/coinbase-advanced-py
