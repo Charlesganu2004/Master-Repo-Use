@@ -1,467 +1,263 @@
 # Master Repo Use
 
-> **[Open Interactive Diagram →](https://charlesganu2004.github.io/Master-Repo-Use/)**
-> Click any node or agent chip to navigate directly into the repo. No setup needed — works in any browser.
->
-> *(First time? Enable GitHub Pages once: repo **Settings → Pages → Branch: main → Folder: / (root) → Save**)*
+Private command center and curated catalog for agent frameworks, RAG, memory, MCP servers, context/token management, GitHub Copilot, Claude Code, Codex, Microsoft Copilot Studio, autonomous-agent tooling, finance/trading research, quantum computing, cloud/cost reduction, app templates, observability, and supporting developer tools.
 
----
+Repository: `Charlesganu2004/Master-Repo-Use`
 
-**GitHub:** https://github.com/Charlesganu2004/Master-Repo-Use  
-Last curated: 2026-08-14 · **234 repos** across 27 lanes · 59 agents · every entry vetted
+The goal is simple: clone this repo once, then use it as the shared instruction/catalog layer for your AI coding tools. The catalog stays here; each client loads the same compact rules and only pulls the task-relevant repos, skills, MCP servers, or setup instructions when needed.
 
-### What this repo is
+## Start here
 
-A **catalog**. It holds links, vetting verdicts, health status and usage notes for
-repositories worth depending on. It vendors no third-party code — every entry is a URL
-plus the evidence behind its verdict.
+### Requirements
 
-### What it is not
+- Git
+- GitHub CLI (`gh`) authenticated to the GitHub account that can read this private repo
+- PowerShell 7+ on Windows, or Bash/WSL/macOS/Linux
+- Install the AI clients you actually use: GitHub Copilot CLI/IDE, Claude Code, Codex, or their supported web/cloud versions
 
-The application. [AI-Hub](https://github.com/Charlesganu2004/AI-Hub) is the agentic
-pipeline and AI agent hub — the desktop app that runs local interchangeable models,
-hosts agents, skills and pipelines, and later becomes the SaaS. AI-Hub *consumes* this
-catalog: its intake gate imports the rejections recorded in
-[docs/VETTING-REPORT.md](docs/VETTING-REPORT.md) as pre-banned, and exports new ones
-back. Curation lives here; execution lives there.
+Authenticate once:
 
-A self-contained command center for agent frameworks, RAG, memory, MCP servers, token/context management, Microsoft Copilot Studio, autonomous trading agents, finance/trading, quantum computing, cloud/cost reduction, app templates, and hackathon resources.
+```bash
+gh auth login
+```
 
-**You do not need to leave this repo to use any of these tools.** Every lane has install commands, usage instructions, and agent setups here.
-
-**Repo health:** [docs/REPO-HEALTH.md](docs/REPO-HEALTH.md) — run Iris to check which repos are still active.  
-**Security:** [docs/SECURITY.md](docs/SECURITY.md) — agent injection prevention, MCP scoping, secret scanning.
-
----
-
-## Interactive Diagram
-
-**[charlesganu2004.github.io/Master-Repo-Use](https://charlesganu2004.github.io/Master-Repo-Use/)** — 6 tabs, fully clickable, navigates directly into repo files:
-
-| Tab | What it shows |
-|---|---|
-| Main Flow | Click any layer node → tools, links, standalone option |
-| Standalone Paths | Fastest path to working in each lane solo |
-| Combinations | 8 named stack recipes with install commands |
-| Trading & Finance | Full safety gate flow: signal → Sage → human → live |
-| Cost & Tokens | Token efficiency and /compact decision flow |
-| Agent Roster | All 59 agents — click any chip to open the agent file |
-
----
-
-## Start Here By Role
-
-| I am a... | Go here first |
-|---|---|
-| Developer building agents | [Repo Catalog → Agent Frameworks](docs/REPO-CATALOG.md) + [Standalone Usage](docs/STANDALONE-USAGE.md) |
-| Trader / researcher | [Autonomous Day Trading](docs/AUTONOMOUS-DAY-TRADING.md) + [Trading & Market Agents](docs/TRADING-MARKET-AGENTS.md) |
-| Architect / DevOps | [Integration Flows](docs/INTEGRATION-FLOWS.md) + [Agent: Eden](agents/architect-eden.md) |
-| Business analyst / planner | [Agent: Clara](agents/biz-analyst-clara.md) + [Agent: Rho](agents/tech-planner-rho.md) |
-| Security engineer | [Security Guide](docs/SECURITY.md) + [Agent: Sentinel](agents/security-sentinel.md) |
-| Data scientist | [Agent: Dex](agents/data-dex.md) + [Repo Catalog → RAG](docs/REPO-CATALOG.md) |
-| New user | [Agent: Guide](agents/onboarding-guide.md) + [Standalone Usage](docs/STANDALONE-USAGE.md) |
-| Cost optimization | [Token Efficiency](docs/TOKEN-EFFICIENCY.md) + [Cost Reduction](cost-reduction/README.md) |
-| Spatial / 3D / robotics | [Spatial Models](docs/SPATIAL-MODELS.md) + [Agent: Scout](agents/spatial-scout.md) |
-| Live / streaming RAG | [Live RAG](docs/LIVE-RAG.md) + [Agent: Stream](agents/rag-stream.md) |
-| Picking an LLM or serving stack | [LLM Models & Serving](docs/LLM-MODELS.md) + [Agent: Picker](agents/model-picker.md) |
-| Vetting a third-party repo | [Security Scanning](docs/SECURITY-SCANNING.md) + [Agent: Vault](agents/scanner-vault.md) |
-| Copilot Studio | [Copilot Studio Integration](docs/COPILOT-STUDIO-INTEGRATION.md) + [Agent: Nexus](agents/copilot-nexus.md) |
-
----
-
-## Start Here By Task
-
-| Need | Go here |
-|---|---|
-| See the main integration flow | [Integration flows](docs/INTEGRATION-FLOWS.md) |
-| See every repo with links and status | [Repo catalog](docs/REPO-CATALOG.md) |
-| Install and run any repo | [Repo instructions](docs/REPO-INSTRUCTIONS.md) |
-| Combine repos into a named stack | [Combining repos](docs/COMBINING-REPOS.md) |
-| Use any lane standalone | [Standalone usage](docs/STANDALONE-USAGE.md) |
-| Copy one-liners for PowerShell, WSL, GitHub CLI | [CLI one-liners](docs/CLI-ONE-LINERS.md) |
-| Reduce token and API cost | [Token efficiency](docs/TOKEN-EFFICIENCY.md) + [Cost reduction](cost-reduction/README.md) |
-| Browse the full agent roster (59 agents) | [Agents overview](agents/AGENTS-OVERVIEW.md) |
-| Check if a repo is still active | [Repo health](docs/REPO-HEALTH.md) |
-| Check catalog freshness automatically | `python scripts/check_freshness.py` + [skills/catalog-freshness](skills/catalog-freshness/SKILL.md) |
-| Vet a repo before trusting it (no scanners to install) | `python scripts/static_audit.py <clones-dir>` |
-| Use Codex CLI or portable agent skills | [repo-lists/codex-agent-skills.txt](repo-lists/codex-agent-skills.txt) |
-| Monitor what your agents are doing | [repo-lists/agent-observability-setup.txt](repo-lists/agent-observability-setup.txt) |
-| Add a plugin | [Adding plugins](docs/ADDING-PLUGINS.md) |
-| Browse available plugins | [Plugins](plugins/README.md) |
-| Secure agents and MCP setup | [Security guide](docs/SECURITY.md) |
-| Share with coworkers | [Access control — in Security guide](docs/SECURITY.md#access-control-for-this-repo) |
-| Let an agent reach folders safely | [Agent access guide](docs/AGENT-ACCESS.md) |
-| Connect Microsoft Copilot Studio | [Copilot Studio integration](docs/COPILOT-STUDIO-INTEGRATION.md) |
-| Add quantum computing | [Quantum guide](quantum/README.md) |
-| Build autonomous day-trading agents | [Autonomous day-trading guide](docs/AUTONOMOUS-DAY-TRADING.md) |
-| Connect broker apps | [Broker app integrations](docs/BROKER-APP-INTEGRATIONS.md) |
-| Add market analysis repos | [Trading and market agents](docs/TRADING-MARKET-AGENTS.md) |
-| Reduce cloud and API cost | [Cost reduction guide](cost-reduction/README.md) |
-| Use curated repo lists in scripts | [repo-lists/all-curated.txt](repo-lists/all-curated.txt) |
-| Add spatial, 3D, world-model, or SLAM repos | [Spatial models](docs/SPATIAL-MODELS.md) |
-| Keep a RAG index fresh as data changes | [Live RAG](docs/LIVE-RAG.md) |
-| Choose an open-weight model or serving stack | [LLM models & serving](docs/LLM-MODELS.md) |
-| Scan a repo before depending on it | [Security scanning](docs/SECURITY-SCANNING.md) |
-| See why a repo was accepted or rejected | [Vetting report](docs/VETTING-REPORT.md) |
-| Use portable anti-hallucination skills | [skills/](skills/README.md) |
-
----
-
-## Quick Clone
+### Clone
 
 PowerShell:
+
 ```powershell
-$RepoPath = Read-Host "Where should Master-Repo-Use be cloned?"; git clone https://github.com/Charlesganu2004/Master-Repo-Use.git $RepoPath; Set-Location $RepoPath
+$RepoPath = "$HOME\Master-Repo-Use"; gh repo clone Charlesganu2004/Master-Repo-Use $RepoPath; Set-Location $RepoPath
 ```
 
-WSL or Bash:
+Bash / WSL / macOS / Linux:
+
 ```bash
-read -rp "Where should Master-Repo-Use be cloned? " repo_path; git clone https://github.com/Charlesganu2004/Master-Repo-Use.git "$repo_path" && cd "$repo_path"
+repo_path="$HOME/Master-Repo-Use"; gh repo clone Charlesganu2004/Master-Repo-Use "$repo_path" && cd "$repo_path"
 ```
 
-GitHub CLI:
+## Global AI setup
+
+This makes the Master Repo guidance available by default to supported local clients without installing every third-party repo in the catalog.
+
+### Windows one-liner
+
+```powershell
+$p="$HOME\Master-Repo-Use"; if (Test-Path "$p\.git") { git -C $p pull } else { gh repo clone Charlesganu2004/Master-Repo-Use $p }; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p
+```
+
+### Bash / WSL / macOS / Linux one-liner
+
 ```bash
-read -rp "Where should Master-Repo-Use be cloned? " repo_path; gh repo clone Charlesganu2004/Master-Repo-Use "$repo_path" && cd "$repo_path"
+p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull; else gh repo clone Charlesganu2004/Master-Repo-Use "$p"; fi; bash "$p/scripts/setup-global-ai.sh" "$p"
 ```
 
----
+What the bootstrap configures:
 
-## Main Flow
+- **GitHub Copilot CLI:** user-level instructions plus `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` pointing at this repo.
+- **Claude Code:** user-level `~/.claude/CLAUDE.md` guidance that points back to this repo; the repo's own `CLAUDE.md` is loaded automatically when you work here.
+- **Codex:** user-level `~/.codex/AGENTS.md` guidance plus the repo's `AGENTS.md` when you work in this repo.
+- Existing personal instruction files are preserved; the scripts update only the marked Master Repo block.
+
+See [docs/GLOBAL-AI-SETUP.md](docs/GLOBAL-AI-SETUP.md) for the full setup, refresh, uninstall, and online/cloud instructions.
+
+## GitHub Copilot setup
+
+The repo includes `.github/copilot-instructions.md`, so GitHub Copilot automatically receives Master Repo guidance whenever Copilot is operating in this repository context.
+
+For Copilot CLI, the global bootstrap above also makes this repo available across other local repositories.
+
+### Copilot one-liner
+
+PowerShell:
+
+```powershell
+$p="$HOME\Master-Repo-Use"; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -CopilotOnly
+```
+
+Bash:
+
+```bash
+bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --copilot-only
+```
+
+Verify in Copilot CLI:
 
 ```text
-CLI, VS Code, Copilot Studio, app UI, or automation
-  -> Maxwell (orchestrator) routes to specialist agent
-  -> Agent framework (Squad, Microsoft Agents, RunAgent, Copilot CLI)
-  -> MCP tools and normal APIs
-  -> RAG, memory, context control, and cost controls
-  -> app, cloud service, broker (paper mode), or local workflow
+/instructions
 ```
 
-Specialist lanes (connect to main flow or run standalone):
+Copilot should show the repository instructions and, for CLI, the user/global Master Repo instructions.
+
+Full guide: [docs/COPILOT-SETUP.md](docs/COPILOT-SETUP.md).
+
+## Interactive command center
+
+The interactive UI is `index.html`.
+
+### Reliable local mode — works with a private repo
+
+From the repo root:
+
+```bash
+python -m http.server 8080
+```
+
+Then open:
+
 ```text
-Market research agents -> optional research and paper-trading sidecar
-Quantum labs -> optional optimization/QML sidecar
-Pitch/hackathon -> standalone demo/story materials
+http://localhost:8080/
 ```
 
----
+PowerShell one-liner:
 
-## Agents
+```powershell
+Set-Location "$HOME\Master-Repo-Use"; python -m http.server 8080
+```
 
-59 named agents with system prompts, tools, knowledge base setup, and setup CLI. Each is ready to paste into Claude, Copilot Studio, Squad, or any compatible framework.
+### GitHub Pages mode
 
-| Category | Agents |
+A Pages deployment workflow is included at `.github/workflows/pages.yml`. GitHub Pages for a **private** personal repository requires a GitHub plan that supports private-repo Pages. In repository **Settings → Pages**, set **Source** to **GitHub Actions** once. After that, pushes to `main` deploy `index.html` automatically.
+
+If private-repo Pages is not available on the GitHub account, use the local mode above; the interactive UI itself does not require the repository to be public.
+
+## How to use the Master Repo
+
+1. Start with [docs/REPO-CATALOG.md](docs/REPO-CATALOG.md) or [repo-lists/all-curated.txt](repo-lists/all-curated.txt).
+2. Pick only the lane needed for the current task.
+3. Check [docs/VETTING-REPORT.md](docs/VETTING-REPORT.md) and [docs/REPO-HEALTH.md](docs/REPO-HEALTH.md) before depending on a third-party project.
+4. Use [docs/REPO-INSTRUCTIONS.md](docs/REPO-INSTRUCTIONS.md) for install/run instructions.
+5. Use [docs/COMBINING-REPOS.md](docs/COMBINING-REPOS.md) when several tools need to work together.
+6. Use [docs/SECURITY.md](docs/SECURITY.md) before enabling write-capable agents, MCP servers, browser automation, secrets, or live external actions.
+
+The default rule for every AI client is: **do not load or install the whole catalog into context. Discover the relevant lane, then load the minimum files/tools needed for that task.**
+
+## Cross-client compatibility
+
+The Master Repo uses portable instruction and integration layers so the same catalog can be consumed by multiple agents:
+
+| Client | Automatic repo instructions | Global/local setup | Tool integration path |
+|---|---|---|---|
+| GitHub Copilot on GitHub/IDE | `.github/copilot-instructions.md` | Copilot CLI user instructions | MCP, skills, CLI/API wrappers |
+| GitHub Copilot CLI | `.github/copilot-instructions.md`, `AGENTS.md`, `CLAUDE.md` | `~/.copilot/` + `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` | MCP, skills, plugins, CLI/API wrappers |
+| Claude Code local | `CLAUDE.md` | `~/.claude/CLAUDE.md` | MCP, skills, plugins, hooks, CLI/API wrappers |
+| Claude Code on the web | committed `CLAUDE.md`, `.claude/`, `.mcp.json` | repo/cloud environment | repo-contained setup and tools |
+| Codex local | `AGENTS.md` | `~/.codex/AGENTS.md` | skills, MCP, CLI/API wrappers |
+| Codex cloud / ChatGPT coding workflows | committed `AGENTS.md` when the repo is selected | connect/select the GitHub repo | repo-contained skills/instructions/tools supported by the environment |
+| ChatGPT web | connect this private GitHub repo | account/project instructions are configured in ChatGPT | GitHub app, supported plugins/MCP/skills |
+| Claude.ai chat/projects | connect/add this GitHub repo or use Claude Code web | profile/project preferences are configured in Claude | GitHub integration and supported project tools |
+
+A repository listed here is not automatically a native plugin for every client. When a tool does not have a native integration, use the compatibility order documented in [docs/GLOBAL-AI-SETUP.md](docs/GLOBAL-AI-SETUP.md): **MCP → skill/instructions → CLI/API wrapper → direct library**.
+
+## Core additions and high-use tools
+
+These are included in the catalog and setup guides:
+
+- **Omni:** `getomnico/omni` — self-hosted workplace AI agent.
+- **Claude-Mem:** `thedotmack/claude-mem` — persistent Claude Code memory; current quick install: `npx claude-mem install`.
+- **Headroom:** `headroomlabs-ai/headroom` — context compression, cross-agent memory, MCP, and wrappers for Claude, Codex, Copilot, and other agents.
+- **Task Observer / Agent Monitor:** `hoangsonww/Claude-Code-Agent-Monitor` — live Claude Code/Codex session, tool, subagent, and task monitoring.
+- **Claude Code setup resources:** `centminmod/my-claude-code-setup` plus the repo-level `CLAUDE.md` and global setup scripts here.
+- **GitHub Copilot:** `github/copilot-cli`, `github/copilot-sdk`, `github/awesome-copilot`, and `github/github-mcp-server`.
+- **Watermark remover:** `D-Ogi/WatermarkRemover-AI` in the media-tools lane. Use only on media you own or are authorized to modify; do not use it to remove attribution or rights-management marks from third-party content without permission.
+
+See [repo-lists/ai-client-tools.txt](repo-lists/ai-client-tools.txt) and [repo-lists/github-copilot.txt](repo-lists/github-copilot.txt).
+
+## Claude-Mem
+
+Install for Claude Code:
+
+```bash
+npx claude-mem install
+```
+
+Restart Claude Code after installation. Keep Claude-Mem optional: Claude Code already has native `CLAUDE.md` and auto-memory, so install Claude-Mem when you specifically want its persistent observation/search workflow.
+
+## Headroom
+
+Recommended isolated global CLI install:
+
+```bash
+uv tool install --python 3.13 "headroom-ai[all]"
+headroom doctor
+```
+
+Examples:
+
+```bash
+headroom wrap claude
+headroom wrap codex
+headroom wrap copilot
+```
+
+Headroom is optional. Do not make it a hard dependency for every Master Repo task.
+
+## Task Observer / Agent Monitor
+
+Use `hoangsonww/Claude-Code-Agent-Monitor` for a visual view of Claude Code and Codex activity. Setup details live in [repo-lists/agent-observability-setup.txt](repo-lists/agent-observability-setup.txt) and the upstream repository.
+
+## Token and work-spend limit — optional, separate setup
+
+Token/spend limiting is **not** enabled by the global one-liners.
+
+If you want a work budget, hard/soft caps, context compression, and a fallback to free/local models after the paid budget is reached, follow the independent guide:
+
+**[docs/TOKEN-BUDGET.md](docs/TOKEN-BUDGET.md)**
+
+That guide separates:
+
+- context/token limits from dollar budgets;
+- provider-native limits from local gateway limits;
+- paid primary models from free/local fallback models;
+- clients that can route through a gateway from clients whose subscription UI controls the model directly.
+
+The recommended fallback path is a local OpenAI-compatible server (for example LocalAI or llama.cpp with a compatible open-weight model) so the fallback does not create another paid API bill.
+
+## Repo map
+
+| Path | Purpose |
 |---|---|
-| Orchestration | Maxwell (routes all tasks), Iris (repo health), Relay (context handoff), Cron (scheduler) |
-| Research | Aria, Dex, Orion, Prism, Beacon |
-| Business | Clara, Rho, Spark, Deck, Funnel, Quill |
-| Software Dev | Atlas, Stack, Canvas, Build, Pipe, Probe, Vera, Trace |
-| Architecture | Eden, Nimbus, Schema, Bridge, Volt |
-| Security | Sentinel, Ghost, Lex, Lock |
-| Finance/Trading | Rex, Qubit, Nova, Sage, Connect |
-| Infra/Cost | Cirrus, Penny, Forge |
-| Knowledge | Vector, Recall, Memo |
-| Copilot Studio | Nexus, Weave |
-| Onboarding | Guide, Help |
-| Quantum | Helix |
-| Cross-cutting | Commit, Lens, Delta, Echo, Pulse, Tempo, Ally |
+| `AGENTS.md` | portable Master Repo contract for Codex/Copilot-compatible agents |
+| `CLAUDE.md` | Claude Code entrypoint |
+| `.github/copilot-instructions.md` | repository-wide GitHub Copilot instructions |
+| `agents/` | named specialist agents |
+| `docs/` | setup, architecture, security, usage, vetting, and integration guides |
+| `repo-lists/` | curated repository lists grouped by lane |
+| `skills/` | portable skills and reusable workflows |
+| `plugins/` | plugin packages and plugin documentation |
+| `scripts/` | health checks, auditing, and global setup helpers |
+| `index.html` | interactive command center |
+| `quantum/` | quantum-computing lane |
+| `cost-reduction/` | cloud/token/cost lane |
 
-**Full roster with tools and cost profiles:** [agents/AGENTS-OVERVIEW.md](agents/AGENTS-OVERVIEW.md)
+## Health, vetting, and security
 
----
+- Repo health: [docs/REPO-HEALTH.md](docs/REPO-HEALTH.md)
+- Vetting: [docs/VETTING-REPORT.md](docs/VETTING-REPORT.md)
+- Security: [docs/SECURITY.md](docs/SECURITY.md)
+- Static audit: `python scripts/static_audit.py <clones-dir>`
+- Catalog freshness: `python scripts/check_freshness.py`
 
-## Reading Tabs
+## Update your local copy
 
-<details>
-<summary><strong>1. Core agent system</strong></summary>
-
-Use this when you want agents that can reason over a repo, call tools, remember project facts, and run from the terminal or a product surface.
-
-- Agent frameworks: Squad, Microsoft Agents, Copilot CLI, RunAgent.
-- Knowledge: LightRAG, Upstash, AugmentR, RAG CLI.
-- Memory: AgentMemory, mem0, durable handoff prompts.
-- Context/cost: LLMLingua, headroom, token optimizer MCP servers.
-- MCP access: filesystem, GitHub, Playwright, docs, databases, cloud tools.
-- Orchestrator: Maxwell routes to Aria, Atlas, Sentinel, Penny, and 51 more specialists.
-
-See [agents/AGENTS-OVERVIEW.md](agents/AGENTS-OVERVIEW.md) for the full agent roster.
-
-</details>
-
-<details>
-<summary><strong>2. Microsoft Copilot Studio connections</strong></summary>
-
-Copilot Studio can sit in front of the stack as the business-facing agent. Connect it to:
-
-- Existing APIs through custom connectors or OpenAPI actions.
-- MCP servers through the Copilot Studio MCP custom connector path.
-- Microsoft 365 Agents SDK services when the agent needs a full-code backend.
-- RAG or finance/quantum services through a small API bridge.
-
-Agents: Nexus (copilot-nexus.md) orchestrates topics and flows. Weave (connector-weave.md) builds connectors.
-
-See [docs/COPILOT-STUDIO-INTEGRATION.md](docs/COPILOT-STUDIO-INTEGRATION.md).
-
-</details>
-
-<details>
-<summary><strong>3. Quantum as standalone or sidecar</strong></summary>
-
-Quantum is not the main focus of this repo. Treat it as:
-
-- Standalone learning: Qiskit, PennyLane, Cirq, Q#, Braket, D-Wave.
-- Sidecar optimization: portfolio optimization, routing, scheduling, scenario selection.
-- Research lane: quantum machine learning, quantum finance, error mitigation.
-
-Agents: Helix (quantum-lab-helix.md) for experiments. Qubit (quantum-qubit.md) for finance research.
-
-See [quantum/README.md](quantum/README.md).
-
-</details>
-
-<details>
-<summary><strong>4. Trading and market agents</strong></summary>
-
-This lane is for research, market analysis, paper trading, and tool exploration. Keep live trading separate until code, risk controls, broker permissions, and compliance are audited.
-
-- Autonomous day trading: safe plugin scaffold, signal generation, backtests, investing allocation proposals, paper trading.
-- Market analysis: OpenBB, FinRobot, FinGPT, yfinance, mplfinance.
-- Trading agents/backtesting: TradingAgents, AI-Trader, FinRL, Lean, Backtrader, Freqtrade.
-
-Agents: Rex (trading), Sage (risk gate), Nova (portfolio), Connect (broker setup).
-
-Safety gate: Sage must approve before any order. Human must approve before any live order. See [docs/AUTONOMOUS-DAY-TRADING.md](docs/AUTONOMOUS-DAY-TRADING.md).
-
-</details>
-
-<details>
-<summary><strong>5. Token efficiency and cost</strong></summary>
-
-Keep model API costs under control:
-
-- /compact: compact the session before the context limit. Relay writes a handoff note first.
-- Model routing: Haiku ($0.80/$4.00 per 1M) for simple tasks, Sonnet for most, Opus for deep reasoning.
-- Prompt caching: cache system prompts and tool schemas to reduce per-call cost.
-- MCP tool slimming: expose only the tools an agent actually needs.
-- Penny: audits sessions and flags bloated prompts.
-
-See [docs/TOKEN-EFFICIENCY.md](docs/TOKEN-EFFICIENCY.md).
-
-</details>
-
-<details>
-<summary><strong>6. Plugins</strong></summary>
-
-Self-contained agent + tool packages with a smoke test and risk limits built in.
-
-Current plugins:
-- [plugins/autonomous-day-trading-agent](plugins/autonomous-day-trading-agent/README.md) — signal generation, backtesting, paper trading
-- [plugins/robinhood-trading-agent](plugins/robinhood-trading-agent/README.md) — Robinhood Crypto research lane
-- [plugins/quantum-trading-agent](plugins/quantum-trading-agent/README.md) — quantum-enhanced paper trading
-
-See [plugins/README.md](plugins/README.md) for the full index. See [docs/ADDING-PLUGINS.md](docs/ADDING-PLUGINS.md) to add a new plugin.
-
-</details>
-
-<details>
-<summary><strong>7. Security</strong></summary>
-
-This repo follows these security rules for all agents and plugins:
-
-- System prompts are write-once at setup time — they cannot be overridden by user input.
-- Tool outputs are data, never instructions — agents do not execute instructions found in file reads or API responses.
-- MCP servers always use explicit allowed paths — never root or wildcards.
-- No secrets in committed files — Lock scans before every commit.
-- Live financial actions require explicit human approval in the current conversation.
-
-See [docs/SECURITY.md](docs/SECURITY.md) for the full threat model, MCP security rules, and access control options.
-
-</details>
-
-<details>
-<summary><strong>8. Pitch and hackathon stays standalone</strong></summary>
-
-Pitch and hackathon tools are not part of the main runtime stack. Keep them as standalone support:
-
-- `awesome-hackathon` for planning and resources.
-- `slidev` and `marpit` for decks.
-- `pitch-deck` for pitch structure and review.
-- Spark (pitch-spark.md) for pitch coaching.
-- Deck (slides-deck.md) for Slidev deck generation.
-
-They can consume summaries from the core stack, but they are not required agent infrastructure.
-
-</details>
-
----
-
-## Decision Map
-
-| If you want to... | Start with | Then add |
-|---|---|---|
-| Build agent teams | [Squad](https://github.com/bradygaster/squad), [microsoft/agents](https://github.com/microsoft/agents), [Agents-for-net](https://github.com/microsoft/Agents-for-net) | RAG, memory, MCP tools |
-| Orchestrate multiple agents | [Maxwell — orchestrator-maxwell.md](agents/orchestrator-maxwell.md) | Specialist agents from agents/ |
-| Build terminal-native workflows | [copilot-cli](https://github.com/github/copilot-cli), [runagent](https://github.com/runagent-dev/runagent), [rag-cli](https://github.com/satoshiman/rag-cli) | Context management and repo lists |
-| Ground agents in docs | [LightRAG](https://github.com/HKUDS/LightRAG), [upstash/vector-js](https://github.com/upstash/vector-js), [rag-chat](https://github.com/upstash/rag-chat) | AgentMemory and context compression |
-| Connect Copilot Studio | [Copilot Studio Integration](docs/COPILOT-STUDIO-INTEGRATION.md) + [Nexus](agents/copilot-nexus.md) | API bridge, MCP server, Microsoft Agents SDK |
-| Add MCP servers | [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers), [playwright-mcp](https://github.com/microsoft/playwright-mcp), [github-mcp-server](https://github.com/github/github-mcp-server) | Toolsets, allowlists, token budgets |
-| Reduce cost | [TOKEN-EFFICIENCY.md](docs/TOKEN-EFFICIENCY.md), [Penny](agents/token-penny.md), [Cirrus](agents/cost-cirrus.md) | Token compression, tool allowlists, cloud policies |
-| Add market analysis | [OpenBB](https://github.com/OpenBB-finance/OpenBB), [finrobot](https://github.com/ai4finance-foundation/finrobot), [TradingAgents](https://github.com/tauricresearch/tradingagents) | RAG, broker APIs, risk checks |
-| Build autonomous day-trading agents | [plugins/autonomous-day-trading-agent](plugins/autonomous-day-trading-agent/README.md), [Rex](agents/trading-rex.md), [Sage](agents/risk-sage.md) | Backtests, paper broker, human approval |
-| Add quantum experiments | [Qiskit](https://github.com/Qiskit/qiskit), [PennyLane](https://github.com/PennyLaneAI/pennylane), [qiskit-finance](https://github.com/qiskit-community/qiskit-finance) | Helix, Qubit, optimization sidecar |
-| Connect broker apps | [plugins/robinhood-trading-agent](plugins/robinhood-trading-agent/README.md), [alpaca-py](https://github.com/alpacahq/alpaca-py), [schwab-py](https://github.com/alexgolec/schwab-py) | Paper mode, broker adapters, approval gates |
-| Ship mobile or web apps | [expo/expo](https://github.com/expo/expo), [create-expo-stack](https://github.com/roninoss/create-expo-stack) | Agent API backend and RAG |
-| Monitor repo health | [Iris — repo-issue-iris.md](agents/repo-issue-iris.md) | GitHub MCP, REPO-HEALTH.md |
-| Secure the stack | [Sentinel](agents/security-sentinel.md), [Lock](agents/secret-scanner-lock.md) | docs/SECURITY.md |
-| Demo or pitch the work | [slidev](https://github.com/slidevjs/slidev), [marpit](https://github.com/marp-team/marpit), [awesome-hackathon](https://github.com/HappyHackingSpace/awesome-hackathon) | Standalone only |
-
----
-
-## Local Access Model
-
-Do not think of agent access as "the whole computer or nothing." Treat it like folder-by-folder permission.
-
-Recommended access levels:
-
-| Level | Use for | Example |
-|---|---|---|
-| Workspace only | Normal coding tasks | `<PATH_TO_THIS_REPO>` |
-| Project lab | Multi-repo experiments | `<PATH_TO_AGENT_LAB>` |
-| Documents or Downloads | Personal file workflows | Add only the folder needed |
-| Whole drive | Rare, high trust, high risk | Prefer not to do this |
-
-The [filesystem MCP server](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) supports allowed directories and MCP Roots. The [GitHub MCP Server](https://github.com/github/github-mcp-server) supports toolsets and read-only modes so GitHub access can also be scoped.
-
-See [docs/AGENT-ACCESS.md](docs/AGENT-ACCESS.md) and [docs/SECURITY.md](docs/SECURITY.md).
-
----
-
-## Repo Structure
-
-```text
-.
-├── README.md                          (this file)
-├── agents/
-│   ├── AGENTS-OVERVIEW.md             (master agent index — 59 agents)
-│   ├── orchestrator-maxwell.md        (routes all tasks)
-│   ├── repo-issue-iris.md             (repo health monitoring)
-│   ├── handoff-relay.md               (context handoff for /compact)
-│   ├── scheduler-cron.md              (scheduled task automation)
-│   ├── research-aria.md               (research analyst)
-│   ├── data-dex.md                    (data scientist)
-│   ├── market-intel-orion.md          (market intelligence)
-│   ├── summarizer-prism.md            (output summarizer)
-│   ├── tech-watch-beacon.md           (technology watch)
-│   ├── biz-analyst-clara.md           (business analyst)
-│   ├── tech-planner-rho.md            (technology planning analyst)
-│   ├── pitch-spark.md                 (pitch coach)
-│   ├── slides-deck.md                 (slide builder)
-│   ├── market-research-funnel.md      (market research)
-│   ├── writer-quill.md                (technical writer)
-│   ├── fullstack-atlas.md             (full-stack developer)
-│   ├── mobile-stack.md                (mobile/Expo app builder)
-│   ├── ui-canvas.md                   (UI/UX designer)
-│   ├── api-forge-build.md             (API developer)
-│   ├── pipeline-pipe.md               (CI/CD agent)
-│   ├── tester-probe.md                (QA & test agent)
-│   ├── test-analyst-vera.md           (test analyst)
-│   ├── debugger-trace.md              (debugger)
-│   ├── architect-eden.md              (software architect)
-│   ├── cloud-arch-nimbus.md           (cloud architect)
-│   ├── data-arch-schema.md            (data architect)
-│   ├── api-bridge.md                  (API/integration architect)
-│   ├── devops-volt.md                 (DevOps engineer)
-│   ├── security-sentinel.md           (security auditor)
-│   ├── redteam-ghost.md               (red team researcher)
-│   ├── compliance-lex.md              (compliance reviewer)
-│   ├── secret-scanner-lock.md         (secret scanner)
-│   ├── trading-rex.md                 (autonomous day trader)
-│   ├── quantum-qubit.md               (quantum finance researcher)
-│   ├── portfolio-nova.md              (portfolio manager)
-│   ├── risk-sage.md                   (risk officer)
-│   ├── broker-connect.md              (broker integration)
-│   ├── cost-cirrus.md                 (cloud cost optimizer)
-│   ├── token-penny.md                 (token cost auditor)
-│   ├── mcp-forge.md                   (MCP server builder)
-│   ├── rag-vector.md                  (RAG & embedding manager)
-│   ├── memory-recall.md               (long-term memory agent)
-│   ├── knowledge-memo.md              (knowledge base manager)
-│   ├── copilot-nexus.md               (Copilot Studio orchestrator)
-│   ├── connector-weave.md             (connector builder)
-│   ├── onboarding-guide.md            (new user onboarding)
-│   ├── support-help.md                (support agent)
-│   ├── quantum-lab-helix.md           (quantum lab assistant)
-│   ├── git-commit-auto.md             (git commit & PR agent)
-│   ├── context-auditor-lens.md        (context auditor)
-│   ├── dependency-watch-delta.md      (dependency watcher)
-│   ├── doc-drift-echo.md              (docs drift detector)
-│   ├── incident-pulse.md              (incident responder)
-│   ├── perf-bench-tempo.md            (performance benchmarker)
-│   └── accessibility-ally.md          (accessibility auditor)
-├── assets/
-│   ├── interactive-diagram.html       (clickable flow diagrams — open in browser)
-│   ├── agent-access-map.svg
-│   ├── broker-app-agent-flow.svg
-│   ├── cost-reduction-flow.svg
-│   ├── day-trading-agent-flow.svg
-│   ├── quantum-trading-agent-flow.svg
-│   └── standalone-setup-flow.svg
-├── cost-reduction/
-│   └── README.md
-├── docs/
-│   ├── ADDING-PLUGINS.md              (how to add a plugin)
-│   ├── AGENT-ACCESS.md
-│   ├── AUTONOMOUS-DAY-TRADING.md
-│   ├── BROKER-APP-INTEGRATIONS.md
-│   ├── CLI-ONE-LINERS.md
-│   ├── COMBINING-REPOS.md             (named stack recipes)
-│   ├── COPILOT-STUDIO-INTEGRATION.md
-│   ├── INTEGRATION-FLOWS.md
-│   ├── MCP-SERVERS.md
-│   ├── LIVE-RAG.md
-│   ├── LLM-MODELS.md
-│   ├── REPO-CATALOG.md
-│   ├── REPO-HEALTH.md                 (repo status tracking)
-│   ├── REPO-INSTRUCTIONS.md           (per-repo install/run guides)
-│   ├── SECURITY.md                    (security guide)
-│   ├── SECURITY-SCANNING.md           (vetting procedure + false-positive shapes)
-│   ├── SPATIAL-MODELS.md
-│   ├── STANDALONE-USAGE.md
-│   ├── TOKEN-EFFICIENCY.md            (token efficiency and /compact)
-│   ├── TRADING-MARKET-AGENTS.md
-│   └── VETTING-REPORT.md              (every verdict, accepted and rejected)
-├── examples/
-├── issues/                            (Iris draft reports, Maxwell logs, Relay handoffs)
-├── plugins/
-│   ├── README.md                      (plugin index)
-│   ├── autonomous-day-trading-agent/
-│   ├── robinhood-trading-agent/
-│   └── quantum-trading-agent/
-├── quantum/
-│   ├── QUANTUM-TRADING.md
-│   └── README.md
-├── scripts/
-│   ├── check_freshness.py             (catalog health, concurrent GitHub checks)
-│   └── static_audit.py                (Stage B vetting gate, standard library only)
-├── skills/                            (7 portable grounding & supply-chain skills)
-├── .github/workflows/
-│   └── repo-freshness.yml             (weekly health check + tracking issue)
-├── index.html                         (GitHub Pages entry for the diagram)
-└── repo-lists/                        (27 lanes; all-curated.txt is the union)
+```bash
+git -C "$HOME/Master-Repo-Use" pull
 ```
 
----
+After a major instruction change, rerun the global setup script so copied user-level instruction blocks are refreshed. Copilot CLI's `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` continues pointing at the live repo automatically.
 
-## Source Notes
+## Recommended first verification
 
-This README and the docs were built from the linked repositories plus current public docs/articles:
+Run these after setup:
 
-- [Microsoft Copilot Studio MCP connector docs](https://learn.microsoft.com/en-us/microsoft-copilot-studio/mcp-add-existing-server-to-agent)
-- [Microsoft Copilot Studio REST API action docs](https://learn.microsoft.com/en-us/microsoft-copilot-studio/agent-extend-action-rest-api)
-- [GitHub Copilot CLI context management](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/context-management)
-- [GitHub custom agents changelog](https://github.blog/changelog/2025-10-28-custom-agents-for-github-copilot/)
-- [Claude automatic context compaction cookbook](https://platform.claude.com/cookbook/tool-use-automatic-context-compaction)
-- [GitHub topic: context-compaction](https://github.com/topics/context-compaction)
-- [Fungies AI agent repository article](https://fungies.io/top-github-repositories-ai-agent-frameworks-2026/)
-- [Robinhood Agentic Trading](https://robinhood.com/us/en/support/articles/agentic-trading/)
-- [Alpaca paper trading docs](https://docs.alpaca.markets/docs/paper-trading)
+```bash
+git -C "$HOME/Master-Repo-Use" status
+python "$HOME/Master-Repo-Use/scripts/check_freshness.py"
+```
+
+Then open your preferred client and ask:
+
+```text
+What Master Repo instructions are loaded, and which catalog lane would you use for this task?
+```
+
+For GitHub Copilot CLI, also run `/instructions`. For Claude Code, run `/memory`. Codex should read the root `AGENTS.md` before work in this repo.
