@@ -173,20 +173,115 @@ def scan_text(path: pathlib.Path, text: str) -> list[str]:
     return out
 
 
+# Scanners disagree about what a non-zero exit means. Only these codes mean
+# "the tool ran fine and had something to report"; anything else is the scanner
+# itself failing, which must never be reported as a security finding.
+FINDING_EXIT_CODES = {
+    "gitleaks": {1},
+    "trivy": {1},
+    "osv-scanner": {1},
+    "semgrep-sql-injection": {1},
+    "semgrep-command-injection": {1},
+    "clamav": {1},
+    "snyk": {1},
+}
+
+# Anything shaped like real credential material is masked before it can reach a
+# log, JSON file, SVG, issue, PR body, or the Pages artifact.
+REDACTIONS = [
+    re.compile(r"-----BEGIN[^-]{0,60}PRIVATE KEY-----.*?-----END[^-]{0,60}PRIVATE KEY-----", re.S | re.I),
+    re.compile(r"\b(?:gh[pousr]|github_pat)_[A-Za-z0-9_]{16,}"),
+    re.compile(r"\bsk-(?:ant-|proj-|live-)?[A-Za-z0-9_-]{16,}"),
+    re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    re.compile(r"\bxox[abposr]-[A-Za-z0-9-]{10,}"),
+    re.compile(r"\bey[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}"),
+    re.compile(r"(?i)\b(?:api[_-]?key|secret|token|password|passwd|pwd|authorization|bearer)\b\s*[:=]\s*\S+"),
+    re.compile(r"\b[A-Za-z0-9+/]{40,}={0,2}\b"),
+    re.compile(r"\b[0-9a-f]{40,}\b", re.I),
+]
+
+
+def redact(text: str, limit: int = 400) -> str:
+    """Mask credential-shaped substrings, then truncate. Never returns raw tool output."""
+    for pattern in REDACTIONS:
+        text = pattern.sub("[REDACTED]", text)
+    text = " ".join(text.split())
+    return text[:limit]
+
+
 def run_external(cmd: list[str], cwd: pathlib.Path, label: str) -> list[str]:
+    """Run a scanner and classify the result as clean, a finding, or a scanner error.
+
+    A scanner error is reported as SCANNER-ERROR and asks for a rescan. It is never
+    reported as a malware/secret finding, because an unusable ClamAV database or a
+    missing signature feed says nothing at all about the repository being scanned.
+    """
     if shutil.which(cmd[0]) is None:
-        return []
+        return [f"SCANNER-ERROR {label} not installed; this scanner did not run"]
     try:
         proc = subprocess.run(cmd, cwd=cwd, text=True, capture_output=True, timeout=900)
     except Exception as exc:
-        return [f"INFO {label} unavailable: {exc}"]
+        return [f"SCANNER-ERROR {label} could not run: {redact(str(exc), 200)}"]
     if proc.returncode == 0:
         return []
-    sample = (proc.stdout + "\n" + proc.stderr).strip().replace("\n", " ")[:650]
-    return [f"HIGH {label} reported findings: {sample}"]
+    sample = redact(proc.stdout + " " + proc.stderr)
+    if proc.returncode in FINDING_EXIT_CODES.get(label, {1}):
+        return [f"HIGH {label} reported findings: {sample}"]
+    return [
+        f"SCANNER-ERROR {label} exited {proc.returncode} without completing; "
+        f"rescan required, this is not a finding about the repository: {sample}"
+    ]
+
+
+def clamav_database_ready() -> bool:
+    """ClamAV without a signature database exits non-zero on every scan."""
+    for directory in ("/var/lib/clamav", "/usr/local/share/clamav", "/opt/homebrew/var/lib/clamav"):
+        base = pathlib.Path(directory)
+        if base.is_dir() and any(base.glob("*.c[vl]d")):
+            return True
+    return False
+
+
+def run_gitleaks(clone: pathlib.Path) -> list[str]:
+    """Gitleaks with --redact, reporting rule/file/line only — never the secret value."""
+    if shutil.which("gitleaks") is None:
+        return ["SCANNER-ERROR gitleaks not installed; secret scanning did not run"]
+    report = clone.parent / "gitleaks-report.json"
+    cmd = [
+        "gitleaks", "detect", "--no-banner", "--redact",
+        "--report-format", "json", "--report-path", str(report),
+        "--source", ".",
+    ]
+    try:
+        proc = subprocess.run(cmd, cwd=clone, text=True, capture_output=True, timeout=900)
+    except Exception as exc:
+        return [f"SCANNER-ERROR gitleaks could not run: {redact(str(exc), 200)}"]
+    if proc.returncode not in (0, 1):
+        return [
+            f"SCANNER-ERROR gitleaks exited {proc.returncode} without completing; "
+            f"rescan required, this is not a finding about the repository: "
+            f"{redact(proc.stdout + ' ' + proc.stderr, 200)}"
+        ]
+    if proc.returncode == 0:
+        return []
+    try:
+        entries = json.loads(report.read_text(encoding="utf-8")) or []
+    except Exception:
+        return ["CRITICAL gitleaks reported secret material; report unreadable, values withheld"]
+    findings = []
+    for entry in entries[:20]:
+        rule = str(entry.get("RuleID") or entry.get("Description") or "unknown-rule")[:60]
+        location = str(entry.get("File") or "unknown-file")[:160]
+        line = entry.get("StartLine")
+        where = f"{location}:{line}" if line else location
+        findings.append(f"CRITICAL gitleaks secret candidate rule={rule} at {where} (value withheld)")
+    if len(entries) > 20:
+        findings.append(f"INFO gitleaks reported {len(entries) - 20} further secret candidates (values withheld)")
+    return findings
 
 
 def deep_scan(repo: str) -> tuple[list[str], bool]:
+    """Return (findings, critical). Scanner failures never set critical."""
     findings: list[str] = []
     with tempfile.TemporaryDirectory(prefix="master-repo-guardian-") as tmp:
         clone = pathlib.Path(tmp) / "repo"
@@ -197,7 +292,8 @@ def deep_scan(repo: str) -> tuple[list[str], bool]:
             timeout=300,
         )
         if proc.returncode != 0:
-            return [f"HIGH clone failed: {proc.stderr.strip()[:400]}"], False
+            # A failed clone is an infrastructure problem, not evidence about the repo.
+            return [f"SCANNER-ERROR clone failed, nothing was scanned: {redact(proc.stderr, 200)}"], False
         for path in iter_files(clone):
             rel = path.relative_to(clone)
             try:
@@ -219,7 +315,7 @@ def deep_scan(repo: str) -> tuple[list[str], bool]:
             if len(findings) >= 100:
                 findings.append("INFO finding limit reached")
                 break
-        findings += run_external(["gitleaks", "detect", "--no-banner", "--source", "."], clone, "gitleaks")
+        findings += run_gitleaks(clone)
         findings += run_external(
             ["trivy", "fs", "--scanners", "vuln,secret,misconfig", "--severity", "HIGH,CRITICAL", "--exit-code", "1", "."],
             clone,
@@ -228,11 +324,25 @@ def deep_scan(repo: str) -> tuple[list[str], bool]:
         findings += run_external(["osv-scanner", "scan", "source", "-r", "."], clone, "osv-scanner")
         findings += run_external(["semgrep", "--config", "p/sql-injection", "--error", "."], clone, "semgrep-sql-injection")
         findings += run_external(["semgrep", "--config", "p/command-injection", "--error", "."], clone, "semgrep-command-injection")
-        if shutil.which("clamscan"):
-            findings += run_external(["clamscan", "-r", "--infected", "."], clone, "clamav")
+        if shutil.which("clamscan") is None:
+            findings.append("SCANNER-ERROR clamav not installed; malware scanning did not run")
+        elif not clamav_database_ready():
+            findings.append(
+                "SCANNER-ERROR clamav signature database is missing or not initialised (run freshclam); "
+                "malware scanning was skipped and no malware conclusion can be drawn"
+            )
+        else:
+            findings += run_external(["clamscan", "-r", "--infected", "--no-summary", "."], clone, "clamav")
         if shutil.which("snyk") and os.getenv("SNYK_TOKEN"):
             findings += run_external(["snyk", "test", "--all-projects", "--severity-threshold=high"], clone, "snyk")
-    return findings, any(item.startswith("CRITICAL") for item in findings)
+    # Redact defensively: nothing leaves this function without passing the masker.
+    findings = [redact(item, 500) for item in findings]
+    critical = any(item.startswith("CRITICAL") for item in findings)
+    return findings, critical
+
+
+def has_scanner_error(findings: Iterable[str]) -> bool:
+    return any(str(item).startswith("SCANNER-ERROR") for item in findings)
 
 
 def classify(repo: str, meta: dict | None, old: dict, override: dict, stale: int, adopt: int, remove: int, archive_grace: int) -> Result:
@@ -303,6 +413,11 @@ def restore_scan_state(result: Result, old: dict) -> None:
     elif any(str(item).startswith("HIGH") for item in result.findings) and result.status == "HEALTHY":
         result.status = "REVIEW"
         result.note = "previous HIGH security finding pending owner-approved rescan"
+    elif has_scanner_error(result.findings):
+        result.deep_scanned = False
+        if result.status == "HEALTHY":
+            result.status = "REVIEW"
+        result.note = "previous security scan did not complete (scanner error); rescan required, not a finding"
 
 
 def remove_from_lists(repo: str) -> None:
@@ -317,6 +432,8 @@ def managed_candidate(result: Result) -> None:
     if result.critical or not result.deep_scanned or result.license not in ADOPTABLE_LICENSES:
         return
     if any(x.startswith(("HIGH", "CRITICAL")) for x in (result.findings or [])):
+        return
+    if has_scanner_error(result.findings or []):
         return
     MANAGED.mkdir(parents=True, exist_ok=True)
     path = MANAGED / (result.repo.replace("/", "__") + ".md")
@@ -438,6 +555,13 @@ def main() -> int:
                 result.status, result.note = "REMOVE", "CRITICAL security finding"
             elif any(item.startswith("HIGH") for item in result.findings):
                 result.status, result.note = "REVIEW", "HIGH security finding requires owner review"
+            elif has_scanner_error(result.findings):
+                # The scanner did not complete. That is a tooling problem, so ask for a
+                # rescan instead of implying the repository contains malware or secrets.
+                result.deep_scanned = False
+                if result.status == "HEALTHY":
+                    result.status = "REVIEW"
+                result.note = "security scan did not complete (scanner error); rescan required, not a finding"
         else:
             restore_scan_state(result, old)
 

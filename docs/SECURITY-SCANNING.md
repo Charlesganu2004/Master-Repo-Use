@@ -71,6 +71,56 @@ Owner-approved/new-repo GitHub scans install or use:
 
 Guardian also supports **Trivy** automatically if it is installed in the runner/environment. The catalog contains additional security projects such as OpenGrep, TruffleHog, Cisco AI Defense MCP Scanner, OSSF Scorecard, Syft, Cosign, and Garak.
 
+## Secret redaction
+
+Guardian never emits a secret value. This is enforced in code, not by convention:
+
+- Gitleaks runs with `--redact` and writes a JSON report. Guardian reports only the
+  **rule ID, file, and line** from that report — never the matched value, never raw stdout.
+- Every other scanner's output passes through `redact()` in `scripts/catalog_guardian.py`,
+  which masks private-key blocks, GitHub/OpenAI/AWS/Slack tokens, JWTs, `key = value`
+  credential pairs, and long base64/hex blobs before the text is truncated and stored.
+- `deep_scan()` re-applies `redact()` to every finding on the way out, so a new scanner
+  cannot bypass masking by being added to the list.
+- The public Pages artifact carries counts and policy only. `scripts/build_public_site.py`
+  rebuilds it from scratch and then **fails the build** if a repository name, note, finding,
+  or scanner name appears in it.
+
+Consequently no secret value can reach Actions logs, `docs/catalog-status.json`,
+`docs/catalog-status.svg`, the Pages site, a `[Catalog Audit]` issue, or a PR body.
+
+`tests/test_scanner_safety.py` asserts this. Run it after touching the scanner code:
+
+```bash
+python tests/test_scanner_safety.py
+```
+
+## CLEAN vs FINDING vs SCANNER ERROR
+
+A scanner that fails to run tells you nothing about the repository, so Guardian keeps the
+three outcomes separate:
+
+| Outcome | Prefix | Meaning |
+|---|---|---|
+| Clean | *(no entry)* | The scanner ran and found nothing. |
+| Finding | `HIGH` / `CRITICAL` | The scanner ran and reported something real. |
+| Scanner error | `SCANNER-ERROR` | The scanner did not complete. **No conclusion about the repo.** |
+
+Only exit codes that a given tool documents as "findings present" become findings; every
+other non-zero exit is a scanner error. This matters most for ClamAV, whose exit code `1`
+means *infected* but whose exit code `2` means *the scan failed* — most commonly because
+the signature database was never downloaded. That used to be reported as
+`HIGH clamav reported findings`, which reads as a malware accusation against an innocent
+repository. It now reports:
+
+```text
+SCANNER-ERROR clamav signature database is missing or not initialised (run freshclam);
+malware scanning was skipped and no malware conclusion can be drawn
+```
+
+A `SCANNER-ERROR` marks the repository for **rescan**, clears `deep_scanned`, and blocks
+managed-adoption promotion. It never sets `CRITICAL` and never proposes removal.
+
 ## Stage A — metadata only
 
 Before cloning or executing a repo, inspect GitHub metadata:
@@ -200,6 +250,7 @@ LICENSE: SPDX/custom status
 ACTIVITY: pushed_at + lifecycle status
 ARCHIVE/EOL: yes/no + successor if any
 FINDINGS: hidden/prompt/sql/command/secrets/malware/dependencies
+SCAN COMPLETENESS: all scanners completed | SCANNER-ERROR present (rescan required)
 REASON: decisive explanation
 ```
 

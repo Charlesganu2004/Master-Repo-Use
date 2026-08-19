@@ -13,20 +13,23 @@ on:
   issue_comment:
     types: [created]
 
+# Least privilege: read-only by default, widened only on the job that pushes.
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-
-concurrency:
-  group: catalog-guardian-${{ github.event_name }}
-  cancel-in-progress: false
+  contents: read
 
 jobs:
+  # Cheap weekly metadata pass. Deep scanning happens only for repositories newly
+  # added to a catalog list, or when the owner approves maintenance below.
   audit:
     if: github.event_name != 'issue_comment'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write
+    concurrency:
+      group: catalog-guardian-audit-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -78,6 +81,11 @@ jobs:
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
           sudo apt-get update -qq
           sudo apt-get install -y -qq clamav
+          # Without signatures clamscan exits non-zero on every scan. Guardian treats a
+          # missing database as SCANNER-ERROR rather than malware, so a failure here
+          # degrades the run instead of breaking it.
+          sudo systemctl stop clamav-freshclam 2>/dev/null || true
+          sudo freshclam --quiet || echo '::warning::freshclam could not update ClamAV signatures; malware scanning will be reported as a scanner error, not as a finding.'
           if [[ -n "${SNYK_TOKEN:-}" ]]; then npm install -g snyk; fi
 
       - name: Refresh metadata and deep-scan new additions
@@ -131,6 +139,8 @@ jobs:
           print()
           print('Deep intake uses built-in invisible/prompt/SQL/command/secret/binary checks plus Semgrep, Gitleaks, OSV Scanner and ClamAV. Snyk runs when SNYK_TOKEN is configured. Additional supported scanners such as Trivy can also be installed without changing Guardian.')
           print()
+          print('Secret values are never printed: Gitleaks runs with `--redact` and only rule, file and line are reported. A `SCANNER-ERROR` note means a scanner failed to run (for example ClamAV without a signature database) and the repository should be rescanned — it is **not** a claim that anything was found.')
+          print()
           print('Policy: 120d stale warning · 270d replacement/managed-adoption review · 365d runtime removal threshold. Archived repos are reviewed for releases, sunset/EOL, successors, reference value, license, and security before removal.')
           PY
           attention="$(python - <<'PY'
@@ -164,7 +174,14 @@ jobs:
       startsWith(github.event.issue.title, '[Catalog Audit]') &&
       contains(github.event.comment.body, 'APPROVE CATALOG MAINTENANCE')
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 75
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    concurrency:
+      group: catalog-guardian-approved-maintenance
+      cancel-in-progress: false
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -193,6 +210,11 @@ jobs:
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
           sudo apt-get update -qq
           sudo apt-get install -y -qq clamav
+          # Without signatures clamscan exits non-zero on every scan. Guardian treats a
+          # missing database as SCANNER-ERROR rather than malware, so a failure here
+          # degrades the run instead of breaking it.
+          sudo systemctl stop clamav-freshclam 2>/dev/null || true
+          sudo freshclam --quiet || echo '::warning::freshclam could not update ClamAV signatures; malware scanning will be reported as a scanner error, not as a finding.'
           if [[ -n "${SNYK_TOKEN:-}" ]]; then npm install -g snyk; fi
 
       - name: Run deep guardian and prepare lifecycle changes

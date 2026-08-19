@@ -19,10 +19,23 @@ p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull --ff-only;
 ## What the bootstrap does
 
 1. Enables GitHub Pages with `build_type=workflow`.
-2. Enables the repository Actions workflow permission required for GitHub Actions to create pull requests.
+2. Sets the default `GITHUB_TOKEN` to read-only and enables the one Actions workflow permission required for GitHub Actions to open pull requests.
 3. Applies `scripts/branch-protection.json` to `main`.
-4. Dispatches the Pages deployment workflow.
-5. Dispatches the Catalog Guardian audit workflow.
+4. Prints a verification block: `has_pages`, Pages build type and URL, `protected`, required reviews, Code Owner reviews, force pushes, deletions.
+5. Dispatches the Pages deployment **once**, and only if the API confirms Pages is enabled.
+
+It does **not** dispatch the Catalog Guardian audit, because that already runs weekly.
+Pass `--run-audit` (bash) or `-RunAudit` (PowerShell) if you want to seed one now.
+
+To re-check state later without changing anything or spending a runner minute:
+
+```bash
+bash scripts/enable-github-pro.sh --verify
+```
+
+```powershell
+& "$HOME\Master-Repo-Use\scripts\enable-github-pro.ps1" -VerifyOnly
+```
 
 ## What it does not do
 
@@ -32,6 +45,7 @@ p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull --ff-only;
 - It does not approve the `[Catalog Audit]` issue for you.
 - It does not call GPT, Claude, Copilot, or Codex.
 - It does not enable the optional token/work budget.
+- It does not configure Codespaces, GitHub Models, Spark, or any paid AI credits.
 
 ## Owner approval after setup
 
@@ -54,3 +68,8 @@ GitHub Pro can publish Pages from a private source repository, but the normal pe
 - a sanitized `docs/catalog-status.json` containing counts/policy but no private repository names or detailed findings.
 
 For the full private repo-by-repo table, run the interactive page locally from your clone.
+
+## Cost control
+
+See [COST-CONTROL.md](COST-CONTROL.md) for the Actions minute budget, the billing
+alerts to enable, and the rules any new workflow has to follow.

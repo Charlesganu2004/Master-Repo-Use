@@ -1,5 +1,7 @@
 name: Deploy Interactive Command Center
 
+# Cost policy: no recurring schedule. Pages redeploys only when the site or the
+# data the site renders actually changes on main, or when the owner dispatches it.
 on:
   push:
     branches: [main]
@@ -10,8 +12,6 @@ on:
       - 'repo-lists/**'
       - 'scripts/catalog_guardian.py'
       - '.github/workflows/pages.yml'
-  schedule:
-    - cron: '17 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -26,6 +26,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       pages_enabled: ${{ steps.pages.outputs.enabled }}
     steps:
@@ -71,19 +72,11 @@ jobs:
           cp index.html _site/index.html
           touch _site/.nojekyll
           cp docs/catalog-status.svg _site/docs/catalog-status.svg
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          source = json.loads(Path('docs/catalog-status.json').read_text(encoding='utf-8'))
-          public = {
-              'updated': source.get('updated'),
-              'policy': source.get('policy', {}),
-              'counts': source.get('counts', {}),
-              'public': True,
-              'repos': []
-          }
-          Path('_site/docs/catalog-status.json').write_text(json.dumps(public, indent=2) + '\n', encoding='utf-8')
-          PY
+          python scripts/build_public_site.py
+
+      - name: Assert the public artifact leaks nothing private
+        shell: bash
+        run: python scripts/build_public_site.py --verify-only
 
       - name: Configure GitHub Pages
         if: steps.pages.outputs.enabled == 'true'
@@ -99,6 +92,7 @@ jobs:
     if: needs.build.outputs.pages_enabled == 'true'
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
