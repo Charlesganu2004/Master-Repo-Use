@@ -1,0 +1,26 @@
+{
+  "FlowiseAI/Flowise": {
+    "mode": "archived-active",
+    "note": "Officially sunset: 3.1.4 released 2026-07-29, feature freeze 2026-07-27, GitHub archive 2026-08-10, EOL 2026-08-31. Keep temporarily as transition/reference material, not as a newly maintained dependency. Re-review for a maintained community fork after EOL."
+  },
+  "YuhaoLin2005/compact-counter-concept": {
+    "mode": "reference",
+    "note": "Archived MIT research/measurement utility, last push 2026-07-02. Keep as reference-only while Claude context-compaction behavior is still relevant; do not treat it as an actively maintained runtime dependency."
+  },
+  "ZongqianLi/Prompt-Compression-Survey": {
+    "mode": "reference",
+    "note": "Static academic survey/reference repository. No repository license was detected, so do not fork or copy code/content into a managed replacement without explicit permission."
+  },
+  "qiskit-community/ibm-quantum-challenge-fall-2021": {
+    "mode": "reference",
+    "note": "Historical IBM Quantum Challenge material. Static by design; keep only as an educational/reference artifact rather than an active runtime dependency."
+  },
+  "vision-x-nyu/thinking-in-space": {
+    "mode": "reference",
+    "note": "Official VSI-Bench research/evaluation artifact. Treat research artifacts separately from runtime packages; keep as reference while still relevant to spatial reasoning evaluation."
+  },
+  "wentaoyuan/RoboPoint": {
+    "mode": "reference",
+    "note": "Apache-2.0 research artifact for spatial affordance prediction. Keep as reference while still relevant; do not interpret paper-code quietness as runtime-package abandonment."
+  }
+}
