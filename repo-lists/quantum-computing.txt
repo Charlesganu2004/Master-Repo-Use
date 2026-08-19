@@ -2,7 +2,7 @@
 Qiskit/qiskit
 qiskit-community/qiskit-finance
 qiskit-community/qiskit-machine-learning
-qiskit-community/qiskit-optimization
+Qiskit/qiskit-addon-opt-mapper  # replaces unsupported qiskit-community/qiskit-optimization
 PennyLaneAI/pennylane
 PennyLaneAI/pennylane-qiskit
 quantumlib/Cirq
