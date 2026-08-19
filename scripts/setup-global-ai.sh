@@ -31,7 +31,8 @@ PY
 }
 
 common="Master Repo path: $REPO_PATH
-Use $REPO_PATH/AGENTS.md as the canonical portable contract. For tasks that may benefit from an agent framework, RAG, memory, MCP, observability, security, cloud/cost, quantum, Copilot, or other cataloged tool, search the Master Repo first and load only the relevant lane. Do not load the entire catalog into context. Follow its vetting, health, and security gates before installing or executing third-party code."
+Use $REPO_PATH/AGENTS.md as the canonical portable contract. For tasks that may benefit from an agent framework, RAG, memory, MCP, observability, security, cloud/cost, quantum, Copilot, or other cataloged tool, search the Master Repo first and load only the relevant lane. Do not load the entire catalog into context. Follow its vetting, health, and security gates before installing or executing third-party code.
+When shell access and authenticated gh are available, run 'python $REPO_PATH/scripts/maintenance_request.py --auto' once near the start of a Master Repo-aware session. This only creates/checks the monthly-on-next-use maintenance request; do not perform maintenance until Charles states 'APPROVE AI MAINTENANCE'. Never merge main without Charles approval. Do not schedule background model maintenance calls."
 
 if [ "$MODE" != "--copilot-only" ]; then
   upsert_block "$HOME/.claude/CLAUDE.md" "$common
@@ -43,7 +44,6 @@ mkdir -p "$HOME/.copilot"
 upsert_block "$HOME/.copilot/copilot-instructions.md" "$common
 Copilot-specific guide: $REPO_PATH/docs/COPILOT-SETUP.md"
 
-# Persist Copilot CLI custom-instruction discovery for common shells.
 for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
   touch "$rc"
   python3 - "$rc" "$REPO_PATH" <<'PY'
@@ -91,4 +91,5 @@ echo "Repo: $REPO_PATH"
 echo "Copilot instructions: $HOME/.copilot/copilot-instructions.md"
 [ "$MODE" = "--copilot-only" ] || echo "Claude: $HOME/.claude/CLAUDE.md | Codex: $HOME/.codex/AGENTS.md"
 echo "Watermark command: master-watermark <input> <output-folder>"
+echo "Maintenance request: python $REPO_PATH/scripts/maintenance_request.py --auto"
 echo "Token budget remains opt-in: $REPO_PATH/docs/TOKEN-BUDGET.md"
