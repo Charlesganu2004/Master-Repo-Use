@@ -26,7 +26,7 @@ jobs:
   audit:
     if: github.event_name != 'issue_comment'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -59,14 +59,31 @@ jobs:
             echo EOF
           } >> "$GITHUB_OUTPUT"
 
-      - name: Install Semgrep for new-repo intake only
+      - name: Set up Go for new-repo security intake
         if: steps.additions.outputs.repos != ''
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
+      - name: Install new-repo scan helpers
+        if: steps.additions.outputs.repos != ''
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         shell: bash
-        run: python -m pip install --disable-pip-version-check semgrep
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check semgrep
+          go install github.com/gitleaks/gitleaks/v8@latest
+          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clamav
+          if [[ -n "${SNYK_TOKEN:-}" ]]; then npm install -g snyk; fi
 
       - name: Refresh metadata and deep-scan new additions
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
@@ -112,6 +129,8 @@ jobs:
           print()
           print('That approval runs a rotating deep scan plus all current REVIEW/REMOVE candidates, applies removal proposals on an automation branch, and opens a PR. **It never merges `main` automatically.**')
           print()
+          print('Deep intake uses built-in invisible/prompt/SQL/command/secret/binary checks plus Semgrep, Gitleaks, OSV Scanner and ClamAV. Snyk runs when SNYK_TOKEN is configured. Additional supported scanners such as Trivy can also be installed without changing Guardian.')
+          print()
           print('Policy: 120d stale warning · 270d replacement/managed-adoption review · 365d runtime removal threshold. Archived repos are reviewed for releases, sunset/EOL, successors, reference value, license, and security before removal.')
           PY
           attention="$(python - <<'PY'
@@ -145,7 +164,7 @@ jobs:
       startsWith(github.event.issue.title, '[Catalog Audit]') &&
       contains(github.event.comment.body, 'APPROVE CATALOG MAINTENANCE')
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -157,13 +176,29 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
       - name: Install owner-approved scan helpers
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         shell: bash
-        run: python -m pip install --disable-pip-version-check semgrep
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check semgrep
+          go install github.com/gitleaks/gitleaks/v8@latest
+          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clamav
+          if [[ -n "${SNYK_TOKEN:-}" ]]; then npm install -g snyk; fi
 
       - name: Run deep guardian and prepare lifecycle changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
