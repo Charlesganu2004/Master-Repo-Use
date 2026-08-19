@@ -15,5 +15,5 @@ phildougherty/infracost_mcp
 jasonwilbur/cloud-cost-mcp
 OptimNow/finops-mcp-resources
 OptimNow/cloud-finops-skills
-aarora79/aws-cost-explorer-mcp-server
+awslabs/mcp  # active AWS billing/cost-management MCP; replaces stale aarora79/aws-cost-explorer-mcp-server
 nozomi-koborinai/gcp-cost-mcp-server
