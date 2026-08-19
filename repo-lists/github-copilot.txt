@@ -1,0 +1,20 @@
+# GitHub Copilot native and adjacent tooling
+github/copilot-cli
+github/copilot-sdk
+github/awesome-copilot
+github/github-mcp-server
+github/docs
+
+# Cross-client tools that can be adapted to Copilot through MCP, CLI, API, or instructions
+headroomlabs-ai/headroom
+modelcontextprotocol/servers
+microsoft/playwright-mcp
+upstash/context7
+VoltAgent/awesome-agent-skills
+addyosmani/agent-skills
+rebelytics/one-skill-to-rule-them-all
+
+# Master Repo compatibility contract
+# .github/copilot-instructions.md -> repo-local default instructions
+# AGENTS.md -> portable cross-agent contract
+# docs/COPILOT-SETUP.md -> global Copilot CLI setup and compatibility rules
