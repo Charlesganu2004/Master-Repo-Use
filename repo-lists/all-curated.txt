@@ -257,7 +257,7 @@ aquasecurity/trivy
 bridgecrewio/checkov
 semgrep/semgrep
 
-# Open-Weight LLMs & Serving Stacks (added 2026-08-05, vetted)
+# Cross-client agents, memory, observability and skills
 omnigent-ai/omnigent
 getomnico/omni
 YeQing17-2026/OmniAgent
@@ -265,6 +265,7 @@ thedotmack/claude-mem
 hoangsonww/Claude-Code-Agent-Monitor
 simple10/agents-observe
 centminmod/my-claude-code-setup
+anthropics/claude-plugins-official
 rebelytics/one-skill-to-rule-them-all
 openai/codex
 RoggeOhta/awesome-codex-cli
@@ -272,3 +273,7 @@ VoltAgent/awesome-agent-skills
 addyosmani/agent-skills
 alirezarezvani/claude-skills
 NVIDIA/skills
+github/awesome-copilot
+
+# Media tools — use only on media you own or are authorized to modify
+D-Ogi/WatermarkRemover-AI
