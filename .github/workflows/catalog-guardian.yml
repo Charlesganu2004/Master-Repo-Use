@@ -1,0 +1,65 @@
+name: Catalog Guardian
+
+on:
+  workflow_dispatch:
+    inputs:
+      deep_scan:
+        description: Run a deep source/security batch scan
+        required: false
+        default: 'true'
+  push:
+    branches: [main]
+    paths:
+      - 'repo-lists/**'
+      - 'scripts/catalog_guardian.py'
+      - '.github/workflows/catalog-guardian.yml'
+  schedule:
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalog-guardian
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Metadata health + rotating deep scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          deep=''
+          # Deep scan once per UTC day, on manual runs, and whenever catalog files change.
+          if [[ "${{ github.event_name }}" == 'workflow_dispatch' || "${{ github.event_name }}" == 'push' || "$(date -u +%H)" == '00' ]]; then
+            deep='--deep --batch-size 12'
+          fi
+          python scripts/catalog_guardian.py $deep --apply-removals
+
+      - name: Commit refreshed dashboard and approved removals
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- docs/catalog-status.json docs/CATALOG-STATUS.md docs/catalog-status.svg docs/AUTO-REMOVALS.md repo-lists/ 2>/dev/null; then
+            echo 'No catalog status changes.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/catalog-status.json docs/CATALOG-STATUS.md docs/catalog-status.svg repo-lists/
+          [ -f docs/AUTO-REMOVALS.md ] && git add docs/AUTO-REMOVALS.md || true
+          git commit -m 'chore: refresh catalog security and health status'
+          git push
