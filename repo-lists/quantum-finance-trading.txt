@@ -2,12 +2,12 @@
 Qiskit/qiskit
 qiskit-community/qiskit-finance
 qiskit-community/qiskit-machine-learning
-qiskit-community/qiskit-optimization
+Qiskit/qiskit-addon-opt-mapper  # supported optimization mapping replacement
 PennyLaneAI/pennylane
 tensorflow/quantum
 mit-han-lab/torchquantum
 jpmorganchase/QOKit
-qiskit-community/ibm-quantum-challenge-fall-2021
+qiskit-community/ibm-quantum-challenge-fall-2021  # reference-only historical challenge
 VarunRathore137/The-Hybrid-Quantum-Portfolio-Optimizer
 BIKASH1002/QML-Stock-Predictor
 MrDecryptDecipher/Sentinel
