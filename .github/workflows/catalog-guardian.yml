@@ -10,10 +10,10 @@ on:
       - '.github/workflows/catalog-guardian.yml'
   schedule:
     - cron: '17 */6 * * *'
-    - cron: '23 0 * * *'
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: catalog-guardian
@@ -33,78 +33,87 @@ jobs:
           python-version: '3.12'
 
       - name: Install deep-scan helpers
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.schedule == '23 0 * * *'
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
           python -m pip install --disable-pip-version-check semgrep
-          # catalog_guardian.py also invokes gitleaks/trivy/osv-scanner/ClamAV
-          # automatically when those executables are present on a runner or workstation.
+          # The guardian also uses gitleaks, Trivy, OSV Scanner, ClamAV and Snyk
+          # automatically when those executables/credentials are available.
 
-      - name: Immediately deep-vet every newly added repo
+      - name: Detect newly added repos
+        id: additions
         if: github.event_name == 'push'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          git diff HEAD^ HEAD -- repo-lists/all-curated.txt \
+          git diff HEAD^ HEAD -- repo-lists/ \
             | sed -n 's/^+\([^+#][^ #]*\/[^ #]*\).*$/\1/p' \
             | sort -u > /tmp/new-repos.txt || true
-          if [[ ! -s /tmp/new-repos.txt ]]; then
-            echo 'No new catalog repos in this commit.'
-            exit 0
-          fi
-          python - <<'PY'
-          from pathlib import Path
-          import datetime as dt
-          from scripts.catalog_guardian import deep_scan, remove_from_repo_lists
+          {
+            echo 'repos<<EOF'
+            cat /tmp/new-repos.txt || true
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
 
-          repos=[x.strip() for x in Path('/tmp/new-repos.txt').read_text().splitlines() if x.strip()]
-          report=Path('docs/NEW-REPO-VETTING.md')
-          existing=report.read_text() if report.exists() else '# New Repo Deep Vetting\n\n'
-          stamp=dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
-          lines=[]
-          for repo in repos:
-              findings, critical = deep_scan(repo)
-              highs=[x for x in findings if x.startswith('HIGH')]
-              if critical:
-                  status='REMOVED — critical security finding'
-                  remove_from_repo_lists(repo)
-              elif highs:
-                  status='REVIEW REQUIRED — high-risk patterns detected'
-              else:
-                  status='PASS'
-              lines.append(f'## {repo} — {status}\n\nScanned: {stamp}\n')
-              if findings:
-                  lines.extend(f'- {x}' for x in findings[:50])
-              else:
-                  lines.append('- Built-in deep checks found no high/critical patterns.')
-              lines.append('')
-          report.write_text(existing.rstrip()+'\n\n'+'\n'.join(lines)+'\n')
-          PY
-
-      - name: Metadata health + rotating deep scan
+      - name: Run metadata audit, deep scans and lifecycle proposals
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          deep=''
-          if [[ "${{ github.event_name }}" == 'workflow_dispatch' || "${{ github.event_name }}" == 'push' || "${{ github.event.schedule }}" == '23 0 * * *' ]]; then
-            deep='--deep --batch-size 12'
+          args=(--apply-removals)
+          if [[ "${{ github.event_name }}" == 'workflow_dispatch' || "${{ github.event_name }}" == 'push' ]]; then
+            args+=(--deep --batch-size 12)
           fi
-          python scripts/catalog_guardian.py $deep --apply-removals
+          if [[ -s /tmp/new-repos.txt ]]; then
+            while IFS= read -r repo; do
+              [[ -n "$repo" ]] && args+=(--force-repo "$repo")
+            done < /tmp/new-repos.txt
+          fi
+          python scripts/catalog_guardian.py "${args[@]}"
 
-      - name: Commit refreshed dashboard, vetting results and approved removals
+      - name: Build owner-review branch
+        id: changes
         shell: bash
         run: |
           set -euo pipefail
           if git diff --quiet; then
-            echo 'No catalog status changes.'
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
+          branch='automation/catalog-guardian'
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/ repo-lists/
-          git commit -m 'chore: refresh catalog security and health status'
-          git push
+          git switch -C "$branch"
+          git add docs/ repo-lists/ managed-repos/
+          git commit -m 'chore: propose catalog health and security updates'
+          git push --force origin "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Open or refresh owner-review PR
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch='${{ steps.changes.outputs.branch }}'
+          existing="$(gh pr list --head "$branch" --base main --state open --json number --jq '.[0].number // empty')"
+          body=$(cat <<'EOF'
+          Automated Catalog Guardian proposal.
+
+          This PR may contain:
+          - refreshed live catalog health/security status;
+          - deep-scan findings for new or rotating repositories;
+          - lifecycle removal proposals;
+          - managed-adoption candidate notes for useful stale/archived code.
+
+          Nothing in this PR should merge until @Charlesganu2004 reviews and approves it. The Owner Approval Check and CODEOWNERS rules are designed to enforce that policy.
+          EOF
+          )
+          if [[ -n "$existing" ]]; then
+            gh pr edit "$existing" --title 'chore: Catalog Guardian owner review' --body "$body"
+          else
+            gh pr create --head "$branch" --base main --title 'chore: Catalog Guardian owner review' --body "$body"
+          fi
