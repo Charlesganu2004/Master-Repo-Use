@@ -4,6 +4,7 @@ ByteDance-Seed/Depth-Anything-3
 colmap/colmap  # license needs manual read
 facebookresearch/map-anything
 facebookresearch/vggt  # license needs manual read
-MrNeRF/LichtFeld-Studio  # copyleft: GPL-3.0
-nerfstudio-project/nerfstudio
+MrNeRF/LichtFeld-Studio  # active replacement lane; copyleft GPL-3.0
 playcanvas/supersplat
+
+# nerfstudio-project/nerfstudio moved to managed-repos/candidates after >365d without a push.
