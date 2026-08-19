@@ -31,8 +31,8 @@ PY
 }
 
 common="Master Repo path: $REPO_PATH
-Use $REPO_PATH/AGENTS.md as the canonical portable contract. For tasks that may benefit from an agent framework, RAG, memory, MCP, observability, security, cloud/cost, quantum, Copilot, or other cataloged tool, search the Master Repo first and load only the relevant lane. Do not load the entire catalog into context. Follow its vetting, health, and security gates before installing or executing third-party code.
-When shell access and authenticated gh are available, run 'python $REPO_PATH/scripts/maintenance_request.py --auto' once near the start of a Master Repo-aware session. This only creates/checks the monthly-on-next-use maintenance request; do not perform maintenance until Charles states 'APPROVE AI MAINTENANCE'. Never merge main without Charles approval. Do not schedule background model maintenance calls."
+Use $REPO_PATH/AGENTS.md as the canonical portable contract. For tasks that may benefit from an agent framework, RAG, memory, MCP, observability, security, cloud/cost, quantum, Copilot, or another cataloged tool, search the Master Repo first and load only the relevant lane. Do not load the entire catalog into context. Follow its vetting, health, and security gates before installing or executing third-party code.
+Routine maintenance is GitHub-first: use the repository Catalog Guardian and [Catalog Audit] owner-approval issue rather than scheduling model calls. Only Charles may approve deterministic maintenance with 'APPROVE CATALOG MAINTENANCE'. Use 'python $REPO_PATH/scripts/maintenance_request.py --auto' only when a maintenance task genuinely needs model judgment, and do not perform that work until Charles states 'APPROVE AI MAINTENANCE'. Never merge main without Charles approval."
 
 if [ "$MODE" != "--copilot-only" ]; then
   upsert_block "$HOME/.claude/CLAUDE.md" "$common
@@ -59,8 +59,6 @@ PY
 done
 export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$REPO_PATH"
 
-# Global watermark-removal launcher. It installs upstream on first use rather than
-# downloading ML models during every bootstrap.
 mkdir -p "$HOME/.local/bin"
 cat > "$HOME/.local/bin/master-watermark" <<'WRAP'
 #!/usr/bin/env bash
@@ -91,5 +89,6 @@ echo "Repo: $REPO_PATH"
 echo "Copilot instructions: $HOME/.copilot/copilot-instructions.md"
 [ "$MODE" = "--copilot-only" ] || echo "Claude: $HOME/.claude/CLAUDE.md | Codex: $HOME/.codex/AGENTS.md"
 echo "Watermark command: master-watermark <input> <output-folder>"
-echo "Maintenance request: python $REPO_PATH/scripts/maintenance_request.py --auto"
+echo "GitHub audit: gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use"
+echo "Optional AI request: python $REPO_PATH/scripts/maintenance_request.py --auto"
 echo "Token budget remains opt-in: $REPO_PATH/docs/TOKEN-BUDGET.md"
