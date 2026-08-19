@@ -62,7 +62,7 @@ jobs:
             echo '::warning::GitHub Pages is not enabled yet. One-time owner action: Settings → Pages → Source → GitHub Actions. This workflow will remain green and skip deployment until that is enabled.'
           fi
 
-      - name: Stage public site only
+      - name: Stage privacy-safe public site
         shell: bash
         run: |
           set -euo pipefail
@@ -70,8 +70,20 @@ jobs:
           mkdir -p _site/docs
           cp index.html _site/index.html
           touch _site/.nojekyll
-          cp docs/catalog-status.json _site/docs/catalog-status.json
           cp docs/catalog-status.svg _site/docs/catalog-status.svg
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          source = json.loads(Path('docs/catalog-status.json').read_text(encoding='utf-8'))
+          public = {
+              'updated': source.get('updated'),
+              'policy': source.get('policy', {}),
+              'counts': source.get('counts', {}),
+              'public': True,
+              'repos': []
+          }
+          Path('_site/docs/catalog-status.json').write_text(json.dumps(public, indent=2) + '\n', encoding='utf-8')
+          PY
 
       - name: Configure GitHub Pages
         if: steps.pages.outputs.enabled == 'true'
