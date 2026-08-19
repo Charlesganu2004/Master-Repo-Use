@@ -8,5 +8,5 @@ NVIDIA/cosmos  # license needs manual read
 Physical-Intelligence/openpi
 remyxai/VQASynth
 SkyworkAI/Matrix-Game
-vision-x-nyu/thinking-in-space
-wentaoyuan/RoboPoint
+vision-x-nyu/thinking-in-space  # reference-only research/evaluation artifact
+wentaoyuan/RoboPoint  # reference-only research artifact
