@@ -52,4 +52,8 @@ Managed candidates are plans only. They do not copy third-party source or create
 
 ## Next review behavior
 
-The no-background-cost maintenance request system in `scripts/maintenance_request.py` will generate a GitHub `[AI Maintenance]` review request on the first Master Repo-aware AI session after the 30-day interval has elapsed. It will not perform changes until Charles says `APPROVE AI MAINTENANCE`.
+Routine follow-up now uses the GitHub-first `Catalog Guardian` workflow. It performs lightweight metadata audits weekly and on relevant catalog/security changes without calling GPT, Claude, Copilot, or Codex. If attention is needed, it creates or refreshes one `[Catalog Audit]` issue.
+
+Charles must comment the exact phrase `APPROVE CATALOG MAINTENANCE` before the deeper deterministic scan/removal/adoption proposal runs. That approved run creates or updates an automation branch and PR; it never merges `main` automatically.
+
+`scripts/maintenance_request.py` remains available only for the separate optional path when deterministic tooling leaves a modernization/adoption decision that genuinely needs model judgment. That AI-assisted path requires the separate `APPROVE AI MAINTENANCE` approval.
