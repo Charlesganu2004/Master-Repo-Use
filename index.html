@@ -1,663 +1,113 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
 <title>Master Repo Use — Interactive Command Center</title>
 <style>
-  :root {
-    --bg: #0d1117; --surface: #161b22; --border: #30363d;
-    --accent: #238636; --accent2: #1f6feb; --accent3: #9e6a03;
-    --accent4: #8b949e; --text: #c9d1d9; --text-dim: #8b949e;
-    --node-hover: #2ea043; --danger: #f85149; --warning: #e3b341;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace; background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px 24px 40px; }
-
-  /* ── Header ── */
-  .repo-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
-  .repo-header h1 { font-size: 1.3rem; font-weight: 700; color: #f0f6fc; }
-  .header-links { display: flex; gap: 8px; flex-wrap: wrap; }
-  .btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 500; text-decoration: none; border: 1px solid var(--border); color: var(--text); background: var(--surface); transition: all 0.15s; cursor: pointer; }
-  .btn:hover { border-color: var(--accent2); color: #fff; background: #1c2333; }
-  .btn-primary { background: var(--accent2); border-color: var(--accent2); color: #fff; }
-  .btn-primary:hover { background: #388bfd; }
-  .subtitle { color: var(--text-dim); font-size: 0.83rem; margin-bottom: 22px; }
-
-  /* ── Tabs ── */
-  .tab-row { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
-  .tab { padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.80rem; font-weight: 500; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); transition: all 0.15s; }
-  .tab:hover { border-color: var(--accent2); color: var(--text); }
-  .tab.active { background: var(--accent2); border-color: var(--accent2); color: #fff; }
-
-  /* ── Diagram areas ── */
-  .diagram-area { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px; overflow-x: auto; }
-  .diagram-area.active { display: block; }
-
-  /* ── Flow nodes ── */
-  .flow { display: flex; flex-direction: column; align-items: flex-start; gap: 0; max-width: 680px; }
-  .flow-node { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 7px; cursor: pointer; border: 1px solid var(--border); background: var(--bg); margin: 3px 0; transition: all 0.15s; font-size: 0.87rem; width: 100%; }
-  .flow-node:hover { border-color: var(--accent2); background: #1c2333; }
-  .flow-node.selected { border-color: var(--accent); background: #0d2818; }
-  .flow-node.entry { border-color: var(--accent2); }
-  .flow-node.gate { border-color: var(--warning); }
-  .flow-node.terminal { border-color: var(--accent4); }
-  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .dot-green { background: var(--accent); } .dot-blue { background: var(--accent2); }
-  .dot-yellow { background: var(--warning); } .dot-gray { background: var(--accent4); }
-  .arrow { color: var(--text-dim); padding: 2px 0 2px 20px; font-size: 1rem; line-height: 1; }
-
-  /* ── Detail panels ── */
-  .detail-panel { margin-top: 18px; padding: 16px; background: #0d2818; border: 1px solid var(--accent); border-radius: 8px; display: none; font-size: 0.85rem; }
-  .detail-panel.active { display: block; }
-  .detail-panel h3 { color: #3fb950; margin-bottom: 10px; font-size: 0.95rem; }
-  .detail-panel ul { list-style: none; padding: 0; }
-  .detail-panel li { padding: 3px 0; color: var(--text); }
-  .detail-panel li::before { content: "→ "; color: var(--accent); }
-  .panel-links { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
-
-  /* ── Combo grid ── */
-  .combo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-top: 4px; }
-  .combo-card { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); cursor: pointer; transition: all 0.15s; font-size: 0.82rem; }
-  .combo-card:hover { border-color: var(--accent2); background: #1c2333; }
-  .combo-card.active-combo { border-color: var(--accent); background: #0d2818; }
-  .combo-card h4 { font-size: 0.84rem; margin-bottom: 4px; color: #f0f6fc; }
-  .combo-detail { margin-top: 14px; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; display: none; font-size: 0.83rem; }
-  .combo-detail.active { display: block; }
-  .combo-detail h3 { color: #f0f6fc; margin-bottom: 8px; }
-
-  /* ── Code blocks ── */
-  .code-block { background: #010409; border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; font-family: monospace; font-size: 0.77rem; color: #c9d1d9; margin: 8px 0; overflow-x: auto; white-space: pre; }
-
-  /* ── Chips / agent links ── */
-  .section-label { color: var(--text-dim); font-size: 0.77rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin: 14px 0 8px; }
-  .chip { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 12px; font-size: 0.72rem; font-weight: 500; margin: 2px; text-decoration: none; transition: all 0.12s; cursor: pointer; }
-  .chip:hover { opacity: 0.82; transform: translateY(-1px); }
-  .chip-green { background: #1a3a1a; color: #3fb950; border: 1px solid #2e6b2e; }
-  .chip-blue  { background: #1a2a3a; color: #79c0ff; border: 1px solid #1f4a7a; }
-  .chip-yellow{ background: #3a2e00; color: #e3b341; border: 1px solid #5a4a00; }
-  .chip-gray  { background: #1e2329; color: #8b949e; border: 1px solid #30363d; }
-
-  /* ── Agent roster grid ── */
-  .roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-  .roster-group { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
-  .roster-group h4 { font-size: 0.78rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-  .roster-group .chips { display: flex; flex-wrap: wrap; gap: 2px; }
-
-  /* ── Utility ── */
-  a { color: inherit; }
-  .note { color: var(--text-dim); font-size: 0.80rem; margin-top: 8px; }
-  .standalone-badge { display: inline-flex; align-items: center; margin-top: 10px; padding: 4px 10px; background: #1f2d3d; border: 1px solid var(--accent2); border-radius: 4px; font-size: 0.78rem; color: var(--accent2); text-decoration: none; }
-  .standalone-badge:hover { background: var(--accent2); color: #fff; }
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#0b1220;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;--blue:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--purple:#bc8cff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}.shell{max-width:1220px;margin:auto;padding:24px}.header{display:flex;gap:18px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:18px}.header h1{font-size:24px;margin:0 0 5px;color:#f0f6fc}.muted{color:var(--muted)}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--border);background:var(--panel);color:var(--text);padding:8px 12px;border-radius:7px;text-decoration:none;cursor:pointer}.btn:hover,.btn:focus-visible{border-color:var(--blue);outline:none}.btn.primary{background:#1f6feb;border-color:#1f6feb;color:white}.statusbar{margin:18px 0;display:grid;grid-template-columns:2fr repeat(4,1fr);gap:8px}.status{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:11px}.status strong{display:block;color:#f0f6fc;font-size:16px}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0}.tab{padding:8px 13px;border-radius:7px;border:1px solid var(--border);background:var(--panel);color:var(--muted);cursor:pointer}.tab.active{background:#1f6feb;color:white;border-color:#1f6feb}.view{display:none}.view.active{display:block}.intro{background:linear-gradient(135deg,#111827,#0d1117);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:12px}.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:15px;display:flex;flex-direction:column;gap:9px}.card:hover{border-color:#484f58}.card h3{margin:0;color:#f0f6fc;font-size:16px}.tag{display:inline-block;width:max-content;border:1px solid var(--border);padding:2px 7px;border-radius:99px;font-size:11px;color:var(--muted)}.tag.green{color:var(--green);border-color:#238636}.tag.yellow{color:var(--yellow);border-color:#9e6a03}.tag.purple{color:var(--purple);border-color:#8957e5}.command{position:relative;background:#010409;border:1px solid var(--border);border-radius:7px;padding:11px 78px 11px 11px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:44px;color:#e6edf3}.copy{position:absolute;right:7px;top:7px;border:1px solid var(--border);background:#21262d;color:var(--text);border-radius:6px;padding:5px 9px;cursor:pointer}.copy:hover{border-color:var(--blue)}.links{display:flex;gap:7px;flex-wrap:wrap}.links a{color:var(--blue);text-decoration:none}.links a:hover{text-decoration:underline}.health-table{width:100%;border-collapse:collapse;background:var(--panel);font-size:12px}.health-table th,.health-table td{border:1px solid var(--border);padding:7px;text-align:left;vertical-align:top}.health-table th{color:#f0f6fc;background:#21262d}.pill{font-weight:700}.pill.HEALTHY{color:var(--green)}.pill.STALE{color:var(--yellow)}.pill.REVIEW{color:#f0883e}.pill.REMOVE{color:var(--red)}.warning{border-left:4px solid var(--yellow);padding:10px 12px;background:#2d260e;border-radius:5px}.ok{border-left:4px solid var(--green);padding:10px 12px;background:#0d2818;border-radius:5px}.footer{margin-top:24px;color:var(--muted);font-size:12px}@media(max-width:820px){.statusbar{grid-template-columns:1fr 1fr}.statusbar .status:first-child{grid-column:1/-1}.shell{padding:15px}}@media(max-width:520px){.statusbar{grid-template-columns:1fr}.statusbar .status:first-child{grid-column:auto}.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-
-<div class="repo-header">
+<main class="shell">
+<header class="header">
   <div>
     <h1>Master Repo Use — Interactive Command Center</h1>
-    <p style="color:var(--text-dim);font-size:0.80rem;margin-top:3px">Click any node or agent chip to navigate directly into the repo.</p>
-    <p style="color:var(--warning);font-size:0.76rem;margin-top:3px"><strong>Command safety:</strong> replace REVIEWED_VERSION with an exact package release you inspected; install it deliberately before using a noninteractive host.</p>
+    <div class="muted">Click a command to copy its exact one-liner. No framework or build step is required for this page.</div>
   </div>
-  <div class="header-links">
-    <a class="btn btn-primary" href="https://github.com/Charlesganu2004/Master-Repo-Use" target="_blank">View on GitHub</a>
-    <a class="btn" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/AGENTS-OVERVIEW.md" target="_blank">All 59 Agents</a>
-    <a class="btn" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/REPO-CATALOG.md" target="_blank">Repo Catalog</a>
-    <a class="btn" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/SECURITY.md" target="_blank">Security</a>
+  <div class="actions">
+    <a class="btn primary" href="https://github.com/Charlesganu2004/Master-Repo-Use" target="_blank" rel="noopener">Private repo ↗</a>
+    <a class="btn" href="docs/CATALOG-STATUS.md">Catalog status</a>
+    <a class="btn" href="docs/SECURITY.md">Security</a>
   </div>
-</div>
+</header>
 
-<div class="tab-row">
-  <div class="tab active" onclick="showDiagram('main',this)">Main Flow</div>
-  <div class="tab" onclick="showDiagram('standalone',this)">Standalone Paths</div>
-  <div class="tab" onclick="showDiagram('combinations',this)">Combinations</div>
-  <div class="tab" onclick="showDiagram('trading',this)">Trading &amp; Finance</div>
-  <div class="tab" onclick="showDiagram('cost',this)">Cost &amp; Tokens</div>
-  <div class="tab" onclick="showDiagram('agents',this)">Agent Roster</div>
-</div>
+<section class="statusbar" aria-label="Catalog health">
+  <div class="status"><strong id="updated">Live catalog status</strong><span class="muted">Loads from docs/catalog-status.json when served by HTTP/Pages.</span></div>
+  <div class="status"><strong class="green" id="healthy">—</strong><span>Healthy</span></div>
+  <div class="status"><strong style="color:var(--yellow)" id="stale">—</strong><span>Stale</span></div>
+  <div class="status"><strong style="color:#f0883e" id="review">—</strong><span>Review</span></div>
+  <div class="status"><strong style="color:var(--red)" id="remove">—</strong><span>Remove</span></div>
+</section>
 
-<!-- ═══════════════ MAIN FLOW ═══════════════ -->
-<div id="diagram-main" class="diagram-area active">
-  <div class="section-label">Click any node to see details, tools, and repo links</div>
-  <div class="flow">
-    <div class="flow-node entry" onclick="showDetail('entry',this)"><div class="dot dot-blue"></div>Entry Point — CLI · VS Code · Copilot Studio · App · Automation</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node" onclick="showDetail('framework',this)"><div class="dot dot-green"></div>Agent Framework — Squad · Microsoft Agents · RunAgent · Copilot CLI</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node" onclick="showDetail('mcp',this)"><div class="dot dot-green"></div>MCP Tools &amp; APIs — Filesystem · GitHub · Playwright · Context7 · Alpaca</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node" onclick="showDetail('rag',this)"><div class="dot dot-green"></div>RAG · Memory · Context Control — LightRAG · AgentMemory · LLMLingua</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node gate" onclick="showDetail('cost',this)"><div class="dot dot-yellow"></div>Cost Controls — Token budget · /compact · Model routing · Tool allowlist</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node terminal" onclick="showDetail('output',this)"><div class="dot dot-gray"></div>Output — App · Cloud · GitHub · Database · Local file</div>
+<nav class="tabs" aria-label="Command center sections">
+  <button class="tab active" data-view="setup">Setup</button>
+  <button class="tab" data-view="tools">Tools</button>
+  <button class="tab" data-view="catalog">Catalog</button>
+  <button class="tab" data-view="health">Health & Security</button>
+  <button class="tab" data-view="access">Access Rules</button>
+</nav>
+
+<section id="view-setup" class="view active">
+  <div class="intro">
+    <strong>Recommended:</strong> clone/update the private Master Repo and install the shared instruction pointers. The bootstrap does <em>not</em> install every catalog project; clients discover only the relevant lane per task.
   </div>
-
-  <div id="detail-entry" class="detail-panel">
-    <h3>Entry Point</h3>
-    <ul>
-      <li>CLI: Claude Code, GitHub Copilot CLI, RunAgent terminal</li>
-      <li>IDE: VS Code with MCP config in .vscode/mcp.json</li>
-      <li>Copilot Studio: Business-facing agent with topic flows</li>
-      <li>App: Mobile (Expo) or web app calling an agent API</li>
-      <li>Automation: GitHub Actions, Azure Pipeline, cron job</li>
-    </ul>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/STANDALONE-USAGE.md" target="_blank">→ Standalone usage guide</a>
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/REPO-INSTRUCTIONS.md" target="_blank">→ Per-repo install guide</a>
-    </div>
+  <div class="grid">
+    <article class="card"><span class="tag green">Windows / PowerShell</span><h3>Global setup — Claude + Codex + GitHub Copilot</h3><p class="muted">Also installs the global <code>master-watermark</code> launcher. Token budgeting stays separate and opt-in.</p><div class="command" data-command>$p="$HOME\Master-Repo-Use"; if (Test-Path "$p\.git") { git -C $p pull --ff-only } else { gh repo clone Charlesganu2004/Master-Repo-Use $p }; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag green">Bash / WSL / macOS / Linux</span><h3>Global setup — Claude + Codex + GitHub Copilot</h3><p class="muted">Same shared Master Repo contract across supported local clients.</p><div class="command" data-command>p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull --ff-only; else gh repo clone Charlesganu2004/Master-Repo-Use "$p"; fi; bash "$p/scripts/setup-global-ai.sh" "$p"<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag purple">GitHub Copilot</span><h3>Copilot-only setup — PowerShell</h3><div class="command" data-command>$p="$HOME\Master-Repo-Use"; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -CopilotOnly<button class="copy">Copy</button></div><div class="links"><a href="docs/COPILOT-SETUP.md">Full Copilot guide</a></div></article>
+    <article class="card"><span class="tag purple">GitHub Copilot</span><h3>Copilot-only setup — Bash</h3><div class="command" data-command>bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --copilot-only<button class="copy">Copy</button></div><div class="links"><a href="docs/COPILOT-SETUP.md">Full Copilot guide</a></div></article>
+    <article class="card"><span class="tag">Interactive UI</span><h3>Open locally — PowerShell</h3><div class="command" data-command>Set-Location "$HOME\Master-Repo-Use"; python -m http.server 8080<button class="copy">Copy</button></div><p class="muted">Then open http://localhost:8080/ . The page itself also opens directly as a file; only live JSON health refresh requires HTTP.</p></article>
+    <article class="card"><span class="tag">Interactive UI</span><h3>Open locally — Bash</h3><div class="command" data-command>cd "$HOME/Master-Repo-Use" && python3 -m http.server 8080<button class="copy">Copy</button></div><p class="muted">Then open http://localhost:8080/ .</p></article>
+    <article class="card"><span class="tag yellow">Optional</span><h3>Token/work-spend budget</h3><p class="muted">Kept out of the large global one-liners. Configure caps and free/local fallback routing independently.</p><div class="links"><a href="docs/TOKEN-BUDGET.md">Open TOKEN-BUDGET.md</a></div></article>
+    <article class="card"><span class="tag">Online clients</span><h3>GPT / Claude / GitHub online</h3><p class="muted">Online products cannot be forced by a shell command to execute every private-repo tool globally. Connect/select this private repo and use the committed AGENTS.md / CLAUDE.md / Copilot instructions supported by that product.</p><div class="links"><a href="docs/GLOBAL-AI-SETUP.md">Online/cloud setup</a></div></article>
   </div>
+</section>
 
-  <div id="detail-framework" class="detail-panel">
-    <h3>Agent Framework</h3>
-    <ul>
-      <li>Squad — multi-agent orchestration (.NET + TypeScript)</li>
-      <li>Microsoft Agents — enterprise .NET agent SDK</li>
-      <li>RunAgent — lightweight Python agent runner</li>
-      <li>GitHub Copilot CLI — terminal-native agent</li>
-      <li>Orchestrator: Maxwell routes all tasks to specialist agents</li>
-    </ul>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/orchestrator-maxwell.md" target="_blank">→ Maxwell (orchestrator)</a>
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/REPO-CATALOG.md#agent-frameworks" target="_blank">→ All agent frameworks</a>
-    </div>
+<section id="view-tools" class="view">
+  <div class="grid">
+    <article class="card"><span class="tag purple">Memory</span><h3>Claude-Mem</h3><p class="muted">Persistent Claude Code observation/search memory.</p><div class="command" data-command>npx claude-mem install<button class="copy">Copy</button></div><div class="links"><a href="https://github.com/thedotmack/claude-mem" target="_blank" rel="noopener">Upstream ↗</a></div></article>
+    <article class="card"><span class="tag purple">Context / tokens</span><h3>Headroom</h3><p class="muted">Compression, MCP, cross-agent memory and wrappers for Claude, Codex and Copilot.</p><div class="command" data-command>uv tool install --python 3.13 "headroom-ai[all]" && headroom doctor<button class="copy">Copy</button></div><div class="links"><a href="https://github.com/headroomlabs-ai/headroom" target="_blank" rel="noopener">Upstream ↗</a></div></article>
+    <article class="card"><span class="tag purple">Workplace agent</span><h3>Omni</h3><p class="muted">Clone the upstream self-hosted Omni agent. Follow its current upstream deployment guide before running services.</p><div class="command" data-command>git clone https://github.com/getomnico/omni.git<button class="copy">Copy</button></div><div class="links"><a href="https://github.com/getomnico/omni" target="_blank" rel="noopener">Upstream ↗</a></div></article>
+    <article class="card"><span class="tag purple">Observer</span><h3>Task Observer / Agent Monitor</h3><p class="muted">Visual Claude Code + Codex session/tool/subagent monitoring.</p><div class="command" data-command>git clone https://github.com/hoangsonww/Claude-Code-Agent-Monitor.git<button class="copy">Copy</button></div><div class="links"><a href="https://github.com/hoangsonww/Claude-Code-Agent-Monitor" target="_blank" rel="noopener">Upstream ↗</a></div></article>
+    <article class="card"><span class="tag yellow">Authorized media only</span><h3>Watermark remover — after global setup</h3><p class="muted">Use only on media you own or are authorized to modify. The wrapper installs/updates the vetted upstream tool on first use.</p><div class="command" data-command>master-watermark INPUT_FILE OUTPUT_FOLDER<button class="copy">Copy</button></div><div class="links"><a href="https://github.com/D-Ogi/WatermarkRemover-AI" target="_blank" rel="noopener">Upstream ↗</a></div></article>
+    <article class="card"><span class="tag">Claude Code setup</span><h3>Master Repo Claude setup</h3><p class="muted">The global bootstrap maintains ~/.claude/CLAUDE.md and points it back to this repo.</p><div class="command" data-command>cat "$HOME/.claude/CLAUDE.md"<button class="copy">Copy</button></div><div class="links"><a href="CLAUDE.md">Repo CLAUDE.md</a></div></article>
+    <article class="card"><span class="tag">Codex setup</span><h3>Master Repo Codex setup</h3><p class="muted">The global bootstrap maintains ~/.codex/AGENTS.md; this repo also contains AGENTS.md.</p><div class="command" data-command>cat "$HOME/.codex/AGENTS.md"<button class="copy">Copy</button></div><div class="links"><a href="AGENTS.md">Repo AGENTS.md</a></div></article>
+    <article class="card"><span class="tag">Copilot ecosystem</span><h3>GitHub Copilot repos</h3><p class="muted">Copilot CLI, SDK, awesome-copilot, and GitHub MCP Server are cataloged together.</p><div class="links"><a href="repo-lists/github-copilot.txt">Open Copilot repo list</a></div></article>
   </div>
+</section>
 
-  <div id="detail-mcp" class="detail-panel">
-    <h3>MCP Tools &amp; APIs</h3>
-    <ul>
-      <li>Filesystem MCP — scoped to allowed paths only, never root</li>
-      <li>GitHub MCP — limited toolsets (repos, issues, PRs, security)</li>
-      <li>Playwright MCP — browser automation for research and verification</li>
-      <li>Context7 — live library documentation lookup</li>
-      <li>Alpaca MCP — paper trading (never live without explicit approval)</li>
-    </ul>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/MCP-SERVERS.md" target="_blank">→ MCP Servers guide</a>
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/AGENT-ACCESS.md" target="_blank">→ Agent access profiles</a>
-    </div>
+<section id="view-catalog" class="view">
+  <div class="intro"><strong>Catalog rule:</strong> use the smallest task-relevant lane. Do not dump the full catalog into every prompt.</div>
+  <div class="grid">
+    <article class="card"><h3>Full curated catalog</h3><div class="links"><a href="repo-lists/all-curated.txt">repo-lists/all-curated.txt</a><a href="docs/REPO-CATALOG.md">REPO-CATALOG.md</a></div></article>
+    <article class="card"><h3>AI client tools</h3><div class="links"><a href="repo-lists/ai-client-tools.txt">Omni · Claude-Mem · Headroom · monitors · Copilot · Codex</a></div></article>
+    <article class="card"><h3>Agent frameworks</h3><div class="links"><a href="repo-lists/agent-frameworks.txt">Agent frameworks</a></div></article>
+    <article class="card"><h3>RAG / memory</h3><div class="links"><a href="docs/REPO-CATALOG.md">Catalog</a></div></article>
+    <article class="card"><h3>MCP</h3><div class="links"><a href="docs/MCP-SETUP.md">MCP setup</a></div></article>
+    <article class="card"><h3>Security scanners</h3><p class="muted">Guardian + Semgrep + Gitleaks + Trivy + OSV Scanner + optional Snyk/ClamAV when installed/configured.</p><div class="links"><a href="docs/SECURITY-SCANNING.md">Security scanning</a></div></article>
+    <article class="card"><h3>Managed replacements</h3><p class="muted">Lifecycle-expired repos that are useful, clean, and license-compatible enter an owner-review adoption lane before any maintained fork/replacement is created.</p><div class="links"><a href="managed-repos/README.md">Managed repo policy</a></div></article>
   </div>
+</section>
 
-  <div id="detail-rag" class="detail-panel">
-    <h3>RAG · Memory · Context</h3>
-    <ul>
-      <li>LightRAG — graph-based RAG with entity awareness</li>
-      <li>Upstash vector-js — serverless vector store</li>
-      <li>AgentMemory — persistent durable memory across sessions</li>
-      <li>LLMLingua — prompt compression (reduce tokens before sending)</li>
-    </ul>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/REPO-CATALOG.md#rag-knowledge-and-memory" target="_blank">→ RAG &amp; Memory catalog</a>
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TOKEN-EFFICIENCY.md" target="_blank">→ Token efficiency guide</a>
-    </div>
+<section id="view-health" class="view">
+  <div class="intro"><strong>Lifecycle:</strong> 120 days without an upstream push = stale warning; 270 days = replacement/adoption review; 365 days = active-catalog removal; archived repos get a 30-day grace period. Security-critical, deleted, or disabled repos can be removed sooner.</div>
+  <div class="warning">A scanner result is evidence, not proof of safety. HIGH findings are held for owner review; confirmed CRITICAL findings are removal candidates. Newly added repositories are deep-vetted immediately.</div>
+  <div class="actions" style="margin:12px 0"><button class="btn" id="refresh-health">Refresh live status</button><a class="btn" href="docs/CATALOG-STATUS.md">Full report</a><a class="btn" href="docs/NEW-REPO-VETTING.md">New-repo vetting</a><a class="btn" href="docs/AUTO-REMOVALS.md">Removal log</a></div>
+  <div style="overflow:auto"><table class="health-table"><thead><tr><th>Repo</th><th>Status</th><th>Last push</th><th>Age</th><th>Deep scan</th><th>Managed</th><th>Note</th></tr></thead><tbody id="health-rows"><tr><td colspan="7" class="muted">Press Refresh or serve this page over HTTP.</td></tr></tbody></table></div>
+</section>
+
+<section id="view-access" class="view">
+  <div class="intro"><strong>Owner-controlled main:</strong> collaborators can pull the latest approved <code>main</code>. Changes must use a pull request and require approval from <code>@Charlesganu2004</code> before merge.</div>
+  <div class="grid">
+    <article class="card"><h3>Pull latest</h3><div class="command" data-command>git switch main && git pull --ff-only origin main<button class="copy">Copy</button></div></article>
+    <article class="card"><h3>Contributor branch</h3><div class="command" data-command>git switch -c proposal/my-change<button class="copy">Copy</button></div><p class="muted">Commit to the proposal branch, push it, and open a PR. Do not push directly to main.</p></article>
+    <article class="card"><h3>Enforcement files</h3><p class="muted">CODEOWNERS assigns the whole repo to @Charlesganu2004. The Owner Approval Check verifies your review. GitHub Rulesets/branch protection must also require PRs, code-owner review, and the approval check.</p><div class="links"><a href=".github/CODEOWNERS">CODEOWNERS</a><a href=".github/workflows/owner-approval.yml">Approval workflow</a></div></article>
   </div>
+</section>
 
-  <div id="detail-cost" class="detail-panel">
-    <h3>Cost Controls</h3>
-    <ul>
-      <li>/compact — compact session before context limit. Relay writes a handoff note first.</li>
-      <li>Token budget — set ANTHROPIC_MAX_TOKENS env var before starting</li>
-      <li>Model routing — Haiku for simple tasks, Sonnet for most, Opus for deep reasoning</li>
-      <li>Tool allowlist — expose only tools the agent actually needs for this task</li>
-      <li>Penny audits bloated sessions and flags top 3 optimizations</li>
-    </ul>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TOKEN-EFFICIENCY.md" target="_blank">→ Full token efficiency guide</a>
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/token-penny.md" target="_blank">→ Penny (cost auditor)</a>
-    </div>
-  </div>
-
-  <div id="detail-output" class="detail-panel">
-    <h3>Output</h3>
-    <ul>
-      <li>Local file system — via filesystem MCP (scoped paths only)</li>
-      <li>GitHub — issues, PRs, comments via GitHub MCP</li>
-      <li>Cloud service — Azure, AWS, GCP via Volt or Nimbus agents</li>
-      <li>Database — via data pipeline (Schema, Vector agents)</li>
-      <li>Broker — paper orders only unless live mode explicitly approved in conversation</li>
-    </ul>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/INTEGRATION-FLOWS.md" target="_blank">→ Integration flows</a>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════ STANDALONE PATHS ═══════════════ -->
-<div id="diagram-standalone" class="diagram-area">
-  <div class="section-label">Pick your goal — fastest path to working standalone</div>
-  <div class="combo-grid">
-    <div class="combo-card" onclick="showCombo('sa-agents',this)"><h4>🤖 Try an Agent Framework</h4><p>Squad, Microsoft Agents, RunAgent, Copilot CLI</p></div>
-    <div class="combo-card" onclick="showCombo('sa-rag',this)"><h4>📚 Index Docs &amp; Ask Questions</h4><p>LightRAG, Upstash, RAG CLI</p></div>
-    <div class="combo-card" onclick="showCombo('sa-mcp',this)"><h4>🔧 Run an MCP Server</h4><p>Filesystem, GitHub, Playwright, Context7</p></div>
-    <div class="combo-card" onclick="showCombo('sa-trading',this)"><h4>📈 Paper Trade</h4><p>Autonomous day-trading plugin, Alpaca paper</p></div>
-    <div class="combo-card" onclick="showCombo('sa-quantum',this)"><h4>⚛️ Quantum Experiments</h4><p>Qiskit, PennyLane, simulator only</p></div>
-    <div class="combo-card" onclick="showCombo('sa-cost',this)"><h4>💰 Reduce Cost</h4><p>Token efficiency, /compact, model routing</p></div>
-    <div class="combo-card" onclick="showCombo('sa-copilot',this)"><h4>🏢 Copilot Studio</h4><p>One REST action or MCP connector</p></div>
-    <div class="combo-card" onclick="showCombo('sa-mobile',this)"><h4>📱 Mobile App</h4><p>Expo, create-expo-stack</p></div>
-  </div>
-
-  <div id="combo-sa-agents" class="combo-detail">
-    <h3>Standalone: Agent Framework</h3>
-    <p>Get one agent running before adding RAG, MCP, or memory.</p>
-    <div class="code-block">npm install -g @bradygaster/squad-cli
-squad init my-first-agent
-squad run</div>
-    <p class="note">When it works standalone → add MCP tools → add RAG → connect to Maxwell.</p>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/STANDALONE-USAGE.md" target="_blank">→ Full standalone guide</a>
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/REPO-INSTRUCTIONS.md" target="_blank">→ Per-framework install</a>
-    </div>
-  </div>
-
-  <div id="combo-sa-rag" class="combo-detail">
-    <h3>Standalone: RAG</h3>
-    <div class="code-block">pip install "lightrag-hku[api]"
-python -c "
-from lightrag import LightRAG
-rag = LightRAG('./storage')
-rag.insert_file('./my-docs')
-print(rag.query('What is the main topic?'))
-"</div>
-    <p class="note">When retrieval quality is verified → connect to an agent.</p>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/REPO-INSTRUCTIONS.md#lightrag" target="_blank">→ LightRAG setup</a>
-    </div>
-  </div>
-
-  <div id="combo-sa-mcp" class="combo-detail">
-    <h3>Standalone: MCP Server</h3>
-    <div class="code-block"># Filesystem — scoped to one explicit folder
-npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION C:/your/project
-
-# GitHub — limited toolsets only
-docker run -i --rm \
-  -e GITHUB_PERSONAL_ACCESS_TOKEN="$TOKEN" \
-  -e GITHUB_TOOLSETS="repos,issues" \
-  ghcr.io/github/github-mcp-server</div>
-    <p class="note">Test each server in MCP Inspector before connecting to an agent.</p>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/MCP-SERVERS.md" target="_blank">→ MCP Servers guide</a>
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/AGENT-ACCESS.md" target="_blank">→ Per-agent access profiles</a>
-    </div>
-  </div>
-
-  <div id="combo-sa-trading" class="combo-detail">
-    <h3>Standalone: Paper Trading</h3>
-    <div class="code-block">cd plugins/autonomous-day-trading-agent
-python -m venv .venv &amp;&amp; .\.venv\Scripts\Activate.ps1
-python -m pip install -e .
-autonomous-day-trading-agent smoke-test --risk risk_limits.example.json
-autonomous-day-trading-agent paper-order --symbol AAPL --side buy --qty 1</div>
-    <p class="note">Paper mode only. Sage must approve before any live order.</p>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/AUTONOMOUS-DAY-TRADING.md" target="_blank">→ Full trading guide</a>
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/trading-rex.md" target="_blank">→ Rex (trading agent)</a>
-    </div>
-  </div>
-
-  <div id="combo-sa-quantum" class="combo-detail">
-    <h3>Standalone: Quantum Lab</h3>
-    <div class="code-block">pip install qiskit qiskit-aer pennylane
-python -c "
-from qiskit import QuantumCircuit
-from qiskit_aer import Aer
-qc = QuantumCircuit(2, 2)
-qc.h(0); qc.cx(0, 1); qc.measure([0,1],[0,1])
-backend = Aer.get_backend('qasm_simulator')
-print(backend.run(qc, shots=1000).result().get_counts())
-"</div>
-    <p class="note">Simulator first. Compare to classical baseline. Hardware only with cost approval.</p>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/quantum-lab-helix.md" target="_blank">→ Helix (quantum lab agent)</a>
-    </div>
-  </div>
-
-  <div id="combo-sa-cost" class="combo-detail">
-    <h3>Standalone: Cost Reduction</h3>
-    <p>Step 1: Check current context size with Lens.</p>
-    <p>Step 2: If session is long, run /compact. Relay writes the handoff note first.</p>
-    <p>Step 3: Switch to Haiku 4.5 for tasks that do not need Sonnet.</p>
-    <p>Step 4: Slim MCP tool schemas — remove tools the agent never calls.</p>
-    <p>Step 5: Add prompt caching to the system prompt.</p>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TOKEN-EFFICIENCY.md" target="_blank">→ Full token efficiency guide</a>
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/context-auditor-lens.md" target="_blank">→ Lens (context auditor)</a>
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/token-penny.md" target="_blank">→ Penny (cost auditor)</a>
-    </div>
-  </div>
-
-  <div id="combo-sa-copilot" class="combo-detail">
-    <h3>Standalone: Copilot Studio</h3>
-    <p>Start with one REST action. Do not start with MCP until the REST action works.</p>
-    <div class="code-block"># Serve a local bridge for testing
-python -m http.server 8787
-# Then add the URL as a custom connector in Copilot Studio</div>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/COPILOT-STUDIO-INTEGRATION.md" target="_blank">→ Copilot Studio guide</a>
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/copilot-nexus.md" target="_blank">→ Nexus (API bridge agent)</a>
-    </div>
-  </div>
-
-  <div id="combo-sa-mobile" class="combo-detail">
-    <h3>Standalone: Mobile App</h3>
-    <div class="code-block">npx create-expo-stack@REVIEWED_VERSION my-app --expo-router --nativewind
-cd my-app &amp;&amp; npm exec --offline -- expo start</div>
-    <p class="note">Start the app alone. Add the agent API endpoint later. Keep secrets out of the bundle.</p>
-    <div class="panel-links">
-      <a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/mobile-stack.md" target="_blank">→ Stack (mobile agent)</a>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════ COMBINATIONS ═══════════════ -->
-<div id="diagram-combinations" class="diagram-area">
-  <div class="section-label">Named stack recipes — click to see repos, install commands, and wire-up steps</div>
-  <div class="combo-grid">
-    <div class="combo-card" onclick="showCombo('c-core',this)"><h4>Core Agent Stack</h4><p>Squad + LightRAG + AgentMemory + Filesystem MCP</p></div>
-    <div class="combo-card" onclick="showCombo('c-ms',this)"><h4>Microsoft Stack</h4><p>Microsoft Agents + Copilot Studio + Aspire + MCP</p></div>
-    <div class="combo-card" onclick="showCombo('c-cost',this)"><h4>Cost-Efficient LLM</h4><p>LLMLingua + token-optimizer-mcp + lean-ctx</p></div>
-    <div class="combo-card" onclick="showCombo('c-market',this)"><h4>Market Research</h4><p>OpenBB + FinRobot + TradingAgents + yfinance</p></div>
-    <div class="combo-card" onclick="showCombo('c-trading',this)"><h4>Autonomous Trading</h4><p>Day-trading plugin + Alpaca MCP + Sage risk gate</p></div>
-    <div class="combo-card" onclick="showCombo('c-quantum',this)"><h4>Quantum Sidecar</h4><p>Qiskit + qiskit-finance + quantum-trading-agent</p></div>
-    <div class="combo-card" onclick="showCombo('c-mcp',this)"><h4>Full MCP Stack</h4><p>Filesystem + GitHub + Playwright + Context7</p></div>
-    <div class="combo-card" onclick="showCombo('c-security',this)"><h4>Security Stack</h4><p>Sentinel + Lock + Ghost + GitHub MCP</p></div>
-  </div>
-
-  <div id="combo-c-core" class="combo-detail"><h3>Core Agent Stack</h3><p>Build an agent team that reasons over your codebase, remembers decisions, and calls tools safely.</p><div class="code-block">npm install -g @bradygaster/squad-cli @agentmemory/agentmemory
-pip install "lightrag-hku[api]"
-npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION YOUR_PROJECT_PATH</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/COMBINING-REPOS.md" target="_blank">→ Full recipe in COMBINING-REPOS.md</a></div></div>
-
-  <div id="combo-c-ms" class="combo-detail"><h3>Microsoft Stack</h3><p>Enterprise agent with Copilot Studio frontend and .NET backend.</p><div class="code-block">dotnet tool install -g Microsoft.Agents.CLI
-npm install -g @microsoft/m365agentstoolkit-cli
-atk init my-enterprise-agent</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/COPILOT-STUDIO-INTEGRATION.md" target="_blank">→ Copilot Studio guide</a></div></div>
-
-  <div id="combo-c-cost" class="combo-detail"><h3>Cost-Efficient LLM Stack</h3><p>Compress, cache, and route to the cheapest model that works.</p><div class="code-block">pip install llmlingua
-# Then follow TOKEN-EFFICIENCY.md checklist</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TOKEN-EFFICIENCY.md" target="_blank">→ TOKEN-EFFICIENCY.md</a></div></div>
-
-  <div id="combo-c-market" class="combo-detail"><h3>Market Research Stack</h3><p>Research stocks, sectors, and market trends using open data.</p><div class="code-block">pip install openbb yfinance pandas matplotlib ta
-# Wire: Orion (research) → Nova (allocation) → Sage (risk gate)</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TRADING-MARKET-AGENTS.md" target="_blank">→ Trading &amp; Market Agents</a></div></div>
-
-  <div id="combo-c-trading" class="combo-detail"><h3>Autonomous Trading Stack</h3><p>Paper-trading with signal generation, backtesting, and risk gates. Paper mode only by default.</p><div class="code-block">cd plugins/autonomous-day-trading-agent
-pip install -e .
-autonomous-day-trading-agent smoke-test --risk risk_limits.example.json
-# Wire: Rex → Sage (approval gate) → Maxwell (coordinator)</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/AUTONOMOUS-DAY-TRADING.md" target="_blank">→ Autonomous Trading guide</a><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/trading-rex.md" target="_blank">→ Rex agent</a></div></div>
-
-  <div id="combo-c-quantum" class="combo-detail"><h3>Quantum Sidecar Stack</h3><p>Quantum optimization alongside a classical workflow. Simulator first, always.</p><div class="code-block">pip install qiskit qiskit-finance qiskit-optimization pennylane
-# Wire: Helix (lab) → Qubit (finance) → Rex (paper execution)</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/quantum-lab-helix.md" target="_blank">→ Helix agent</a></div></div>
-
-  <div id="combo-c-mcp" class="combo-detail"><h3>Full MCP Stack</h3><div class="code-block">npx @modelcontextprotocol/server-filesystem@REVIEWED_VERSION YOUR_PATH
-docker run -i --rm -e GITHUB_TOOLSETS="repos,issues" ghcr.io/github/github-mcp-server
-npx @playwright/mcp@REVIEWED_VERSION
-npx @upstash/context7-mcp@REVIEWED_VERSION</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/MCP-SERVERS.md" target="_blank">→ MCP Servers guide</a></div></div>
-
-  <div id="combo-c-security" class="combo-detail"><h3>Security Stack</h3><div class="code-block">pip install detect-secrets
-detect-secrets scan > .secrets.baseline
-# Run Sentinel monthly, Ghost for threat modeling (requires written auth scope)</div><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/SECURITY.md" target="_blank">→ Security guide</a><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/security-sentinel.md" target="_blank">→ Sentinel agent</a></div></div>
-</div>
-
-<!-- ═══════════════ TRADING FLOW ═══════════════ -->
-<div id="diagram-trading" class="diagram-area">
-  <div class="section-label">Click any node to see the safety detail</div>
-  <div class="flow">
-    <div class="flow-node entry" onclick="showDetail('t-data',this)"><div class="dot dot-blue"></div>Market data · Watchlist · News — OpenBB · yfinance · broker API</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node" onclick="showDetail('t-signal',this)"><div class="dot dot-green"></div>Strategy signal — momentum · mean-reversion · ML signal · Vibe-Trading</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node" onclick="showDetail('t-backtest',this)"><div class="dot dot-green"></div>Backtest &amp; baseline — historical data · Backtrader · paper results</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node gate" onclick="showDetail('t-risk',this)"><div class="dot dot-yellow"></div>Risk gates — Sage checks position size · daily loss · correlation</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node gate" onclick="showDetail('t-paper',this)"><div class="dot dot-yellow"></div>Paper broker — Alpaca paper · audit log written · report to human</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node gate" onclick="showDetail('t-approval',this)"><div class="dot dot-yellow"></div>Human approval gate — required before ANY live order</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node terminal" onclick="showDetail('t-live',this)"><div class="dot dot-gray"></div>Optional live broker adapter — audited adapter only after full review</div>
-  </div>
-
-  <div id="detail-t-data" class="detail-panel"><h3>Market Data</h3><ul><li>OpenBB — multi-source market data platform</li><li>yfinance — Yahoo Finance historical prices</li><li>Alpaca MCP — paper account state, recent orders</li><li>Always use public/free data first before paid feeds</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TRADING-MARKET-AGENTS.md" target="_blank">→ Market agents guide</a></div></div>
-
-  <div id="detail-t-signal" class="detail-panel"><h3>Strategy Signal</h3><ul><li>Rex (trading-rex.md) — the execution agent for signals</li><li>TradingAgents — multi-agent signal framework</li><li>Vibe-Trading — HKUDS market intelligence</li><li>Signals are data — not orders. They go to the risk gate first.</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/trading-rex.md" target="_blank">→ Rex agent file</a></div></div>
-
-  <div id="detail-t-backtest" class="detail-panel"><h3>Backtest</h3><ul><li>autonomous-day-trading-agent backtest --bars data/sample.csv</li><li>Compare against a buy-and-hold baseline always</li><li>Backtest results do not guarantee live performance</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/AUTONOMOUS-DAY-TRADING.md" target="_blank">→ Full trading guide</a></div></div>
-
-  <div id="detail-t-risk" class="detail-panel"><h3>Risk Gates</h3><ul><li>Sage is the mandatory approval layer — cannot be bypassed</li><li>Checks: position size, daily loss limit, correlation, live mode flag</li><li>Returns: APPROVED / DENIED / ESCALATE</li><li>risk_limits.json is deterministic code, not LLM judgment</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/risk-sage.md" target="_blank">→ Sage agent file</a></div></div>
-
-  <div id="detail-t-paper" class="detail-panel"><h3>Paper Broker</h3><ul><li>Alpaca paper mode: set ALPACA_PAPER=true</li><li>Every order written to audit log in issues/</li><li>No real money involved at this stage</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/BROKER-APP-INTEGRATIONS.md" target="_blank">→ Broker integrations guide</a></div></div>
-
-  <div id="detail-t-approval" class="detail-panel"><h3>Human Approval Gate</h3><ul><li>Human types "Rex: live mode approved" in the current conversation</li><li>Sage must return APPROVED for the specific order</li><li>Maxwell logs the approval to issues/</li><li>This gate cannot be automated — human must be present</li></ul></div>
-
-  <div id="detail-t-live" class="detail-panel"><h3>Live Broker Adapter</h3><ul><li>Only after: smoke test, backtest, paper test, risk audit, human approval</li><li>Supported: Alpaca, IBKR, Schwab, Tradier, Tastytrade, Coinbase</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/BROKER-APP-INTEGRATIONS.md" target="_blank">→ Per-broker CLI setup</a></div></div>
-</div>
-
-<!-- ═══════════════ COST FLOW ═══════════════ -->
-<div id="diagram-cost" class="diagram-area">
-  <div class="section-label">Token efficiency and cost control flow</div>
-  <div class="flow">
-    <div class="flow-node entry" onclick="showDetail('c-before',this)"><div class="dot dot-blue"></div>Before a run — check context, pick model tier, set token budget</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node" onclick="showDetail('c-cache',this)"><div class="dot dot-green"></div>Prompt caching — cache system prompt and tool schemas</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node" onclick="showDetail('c-compress',this)"><div class="dot dot-green"></div>Context compression — LLMLingua · lean-ctx · RAG retrieval</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node" onclick="showDetail('c-slim',this)"><div class="dot dot-green"></div>Tool schema slimming — expose only tools needed for this agent</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node gate" onclick="showDetail('c-mid',this)"><div class="dot dot-yellow"></div>Mid-run — monitor token usage. Over 50%? Run /compact</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node" onclick="showDetail('c-route',this)"><div class="dot dot-green"></div>Model routing — Haiku for simple tasks, Sonnet for most, Opus for deep</div>
-    <div class="arrow">↓</div>
-    <div class="flow-node terminal" onclick="showDetail('c-audit',this)"><div class="dot dot-gray"></div>Post-run audit — Penny reviews cost, flags for next session</div>
-  </div>
-
-  <div id="detail-c-before" class="detail-panel"><h3>Before a Run</h3><ul><li>Run Lens to check what is in context</li><li>Count tokens before sending a large prompt</li><li>Set ANTHROPIC_MAX_TOKENS to cap the session</li><li>Choose the cheapest model that can do the task</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TOKEN-EFFICIENCY.md" target="_blank">→ Token efficiency guide</a><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/context-auditor-lens.md" target="_blank">→ Lens agent</a></div></div>
-
-  <div id="detail-c-cache" class="detail-panel"><h3>Prompt Caching</h3><ul><li>Add cache_control: {type: "ephemeral"} to your system prompt</li><li>Cache TTL: 5 minutes in the Anthropic API</li><li>Saves input token cost on every cached call</li><li>Best for: agent system prompts, tool schemas, stable repo catalogs</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TOKEN-EFFICIENCY.md#prompt-caching" target="_blank">→ Caching guide with code</a></div></div>
-
-  <div id="detail-c-compress" class="detail-panel"><h3>Context Compression</h3><ul><li>LLMLingua — compress long documents before loading them into context</li><li>lean-ctx — keep session context minimal</li><li>RAG retrieval — retrieve top-3 chunks instead of loading whole documents</li></ul></div>
-
-  <div id="detail-c-slim" class="detail-panel"><h3>Tool Schema Slimming</h3><ul><li>Use GITHUB_TOOLSETS to limit which GitHub tools are exposed</li><li>Remove tool descriptions over 50 words — trim to the core</li><li>Remove optional parameters the agent never uses</li><li>Run MCP inspector to see actual schema sizes</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/AGENT-ACCESS.md" target="_blank">→ Agent access profiles</a></div></div>
-
-  <div id="detail-c-mid" class="detail-panel"><h3>Mid-Run /compact</h3><ul><li>Relay writes a handoff note first (agents/handoff-relay.md)</li><li>Type /compact in Claude Code</li><li>Context window resets, handoff note preserved in issues/</li><li>Session continues from the checkpoint</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/handoff-relay.md" target="_blank">→ Relay (handoff agent)</a></div></div>
-
-  <div id="detail-c-route" class="detail-panel"><h3>Model Routing</h3><ul><li>Haiku 4.5 ($0.80/$4.00 per 1M): scanning, classification, summarization</li><li>Sonnet 4.6 ($3.00/$15.00 per 1M): code, analysis, most agent tasks</li><li>Opus 4.8 ($15.00/$75.00 per 1M): security, architecture, deep reasoning</li><li>Fable 5: long-form writing, narrative, pitch decks</li></ul></div>
-
-  <div id="detail-c-audit" class="detail-panel"><h3>Post-Run Audit</h3><ul><li>Penny reviews the session: system prompt size, tool schemas, model tier used</li><li>Penny flags if Opus was used where Sonnet would have sufficed</li><li>Findings go to issues/ for next session</li></ul><div class="panel-links"><a class="standalone-badge" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/token-penny.md" target="_blank">→ Penny agent file</a></div></div>
-</div>
-
-<!-- ═══════════════ AGENT ROSTER ═══════════════ -->
-<div id="diagram-agents" class="diagram-area">
-  <div class="section-label">All 59 agents — click any chip to open the agent file on GitHub</div>
-  <div class="roster-grid">
-
-    <div class="roster-group">
-      <h4>Orchestration</h4>
-      <div class="chips">
-        <a class="chip chip-green" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/orchestrator-maxwell.md" target="_blank">Maxwell</a>
-        <a class="chip chip-green" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/repo-issue-iris.md" target="_blank">Iris</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/handoff-relay.md" target="_blank">Relay</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/scheduler-cron.md" target="_blank">Cron</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Research</h4>
-      <div class="chips">
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/research-aria.md" target="_blank">Aria</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/data-dex.md" target="_blank">Dex</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/market-intel-orion.md" target="_blank">Orion</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/summarizer-prism.md" target="_blank">Prism</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/tech-watch-beacon.md" target="_blank">Beacon</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Business &amp; Strategy</h4>
-      <div class="chips">
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/biz-analyst-clara.md" target="_blank">Clara</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/tech-planner-rho.md" target="_blank">Rho</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/pitch-spark.md" target="_blank">Spark</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/slides-deck.md" target="_blank">Deck</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/market-research-funnel.md" target="_blank">Funnel</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/writer-quill.md" target="_blank">Quill</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Dev &amp; Engineering</h4>
-      <div class="chips">
-        <a class="chip chip-green" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/fullstack-atlas.md" target="_blank">Atlas</a>
-        <a class="chip chip-green" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/mobile-stack.md" target="_blank">Stack</a>
-        <a class="chip chip-green" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/ui-canvas.md" target="_blank">Canvas</a>
-        <a class="chip chip-green" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/api-forge-build.md" target="_blank">Build</a>
-        <a class="chip chip-green" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/pipeline-pipe.md" target="_blank">Pipe</a>
-        <a class="chip chip-green" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/tester-probe.md" target="_blank">Probe</a>
-        <a class="chip chip-green" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/test-analyst-vera.md" target="_blank">Vera</a>
-        <a class="chip chip-green" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/debugger-trace.md" target="_blank">Trace</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Architecture</h4>
-      <div class="chips">
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/architect-eden.md" target="_blank">Eden</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/cloud-arch-nimbus.md" target="_blank">Nimbus</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/data-arch-schema.md" target="_blank">Schema</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/api-bridge.md" target="_blank">Bridge</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/devops-volt.md" target="_blank">Volt</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Security</h4>
-      <div class="chips">
-        <a class="chip chip-yellow" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/security-sentinel.md" target="_blank">Sentinel</a>
-        <a class="chip chip-yellow" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/scanner-vault.md" target="_blank">Vault</a>
-        <a class="chip chip-yellow" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/redteam-ghost.md" target="_blank">Ghost</a>
-        <a class="chip chip-yellow" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/compliance-lex.md" target="_blank">Lex</a>
-        <a class="chip chip-yellow" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/secret-scanner-lock.md" target="_blank">Lock</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Finance &amp; Trading</h4>
-      <div class="chips">
-        <a class="chip chip-yellow" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/trading-rex.md" target="_blank">Rex</a>
-        <a class="chip chip-yellow" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/risk-sage.md" target="_blank">Sage</a>
-        <a class="chip chip-yellow" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/portfolio-nova.md" target="_blank">Nova</a>
-        <a class="chip chip-yellow" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/quantum-qubit.md" target="_blank">Qubit</a>
-        <a class="chip chip-yellow" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/broker-connect.md" target="_blank">Connect</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Infra &amp; Cost</h4>
-      <div class="chips">
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/cost-cirrus.md" target="_blank">Cirrus</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/token-penny.md" target="_blank">Penny</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/mcp-forge.md" target="_blank">Forge</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Knowledge &amp; Memory</h4>
-      <div class="chips">
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/rag-vector.md" target="_blank">Vector</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/rag-stream.md" target="_blank">Stream</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/memory-recall.md" target="_blank">Recall</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/knowledge-memo.md" target="_blank">Memo</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Spatial &amp; Perception</h4>
-      <div class="chips">
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/spatial-scout.md" target="_blank">Scout</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Models &amp; Inference</h4>
-      <div class="chips">
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/model-picker.md" target="_blank">Picker</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Copilot Studio</h4>
-      <div class="chips">
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/copilot-nexus.md" target="_blank">Nexus</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/connector-weave.md" target="_blank">Weave</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Quantum</h4>
-      <div class="chips">
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/quantum-lab-helix.md" target="_blank">Helix</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Onboarding &amp; Support</h4>
-      <div class="chips">
-        <a class="chip chip-green" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/onboarding-guide.md" target="_blank">Guide</a>
-        <a class="chip chip-green" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/support-help.md" target="_blank">Help</a>
-      </div>
-    </div>
-
-    <div class="roster-group">
-      <h4>Cross-cutting</h4>
-      <div class="chips">
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/git-commit-auto.md" target="_blank">Commit</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/context-auditor-lens.md" target="_blank">Lens</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/dependency-watch-delta.md" target="_blank">Delta</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/doc-drift-echo.md" target="_blank">Echo</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/incident-pulse.md" target="_blank">Pulse</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/perf-bench-tempo.md" target="_blank">Tempo</a>
-        <a class="chip chip-blue" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/accessibility-ally.md" target="_blank">Ally</a>
-      </div>
-    </div>
-
-  </div>
-  <p style="margin-top:16px;color:var(--text-dim);font-size:0.80rem">
-    Full table with tools, model tiers, and cost profiles →
-    <a href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/AGENTS-OVERVIEW.md" target="_blank" style="color:var(--accent2)">agents/AGENTS-OVERVIEW.md</a>
-  </p>
-</div>
-
+<footer class="footer">Master Repo Use is a private catalog/instruction layer. Tool availability still follows each client, upstream project, license, account plan, and security boundary.</footer>
+</main>
 <script>
-function showDiagram(id, tab) {
-  document.querySelectorAll('.diagram-area').forEach(d => d.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('diagram-' + id).classList.add('active');
-  if (tab) tab.classList.add('active');
-  closeAllDetails();
-}
-function showDetail(id, node) {
-  const panel = document.getElementById('detail-' + id);
-  const already = panel && panel.classList.contains('active');
-  document.querySelectorAll('.detail-panel').forEach(d => d.classList.remove('active'));
-  document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected'));
-  if (!already) {
-    if (panel) panel.classList.add('active');
-    if (node) node.classList.add('selected');
-  }
-}
-function showCombo(id, card) {
-  const detail = document.getElementById('combo-' + id);
-  const already = detail && detail.classList.contains('active');
-  document.querySelectorAll('.combo-detail').forEach(d => d.classList.remove('active'));
-  document.querySelectorAll('.combo-card').forEach(c => c.classList.remove('active-combo'));
-  if (!already) {
-    if (detail) detail.classList.add('active');
-    if (card) card.classList.add('active-combo');
-  }
-}
-function closeAllDetails() {
-  document.querySelectorAll('.detail-panel').forEach(d => d.classList.remove('active'));
-  document.querySelectorAll('.combo-detail').forEach(d => d.classList.remove('active'));
-  document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected'));
-  document.querySelectorAll('.combo-card').forEach(c => c.classList.remove('active-combo'));
-}
+const tabs=[...document.querySelectorAll('.tab')];
+tabs.forEach(tab=>tab.addEventListener('click',()=>{tabs.forEach(x=>x.classList.remove('active'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));tab.classList.add('active');document.getElementById('view-'+tab.dataset.view).classList.add('active');if(tab.dataset.view==='health')loadHealth();}));
+function commandText(box){const clone=box.cloneNode(true);clone.querySelectorAll('button').forEach(x=>x.remove());return clone.textContent.trim();}
+async function copyCommand(box,button){const text=commandText(box);try{await navigator.clipboard.writeText(text)}catch(e){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}const old=button.textContent;button.textContent='Copied';setTimeout(()=>button.textContent=old,1200)}
+document.querySelectorAll('[data-command]').forEach(box=>{const button=box.querySelector('.copy');button.addEventListener('click',e=>{e.stopPropagation();copyCommand(box,button)});box.tabIndex=0;box.title='Click to copy';box.addEventListener('click',()=>copyCommand(box,button));box.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();copyCommand(box,button)}})});
+async function loadHealth(){const rows=document.getElementById('health-rows');try{const response=await fetch('docs/catalog-status.json?ts='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error(response.status);const data=await response.json();document.getElementById('updated').textContent='Updated '+(data.updated||'unknown');for(const key of ['healthy','stale','review','remove'])document.getElementById(key).textContent=(data.counts&&data.counts[key.toUpperCase()])??0;rows.innerHTML='';for(const r of (data.repos||[])){const tr=document.createElement('tr');const values=[r.repo,r.status,r.pushed_at||'—',r.age_days==null?'—':r.age_days+'d',r.deep_scanned?'yes':'no',r.adoption_candidate?'candidate':'—',r.note||(r.findings&&r.findings[0])||''];values.forEach((v,i)=>{const td=document.createElement('td');if(i===1){const span=document.createElement('span');span.className='pill '+r.status;span.textContent=v;td.appendChild(span)}else td.textContent=v;tr.appendChild(td)});rows.appendChild(tr)}if(!(data.repos||[]).length)rows.innerHTML='<tr><td colspan="7" class="muted">Status file exists but has no repo rows yet. Run Catalog Guardian once.</td></tr>'}catch(e){rows.innerHTML='<tr><td colspan="7" class="muted">Live status could not be loaded. If you opened index.html directly with file://, run the local HTTP one-liner from Setup or open docs/CATALOG-STATUS.md.</td></tr>'}}
+document.getElementById('refresh-health').addEventListener('click',loadHealth);loadHealth();
 </script>
 </body>
 </html>
