@@ -6,108 +6,97 @@
 <meta name="color-scheme" content="dark">
 <title>Master Repo Use — Interactive Command Center</title>
 <style>
-:root{--bg:#0d1117;--panel:#161b22;--panel2:#0b1220;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;--blue:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--purple:#bc8cff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}.shell{max-width:1220px;margin:auto;padding:24px}.header{display:flex;gap:18px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:18px}.header h1{font-size:24px;margin:0 0 5px;color:#f0f6fc}.muted{color:var(--muted)}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--border);background:var(--panel);color:var(--text);padding:8px 12px;border-radius:7px;text-decoration:none;cursor:pointer}.btn:hover,.btn:focus-visible{border-color:var(--blue);outline:none}.btn.primary{background:#1f6feb;border-color:#1f6feb;color:white}.statusbar{margin:18px 0;display:grid;grid-template-columns:2fr repeat(4,1fr);gap:8px}.status{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:11px}.status strong{display:block;color:#f0f6fc;font-size:16px}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0}.tab{padding:8px 13px;border-radius:7px;border:1px solid var(--border);background:var(--panel);color:var(--muted);cursor:pointer}.tab.active{background:#1f6feb;color:white;border-color:#1f6feb}.view{display:none}.view.active{display:block}.intro{background:linear-gradient(135deg,#111827,#0d1117);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:12px}.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:15px;display:flex;flex-direction:column;gap:9px}.card:hover{border-color:#484f58}.card h3{margin:0;color:#f0f6fc;font-size:16px}.tag{display:inline-block;width:max-content;border:1px solid var(--border);padding:2px 7px;border-radius:99px;font-size:11px;color:var(--muted)}.tag.green{color:var(--green);border-color:#238636}.tag.yellow{color:var(--yellow);border-color:#9e6a03}.tag.purple{color:var(--purple);border-color:#8957e5}.command{position:relative;background:#010409;border:1px solid var(--border);border-radius:7px;padding:11px 78px 11px 11px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:44px;color:#e6edf3}.copy{position:absolute;right:7px;top:7px;border:1px solid var(--border);background:#21262d;color:var(--text);border-radius:6px;padding:5px 9px;cursor:pointer}.copy:hover{border-color:var(--blue)}.links{display:flex;gap:7px;flex-wrap:wrap}.links a{color:var(--blue);text-decoration:none}.links a:hover{text-decoration:underline}.health-table{width:100%;border-collapse:collapse;background:var(--panel);font-size:12px}.health-table th,.health-table td{border:1px solid var(--border);padding:7px;text-align:left;vertical-align:top}.health-table th{color:#f0f6fc;background:#21262d}.pill{font-weight:700}.pill.HEALTHY{color:var(--green)}.pill.STALE{color:var(--yellow)}.pill.REVIEW{color:#f0883e}.pill.REMOVE{color:var(--red)}.warning{border-left:4px solid var(--yellow);padding:10px 12px;background:#2d260e;border-radius:5px}.ok{border-left:4px solid var(--green);padding:10px 12px;background:#0d2818;border-radius:5px}.footer{margin-top:24px;color:var(--muted);font-size:12px}@media(max-width:820px){.statusbar{grid-template-columns:1fr 1fr}.statusbar .status:first-child{grid-column:1/-1}.shell{padding:15px}}@media(max-width:520px){.statusbar{grid-template-columns:1fr}.statusbar .status:first-child{grid-column:auto}.grid{grid-template-columns:1fr}}
+:root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--text:#c9d1d9;--muted:#8b949e;--blue:#58a6ff;--green:#3fb950;--yellow:#d29922;--orange:#f0883e;--red:#f85149;--purple:#bc8cff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}.wrap{max-width:1180px;margin:auto;padding:22px}.head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:16px}h1{margin:0;color:#f0f6fc;font-size:24px}h2{color:#f0f6fc}.muted{color:var(--muted)}.actions,.tabs,.links{display:flex;gap:8px;flex-wrap:wrap}.btn,.tab{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:7px;padding:8px 11px;text-decoration:none;cursor:pointer}.btn:hover,.tab:hover,.tab.active{border-color:var(--blue)}.tab.active{background:#1f6feb;color:white}.tabs{margin:18px 0}.view{display:none}.view.active{display:block}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}.card{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:14px}.card h3{margin:0 0 6px;color:#f0f6fc}.tag{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:2px 7px;margin-bottom:8px;font-size:11px}.tag.green{color:var(--green)}.tag.yellow{color:var(--yellow)}.tag.purple{color:var(--purple)}.cmd{position:relative;background:#010409;border:1px solid var(--line);border-radius:7px;padding:11px 76px 11px 11px;white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer;min-height:44px}.copy{position:absolute;right:7px;top:7px;border:1px solid var(--line);background:#21262d;color:var(--text);border-radius:6px;padding:5px 9px;cursor:pointer}.statusbar{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:8px;margin:18px 0}.status{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:10px}.status strong{display:block;font-size:16px;color:#f0f6fc}.notice{border-left:4px solid var(--yellow);background:#2d260e;padding:10px 12px;border-radius:6px;margin-bottom:12px}.ok{border-left-color:var(--green);background:#0d2818}.health{width:100%;border-collapse:collapse;font-size:12px;background:var(--panel)}.health th,.health td{border:1px solid var(--line);padding:7px;text-align:left}.HEALTHY{color:var(--green)}.STALE{color:var(--yellow)}.REVIEW{color:var(--orange)}.REMOVE{color:var(--red)}a{color:var(--blue)}footer{margin-top:22px;color:var(--muted);font-size:12px}@media(max-width:800px){.statusbar{grid-template-columns:1fr 1fr}.statusbar .status:first-child{grid-column:1/-1}}@media(max-width:520px){.statusbar,.grid{grid-template-columns:1fr}.statusbar .status:first-child{grid-column:auto}}
 </style>
 </head>
 <body>
-<main class="shell">
-<header class="header">
-  <div>
-    <h1>Master Repo Use — Interactive Command Center</h1>
-    <div class="muted">Click a command to copy its exact one-liner. No framework or build step is required for this page.</div>
-  </div>
+<main class="wrap">
+<header class="head">
+  <div><h1>Master Repo Use</h1><div class="muted">Private catalog + global AI instruction layer. Click any command box to copy its one-liner.</div></div>
   <div class="actions">
-    <a class="btn primary" href="https://github.com/Charlesganu2004/Master-Repo-Use" target="_blank" rel="noopener">Private repo ↗</a>
-    <a class="btn" href="docs/CATALOG-STATUS.md">Catalog status</a>
-    <a class="btn" href="docs/SECURITY.md">Security</a>
+    <a class="btn" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use">Private repository ↗</a>
+    <a class="btn" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/README.md">README ↗</a>
   </div>
 </header>
 
-<section class="statusbar" aria-label="Catalog health">
-  <div class="status"><strong id="updated">Live catalog status</strong><span class="muted">Loads from docs/catalog-status.json when served by HTTP/Pages.</span></div>
-  <div class="status"><strong class="green" id="healthy">—</strong><span>Healthy</span></div>
-  <div class="status"><strong style="color:var(--yellow)" id="stale">—</strong><span>Stale</span></div>
-  <div class="status"><strong style="color:#f0883e" id="review">—</strong><span>Review</span></div>
-  <div class="status"><strong style="color:var(--red)" id="remove">—</strong><span>Remove</span></div>
+<section class="statusbar">
+  <div class="status"><strong id="updated">Catalog status</strong><span class="muted">Live JSON refresh when served through Pages/HTTP.</span></div>
+  <div class="status"><strong id="healthy" class="HEALTHY">—</strong><span>Healthy</span></div>
+  <div class="status"><strong id="stale" class="STALE">—</strong><span>Stale</span></div>
+  <div class="status"><strong id="review" class="REVIEW">—</strong><span>Review</span></div>
+  <div class="status"><strong id="remove" class="REMOVE">—</strong><span>Remove</span></div>
 </section>
 
-<nav class="tabs" aria-label="Command center sections">
+<nav class="tabs">
   <button class="tab active" data-view="setup">Setup</button>
+  <button class="tab" data-view="maintenance">Maintenance</button>
   <button class="tab" data-view="tools">Tools</button>
-  <button class="tab" data-view="catalog">Catalog</button>
-  <button class="tab" data-view="health">Health & Security</button>
-  <button class="tab" data-view="access">Access Rules</button>
+  <button class="tab" data-view="health">Health/Security</button>
+  <button class="tab" data-view="access">Access</button>
 </nav>
 
-<section id="view-setup" class="view active">
-  <div class="intro">
-    <strong>Recommended:</strong> clone/update the private Master Repo and install the shared instruction pointers. The bootstrap does <em>not</em> install every catalog project; clients discover only the relevant lane per task.
-  </div>
+<section id="setup" class="view active">
+<div class="grid">
+  <article class="card"><span class="tag green">Windows</span><h3>Global Claude + Codex + Copilot setup</h3><p class="muted">Updates/clones the private Master Repo and installs shared instruction pointers.</p><div class="cmd" data-command>$p="$HOME\Master-Repo-Use"; if (Test-Path "$p\.git") { git -C $p pull --ff-only } else { gh repo clone Charlesganu2004/Master-Repo-Use $p }; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p<button class="copy">Copy</button></div></article>
+  <article class="card"><span class="tag green">Bash / WSL / macOS / Linux</span><h3>Global Claude + Codex + Copilot setup</h3><div class="cmd" data-command>p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull --ff-only; else gh repo clone Charlesganu2004/Master-Repo-Use "$p"; fi; bash "$p/scripts/setup-global-ai.sh" "$p"<button class="copy">Copy</button></div></article>
+  <article class="card"><span class="tag purple">Copilot</span><h3>Copilot-only — PowerShell</h3><div class="cmd" data-command>$p="$HOME\Master-Repo-Use"; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -CopilotOnly<button class="copy">Copy</button></div></article>
+  <article class="card"><span class="tag purple">Copilot</span><h3>Copilot-only — Bash</h3><div class="cmd" data-command>bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --copilot-only<button class="copy">Copy</button></div></article>
+  <article class="card"><span class="tag">Interactive local</span><h3>Launch locally — PowerShell</h3><div class="cmd" data-command>Set-Location "$HOME\Master-Repo-Use"; python -m http.server 8080<button class="copy">Copy</button></div><p class="muted">Open http://localhost:8080/</p></article>
+  <article class="card"><span class="tag">Interactive local</span><h3>Launch locally — Bash</h3><div class="cmd" data-command>cd "$HOME/Master-Repo-Use" && python3 -m http.server 8080<button class="copy">Copy</button></div><p class="muted">Open http://localhost:8080/</p></article>
+  <article class="card"><span class="tag yellow">Separate opt-in</span><h3>Token/work budget</h3><p class="muted">Not included in the large one-liners. Configure paid caps and compatible free/local fallback independently.</p><div class="links"><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TOKEN-BUDGET.md">Token budget guide ↗</a></div></article>
+  <article class="card"><span class="tag">Online</span><h3>GPT / Claude / GitHub online</h3><p class="muted">Connect/select the private repo. Hosted products cannot be forced by a shell script to execute every private tool globally.</p><div class="links"><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/GLOBAL-AI-SETUP.md">Online setup ↗</a></div></article>
+</div>
+</section>
+
+<section id="maintenance" class="view">
+  <div class="notice ok"><strong>No background AI spend:</strong> maintenance is monthly-on-next-use. The request can be generated for free through GitHub CLI/API, then AI work starts only after your approval.</div>
   <div class="grid">
-    <article class="card"><span class="tag green">Windows / PowerShell</span><h3>Global setup — Claude + Codex + GitHub Copilot</h3><p class="muted">Also installs the global <code>master-watermark</code> launcher. Token budgeting stays separate and opt-in.</p><div class="command" data-command>$p="$HOME\Master-Repo-Use"; if (Test-Path "$p\.git") { git -C $p pull --ff-only } else { gh repo clone Charlesganu2004/Master-Repo-Use $p }; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag green">Bash / WSL / macOS / Linux</span><h3>Global setup — Claude + Codex + GitHub Copilot</h3><p class="muted">Same shared Master Repo contract across supported local clients.</p><div class="command" data-command>p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull --ff-only; else gh repo clone Charlesganu2004/Master-Repo-Use "$p"; fi; bash "$p/scripts/setup-global-ai.sh" "$p"<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag purple">GitHub Copilot</span><h3>Copilot-only setup — PowerShell</h3><div class="command" data-command>$p="$HOME\Master-Repo-Use"; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -CopilotOnly<button class="copy">Copy</button></div><div class="links"><a href="docs/COPILOT-SETUP.md">Full Copilot guide</a></div></article>
-    <article class="card"><span class="tag purple">GitHub Copilot</span><h3>Copilot-only setup — Bash</h3><div class="command" data-command>bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --copilot-only<button class="copy">Copy</button></div><div class="links"><a href="docs/COPILOT-SETUP.md">Full Copilot guide</a></div></article>
-    <article class="card"><span class="tag">Interactive UI</span><h3>Open locally — PowerShell</h3><div class="command" data-command>Set-Location "$HOME\Master-Repo-Use"; python -m http.server 8080<button class="copy">Copy</button></div><p class="muted">Then open http://localhost:8080/ . The page itself also opens directly as a file; only live JSON health refresh requires HTTP.</p></article>
-    <article class="card"><span class="tag">Interactive UI</span><h3>Open locally — Bash</h3><div class="command" data-command>cd "$HOME/Master-Repo-Use" && python3 -m http.server 8080<button class="copy">Copy</button></div><p class="muted">Then open http://localhost:8080/ .</p></article>
-    <article class="card"><span class="tag yellow">Optional</span><h3>Token/work-spend budget</h3><p class="muted">Kept out of the large global one-liners. Configure caps and free/local fallback routing independently.</p><div class="links"><a href="docs/TOKEN-BUDGET.md">Open TOKEN-BUDGET.md</a></div></article>
-    <article class="card"><span class="tag">Online clients</span><h3>GPT / Claude / GitHub online</h3><p class="muted">Online products cannot be forced by a shell command to execute every private-repo tool globally. Connect/select this private repo and use the committed AGENTS.md / CLAUDE.md / Copilot instructions supported by that product.</p><div class="links"><a href="docs/GLOBAL-AI-SETUP.md">Online/cloud setup</a></div></article>
+    <article class="card"><h3>Check whether review is due</h3><div class="cmd" data-command>python "$HOME/Master-Repo-Use/scripts/maintenance_request.py" --check<button class="copy">Copy</button></div></article>
+    <article class="card"><h3>Create request if due</h3><div class="cmd" data-command>python "$HOME/Master-Repo-Use/scripts/maintenance_request.py" --auto<button class="copy">Copy</button></div><p class="muted">Creates one [AI Maintenance] GitHub issue if due, then stops.</p></article>
+    <article class="card"><h3>Generate local request only</h3><div class="cmd" data-command>python "$HOME/Master-Repo-Use/scripts/maintenance_request.py" --generate<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag yellow">Owner gate</span><h3>Approve AI maintenance</h3><div class="cmd" data-command>APPROVE AI MAINTENANCE<button class="copy">Copy</button></div><p class="muted">After this phrase, the AI may review/update a branch and open a PR. It still must not merge main without your approval.</p></article>
+    <article class="card"><h3>Maintenance guide</h3><div class="links"><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/AI-MAINTENANCE.md">Open guide ↗</a><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/issues?q=is%3Aissue+is%3Aopen+%22%5BAI+Maintenance%5D%22">Open requests ↗</a></div></article>
   </div>
 </section>
 
-<section id="view-tools" class="view">
-  <div class="grid">
-    <article class="card"><span class="tag purple">Memory</span><h3>Claude-Mem</h3><p class="muted">Persistent Claude Code observation/search memory.</p><div class="command" data-command>npx claude-mem install<button class="copy">Copy</button></div><div class="links"><a href="https://github.com/thedotmack/claude-mem" target="_blank" rel="noopener">Upstream ↗</a></div></article>
-    <article class="card"><span class="tag purple">Context / tokens</span><h3>Headroom</h3><p class="muted">Compression, MCP, cross-agent memory and wrappers for Claude, Codex and Copilot.</p><div class="command" data-command>uv tool install --python 3.13 "headroom-ai[all]" && headroom doctor<button class="copy">Copy</button></div><div class="links"><a href="https://github.com/headroomlabs-ai/headroom" target="_blank" rel="noopener">Upstream ↗</a></div></article>
-    <article class="card"><span class="tag purple">Workplace agent</span><h3>Omni</h3><p class="muted">Clone the upstream self-hosted Omni agent. Follow its current upstream deployment guide before running services.</p><div class="command" data-command>git clone https://github.com/getomnico/omni.git<button class="copy">Copy</button></div><div class="links"><a href="https://github.com/getomnico/omni" target="_blank" rel="noopener">Upstream ↗</a></div></article>
-    <article class="card"><span class="tag purple">Observer</span><h3>Task Observer / Agent Monitor</h3><p class="muted">Visual Claude Code + Codex session/tool/subagent monitoring.</p><div class="command" data-command>git clone https://github.com/hoangsonww/Claude-Code-Agent-Monitor.git<button class="copy">Copy</button></div><div class="links"><a href="https://github.com/hoangsonww/Claude-Code-Agent-Monitor" target="_blank" rel="noopener">Upstream ↗</a></div></article>
-    <article class="card"><span class="tag yellow">Authorized media only</span><h3>Watermark remover — after global setup</h3><p class="muted">Use only on media you own or are authorized to modify. The wrapper installs/updates the vetted upstream tool on first use.</p><div class="command" data-command>master-watermark INPUT_FILE OUTPUT_FOLDER<button class="copy">Copy</button></div><div class="links"><a href="https://github.com/D-Ogi/WatermarkRemover-AI" target="_blank" rel="noopener">Upstream ↗</a></div></article>
-    <article class="card"><span class="tag">Claude Code setup</span><h3>Master Repo Claude setup</h3><p class="muted">The global bootstrap maintains ~/.claude/CLAUDE.md and points it back to this repo.</p><div class="command" data-command>cat "$HOME/.claude/CLAUDE.md"<button class="copy">Copy</button></div><div class="links"><a href="CLAUDE.md">Repo CLAUDE.md</a></div></article>
-    <article class="card"><span class="tag">Codex setup</span><h3>Master Repo Codex setup</h3><p class="muted">The global bootstrap maintains ~/.codex/AGENTS.md; this repo also contains AGENTS.md.</p><div class="command" data-command>cat "$HOME/.codex/AGENTS.md"<button class="copy">Copy</button></div><div class="links"><a href="AGENTS.md">Repo AGENTS.md</a></div></article>
-    <article class="card"><span class="tag">Copilot ecosystem</span><h3>GitHub Copilot repos</h3><p class="muted">Copilot CLI, SDK, awesome-copilot, and GitHub MCP Server are cataloged together.</p><div class="links"><a href="repo-lists/github-copilot.txt">Open Copilot repo list</a></div></article>
-  </div>
+<section id="tools" class="view">
+<div class="grid">
+  <article class="card"><span class="tag purple">Memory</span><h3>Claude-Mem</h3><div class="cmd" data-command>npx claude-mem install<button class="copy">Copy</button></div><a target="_blank" rel="noopener" href="https://github.com/thedotmack/claude-mem">Upstream ↗</a></article>
+  <article class="card"><span class="tag purple">Context</span><h3>Headroom</h3><div class="cmd" data-command>uv tool install --python 3.13 "headroom-ai[all]" && headroom doctor<button class="copy">Copy</button></div><a target="_blank" rel="noopener" href="https://github.com/headroomlabs-ai/headroom">Upstream ↗</a></article>
+  <article class="card"><span class="tag purple">Agent</span><h3>Omni</h3><div class="cmd" data-command>git clone https://github.com/getomnico/omni.git<button class="copy">Copy</button></div><a target="_blank" rel="noopener" href="https://github.com/getomnico/omni">Upstream ↗</a></article>
+  <article class="card"><span class="tag purple">Observer</span><h3>Task Observer / Agent Monitor</h3><div class="cmd" data-command>git clone https://github.com/hoangsonww/Claude-Code-Agent-Monitor.git<button class="copy">Copy</button></div><a target="_blank" rel="noopener" href="https://github.com/hoangsonww/Claude-Code-Agent-Monitor">Upstream ↗</a></article>
+  <article class="card"><span class="tag yellow">Authorized media only</span><h3>Watermark remover</h3><div class="cmd" data-command>master-watermark INPUT_FILE OUTPUT_FOLDER<button class="copy">Copy</button></div><a target="_blank" rel="noopener" href="https://github.com/D-Ogi/WatermarkRemover-AI">Upstream ↗</a></article>
+  <article class="card"><h3>GitHub Copilot repo lane</h3><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/repo-lists/github-copilot.txt">Open private list ↗</a></article>
+  <article class="card"><h3>All AI client tools</h3><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/repo-lists/ai-client-tools.txt">Open private list ↗</a></article>
+</div>
 </section>
 
-<section id="view-catalog" class="view">
-  <div class="intro"><strong>Catalog rule:</strong> use the smallest task-relevant lane. Do not dump the full catalog into every prompt.</div>
-  <div class="grid">
-    <article class="card"><h3>Full curated catalog</h3><div class="links"><a href="repo-lists/all-curated.txt">repo-lists/all-curated.txt</a><a href="docs/REPO-CATALOG.md">REPO-CATALOG.md</a></div></article>
-    <article class="card"><h3>AI client tools</h3><div class="links"><a href="repo-lists/ai-client-tools.txt">Omni · Claude-Mem · Headroom · monitors · Copilot · Codex</a></div></article>
-    <article class="card"><h3>Agent frameworks</h3><div class="links"><a href="repo-lists/agent-frameworks.txt">Agent frameworks</a></div></article>
-    <article class="card"><h3>RAG / memory</h3><div class="links"><a href="docs/REPO-CATALOG.md">Catalog</a></div></article>
-    <article class="card"><h3>MCP</h3><div class="links"><a href="docs/MCP-SETUP.md">MCP setup</a></div></article>
-    <article class="card"><h3>Security scanners</h3><p class="muted">Guardian + Semgrep + Gitleaks + Trivy + OSV Scanner + optional Snyk/ClamAV when installed/configured.</p><div class="links"><a href="docs/SECURITY-SCANNING.md">Security scanning</a></div></article>
-    <article class="card"><h3>Managed replacements</h3><p class="muted">Lifecycle-expired repos that are useful, clean, and license-compatible enter an owner-review adoption lane before any maintained fork/replacement is created.</p><div class="links"><a href="managed-repos/README.md">Managed repo policy</a></div></article>
-  </div>
+<section id="health" class="view">
+  <div class="notice"><strong>Lifecycle:</strong> 120d stale warning → 270d replacement/adoption review → 365d active-runtime removal. Archived repos are reviewed in context; research/reference repos can be explicitly exempted.</div>
+  <div class="actions" style="margin-bottom:12px"><button id="refresh" class="btn">Refresh status</button><a class="btn" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/LIFECYCLE-REVIEW-2026-08-19.md">Lifecycle review ↗</a><a class="btn" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/SECURITY-SCANNING.md">Security scanning ↗</a></div>
+  <div style="overflow:auto"><table class="health"><thead><tr><th>Repo</th><th>Status</th><th>Age</th><th>Archived</th><th>Deep scan</th><th>Note</th></tr></thead><tbody id="healthRows"><tr><td colspan="6" class="muted">Loading status…</td></tr></tbody></table></div>
 </section>
 
-<section id="view-health" class="view">
-  <div class="intro"><strong>Lifecycle:</strong> 120 days without an upstream push = stale warning; 270 days = replacement/adoption review; 365 days = active-catalog removal; archived repos get a 30-day grace period. Security-critical, deleted, or disabled repos can be removed sooner.</div>
-  <div class="warning">A scanner result is evidence, not proof of safety. HIGH findings are held for owner review; confirmed CRITICAL findings are removal candidates. Newly added repositories are deep-vetted immediately.</div>
-  <div class="actions" style="margin:12px 0"><button class="btn" id="refresh-health">Refresh live status</button><a class="btn" href="docs/CATALOG-STATUS.md">Full report</a><a class="btn" href="docs/NEW-REPO-VETTING.md">New-repo vetting</a><a class="btn" href="docs/AUTO-REMOVALS.md">Removal log</a></div>
-  <div style="overflow:auto"><table class="health-table"><thead><tr><th>Repo</th><th>Status</th><th>Last push</th><th>Age</th><th>Deep scan</th><th>Managed</th><th>Note</th></tr></thead><tbody id="health-rows"><tr><td colspan="7" class="muted">Press Refresh or serve this page over HTTP.</td></tr></tbody></table></div>
+<section id="access" class="view">
+<div class="notice"><strong>Pull is allowed; main changes require Charles approval.</strong> CODEOWNERS and the owner-approval workflow are committed, but GitHub server-side branch/ruleset protection must also be enabled.</div>
+<div class="grid">
+  <article class="card"><h3>Pull latest approved main</h3><div class="cmd" data-command>git switch main && git pull --ff-only origin main<button class="copy">Copy</button></div></article>
+  <article class="card"><h3>Create contributor branch</h3><div class="cmd" data-command>git switch -c proposal/my-change<button class="copy">Copy</button></div></article>
+  <article class="card"><h3>Protection setup</h3><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/settings/rules">Open repository rules ↗</a><p class="muted">Require PR, 1 approval, Code Owner review, Owner Approval Check, conversation resolution, no force-push/delete.</p></article>
+</div>
 </section>
 
-<section id="view-access" class="view">
-  <div class="intro"><strong>Owner-controlled main:</strong> collaborators can pull the latest approved <code>main</code>. Changes must use a pull request and require approval from <code>@Charlesganu2004</code> before merge.</div>
-  <div class="grid">
-    <article class="card"><h3>Pull latest</h3><div class="command" data-command>git switch main && git pull --ff-only origin main<button class="copy">Copy</button></div></article>
-    <article class="card"><h3>Contributor branch</h3><div class="command" data-command>git switch -c proposal/my-change<button class="copy">Copy</button></div><p class="muted">Commit to the proposal branch, push it, and open a PR. Do not push directly to main.</p></article>
-    <article class="card"><h3>Enforcement files</h3><p class="muted">CODEOWNERS assigns the whole repo to @Charlesganu2004. The Owner Approval Check verifies your review. GitHub Rulesets/branch protection must also require PRs, code-owner review, and the approval check.</p><div class="links"><a href=".github/CODEOWNERS">CODEOWNERS</a><a href=".github/workflows/owner-approval.yml">Approval workflow</a></div></article>
-  </div>
-</section>
-
-<footer class="footer">Master Repo Use is a private catalog/instruction layer. Tool availability still follows each client, upstream project, license, account plan, and security boundary.</footer>
+<footer>The deployed site intentionally contains only the interactive page and generated health status files. Private docs/catalog files remain in the private GitHub repository.</footer>
 </main>
 <script>
 const tabs=[...document.querySelectorAll('.tab')];
-tabs.forEach(tab=>tab.addEventListener('click',()=>{tabs.forEach(x=>x.classList.remove('active'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));tab.classList.add('active');document.getElementById('view-'+tab.dataset.view).classList.add('active');if(tab.dataset.view==='health')loadHealth();}));
-function commandText(box){const clone=box.cloneNode(true);clone.querySelectorAll('button').forEach(x=>x.remove());return clone.textContent.trim();}
-async function copyCommand(box,button){const text=commandText(box);try{await navigator.clipboard.writeText(text)}catch(e){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}const old=button.textContent;button.textContent='Copied';setTimeout(()=>button.textContent=old,1200)}
-document.querySelectorAll('[data-command]').forEach(box=>{const button=box.querySelector('.copy');button.addEventListener('click',e=>{e.stopPropagation();copyCommand(box,button)});box.tabIndex=0;box.title='Click to copy';box.addEventListener('click',()=>copyCommand(box,button));box.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();copyCommand(box,button)}})});
-async function loadHealth(){const rows=document.getElementById('health-rows');try{const response=await fetch('docs/catalog-status.json?ts='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error(response.status);const data=await response.json();document.getElementById('updated').textContent='Updated '+(data.updated||'unknown');for(const key of ['healthy','stale','review','remove'])document.getElementById(key).textContent=(data.counts&&data.counts[key.toUpperCase()])??0;rows.innerHTML='';for(const r of (data.repos||[])){const tr=document.createElement('tr');const values=[r.repo,r.status,r.pushed_at||'—',r.age_days==null?'—':r.age_days+'d',r.deep_scanned?'yes':'no',r.adoption_candidate?'candidate':'—',r.note||(r.findings&&r.findings[0])||''];values.forEach((v,i)=>{const td=document.createElement('td');if(i===1){const span=document.createElement('span');span.className='pill '+r.status;span.textContent=v;td.appendChild(span)}else td.textContent=v;tr.appendChild(td)});rows.appendChild(tr)}if(!(data.repos||[]).length)rows.innerHTML='<tr><td colspan="7" class="muted">Status file exists but has no repo rows yet. Run Catalog Guardian once.</td></tr>'}catch(e){rows.innerHTML='<tr><td colspan="7" class="muted">Live status could not be loaded. If you opened index.html directly with file://, run the local HTTP one-liner from Setup or open docs/CATALOG-STATUS.md.</td></tr>'}}
-document.getElementById('refresh-health').addEventListener('click',loadHealth);loadHealth();
+tabs.forEach(t=>t.onclick=()=>{tabs.forEach(x=>x.classList.remove('active'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.getElementById(t.dataset.view).classList.add('active');if(t.dataset.view==='health')loadHealth();});
+function textOf(box){const c=box.cloneNode(true);c.querySelectorAll('button').forEach(b=>b.remove());return c.textContent.trim()}
+async function copyBox(box,btn){const text=textOf(box);try{await navigator.clipboard.writeText(text)}catch(_){const a=document.createElement('textarea');a.value=text;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}const old=btn.textContent;btn.textContent='Copied';setTimeout(()=>btn.textContent=old,1000)}
+document.querySelectorAll('[data-command]').forEach(box=>{const btn=box.querySelector('.copy');box.tabIndex=0;box.title='Click to copy';box.onclick=e=>{if(e.target!==btn)copyBox(box,btn)};btn.onclick=e=>{e.stopPropagation();copyBox(box,btn)};box.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();copyBox(box,btn)}}});
+async function loadHealth(){const rows=document.getElementById('healthRows');try{const r=await fetch('docs/catalog-status.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(r.status);const d=await r.json();document.getElementById('updated').textContent='Updated '+(d.updated||'unknown');['healthy','stale','review','remove'].forEach(k=>document.getElementById(k).textContent=d.counts?.[k.toUpperCase()]??0);rows.innerHTML='';for(const x of d.repos||[]){const tr=document.createElement('tr');const vals=[x.repo,x.status,x.age_days==null?'—':x.age_days+'d',x.archived?'yes':'no',x.deep_scanned?'yes':'no',x.note||''];vals.forEach((v,i)=>{const td=document.createElement('td');td.textContent=v;if(i===1)td.className=v;tr.appendChild(td)});rows.appendChild(tr)}if(!(d.repos||[]).length)rows.innerHTML='<tr><td colspan="6" class="muted">No status rows yet. Run Catalog Guardian once.</td></tr>'}catch(e){rows.innerHTML='<tr><td colspan="6" class="muted">Status JSON unavailable. Run locally through HTTP or run Catalog Guardian to generate docs/catalog-status.json.</td></tr>'}}
+document.getElementById('refresh').onclick=loadHealth;loadHealth();
 </script>
 </body>
 </html>
