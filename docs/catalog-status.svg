@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="110" role="img" aria-label="Master Repo catalog health">
+<rect width="760" height="110" rx="10" fill="#0d1117"/>
+<text x="24" y="31" fill="#f0f6fc" font-family="Segoe UI,Arial" font-size="17" font-weight="700">Master Repo — live catalog health</text>
+<text x="24" y="58" fill="#8b949e" font-family="Segoe UI,Arial" font-size="13">Catalog Guardian enabled — first automated scan pending</text>
+<text x="24" y="87" fill="#58a6ff" font-family="Segoe UI,Arial" font-size="15">Runs on catalog changes + every 6 hours</text>
+</svg>
