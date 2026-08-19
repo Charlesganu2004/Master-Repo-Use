@@ -7,7 +7,11 @@ on:
       - 'index.html'
       - 'docs/catalog-status.json'
       - 'docs/catalog-status.svg'
+      - 'repo-lists/**'
+      - 'scripts/catalog_guardian.py'
       - '.github/workflows/pages.yml'
+  schedule:
+    - cron: '17 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -22,9 +26,41 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      pages_enabled: ${{ steps.pages.outputs.enabled }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Refresh lightweight catalog metadata for the visual
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: python scripts/catalog_guardian.py
+
+      - name: Check whether GitHub Pages is enabled
+        id: pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          code="$(curl -sS -o /tmp/pages.json -w '%{http_code}' \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/pages")"
+          if [[ "$code" == '200' ]]; then
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+            echo '::warning::GitHub Pages is not enabled yet. One-time owner action: Settings → Pages → Source → GitHub Actions. This workflow will remain green and skip deployment until that is enabled.'
+          fi
 
       - name: Stage public site only
         shell: bash
@@ -34,24 +70,21 @@ jobs:
           mkdir -p _site/docs
           cp index.html _site/index.html
           touch _site/.nojekyll
-          if [[ -f docs/catalog-status.json ]]; then
-            cp docs/catalog-status.json _site/docs/catalog-status.json
-          else
-            printf '{"updated":"not generated yet","counts":{"HEALTHY":0,"STALE":0,"REVIEW":0,"REMOVE":0},"repos":[]}\n' > _site/docs/catalog-status.json
-          fi
-          if [[ -f docs/catalog-status.svg ]]; then
-            cp docs/catalog-status.svg _site/docs/catalog-status.svg
-          fi
+          cp docs/catalog-status.json _site/docs/catalog-status.json
+          cp docs/catalog-status.svg _site/docs/catalog-status.svg
 
       - name: Configure GitHub Pages
+        if: steps.pages.outputs.enabled == 'true'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
+        if: steps.pages.outputs.enabled == 'true'
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
 
   deploy:
+    if: needs.build.outputs.pages_enabled == 'true'
     needs: build
     runs-on: ubuntu-latest
     environment:
