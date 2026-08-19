@@ -34,7 +34,7 @@ github/github-mcp-server
 Qiskit/qiskit
 qiskit-community/qiskit-finance
 qiskit-community/qiskit-machine-learning
-qiskit-community/qiskit-optimization
+Qiskit/qiskit-addon-opt-mapper  # replaces unsupported qiskit-community/qiskit-optimization
 PennyLaneAI/pennylane
 PennyLaneAI/pennylane-qiskit
 quantumlib/Cirq
@@ -90,23 +90,20 @@ TradingGoose/TradingGoose.github.io
 marcozanetti-dev/intraday-mean-reversion-costs-aware
 ebrahimpichka/DeepRL-trade
 RezaSoleymanifar/neuralHFT
-oyi77/Crypto-RL-Trading-Bot
 fsaavedra0003/Agentic-AI-Trading-Bot-with-LLM-reasoning-sentiment-analysis
 padmarajkore/Ai-crypto-trading-system
 
 # Broker app integrations / Robinhood alternatives
 DhruvaBansal00/robin_stocks_v2
 ib-api-reloaded/ib_async
-tylerebowers/Schwabdev
-alexgolec/schwab-py
+tylerebowers/Schwabdev  # replaces stale alexgolec/schwab-py
 thammo4/uvatradier
 Lumiwealth/lumiwealth-tradier
 passiv/snaptrade-sdks
 passiv/snaptrade-cli
 passiv/snaptrade-react
 tastytrade/tastytrade-api-js
-tastytrade/tastytrade-sdk-python
-tastyware/tastytrade
+tastyware/tastytrade  # current Python alternative; old tastytrade SDK repo is archived
 tastyware/tastytrade-cli
 ferdousbhai/tasty-agent
 coinbase/coinbase-advanced-py
@@ -115,7 +112,6 @@ rhettre/coinbase-advancedtrade-python
 qmyhd/LLM-portfolio-project
 
 # Trading agent MCP / memory / risk tools
-financial-datasets/mcp-server
 mnemox-ai/tradememory-protocol
 wshobson/maverick-mcp
 aitrados/finance-trading-ai-agents-mcp
@@ -130,7 +126,7 @@ microsoft/mcp
 microsoftdocs/mcp
 microsoft/playwright-mcp
 upstash/context7
-awslabs/mcp
+awslabs/mcp  # includes active AWS billing/cost-management MCP server
 punkpeye/awesome-mcp-servers
 microsoft/lets-learn-mcp-python
 
@@ -150,7 +146,6 @@ phildougherty/infracost_mcp
 jasonwilbur/cloud-cost-mcp
 OptimNow/finops-mcp-resources
 OptimNow/cloud-finops-skills
-aarora79/aws-cost-explorer-mcp-server
 nozomi-koborinai/gcp-cost-mcp-server
 
 # Article and topic discoveries
@@ -224,8 +219,7 @@ ByteDance-Seed/Depth-Anything-3
 colmap/colmap
 facebookresearch/map-anything
 facebookresearch/vggt
-MrNeRF/LichtFeld-Studio
-nerfstudio-project/nerfstudio
+MrNeRF/LichtFeld-Studio  # active replacement lane for stale nerfstudio; GPL-3.0
 playcanvas/supersplat
 
 # AR / Robotics Mapping & SLAM (added 2026-08-05, vetted)
