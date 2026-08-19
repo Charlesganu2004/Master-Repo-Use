@@ -1,5 +1,4 @@
 # Trading Agent MCP / Memory / Risk / Research Tools
-financial-datasets/mcp-server
 mnemox-ai/tradememory-protocol
 wshobson/maverick-mcp
 aitrados/finance-trading-ai-agents-mcp
@@ -8,3 +7,5 @@ VictorVVedtion/trading-skills
 alpacahq/alpaca-mcp-server
 infracost/infracost
 opencost/opencost
+
+# financial-datasets/mcp-server moved to managed-repos/candidates after >365d without a push.
