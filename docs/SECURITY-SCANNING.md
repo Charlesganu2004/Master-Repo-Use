@@ -1,246 +1,210 @@
-# Security Scanning
+# Security Scanning and Third-Party Repo Intake
 
-The toolchain used to vet every third-party repo in this catalog before it was added. All four
-tools are free and require no account. Every repo in [VETTING-REPORT.md](VETTING-REPORT.md) went
-through this exact pipeline.
+This is the security gate for repositories in `Charlesganu2004/Master-Repo-Use`.
 
-Related:
-- [skills/dep-audit](../skills/dep-audit/SKILL.md) — portable version of this procedure for any agent
-- [agents/scanner-vault.md](../agents/scanner-vault.md) — the agent that runs it
-- [SECURITY.md](SECURITY.md) — repo-level agent injection and MCP scoping
+The goal is not to claim that static scanning can prove a repository safe. The goal is to catch common supply-chain, injection, malware, secret, lifecycle, and maintenance risks **before** a repo is trusted or executed.
 
----
+Related files:
+
+- `scripts/catalog_guardian.py` — automated metadata + source guardian
+- `.github/workflows/catalog-guardian.yml` — GitHub Pro audit and owner-approval workflow
+- `docs/VETTING-REPORT.md` — vetting history
+- `docs/CATALOG-STATUS.md` — current private status
+- `docs/SECURITY.md` — repository-level agent/MCP security rules
+- `docs/NEW-REPO-VETTING.md` — new-entry procedure
+
+## Current lifecycle policy
+
+Freshness is a maintenance signal, not a security verdict.
+
+- **0–120 days since last push:** healthy from a freshness perspective.
+- **121–269 days:** stale warning.
+- **270–365 days:** replacement / managed-adoption review.
+- **More than 365 days:** remove from the active/runtime catalog unless Charles approves a reference/stability exception.
+- **Archived:** inspect archive reason, recent releases, sunset/EOL notice, successor, security state, licensing, and reference value before deciding.
+- **Deleted or disabled:** immediate removal candidate.
+- **Static research/reference repos:** may receive an explicit `reference` lifecycle override when inactivity is expected.
+
+The 120-day warning is intentionally much earlier than deletion. Fast-moving AI tooling changes quickly, while stable libraries and research artifacts can legitimately be quiet.
+
+## GitHub-first audit model
+
+Routine maintenance does not require GPT, Claude, Copilot, or Codex.
+
+The `Catalog Guardian` workflow runs a lightweight metadata audit weekly and when catalog/security policy files change. It creates or refreshes one `[Catalog Audit]` issue when attention is needed.
+
+Deep maintenance requires Charles's exact issue comment:
+
+```text
+APPROVE CATALOG MAINTENANCE
+```
+
+After approval, GitHub Actions performs the deeper deterministic scan, prepares lifecycle/removal/adoption changes on an automation branch, and opens a PR. It does **not** merge `main`.
 
 ## Threat model
 
-You are about to depend on code someone else wrote. In rough order of how often it actually bites:
+The gate looks for:
 
-| Threat | What it looks like | Caught by |
+| Threat | Examples | Primary checks |
 |---|---|---|
-| Install-time execution | `postinstall`, `setup.py` hooks, `curl \| bash` in a Makefile | Manual audit (stage B2) |
-| Known-vulnerable dependencies | Transitively pulled CVEs | Trivy, OSV-Scanner |
-| Typosquat / hijacked name | `owner/name` is not the project you think | Stage A canonical check |
-| Abandoned code | No maintainer, no patch when a bug is found | Stage A last-push date |
-| Committed secrets | Author's key in git history | Gitleaks, Trivy |
-| CI supply-chain holes | `pull_request_target` + untrusted checkout | Manual audit (stage B2) |
+| Hidden/invisible instructions | bidi overrides, zero-width controls, hidden prompt text | Guardian Unicode scan + manual context read |
+| Prompt/instruction injection | “ignore previous instructions”, secret exfiltration requests, safety bypass text | Guardian prompt-injection heuristics + manual review |
+| Install-time execution | npm lifecycle hooks, `setup.py`, custom build backends, `curl | sh` | Guardian patterns + manual Stage B2 |
+| SQL/command injection | interpolated SQL, unsafe shell construction | Guardian + Semgrep |
+| Credential exposure/exfiltration | private keys, API tokens, code that sends env secrets | Guardian + Gitleaks/Semgrep |
+| Malware/binary payloads | PE/ELF binaries, malicious fixtures, suspicious installers | Guardian + ClamAV + manual review |
+| Vulnerable dependencies | HIGH/CRITICAL CVEs in runtime dependencies | OSV Scanner; Trivy/Snyk when available |
+| CI supply-chain risk | `pull_request_target` + untrusted checkout; event data inside shell | manual workflow review + static audit |
+| Typosquat/renamed slug | requested slug resolves to unexpected canonical repo | GitHub metadata canonical-name check |
+| Abandonment/sunset | stale, archived, EOL, unsupported project | 120/270/365 lifecycle + successor review |
+| License risk | no license, custom restrictions, copyleft obligations | GitHub metadata + manual LICENSE/NOTICE read |
 
-The first and last rows matter most and are the ones scanners miss, because they are design
-decisions rather than vulnerabilities. They require reading.
+## Automated tools
 
----
+Owner-approved/new-repo GitHub scans install or use:
 
-## The tools
+- **Semgrep OSS** — SQL/command injection and code-pattern checks.
+- **Gitleaks** — committed secret detection.
+- **OSV Scanner** — dependency vulnerabilities against OSV.
+- **ClamAV** — malware signatures where applicable.
+- **Snyk CLI** — optional; used when `SNYK_TOKEN` is configured.
 
-| Tool | Covers | Account needed |
-|---|---|---|
-| [Gitleaks](https://github.com/gitleaks/gitleaks) | Committed secrets | No |
-| [Trivy](https://github.com/aquasecurity/trivy) | Dependency CVEs, secrets, IaC misconfig | No |
-| [OSV-Scanner](https://github.com/google/osv-scanner) | Lockfile vulns against OSV.dev | No |
-| [Semgrep OSS](https://github.com/semgrep/semgrep) | Code patterns, injection, command exec | No |
-| [Snyk](https://github.com/snyk/cli) | SCA, SAST, container, IaC | **Yes** — free tier requires `snyk auth` |
+Guardian also supports **Trivy** automatically if it is installed in the runner/environment. The catalog contains additional security projects such as OpenGrep, TruffleHog, Cisco AI Defense MCP Scanner, OSSF Scorecard, Syft, Cosign, and Garak.
 
-**On Snyk.** It is genuinely good, but its free tier requires creating an account and
-authenticating through a browser before the CLI will run. That puts it in a different category
-from the four above, which you download and run. Trivy + OSV-Scanner + Semgrep OSS cover the same
-dependency-CVE and code-pattern ground with no account. Treat Snyk as optional.
+## Stage A — metadata only
 
-### Install
-
-Download from the official release pages and **verify the checksum**. Every release above ships
-a checksums file; a scanner you cannot verify is not a security tool.
+Before cloning or executing a repo, inspect GitHub metadata:
 
 ```bash
-# example: gitleaks
-curl -fsSL -o gitleaks.tar.gz \
-  https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
-curl -fsSL -o sums.txt \
-  https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_checksums.txt
-sha256sum -c --ignore-missing sums.txt
-tar xzf gitleaks.tar.gz gitleaks
+gh api repos/OWNER/NAME
 ```
 
-Semgrep installs via pip and is best kept in a venv:
+Check at minimum:
 
-```bash
-python3 -m venv ~/semgrep-venv
-~/semgrep-venv/bin/pip install semgrep
-```
+1. `full_name` exactly matches the intended canonical repository or a verified rename.
+2. `archived` and `disabled` state.
+3. `fork` status and whether the parent should be used instead.
+4. `pushed_at` against the 120/270/365 lifecycle policy.
+5. `license.spdx_id` and the actual LICENSE/NOTICE files.
+6. README/archive/EOL/successor notices.
+7. Security advisories and active maintenance signals when the repo will execute code.
 
-On Debian/Ubuntu, a bare `pip install --user` is refused under
-[PEP 668](https://peps.python.org/pep-0668/) (externally-managed environment). Use the venv.
-
-### Windows
-
-**Run this pipeline under WSL, not native Windows.** Three things break otherwise:
-
-1. **Semgrep has no native Windows build.**
-2. **`Filename too long`** — Windows' 260-character `MAX_PATH` makes `git clone` fail outright on
-   repos with deep trees. Several major projects cannot be cloned on Windows without
-   `core.longpaths`, and even then tooling downstream misbehaves.
-3. **File locking** — Windows Defender and the search indexer hold handles on freshly cloned
-   files, so `rm -rf` fails with "Device or resource busy" and leaves broken directories that
-   poison the next clone.
-
-Cloning and scanning inside WSL's ext4 filesystem avoids all three, and semgrep runs several
-times faster there than over `/mnt/c`.
-
----
-
-## Stage A — metadata, no code executed
-
-```bash
-curl -s -H "Accept: application/vnd.github+json" \
-     "https://api.github.com/repos/OWNER/NAME"
-```
-
-Check:
-
-- **`full_name` vs what you asked for.** GitHub silently redirects renamed repos, so a 200
-  response does not confirm the name. A mismatch is the typosquat signature — reject on it.
-- **`archived`, `disabled`**
-- **`fork`** — if true, why this fork and not the parent?
-- **`pushed_at`** — no commits in ~18 months on a security-relevant dependency is a finding
-- **`license.spdx_id`** — `NOASSERTION` means a custom license a human must read
-- **README install instructions** — does it tell you to pipe a download into a shell?
-
-Unauthenticated the API allows 60 requests/hour, which is the practical batch limit.
-
----
+A recent `updated_at` value alone is not proof of active code maintenance; stars, issues, metadata changes, or documentation can change it without a source push.
 
 ## Stage B — clone and scan
 
+Recommended WSL/Linux workflow:
+
 ```bash
-git clone --depth 1 https://github.com/OWNER/NAME.git ./target
+mkdir -p /tmp/master-repo-vet
+cd /tmp/master-repo-vet
+git clone --depth 1 https://github.com/OWNER/NAME.git target
 
-gitleaks detect --source ./target --no-git --redact --exit-code 0 \
-         --report-format json --report-path gitleaks.json
-
-trivy fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL \
-      --format json --output trivy.json ./target
-
-osv-scanner scan --recursive --format json --output osv.json ./target
-
-semgrep scan --config p/security-audit --config p/secrets --config p/command-injection \
-        --json -o semgrep.json --no-git-ignore --timeout 60 --metrics=off ./target
-
-rm -rf ./target
+gitleaks detect --source target --no-git --redact --exit-code 0
+osv-scanner scan source -r target
+semgrep scan --config p/security-audit --config p/secrets --config p/command-injection target
+clamscan -r --infected target
 ```
 
-Always pass `--redact` to gitleaks. Scanner output containing live secrets must never be
-committed anywhere.
+If installed:
 
----
+```bash
+trivy fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL target
+snyk test --all-projects --severity-threshold=high
+```
 
-## Stage B2 — what executes if you use this
+Always redact secret-scanner output before storing logs. Do not commit live secret material into this repo as “evidence.”
 
-Scanners do not flag these, because they are not vulnerabilities. Read them yourself.
+## Stage B2 — manual execution-path review
 
-| Look at | Why it matters |
-|---|---|
-| `package.json` → `preinstall`, `install`, `postinstall`, `prepare` | Runs on `npm install`, before you run anything |
-| `setup.py` → `cmdclass`, subprocess calls | Runs on `pip install` |
-| `pyproject.toml` → custom build backend, build hooks | Same |
-| `install.sh`, Makefile install targets | Check for `curl … \| bash` |
-| `Dockerfile` → `RUN curl … \| sh`, `ADD <url>` | Unpinned remote fetch into the image |
-| `.github/workflows/*` → `pull_request_target` + checkout of PR head | Privileged-context RCE |
-| `.github/workflows/*` → `${{ github.event.* }}` inside `run:` | Script injection via PR title or branch name |
-| `.npmrc`, `pip.conf` | Registry redirection away from the default index |
+Static tools do not understand intent. Read the files that can execute automatically:
 
----
+- `package.json`: `preinstall`, `install`, `postinstall`, `prepare`.
+- `setup.py`: `cmdclass`, subprocess/network calls.
+- `pyproject.toml`: custom build backends/hooks.
+- `install.sh`, PowerShell installers, Makefile install targets.
+- Dockerfiles: remote fetch + execute, unpinned artifacts.
+- `.github/workflows/*`: `pull_request_target`, untrusted checkouts, event data interpolated into `run:`.
+- `.npmrc`, `pip.conf`, registry mirrors.
+- MCP manifests and agent instructions that request broad filesystem/network/secrets access.
+- Browser automation or financial integrations that can perform real external actions.
 
-## Reading the results
+## Hidden text and prompt injection
 
-Findings are evidence, not verdicts. Large healthy repos routinely produce dozens of hits.
+The Guardian treats these as review signals:
 
-**Usually noise:**
-- Secrets in `test/`, `fixtures/`, `examples/` that are obviously dummy values
-- CVEs in dev-only or docs-build dependencies
-- Semgrep hits inside vendored third-party trees
-- Unpinned GitHub Actions in a repo you are not contributing to
+- bidi overrides and zero-width control characters in source/instruction files;
+- text attempting to override system/developer/user instructions;
+- instructions asking an agent to reveal secrets/system prompts;
+- instructions that try to disable approval/safety/security gates.
 
-**Usually real:**
-- Any install-time script fetching from a URL
-- A high-entropy secret in application source
-- `pull_request_target` combined with untrusted checkout
-- A critical CVE in a runtime dependency with no fix available
-- Any canonical-name mismatch
+These heuristics can false-positive in security test fixtures or blocklists. Open every finding and read the surrounding context.
 
-Judge each finding against *your* use. A CVE in a code path you never call is not the same as
-one in the entry point.
+## SQL injection review
 
----
+A string containing SQL is not automatically unsafe. Distinguish:
+
+**Safer:**
+
+```text
+SELECT ... WHERE id = $1
+```
+
+with user input passed through a bound parameter.
+
+**Review/unsafe shape:**
+
+```text
+"SELECT ... WHERE id = " + user_input
+f"SELECT ... WHERE id = {user_input}"
+```
+
+Guardian/Semgrep findings are evidence for inspection, not an automatic guilty verdict.
+
+## New repo intake rule
+
+Every new catalog repo should receive an immediate deep source scan. The workflow detects newly added `owner/repo` lines in `repo-lists/*.txt` and deep-scans those additions during the same GitHub Actions run.
+
+A new repo is not “trusted because it is in the file.” It becomes usable only after its security/lifecycle/license findings are acceptable.
+
+## Removal and managed adoption
+
+A repo can become a removal candidate because it is deleted, disabled, lifecycle-expired, explicitly sunset, or has a confirmed CRITICAL finding.
+
+Before preserving useful code as a Charles-managed replacement:
+
+1. deep-scan the source;
+2. resolve all HIGH/CRITICAL findings;
+3. verify license/NOTICE/attribution obligations;
+4. identify only the useful components;
+5. modernize dependencies, tests, CI, and security controls;
+6. re-scan the maintained version;
+7. add it back only through an owner-approved PR.
+
+Automation may create a managed-adoption **candidate note**, but it must not silently copy/fork third-party source code.
+
+## Windows
+
+For full scanning, prefer WSL on an ext4 filesystem. Semgrep and Unix security tooling generally work more reliably there than against deep Windows trees under `/mnt/c`.
+
+The Python-only `scripts/static_audit.py` remains useful when external scanners are unavailable, but the owner-approved GitHub workflow is the preferred reproducible scan path.
 
 ## Verdict format
 
-Record every candidate, including rejections — otherwise the same bad candidate gets
-re-proposed in six months.
+Record a concise decision:
 
+```text
+REPO: owner/name
+VERDICT: PASS | PASS-WITH-NOTE | REVIEW | REJECT | REFERENCE
+LICENSE: SPDX/custom status
+ACTIVITY: pushed_at + lifecycle status
+ARCHIVE/EOL: yes/no + successor if any
+FINDINGS: hidden/prompt/sql/command/secrets/malware/dependencies
+REASON: decisive explanation
 ```
-REPO:     owner/name
-VERDICT:  PASS | PASS-WITH-NOTE | REJECT
-LICENSE:  SPDX id, plus non-commercial or copyleft terms
-ACTIVITY: last push date
-FINDINGS: gitleaks N | trivy N | osv N | semgrep N | install-time hooks N
-REASON:   one decisive line
-```
-
-Re-audit on major version bumps. A repo that passed at v1.2 is not a repo that passed at v2.0.
-
----
 
 ## Limits
 
-A clean scan is the absence of evidence from four specific tools. It is not proof of safety.
-None of this detects a deliberate backdoor written to look like ordinary code, and none of it
-substitutes for reading what you are about to install.
+No combination of static scanners can prove third-party software safe. Deliberate backdoors can look like ordinary code, dependency compromise can happen after a prior pass, and a clean source tree can still be dangerous when granted broad credentials or network access.
 
-## Stage B without installing scanners
-
-`scripts/static_audit.py` runs the four checks that actually gate this catalog, using
-only the Python standard library — no gitleaks/Trivy/Semgrep download, no network:
-
-```bash
-mkdir -p /tmp/vet && cd /tmp/vet
-git clone --depth 1 https://github.com/OWNER/NAME.git OWNER_NAME
-python scripts/static_audit.py /tmp/vet
-```
-
-| Class | Blocking? | What it catches |
-| --- | --- | --- |
-| hidden unicode | yes | zero-width, bidi override, Unicode tag chars, soft hyphen in **source** paths |
-| unsafe pr_target | yes | `pull_request_target` that checks out `pull_request.head` — runs fork code with write tokens |
-| hidden (fixture) | no | the same characters under `tests/`, `fixtures/`, `testdata/` |
-| sql injection | no | queries built by concatenation, f-string, or `.format()` |
-| fetch-and-exec | no | `curl … \| sh`, `iwr … \| iex` |
-| install hooks | no | npm lifecycle, `setup.py`/`pyproject` build hooks |
-| malware fixtures | no | paths that look like a shipped malware corpus |
-
-A non-zero count is not a verdict. **Open every finding and read it.** Only the two
-blocking classes stop a repo automatically, and even those get a human look.
-
-### Known false-positive shapes
-
-Recorded from real runs so they are not re-litigated each time:
-
-- **Parameterised SQL with a constant interpolated.** `f"SELECT {COLS} FROM t WHERE id = ANY($1)"`
-  is safe — user data goes through `$1`. The scanner skips a match when a bound-parameter
-  marker (`?`, `$1`, `%s`, `:name`) sits nearby.
-- **`U+200D` between emoji.** That is a ZWJ sequence rendering one glyph, not concealment.
-  Only counted when neither neighbour is pictographic.
-- **Hidden characters in test fixtures.** A repo that ships invisible-character samples is
-  usually testing its own detector. Reported in a separate bucket, never blocking.
-- **Dangerous strings in blocklists.** `"wget * | sh"` inside a `DANGEROUS_COMMANDS` set is
-  a control, not a call. Always read the surrounding lines.
-- **`curl … | sh` in README/Dockerfile.** Install documentation, not repo behaviour. What
-  matters is whether *your* install path executes it.
-- **English prose.** "update", "delete" in a sentence are not SQL. The keyword must be
-  followed by real SQL syntax to match.
-
-### Two things that are always checked by hand
-
-1. **Canonical name.** Ask the API for the repo and compare `full_name` to what you typed.
-   A mismatch means the project moved org — as `chopratejas/headroom` →
-   `headroomlabs-ai/headroom` did. Update the slug. A stale slug is a live supply-chain
-   hole: abandoned org names can be re-registered by anyone.
-2. **Licence.** `NOASSERTION` means GitHub could not identify one. Read the LICENSE file
-   before use; no licence means no permission.
+Use least privilege, pin versions when appropriate, keep secrets scoped, re-audit major version changes, and keep Charles's approval gate in front of catalog removals/adoptions and protected-`main` changes.
