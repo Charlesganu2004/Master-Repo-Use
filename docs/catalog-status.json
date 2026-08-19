@@ -1,0 +1,72 @@
+{
+  "updated": "2026-08-19 seeded lifecycle review — full Catalog Guardian scan pending",
+  "scope": "Seeded status so the interactive page works immediately. The next owner-approved/local Catalog Guardian run replaces this with the full catalog snapshot.",
+  "policy": {
+    "stale_after_days": 120,
+    "adoption_review_days": 270,
+    "remove_stale_after_days": 365,
+    "archive_grace_days": 30
+  },
+  "counts": {
+    "HEALTHY": "pending",
+    "STALE": "pending",
+    "REVIEW": 6,
+    "REMOVE": 0
+  },
+  "repos": [
+    {
+      "repo": "FlowiseAI/Flowise",
+      "status": "REVIEW",
+      "age_days": 6,
+      "archived": true,
+      "deep_scanned": false,
+      "adoption_candidate": true,
+      "note": "Recent final/transition activity but upstream is officially archived/sunset; keep as transition/reference pending successor or owner-approved managed plan."
+    },
+    {
+      "repo": "YuhaoLin2005/compact-counter-concept",
+      "status": "REVIEW",
+      "age_days": 48,
+      "archived": true,
+      "deep_scanned": false,
+      "adoption_candidate": false,
+      "note": "Archived recent research utility; retained as reference-only."
+    },
+    {
+      "repo": "ZongqianLi/Prompt-Compression-Survey",
+      "status": "REVIEW",
+      "age_days": 458,
+      "archived": false,
+      "deep_scanned": false,
+      "adoption_candidate": false,
+      "note": "Static academic survey retained as reference; no repository license detected, so do not copy/fork without permission."
+    },
+    {
+      "repo": "qiskit-community/ibm-quantum-challenge-fall-2021",
+      "status": "REVIEW",
+      "age_days": 551,
+      "archived": false,
+      "deep_scanned": false,
+      "adoption_candidate": false,
+      "note": "Historical educational challenge retained as reference-only."
+    },
+    {
+      "repo": "vision-x-nyu/thinking-in-space",
+      "status": "REVIEW",
+      "age_days": 379,
+      "archived": false,
+      "deep_scanned": false,
+      "adoption_candidate": false,
+      "note": "Research/evaluation artifact retained as reference-only."
+    },
+    {
+      "repo": "wentaoyuan/RoboPoint",
+      "status": "REVIEW",
+      "age_days": 398,
+      "archived": false,
+      "deep_scanned": false,
+      "adoption_candidate": false,
+      "note": "Research artifact retained as reference-only."
+    }
+  ]
+}
