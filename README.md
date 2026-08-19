@@ -8,13 +8,20 @@ The Master Repo is the shared **catalog + instructions + security/vetting layer*
 
 ## Live catalog health
 
-![Master Repo live catalog health](docs/catalog-status.svg)
+Once GitHub Pages is enabled, this visual refreshes every six hours without committing generated status changes to `main`:
 
-- Full status: [docs/CATALOG-STATUS.md](docs/CATALOG-STATUS.md)
-- Latest in-depth stale/archive review: [docs/LIFECYCLE-REVIEW-2026-08-19.md](docs/LIFECYCLE-REVIEW-2026-08-19.md)
-- Managed-repo policy: [managed-repos/README.md](managed-repos/README.md)
+![Master Repo live catalog health](https://charlesganu2004.github.io/Master-Repo-Use/docs/catalog-status.svg)
 
-The visual is refreshed whenever Catalog Guardian is run and its owner-reviewed update is accepted. **There is no recurring AI/model maintenance loop and no six-hour scheduled Guardian job by default.** This avoids background model/API spend and recurring private-repo Actions usage.
+Until Pages is enabled, use the committed snapshot at [docs/catalog-status.svg](docs/catalog-status.svg).
+
+Detailed private status remains in:
+
+- [docs/CATALOG-STATUS.md](docs/CATALOG-STATUS.md)
+- [docs/catalog-status.json](docs/catalog-status.json)
+- [docs/LIFECYCLE-REVIEW-2026-08-19.md](docs/LIFECYCLE-REVIEW-2026-08-19.md)
+- [managed-repos/README.md](managed-repos/README.md)
+
+The public Pages artifact exposes **health counts only**, not the private repo-by-repo catalog JSON. Local mode shows the complete table.
 
 Lifecycle rules:
 
@@ -22,9 +29,11 @@ Lifecycle rules:
 - 🟡 **121–269 days:** stale warning.
 - 🟠 **270–365 days:** replacement / managed-adoption review.
 - 🔴 **>365 days:** remove from the active/runtime catalog unless an owner-approved reference/stability exception applies.
-- **Archived + recent activity:** review the reason, releases, sunset/EOL notice, and successor before deciding.
+- **Archived + recent activity:** review releases, archive reason, sunset/EOL notice, successor, security, and reference value before deciding.
 - **Static research/reference repos:** may receive a `reference` override when inactivity is expected.
 - **Deleted/disabled or confirmed CRITICAL security finding:** immediate removal candidate.
+
+A 3–4 month stale warning is intentional: it catches fast-moving AI tooling early without deleting useful software merely because it had a quiet quarter.
 
 ## Start here
 
@@ -57,7 +66,7 @@ repo_path="$HOME/Master-Repo-Use"; gh repo clone Charlesganu2004/Master-Repo-Use
 
 ## Global AI setup
 
-The global bootstrap installs a small instruction/pointer layer. It **does not install the entire third-party catalog into every machine or prompt**.
+The global bootstrap installs a small instruction/pointer layer. It **does not install the entire third-party catalog into every machine or every prompt**.
 
 ### Windows one-liner
 
@@ -76,7 +85,7 @@ The bootstrap configures:
 - **GitHub Copilot CLI:** global/user instructions + `COPILOT_CUSTOM_INSTRUCTIONS_DIRS`.
 - **Claude Code:** `~/.claude/CLAUDE.md` pointer + repo `CLAUDE.md`.
 - **Codex:** `~/.codex/AGENTS.md` pointer + repo `AGENTS.md`.
-- **Monthly-on-next-use maintenance request:** clients run `scripts/maintenance_request.py --auto` when they already have an active Master Repo-aware session. It may create one GitHub review issue, then stops until you approve.
+- **Optional AI maintenance request:** `scripts/maintenance_request.py --auto` can create one owner-approval prompt when a task genuinely needs model judgment.
 - **Global watermark command:** `master-watermark` on Bash platforms or `$HOME\bin\master-watermark.ps1` on Windows. The upstream tool is installed on first use, not during bootstrap.
 - Existing personal instruction files are preserved; only the marked Master Repo block is managed.
 
@@ -88,13 +97,13 @@ Full guide: [docs/GLOBAL-AI-SETUP.md](docs/GLOBAL-AI-SETUP.md).
 
 The repository includes `.github/copilot-instructions.md`, so repo-aware Copilot sessions receive the Master Repo rules automatically.
 
-PowerShell one-liner:
+PowerShell:
 
 ```powershell
 $p="$HOME\Master-Repo-Use"; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -CopilotOnly
 ```
 
-Bash one-liner:
+Bash:
 
 ```bash
 bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --copilot-only
@@ -132,43 +141,89 @@ Open:
 http://localhost:8080/
 ```
 
-The page can also be opened directly as `index.html`; live JSON health refresh works best through HTTP.
+Local mode can display the full private repo-by-repo health table.
 
 ### GitHub Pages mode
 
-`.github/workflows/pages.yml` deploys `index.html` from approved `main` commits. One time: **Settings → Pages → Source → GitHub Actions**. Private-repo Pages availability depends on your GitHub plan; local mode works regardless.
+`.github/workflows/pages.yml` builds the command center from approved `main` and refreshes its health-count visual every six hours.
 
-## Approval-driven AI maintenance — no background model spend
+**One-time owner action:** open **Settings → Pages** and set **Source → GitHub Actions**.
 
-The Master Repo does not continuously call GPT, Claude, Copilot, or Codex.
+After that, deploy immediately with:
 
-Instead, the first supported AI session after the 30-day review interval runs:
+```bash
+gh workflow run pages.yml -R Charlesganu2004/Master-Repo-Use
+```
+
+The workflow now checks whether Pages is enabled before calling the Pages deployment actions. Until the one-time setting is enabled it exits successfully with a warning and skips deployment instead of repeatedly failing.
+
+GitHub Pro allows Pages to use a private source repository, but a normal personal GitHub Pages site is public. For that reason this workflow publishes only `index.html` plus a sanitized count-only status payload/SVG. It does **not** publish the private catalog or detailed findings.
+
+## GitHub Pro automatic audit — no paid AI background loop
+
+GitHub Actions now handles the routine maintenance checks. GPT, Claude, Copilot, and Codex are **not** called in the background.
+
+`.github/workflows/catalog-guardian.yml` runs:
+
+- weekly;
+- whenever catalog/security lifecycle files change;
+- when you manually dispatch it.
+
+The normal audit is metadata-only, so it stays lightweight. A newly added repo is immediately source-scanned. Existing expensive deep scans wait for your explicit approval.
+
+Run an audit now:
+
+```bash
+gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use
+```
+
+If anything needs attention, the workflow creates or refreshes one `[Catalog Audit]` GitHub issue as an audit trail. It does **not** change `main`.
+
+### Approve deterministic maintenance
+
+Comment this exact phrase on the open audit issue:
+
+```text
+APPROVE CATALOG MAINTENANCE
+```
+
+That owner comment triggers GitHub Actions to:
+
+1. deep-scan the rotating batch and every current REVIEW/REMOVE candidate;
+2. re-evaluate stale/archive/security state;
+3. prepare removal/replacement/managed-adoption changes on `automation/catalog-guardian`;
+4. open or refresh a PR;
+5. close the audit issue with a link to the PR.
+
+It still **does not merge `main`**.
+
+One-time setting required for automatic PR creation: **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests**. This permission lets the bot create the PR; it does not bypass your branch/Code Owner approval policy.
+
+### Optional AI maintenance only when judgment is needed
+
+For work that deterministic scanners cannot do safely—such as deciding how to modernize useful abandoned code—use:
 
 ```bash
 python scripts/maintenance_request.py --auto
 ```
 
-If a review is due and no `[AI Maintenance]` issue is open, it creates one issue containing the complete maintenance prompt and assigns it to `Charlesganu2004`. The AI must stop there.
-
-To approve the review, use the exact phrase:
+That creates an `[AI Maintenance]` request and stops. Approve model-assisted work with:
 
 ```text
 APPROVE AI MAINTENANCE
 ```
 
-After approval, the AI may deep-review the catalog, prepare a branch, and open a PR. It still **must not merge `main` without your approval**.
+The AI may then work in the active session and prepare a branch/PR. It still may not merge `main` without your approval.
 
-Useful commands:
+## GitHub Pro usage controls
 
-```bash
-python scripts/maintenance_request.py --check
-python scripts/maintenance_request.py --auto
-python scripts/maintenance_request.py --generate
-```
+The recurring workflows are intentionally small:
 
-Full guide: [docs/AI-MAINTENANCE.md](docs/AI-MAINTENANCE.md).
+- Pages: lightweight metadata refresh + static deployment.
+- Catalog Guardian: weekly metadata audit; deep scanning only for new repos or owner-approved maintenance.
+- No recurring model/API calls.
 
-`.github/workflows/catalog-guardian.yml` is manual-only. For zero Actions usage, run Guardian locally.
+Use GitHub **Billing & licensing / Budgets and alerts** to set an Actions budget/alerts if you want a hard financial guardrail in addition to the included GitHub Pro usage.
 
 ## How to use the Master Repo
 
@@ -194,7 +249,7 @@ Full guide: [docs/AI-MAINTENANCE.md](docs/AI-MAINTENANCE.md).
 
 A catalog repo is not automatically a native plugin for every client. The preferred compatibility order is **MCP → skill/plugin/instructions → CLI/API wrapper → direct library**.
 
-Browser-hosted ChatGPT/Claude/Copilot cannot be forced by a shell script to execute every private-repo tool globally. Connect/select this repo so they can use the committed instructions and maintenance issue workflow.
+Browser-hosted ChatGPT/Claude/Copilot cannot be forced by a shell script to execute every private-repo tool globally. Connect/select this repo so they can use the committed instructions and approved maintenance workflow.
 
 ## Core cross-agent additions
 
@@ -238,7 +293,7 @@ After the global setup:
 master-watermark INPUT_FILE OUTPUT_FOLDER
 ```
 
-On Windows you can also call:
+Windows:
 
 ```powershell
 & "$HOME\bin\master-watermark.ps1" INPUT_FILE OUTPUT_FOLDER
@@ -256,36 +311,37 @@ It covers context/output limits, work budgets, soft/hard caps, compression, and 
 
 Guardian: [scripts/catalog_guardian.py](scripts/catalog_guardian.py)
 
-It checks for:
+The built-in source scanner checks for:
 
 - Unicode bidirectional/invisible controls and hidden-text patterns;
 - prompt/instruction injection indicators in agent/MCP content;
 - suspicious download-and-execute, encoded PowerShell, base64/dynamic execution, and credential-exfiltration patterns;
 - SQL-injection-style dynamic query construction and command-injection patterns;
 - private keys/secrets;
-- embedded PE/ELF executables and suspicious install behavior;
-- repository deleted/disabled/archive/freshness state;
-- external scanner findings when the tools are installed.
+- embedded PE/ELF executables;
+- repository deleted/disabled/archive/freshness state.
 
-The security catalog includes Snyk CLI, Trivy, Semgrep, OpenGrep, OSV Scanner, Gitleaks, TruffleHog, Cisco AI Defense MCP Scanner, OSSF Scorecard, Syft, Cosign, and Garak. Guardian can also use ClamAV when installed.
+When installed, Guardian can additionally consume Semgrep, Snyk CLI, Trivy, OSV Scanner, Gitleaks, and ClamAV findings. The security catalog also includes OpenGrep, TruffleHog, Cisco AI Defense MCP Scanner, OSSF Scorecard, Syft, Cosign, and Garak.
 
-Static scanners reduce risk but do not prove third-party code is safe. HIGH findings require review; confirmed CRITICAL findings are removal candidates.
+Static scanners reduce risk but cannot prove third-party code is safe. HIGH findings require review; confirmed CRITICAL findings are removal candidates.
 
-New and flagged repos should be deep-vetted before use. See [docs/SECURITY-SCANNING.md](docs/SECURITY-SCANNING.md) and [docs/NEW-REPO-VETTING.md](docs/NEW-REPO-VETTING.md).
+The scanner preserves the latest expensive deep-scan state during lightweight metadata refreshes instead of erasing previous findings.
 
-## Stale/archive decisions from the current review
+See [docs/SECURITY-SCANNING.md](docs/SECURITY-SCANNING.md) and [docs/NEW-REPO-VETTING.md](docs/NEW-REPO-VETTING.md).
 
-The 2026-08-19 in-depth review made these important changes:
+## Current stale/archive decisions
 
-- `qiskit-community/qiskit-optimization` → replaced with `Qiskit/qiskit-addon-opt-mapper` because the upstream project is archived/unsupported despite recent code activity.
-- `tastytrade/tastytrade-sdk-python` → removed from the active lane because upstream explicitly archived it; `tastyware/tastytrade` remains as an active unofficial Python alternative.
+The 2026-08-19 in-depth review made these changes:
+
+- `qiskit-community/qiskit-optimization` → `Qiskit/qiskit-addon-opt-mapper`.
+- `tastytrade/tastytrade-sdk-python` → removed from active lane; `tastyware/tastytrade` remains as the current Python alternative in this catalog.
 - `aarora79/aws-cost-explorer-mcp-server` → replaced by active `awslabs/mcp` billing/cost-management tooling.
-- `alexgolec/schwab-py` → removed in favor of active `tylerebowers/Schwabdev`.
-- `financial-datasets/mcp-server` → active-list removal + managed-adoption candidate.
-- `nerfstudio-project/nerfstudio` → active-list removal + managed-adoption candidate; active 3D alternatives remain cataloged.
-- `oyi77/Crypto-RL-Trading-Bot` → removed; no license was detected, so it is not a managed-adoption candidate.
-- `FlowiseAI/Flowise` → retained only as transition/reference material because 3.1.4/recent activity does not cancel the explicit archive/sunset state.
-- Prompt Compression Survey, IBM Quantum Challenge 2021, VSI-Bench `thinking-in-space`, RoboPoint, and compact-counter are retained as reference-only artifacts where appropriate.
+- `alexgolec/schwab-py` → removed in favor of `tylerebowers/Schwabdev`.
+- `financial-datasets/mcp-server` → active-list removal + managed-adoption review.
+- `nerfstudio-project/nerfstudio` → active-list removal + managed-adoption review; active 3D alternatives remain cataloged.
+- `oyi77/Crypto-RL-Trading-Bot` → removed; no detected license means no automatic managed adoption.
+- `FlowiseAI/Flowise` → retained temporarily as transition/reference material. Recent `3.1.4` activity is recorded, but the project’s explicit archive/sunset state means it is not treated as a newly maintained dependency.
+- Prompt Compression Survey, IBM Quantum Challenge 2021, VSI-Bench `thinking-in-space`, RoboPoint, and compact-counter remain reference-only where appropriate.
 
 Details: [docs/LIFECYCLE-REVIEW-2026-08-19.md](docs/LIFECYCLE-REVIEW-2026-08-19.md).
 
@@ -300,20 +356,20 @@ git switch main && git pull --ff-only origin main
 Contributors work on branches and PRs. The repo includes:
 
 - `.github/CODEOWNERS` — `@Charlesganu2004` owns all files.
-- `.github/workflows/owner-approval.yml` — checks for Charles's PR approval.
+- `.github/workflows/owner-approval.yml` — checks for Charles’s PR approval.
+- `scripts/branch-protection.json` — one-command GitHub server protection policy.
 
-One-time GitHub server settings for `main`:
+### One-line branch protection setup
 
-1. Require a pull request before merging.
-2. Require at least 1 approval.
-3. Require review from Code Owners.
-4. Require **Owner Approval Check / owner-approval**.
-5. Dismiss stale approvals when new commits arrive.
-6. Require conversation resolution.
-7. Block force pushes and branch deletion.
-8. Restrict bypass/direct updates to `Charlesganu2004` only when necessary.
+Run once after cloning and authenticating `gh` as the repo owner:
 
-Those GitHub branch/ruleset settings are required for server-side enforcement; repository files alone cannot block an authorized direct push.
+```bash
+gh api --method PUT -H "Accept: application/vnd.github+json" repos/Charlesganu2004/Master-Repo-Use/branches/main/protection --input "$HOME/Master-Repo-Use/scripts/branch-protection.json"
+```
+
+This requires PR review, requires Code Owner review, dismisses stale approvals, requires conversation resolution, and blocks force-push/deletion. `enforce_admins` is left off so the repository owner retains an emergency bypass.
+
+The repository-side files alone cannot protect a branch; this GitHub server setting must be enabled once.
 
 ## Repo map
 
@@ -323,16 +379,16 @@ Those GitHub branch/ruleset settings are required for server-side enforcement; r
 | `CLAUDE.md` | Claude Code entrypoint |
 | `.github/copilot-instructions.md` | GitHub Copilot repo instructions |
 | `.github/CODEOWNERS` | owner review ownership |
-| `.github/workflows/catalog-guardian.yml` | manual owner-requested guardian PR workflow |
-| `.github/workflows/pages.yml` | interactive command-center deployment |
-| `.github/workflows/owner-approval.yml` | PR owner-approval gate |
+| `.github/workflows/catalog-guardian.yml` | weekly/on-change audit + owner-comment maintenance workflow |
+| `.github/workflows/pages.yml` | six-hour privacy-safe interactive deployment/status refresh |
+| `.github/workflows/owner-approval.yml` | PR owner-approval check |
 | `agents/` | specialist agents |
 | `docs/` | setup, security, vetting, lifecycle, status, integration guides |
 | `repo-lists/` | curated repositories grouped by lane |
 | `managed-repos/` | candidate plans for owner-maintained replacements |
 | `skills/` | portable skills/workflows |
 | `plugins/` | plugin packages/docs |
-| `scripts/` | setup, maintenance request, auditing, guardian helpers |
+| `scripts/` | setup, maintenance, auditing, guardian, branch-protection helpers |
 | `index.html` | click-to-copy interactive command center |
 | `quantum/` | quantum-computing lane |
 | `cost-reduction/` | cloud/token/cost lane |
@@ -341,8 +397,8 @@ Those GitHub branch/ruleset settings are required for server-side enforcement; r
 
 ```bash
 git -C "$HOME/Master-Repo-Use" pull --ff-only
+python "$HOME/Master-Repo-Use/scripts/catalog_guardian.py"
 python "$HOME/Master-Repo-Use/scripts/maintenance_request.py" --check
-python "$HOME/Master-Repo-Use/scripts/check_freshness.py"
 ```
 
 After major instruction changes, rerun the global setup script so copied user-level instruction blocks are refreshed.
