@@ -29,6 +29,7 @@ function Set-MasterRepoBlock {
 $common = @"
 Master Repo path: $RepoPath
 Use $RepoPath\AGENTS.md as the canonical portable contract. For tasks that may benefit from an agent framework, RAG, memory, MCP, observability, security, cloud/cost, quantum, Copilot, or another cataloged tool, search the Master Repo first and load only the relevant lane. Do not load the entire catalog into context. Follow its vetting, health, and security gates before installing or executing third-party code.
+When shell access and authenticated gh are available, run `python "$RepoPath\scripts\maintenance_request.py" --auto` once near the start of a Master Repo-aware session. This only creates/checks the monthly-on-next-use maintenance request; do not perform maintenance until Charles states `APPROVE AI MAINTENANCE`. Never merge main without Charles approval. Do not schedule background model maintenance calls.
 "@
 
 if (-not $CopilotOnly) {
@@ -74,4 +75,5 @@ Write-Host "Repo: $RepoPath"
 Write-Host "Copilot: $HOME\.copilot\copilot-instructions.md"
 if (-not $CopilotOnly) { Write-Host "Claude: $HOME\.claude\CLAUDE.md | Codex: $HOME\.codex\AGENTS.md" }
 Write-Host "Watermark command: & '$bin\master-watermark.ps1' <input> <output-folder>"
+Write-Host "Maintenance request: python '$RepoPath\scripts\maintenance_request.py' --auto"
 Write-Host "Token budget remains opt-in: $RepoPath\docs\TOKEN-BUDGET.md"
