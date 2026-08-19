@@ -17,6 +17,7 @@ TradingGoose/TradingGoose.github.io
 marcozanetti-dev/intraday-mean-reversion-costs-aware
 ebrahimpichka/DeepRL-trade
 RezaSoleymanifar/neuralHFT
-oyi77/Crypto-RL-Trading-Bot
 fsaavedra0003/Agentic-AI-Trading-Bot-with-LLM-reasoning-sentiment-analysis
 padmarajkore/Ai-crypto-trading-system
+
+# oyi77/Crypto-RL-Trading-Bot removed after >365d without a push and no detected license.
