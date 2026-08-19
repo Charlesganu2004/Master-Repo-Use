@@ -5,7 +5,8 @@ on:
     branches: [main]
     paths:
       - 'index.html'
-      - 'assets/**'
+      - 'docs/catalog-status.json'
+      - 'docs/catalog-status.svg'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -19,17 +20,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Stage public site only
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf _site
+          mkdir -p _site/docs
+          cp index.html _site/index.html
+          touch _site/.nojekyll
+          if [[ -f docs/catalog-status.json ]]; then
+            cp docs/catalog-status.json _site/docs/catalog-status.json
+          else
+            printf '{"updated":"not generated yet","counts":{"HEALTHY":0,"STALE":0,"REVIEW":0,"REMOVE":0},"repos":[]}\n' > _site/docs/catalog-status.json
+          fi
+          if [[ -f docs/catalog-status.svg ]]; then
+            cp docs/catalog-status.svg _site/docs/catalog-status.svg
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
   deploy:
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
