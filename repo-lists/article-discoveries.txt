@@ -12,7 +12,7 @@ OpenBB-finance/OpenBB
 microsoft/autogen
 microsoft/ai-agents-for-beginners
 mem0ai/mem0
-FlowiseAI/Flowise
+FlowiseAI/Flowise  # sunset/archived transition reference; see lifecycle-overrides.json
 crewAIInc/crewAI
 mudler/LocalAI
 CherryHQ/cherry-studio
@@ -27,5 +27,5 @@ Yuchen20/Context-Crumb
 zzallirog/weighted-compact
 soolaugust/0CompactMem
 guorunjie/codex-relay-baton-guardian
-YuhaoLin2005/compact-counter-concept
+YuhaoLin2005/compact-counter-concept  # archived reference-only research utility
 RyanWeb31110/codex-thread-handoff
