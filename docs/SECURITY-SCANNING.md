@@ -174,7 +174,7 @@ Static tools do not understand intent. Read the files that can execute automatic
 - MCP manifests and agent instructions that request broad filesystem/network/secrets access.
 - Browser automation or financial integrations that can perform real external actions.
 
-For this repository's own `pull_request_target` owner gate, the workflow checks out the trusted default branch only and never checks out or executes PR-head code.
+For this repository's own `pull_request_target` owner gate, the workflow checks out the trusted default branch only and never checks out or executes PR-head code. The status writer is intentionally minimal (`statuses:write`) and approval is evaluated from GitHub API identity + current head SHA.
 
 ## Hidden text and prompt injection
 
