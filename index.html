@@ -4,103 +4,208 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>Master Repo Use — Interactive Command Center</title>
+<meta name="theme-color" content="#080b13">
+<title>Master Repo Use — Command Center</title>
 <style>
-:root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--text:#c9d1d9;--muted:#8b949e;--blue:#58a6ff;--green:#3fb950;--yellow:#d29922;--orange:#f0883e;--red:#f85149;--purple:#bc8cff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}.wrap{max-width:1180px;margin:auto;padding:22px}.head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:16px}h1{margin:0;color:#f0f6fc;font-size:24px}.muted{color:var(--muted)}.actions,.tabs,.links{display:flex;gap:8px;flex-wrap:wrap}.btn,.tab{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:7px;padding:8px 11px;text-decoration:none;cursor:pointer}.btn:hover,.tab:hover,.tab.active{border-color:var(--blue)}.tab.active{background:#1f6feb;color:white}.tabs{margin:18px 0}.view{display:none}.view.active{display:block}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}.card{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:14px}.card h3{margin:0 0 6px;color:#f0f6fc}.tag{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:2px 7px;margin-bottom:8px;font-size:11px}.tag.green{color:var(--green)}.tag.yellow{color:var(--yellow)}.tag.purple{color:var(--purple)}.cmd{position:relative;background:#010409;border:1px solid var(--line);border-radius:7px;padding:11px 76px 11px 11px;white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer;min-height:44px}.copy{position:absolute;right:7px;top:7px;border:1px solid var(--line);background:#21262d;color:var(--text);border-radius:6px;padding:5px 9px;cursor:pointer}.statusbar{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:8px;margin:18px 0}.status{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:10px}.status strong{display:block;font-size:16px;color:#f0f6fc}.notice{border-left:4px solid var(--yellow);background:#2d260e;padding:10px 12px;border-radius:6px;margin-bottom:12px}.ok{border-left-color:var(--green);background:#0d2818}.health{width:100%;border-collapse:collapse;font-size:12px;background:var(--panel)}.health th,.health td{border:1px solid var(--line);padding:7px;text-align:left;vertical-align:top}.HEALTHY{color:var(--green)}.STALE{color:var(--yellow)}.REVIEW{color:var(--orange)}.REMOVE{color:var(--red)}a{color:var(--blue)}footer{margin-top:22px;color:var(--muted);font-size:12px}@media(max-width:800px){.statusbar{grid-template-columns:1fr 1fr}.statusbar .status:first-child{grid-column:1/-1}}@media(max-width:520px){.statusbar,.grid{grid-template-columns:1fr}.statusbar .status:first-child{grid-column:auto}}
+:root{
+  --bg:#070a12;--bg2:#0b1020;--panel:rgba(17,24,39,.72);--panel-solid:#111827;--panel2:#151d2e;
+  --line:rgba(148,163,184,.16);--line-strong:rgba(148,163,184,.28);--text:#eef2ff;--muted:#94a3b8;
+  --blue:#60a5fa;--cyan:#22d3ee;--green:#34d399;--yellow:#fbbf24;--orange:#fb923c;--red:#fb7185;--purple:#a78bfa;
+  --shadow:0 24px 70px rgba(0,0,0,.34);--radius:18px;--radius-sm:12px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font:14px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-x:hidden}
+body:before,body:after{content:"";position:fixed;pointer-events:none;filter:blur(90px);opacity:.24;z-index:-2;border-radius:999px}
+body:before{width:520px;height:520px;background:#2563eb;top:-220px;left:-180px}
+body:after{width:480px;height:480px;background:#7c3aed;right:-180px;top:180px}
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:-3;background-image:linear-gradient(rgba(148,163,184,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.035) 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(to bottom,#000,transparent 78%)}
+a{color:var(--blue);text-decoration:none}a:hover{color:#93c5fd}
+button,input{font:inherit}
+button{color:inherit}
+.wrap{max-width:1440px;margin:auto;padding:28px 30px 40px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:13px;min-width:0}
+.logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-weight:900;letter-spacing:-.04em;background:linear-gradient(135deg,#2563eb,#7c3aed 58%,#22d3ee);box-shadow:0 12px 36px rgba(99,102,241,.32),inset 0 1px 0 rgba(255,255,255,.3)}
+.brand-copy{min-width:0}.brand-copy h1{font-size:18px;line-height:1.2;margin:0;font-weight:800;letter-spacing:-.02em}.brand-copy p{margin:3px 0 0;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+.mode-badge,.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:rgba(15,23,42,.72);border-radius:999px;padding:7px 10px;color:#cbd5e1;font-size:12px;backdrop-filter:blur(14px)}
+.mode-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 14px currentColor}
+.btn{border:1px solid var(--line);background:rgba(15,23,42,.78);color:#dbeafe;border-radius:11px;padding:9px 12px;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:.18s ease;backdrop-filter:blur(14px)}
+.btn:hover{transform:translateY(-1px);border-color:rgba(96,165,250,.5);background:rgba(30,41,59,.9);box-shadow:0 10px 26px rgba(0,0,0,.18)}
+.btn.primary{background:linear-gradient(135deg,#2563eb,#4f46e5);border-color:rgba(129,140,248,.55);color:#fff;box-shadow:0 8px 26px rgba(37,99,235,.24)}
+.hero{position:relative;border:1px solid var(--line);background:linear-gradient(135deg,rgba(15,23,42,.88),rgba(17,24,39,.64));border-radius:26px;padding:30px;overflow:hidden;box-shadow:var(--shadow);backdrop-filter:blur(20px)}
+.hero:after{content:"";position:absolute;width:360px;height:360px;border-radius:50%;right:-90px;top:-150px;background:radial-gradient(circle,rgba(34,211,238,.22),transparent 67%);pointer-events:none}
+.eyebrow{display:flex;align-items:center;gap:8px;color:#93c5fd;font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:10px;margin-bottom:11px}.pulse{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 0 0 rgba(52,211,153,.55);animation:pulse 2.4s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,.7fr);gap:28px;align-items:end}
+.hero h2{font-size:clamp(28px,4vw,50px);line-height:1.04;letter-spacing:-.045em;margin:0;max-width:820px}.grad{background:linear-gradient(90deg,#fff,#bfdbfe 42%,#c4b5fd 72%,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{color:#aebbd0;font-size:15px;max-width:760px;margin:14px 0 0}
+.hero-quick{display:grid;gap:9px;position:relative;z-index:1}.quick-row{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);background:rgba(2,6,23,.4);border-radius:13px;padding:11px 13px}.quick-row span:first-child{color:var(--muted);font-size:12px}.quick-row strong{font-size:12px;color:#e2e8f0;text-align:right}
+.dashboard{display:grid;grid-template-columns:minmax(240px,1.5fr) repeat(4,minmax(120px,.7fr));gap:12px;margin:16px 0}
+.stat{position:relative;border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:15px 16px;overflow:hidden;backdrop-filter:blur(18px);transition:.18s ease}.stat:hover{transform:translateY(-2px);border-color:var(--line-strong)}.stat:after{content:"";position:absolute;inset:auto -20px -28px auto;width:80px;height:80px;border-radius:50%;background:currentColor;opacity:.055}.stat small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}.stat strong{display:block;font-size:24px;letter-spacing:-.04em;margin-top:4px}.stat.meta strong{font-size:14px;letter-spacing:0}.stat.meta span{display:block;color:var(--muted);font-size:12px;margin-top:3px}.HEALTHY{color:var(--green)}.STALE{color:var(--yellow)}.REVIEW{color:var(--orange)}.REMOVE{color:var(--red)}
+.commandbar{display:grid;grid-template-columns:minmax(230px,1fr) auto;gap:12px;align-items:center;margin:20px 0 14px}.search-wrap{position:relative}.search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:#64748b}.search{width:100%;height:43px;border:1px solid var(--line);background:rgba(15,23,42,.72);color:#e2e8f0;border-radius:13px;padding:0 44px 0 40px;outline:none;transition:.18s;backdrop-filter:blur(16px)}.search:focus{border-color:rgba(96,165,250,.55);box-shadow:0 0 0 3px rgba(59,130,246,.12)}.shortcut{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:1px solid var(--line);background:#0f172a;border-radius:7px;padding:2px 7px;color:#64748b;font-size:11px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px;border:1px solid var(--line);background:rgba(15,23,42,.62);border-radius:14px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{border:0;background:transparent;color:#94a3b8;border-radius:10px;padding:8px 11px;cursor:pointer;white-space:nowrap;transition:.16s}.tab:hover{color:#e2e8f0;background:rgba(51,65,85,.42)}.tab.active{color:#fff;background:linear-gradient(135deg,rgba(37,99,235,.88),rgba(79,70,229,.88));box-shadow:0 5px 18px rgba(37,99,235,.18)}
+.view{display:none;animation:fade .2s ease}.view.active{display:block}@keyframes fade{from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:none}}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:18px;margin:22px 2px 13px}.section-head h2{font-size:20px;margin:0;letter-spacing:-.025em}.section-head p{margin:3px 0 0;color:var(--muted);font-size:12px}.section-meta{color:#64748b;font-size:11px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}.card{grid-column:span 4;position:relative;border:1px solid var(--line);background:linear-gradient(145deg,rgba(17,24,39,.82),rgba(15,23,42,.7));border-radius:var(--radius);padding:17px;min-width:0;transition:.2s ease;backdrop-filter:blur(18px);overflow:hidden}.card:hover{transform:translateY(-3px);border-color:rgba(96,165,250,.34);box-shadow:0 18px 44px rgba(0,0,0,.22)}.card.wide{grid-column:span 6}.card.full{grid-column:1/-1}.card h3{font-size:14px;line-height:1.3;margin:3px 0 7px;color:#f8fafc}.card p{margin:0 0 12px}.card.hidden-search{display:none}.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.iconbox{flex:0 0 auto;width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:rgba(30,41,59,.7);display:grid;place-items:center;font-size:16px}.tag{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:3px 8px;margin-bottom:8px;font-size:10px;font-weight:700;letter-spacing:.03em;color:#cbd5e1;background:rgba(15,23,42,.56)}.tag.green{color:#6ee7b7;border-color:rgba(52,211,153,.22)}.tag.yellow{color:#fde68a;border-color:rgba(251,191,36,.25)}.tag.purple{color:#c4b5fd;border-color:rgba(167,139,250,.28)}.tag.blue{color:#93c5fd;border-color:rgba(96,165,250,.28)}
+.muted{color:var(--muted)}
+.cmd{position:relative;background:#060912;border:1px solid rgba(148,163,184,.18);border-radius:12px;padding:12px 78px 12px 12px;white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer;min-height:48px;font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;color:#dbeafe;transition:.16s}.cmd:hover,.cmd:focus{outline:none;border-color:rgba(96,165,250,.42);background:#080d18}.copy{position:absolute;right:7px;top:7px;border:1px solid var(--line);background:#151c2b;color:#cbd5e1;border-radius:8px;padding:6px 9px;cursor:pointer;font-size:11px;transition:.16s}.copy:hover{background:#1e293b;color:white}.copy.done{color:#6ee7b7;border-color:rgba(52,211,153,.35)}
+.card-link{display:inline-flex;align-items:center;gap:6px;margin-top:3px;font-weight:600;font-size:12px}.notice{border:1px solid rgba(251,191,36,.2);background:linear-gradient(90deg,rgba(120,53,15,.22),rgba(15,23,42,.64));padding:13px 15px;border-radius:14px;margin-bottom:12px;color:#dbe4f0}.notice.ok{border-color:rgba(52,211,153,.2);background:linear-gradient(90deg,rgba(6,78,59,.24),rgba(15,23,42,.64))}.notice strong{color:#f8fafc}
+.health-wrap{border:1px solid var(--line);border-radius:16px;overflow:auto;background:rgba(15,23,42,.64)}.health{width:100%;border-collapse:collapse;font-size:12px;min-width:760px}.health th{position:sticky;top:0;background:#111827;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;font-size:10px}.health th,.health td{border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}.health tr:last-child td{border-bottom:0}.health tbody tr:hover{background:rgba(51,65,85,.2)}
+.lifecycle{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}.life{border:1px solid var(--line);border-radius:13px;padding:11px 12px;background:rgba(15,23,42,.64)}.life b{display:block;font-size:12px}.life span{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.empty{display:none;text-align:center;border:1px dashed var(--line);border-radius:16px;padding:36px 16px;color:var(--muted);margin-top:12px}.empty.show{display:block}
+footer{margin-top:28px;border-top:1px solid var(--line);padding:18px 3px;color:#64748b;font-size:11px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.toast{position:fixed;right:20px;bottom:20px;border:1px solid rgba(52,211,153,.3);background:rgba(6,20,18,.94);color:#d1fae5;border-radius:12px;padding:11px 14px;box-shadow:var(--shadow);transform:translateY(30px);opacity:0;pointer-events:none;transition:.2s;z-index:10}.toast.show{transform:none;opacity:1}
+@media(max-width:1050px){.hero-grid{grid-template-columns:1fr}.dashboard{grid-template-columns:repeat(4,1fr)}.dashboard .meta{grid-column:1/-1}.card{grid-column:span 6}}
+@media(max-width:720px){.wrap{padding:18px 14px 30px}.topbar{align-items:flex-start}.top-actions{width:100%;justify-content:flex-start}.hero{padding:22px}.dashboard{grid-template-columns:1fr 1fr}.dashboard .meta{grid-column:1/-1}.commandbar{grid-template-columns:1fr}.tabs{width:100%}.card,.card.wide{grid-column:1/-1}.lifecycle{grid-template-columns:1fr 1fr}.section-head{align-items:flex-start;flex-direction:column}.hero h2{font-size:34px}}
+@media(max-width:430px){.dashboard{grid-template-columns:1fr}.dashboard .meta{grid-column:auto}.lifecycle{grid-template-columns:1fr}.top-actions .btn{flex:1}.brand-copy p{white-space:normal}.hero{border-radius:20px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
+<div class="bg-grid" aria-hidden="true"></div>
 <main class="wrap">
-<header class="head">
-  <div><h1>Master Repo Use</h1><div class="muted">Private catalog + shared AI instruction layer. Click any command box to copy the exact one-liner.</div></div>
-  <div class="actions">
-    <a class="btn" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use">Private repository ↗</a>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">MR</div>
+    <div class="brand-copy"><h1>Master Repo Use</h1><p>Private catalog · shared AI instructions · deterministic security guardian</p></div>
+  </div>
+  <div class="top-actions">
+    <span class="mode-badge" id="modeBadge"><span class="mode-dot"></span><span id="modeText">Loading mode…</span></span>
+    <a class="btn" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use">Repository ↗</a>
     <a class="btn" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/README.md">README ↗</a>
   </div>
 </header>
 
-<section class="statusbar" aria-label="Catalog health">
-  <div class="status"><strong id="updated">Catalog status</strong><span class="muted">Refreshed from GitHub metadata without paid AI calls.</span></div>
-  <div class="status"><strong id="healthy" class="HEALTHY">—</strong><span>Healthy</span></div>
-  <div class="status"><strong id="stale" class="STALE">—</strong><span>Stale</span></div>
-  <div class="status"><strong id="review" class="REVIEW">—</strong><span>Review</span></div>
-  <div class="status"><strong id="remove" class="REMOVE">—</strong><span>Remove</span></div>
-</section>
-
-<nav class="tabs" aria-label="Command-center sections">
-  <button class="tab active" data-view="setup">Setup</button>
-  <button class="tab" data-view="maintenance">Maintenance</button>
-  <button class="tab" data-view="tools">Tools</button>
-  <button class="tab" data-view="health">Health/Security</button>
-  <button class="tab" data-view="access">Access/Deploy</button>
-</nav>
-
-<section id="setup" class="view active">
-<div class="grid">
-  <article class="card"><span class="tag green">Windows</span><h3>Global Claude + Codex + Copilot setup</h3><p class="muted">Updates/clones the private Master Repo and installs shared instruction pointers.</p><div class="cmd" data-command>$p="$HOME\Master-Repo-Use"; if (Test-Path "$p\.git") { git -C $p pull --ff-only } else { gh repo clone Charlesganu2004/Master-Repo-Use $p }; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p<button class="copy">Copy</button></div></article>
-  <article class="card"><span class="tag green">Bash / WSL / macOS / Linux</span><h3>Global Claude + Codex + Copilot setup</h3><div class="cmd" data-command>p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull --ff-only; else gh repo clone Charlesganu2004/Master-Repo-Use "$p"; fi; bash "$p/scripts/setup-global-ai.sh" "$p"<button class="copy">Copy</button></div></article>
-  <article class="card"><span class="tag purple">Copilot</span><h3>Copilot-only — PowerShell</h3><div class="cmd" data-command>$p="$HOME\Master-Repo-Use"; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -CopilotOnly<button class="copy">Copy</button></div></article>
-  <article class="card"><span class="tag purple">Copilot</span><h3>Copilot-only — Bash</h3><div class="cmd" data-command>bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --copilot-only<button class="copy">Copy</button></div></article>
-  <article class="card"><span class="tag">Interactive local</span><h3>Launch locally — PowerShell</h3><div class="cmd" data-command>Set-Location "$HOME\Master-Repo-Use"; python -m http.server 8080<button class="copy">Copy</button></div><p class="muted">Then open http://localhost:8080/</p></article>
-  <article class="card"><span class="tag">Interactive local</span><h3>Launch locally — Bash</h3><div class="cmd" data-command>cd "$HOME/Master-Repo-Use" && python3 -m http.server 8080<button class="copy">Copy</button></div><p class="muted">Then open http://localhost:8080/</p></article>
-  <article class="card"><span class="tag yellow">Separate opt-in</span><h3>Token/work budget</h3><p class="muted">Not included in the large one-liners. Configure paid caps and compatible free/local fallback independently.</p><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TOKEN-BUDGET.md">Token budget guide ↗</a></article>
-  <article class="card"><span class="tag">Online</span><h3>GPT / Claude / GitHub online</h3><p class="muted">Connect/select the private repo. Hosted products cannot be forced by a shell script to execute every private tool globally.</p><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/GLOBAL-AI-SETUP.md">Online setup ↗</a></article>
-</div>
-</section>
-
-<section id="maintenance" class="view">
-  <div class="notice ok"><strong>Default maintenance uses GitHub, not paid AI:</strong> lightweight audits are automatic. The issue is the audit trail and approval gate. Your approval launches the deeper deterministic scanner and creates a PR; nothing merges automatically.</div>
-  <div class="grid">
-    <article class="card"><span class="tag green">GitHub Pro</span><h3>Run catalog audit now</h3><div class="cmd" data-command>gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use<button class="copy">Copy</button></div><p class="muted">The same lightweight audit also runs weekly and whenever catalog/security rules change.</p></article>
-    <article class="card"><h3>Open audit trail</h3><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/issues?q=is%3Aissue+%22%5BCatalog+Audit%5D%22">Catalog Audit issues ↗</a><p class="muted">An open audit is updated instead of creating duplicates.</p></article>
-    <article class="card"><span class="tag yellow">Owner gate</span><h3>Approve deterministic maintenance</h3><div class="cmd" data-command>APPROVE CATALOG MAINTENANCE<button class="copy">Copy</button></div><p class="muted">Comment this exact phrase on the open [Catalog Audit] issue. GitHub then deep-scans the rotating batch plus all REVIEW/REMOVE repos, proposes removals/adoptions, and opens a PR.</p></article>
-    <article class="card"><h3>Approve current audit — Bash</h3><div class="cmd" data-command>n=$(gh issue list -R Charlesganu2004/Master-Repo-Use --state open --search 'in:title [Catalog Audit]' --json number,title --jq '[.[] | select(.title | startswith("[Catalog Audit]"))][0].number'); gh issue comment "$n" -R Charlesganu2004/Master-Repo-Use --body 'APPROVE CATALOG MAINTENANCE'<button class="copy">Copy</button></div></article>
-    <article class="card"><h3>Optional AI modernization request</h3><p class="muted">Use only when the deterministic audit leaves a task that actually needs GPT/Claude/Copilot/Codex judgment, such as adopting and modernizing useful abandoned code.</p><div class="cmd" data-command>python "$HOME/Master-Repo-Use/scripts/maintenance_request.py" --auto<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag purple">AI owner gate</span><h3>Approve optional AI maintenance</h3><div class="cmd" data-command>APPROVE AI MAINTENANCE<button class="copy">Copy</button></div><p class="muted">AI work stays session-based and must create a branch/PR, not merge main.</p></article>
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="eyebrow"><span class="pulse"></span>AI engineering control plane</div>
+      <h2><span class="grad">One command center.</span><br>Every coding agent, safely connected.</h2>
+      <p>Set up Claude, Codex and Copilot, audit the curated catalog, review security health, and manage protected deployments without hunting through scripts or docs.</p>
+    </div>
+    <div class="hero-quick" aria-label="Operating model">
+      <div class="quick-row"><span>Routine maintenance</span><strong>GitHub Actions · deterministic</strong></div>
+      <div class="quick-row"><span>Paid AI background jobs</span><strong class="HEALTHY">0 scheduled</strong></div>
+      <div class="quick-row"><span>Protected main</span><strong>Owner approval required</strong></div>
+    </div>
   </div>
 </section>
 
-<section id="tools" class="view">
-<div class="grid">
-  <article class="card"><span class="tag purple">Memory</span><h3>Claude-Mem</h3><div class="cmd" data-command>npx claude-mem install<button class="copy">Copy</button></div><a target="_blank" rel="noopener" href="https://github.com/thedotmack/claude-mem">Upstream ↗</a></article>
-  <article class="card"><span class="tag purple">Context</span><h3>Headroom</h3><div class="cmd" data-command>uv tool install --python 3.13 "headroom-ai[all]" && headroom doctor<button class="copy">Copy</button></div><a target="_blank" rel="noopener" href="https://github.com/headroomlabs-ai/headroom">Upstream ↗</a></article>
-  <article class="card"><span class="tag purple">Agent</span><h3>Omni</h3><div class="cmd" data-command>git clone https://github.com/getomnico/omni.git<button class="copy">Copy</button></div><a target="_blank" rel="noopener" href="https://github.com/getomnico/omni">Upstream ↗</a></article>
-  <article class="card"><span class="tag purple">Observer</span><h3>Task Observer / Agent Monitor</h3><div class="cmd" data-command>git clone https://github.com/hoangsonww/Claude-Code-Agent-Monitor.git<button class="copy">Copy</button></div><a target="_blank" rel="noopener" href="https://github.com/hoangsonww/Claude-Code-Agent-Monitor">Upstream ↗</a></article>
-  <article class="card"><span class="tag yellow">Authorized media only</span><h3>Watermark remover</h3><div class="cmd" data-command>master-watermark INPUT_FILE OUTPUT_FOLDER<button class="copy">Copy</button></div><a target="_blank" rel="noopener" href="https://github.com/D-Ogi/WatermarkRemover-AI">Upstream ↗</a></article>
-  <article class="card"><h3>GitHub Copilot repo lane</h3><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/repo-lists/github-copilot.txt">Open private list ↗</a></article>
-  <article class="card"><h3>All AI client tools</h3><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/repo-lists/ai-client-tools.txt">Open private list ↗</a></article>
+<section class="dashboard" aria-label="Catalog health">
+  <div class="stat meta"><small>Catalog status</small><strong id="updated">Loading latest metadata…</strong><span id="statusMeta">Privacy-safe aggregate health</span></div>
+  <div class="stat HEALTHY"><small>Healthy</small><strong id="healthy">—</strong><span>0–120 days</span></div>
+  <div class="stat STALE"><small>Stale</small><strong id="stale">—</strong><span>121–269 days</span></div>
+  <div class="stat REVIEW"><small>Review</small><strong id="review">—</strong><span>270–365 days</span></div>
+  <div class="stat REMOVE"><small>Remove</small><strong id="remove">—</strong><span>&gt;365 days</span></div>
+</section>
+
+<div class="commandbar">
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
+    <input id="search" class="search" type="search" autocomplete="off" placeholder="Search commands, setup, security, deployment…" aria-label="Search cards">
+    <span class="shortcut">/</span>
+  </div>
+  <nav class="tabs" aria-label="Command-center sections">
+    <button class="tab active" data-view="setup">Setup</button>
+    <button class="tab" data-view="maintenance">Maintenance</button>
+    <button class="tab" data-view="tools" data-private>Tools</button>
+    <button class="tab" data-view="health">Health & Security</button>
+    <button class="tab" data-view="access">Access & Deploy</button>
+  </nav>
 </div>
+
+<section id="setup" class="view active">
+  <div class="section-head"><div><h2>Get connected</h2><p>Start with one global setup, or configure only the client you need.</p></div><div class="section-meta">Click any command to copy</div></div>
+  <div class="grid">
+    <article class="card wide"><div class="card-head"><div><span class="tag green">Windows · Recommended</span><h3>Global Claude + Codex + Copilot setup</h3></div><div class="iconbox">⌘</div></div><p class="muted">Updates or clones the private Master Repo, then installs shared instruction pointers.</p><div class="cmd" data-command>$p="$HOME\Master-Repo-Use"; if (Test-Path "$p\.git") { git -C $p pull --ff-only } else { gh repo clone Charlesganu2004/Master-Repo-Use $p }; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p<button class="copy">Copy</button></div></article>
+    <article class="card wide"><div class="card-head"><div><span class="tag green">Bash / WSL / macOS / Linux</span><h3>Global Claude + Codex + Copilot setup</h3></div><div class="iconbox">$_</div></div><p class="muted">Same global instruction layer for Bash-compatible environments.</p><div class="cmd" data-command>p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull --ff-only; else gh repo clone Charlesganu2004/Master-Repo-Use "$p"; fi; bash "$p/scripts/setup-global-ai.sh" "$p"<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag purple">Copilot</span><h3>Copilot-only · PowerShell</h3><p class="muted">Install only the GitHub Copilot instruction pointer.</p><div class="cmd" data-command>$p="$HOME\Master-Repo-Use"; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -CopilotOnly<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag purple">Copilot</span><h3>Copilot-only · Bash</h3><p class="muted">Lightweight Copilot-only setup for Unix-style shells.</p><div class="cmd" data-command>bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --copilot-only<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag blue">Private local mode</span><h3>Launch locally · PowerShell</h3><p class="muted">Local mode can show detailed repo-by-repo health.</p><div class="cmd" data-command>Set-Location "$HOME\Master-Repo-Use"; python -m http.server 8080<button class="copy">Copy</button></div><a class="card-link" href="http://localhost:8080/">Open localhost ↗</a></article>
+    <article class="card"><span class="tag blue">Private local mode</span><h3>Launch locally · Bash</h3><p class="muted">Serve the private command center from your clone.</p><div class="cmd" data-command>cd "$HOME/Master-Repo-Use" && python3 -m http.server 8080<button class="copy">Copy</button></div><a class="card-link" href="http://localhost:8080/">Open localhost ↗</a></article>
+    <article class="card"><span class="tag yellow">Separate opt-in</span><h3>Token / work budget</h3><p class="muted">Paid caps and compatible free/local fallback stay separate from the large setup commands.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TOKEN-BUDGET.md">Open token budget guide ↗</a></article>
+    <article class="card"><span class="tag blue">Hosted clients</span><h3>GPT / Claude / GitHub online</h3><p class="muted">Connect or select this private repository so hosted clients can use committed instructions.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/GLOBAL-AI-SETUP.md">Open online setup ↗</a></article>
+  </div>
+</section>
+
+<section id="maintenance" class="view">
+  <div class="section-head"><div><h2>Maintenance control</h2><p>Cheap metadata audits by default; deeper work only after an owner gate.</p></div><div class="section-meta">No scheduled paid AI</div></div>
+  <div class="notice ok"><strong>Default path:</strong> GitHub performs the lightweight audit. An issue is the audit trail and approval gate. Your approval launches deeper deterministic maintenance and creates a PR; it never merges automatically.</div>
+  <div class="grid">
+    <article class="card wide"><span class="tag green">GitHub Pro · Lightweight</span><h3>Run catalog audit now</h3><p class="muted">The same metadata audit runs weekly and when catalog/security rules change.</p><div class="cmd" data-command>gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag blue">Audit trail</span><h3>Open catalog audit issues</h3><p class="muted">One open audit is refreshed rather than duplicated.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/issues?q=is%3Aissue+%22%5BCatalog+Audit%5D%22">Open audit trail ↗</a></article>
+    <article class="card"><span class="tag yellow">Owner gate</span><h3>Approve deterministic maintenance</h3><p class="muted">Comment this exact phrase on the active Catalog Audit issue.</p><div class="cmd" data-command>APPROVE CATALOG MAINTENANCE<button class="copy">Copy</button></div></article>
+    <article class="card wide"><span class="tag yellow">Owner gate · CLI</span><h3>Approve current audit · Bash</h3><p class="muted">Find the current audit issue and post the deterministic maintenance approval.</p><div class="cmd" data-command>n=$(gh issue list -R Charlesganu2004/Master-Repo-Use --state open --search 'in:title [Catalog Audit]' --json number,title --jq '[.[] | select(.title | startswith("[Catalog Audit]"))][0].number'); gh issue comment "$n" -R Charlesganu2004/Master-Repo-Use --body 'APPROVE CATALOG MAINTENANCE'<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag purple">Optional AI</span><h3>Request AI modernization</h3><p class="muted">Only for judgment-heavy work such as modernizing useful abandoned code.</p><div class="cmd" data-command>python "$HOME/Master-Repo-Use/scripts/maintenance_request.py" --auto<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag purple">AI owner gate</span><h3>Approve optional AI maintenance</h3><p class="muted">AI stays session-based and must prepare a branch/PR.</p><div class="cmd" data-command>APPROVE AI MAINTENANCE<button class="copy">Copy</button></div></article>
+  </div>
+</section>
+
+<section id="tools" class="view" data-private>
+  <div class="section-head"><div><h2>Private tool shelf</h2><p>Curated local tools and agent extensions. This section is removed from public Pages.</p></div><div class="section-meta">Private/local only</div></div>
+  <div class="grid">
+    <article class="card"><span class="tag purple">Memory</span><h3>Claude-Mem</h3><div class="cmd" data-command>npx claude-mem install<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/thedotmack/claude-mem">Upstream ↗</a></article>
+    <article class="card"><span class="tag purple">Context</span><h3>Headroom</h3><div class="cmd" data-command>uv tool install --python 3.13 "headroom-ai[all]" && headroom doctor<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/headroomlabs-ai/headroom">Upstream ↗</a></article>
+    <article class="card"><span class="tag purple">Agent</span><h3>Omni</h3><div class="cmd" data-command>git clone https://github.com/getomnico/omni.git<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/getomnico/omni">Upstream ↗</a></article>
+    <article class="card"><span class="tag purple">Observer</span><h3>Task Observer / Agent Monitor</h3><div class="cmd" data-command>git clone https://github.com/hoangsonww/Claude-Code-Agent-Monitor.git<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/hoangsonww/Claude-Code-Agent-Monitor">Upstream ↗</a></article>
+    <article class="card"><span class="tag yellow">Authorized media only</span><h3>Watermark remover</h3><div class="cmd" data-command>master-watermark INPUT_FILE OUTPUT_FOLDER<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/D-Ogi/WatermarkRemover-AI">Upstream ↗</a></article>
+    <article class="card"><span class="tag blue">Catalog</span><h3>GitHub Copilot repo lane</h3><p class="muted">Open the curated Copilot-specific private list.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/repo-lists/github-copilot.txt">Open private list ↗</a></article>
+    <article class="card"><span class="tag blue">Catalog</span><h3>All AI client tools</h3><p class="muted">Browse every client/tool integration in the private catalog.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/repo-lists/ai-client-tools.txt">Open private list ↗</a></article>
+  </div>
 </section>
 
 <section id="health" class="view">
-  <div class="notice"><strong>Lifecycle:</strong> 120d stale warning → 270d replacement/adoption review → 365d active-runtime removal. Archived repos are reviewed in context; research/reference repos can be explicitly exempted.</div>
-  <div class="actions" style="margin-bottom:12px"><button id="refresh" class="btn">Refresh status</button><a class="btn" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/LIFECYCLE-REVIEW-2026-08-19.md">Lifecycle review ↗</a><a class="btn" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/SECURITY-SCANNING.md">Security scanning ↗</a></div>
-  <div style="overflow:auto"><table class="health"><thead><tr><th>Repo</th><th>Status</th><th>Age</th><th>Archived</th><th>Deep scan</th><th>Note</th></tr></thead><tbody id="healthRows"><tr><td colspan="6" class="muted">Loading status…</td></tr></tbody></table></div>
+  <div class="section-head"><div><h2>Health & security</h2><p>Lifecycle pressure, scanner state and detailed private rows when running locally.</p></div><div class="section-meta">Metadata ≠ security verdict</div></div>
+  <div class="lifecycle" aria-label="Lifecycle thresholds">
+    <div class="life HEALTHY"><b>Healthy · 0–120d</b><span>Freshness looks current.</span></div>
+    <div class="life STALE"><b>Stale · 121–269d</b><span>Warning; inspect maintenance.</span></div>
+    <div class="life REVIEW"><b>Review · 270–365d</b><span>Replace, adopt, or exempt.</span></div>
+    <div class="life REMOVE"><b>Remove · &gt;365d</b><span>Active-runtime removal candidate.</span></div>
+  </div>
+  <div class="notice"><strong>Archived repositories are not auto-deleted.</strong> Archive reason, EOL/sunset, successors, security and reference value are reviewed in context. Research/reference repositories can receive an owner-approved exception.</div>
+  <div class="top-actions" style="justify-content:flex-start;margin:12px 0"><button id="refresh" class="btn primary">↻ Refresh status</button><a class="btn" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/LIFECYCLE-REVIEW-2026-08-19.md">Lifecycle review ↗</a><a class="btn" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/SECURITY-SCANNING.md">Security scanning ↗</a></div>
+  <div class="health-wrap"><table class="health"><thead><tr><th>Repository</th><th>Status</th><th>Age</th><th>Archived</th><th>Deep scan</th><th>Note</th></tr></thead><tbody id="healthRows"><tr><td colspan="6" class="muted">Loading status…</td></tr></tbody></table></div>
 </section>
 
 <section id="access" class="view">
-<div class="notice"><strong>Pull is allowed; protected-main writes require Charles approval.</strong> CODEOWNERS and the owner-approval workflow are committed. Run the protection one-liner once because branch protection is a GitHub server setting.</div>
-<div class="grid">
-  <article class="card"><h3>Pull latest approved main</h3><div class="cmd" data-command>git switch main && git pull --ff-only origin main<button class="copy">Copy</button></div></article>
-  <article class="card"><h3>Create contributor branch</h3><div class="cmd" data-command>git switch -c proposal/my-change<button class="copy">Copy</button></div></article>
-  <article class="card"><span class="tag yellow">One time</span><h3>Enable main branch protection</h3><div class="cmd" data-command>gh api --method PUT -H "Accept: application/vnd.github+json" repos/Charlesganu2004/Master-Repo-Use/branches/main/protection --input "$HOME/Master-Repo-Use/scripts/branch-protection.json"<button class="copy">Copy</button></div><p class="muted">Requires authenticated GitHub CLI admin access. Enforces PR + Code Owner review, dismisses stale approvals, blocks force-push/delete, and requires resolved conversations.</p></article>
-  <article class="card"><span class="tag yellow">One time</span><h3>Enable GitHub Pages</h3><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/settings/pages">Open Pages settings ↗</a><p class="muted">Set Source to GitHub Actions. Until then the deployment workflow stays green and skips deploy instead of failing.</p></article>
-  <article class="card"><h3>Deploy after Pages is enabled</h3><div class="cmd" data-command>gh workflow run pages.yml -R Charlesganu2004/Master-Repo-Use<button class="copy">Copy</button></div></article>
-  <article class="card"><span class="tag yellow">One time</span><h3>Allow audit workflow to open PRs</h3><a target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/settings/actions">Open Actions settings ↗</a><p class="muted">Under Workflow permissions, enable “Allow GitHub Actions to create and approve pull requests.” The workflow only creates the PR; Charles still approves merge.</p></article>
-</div>
+  <div class="section-head"><div><h2>Access & deployment</h2><p>Pull freely; write through protected branches and owner-approved PRs.</p></div><div class="section-meta">Main stays protected</div></div>
+  <div class="notice ok"><strong>Protected-main model:</strong> the required <code>owner-approval</code> status check is the authoritative gate. Other authors need Charles's current-head review; Charles-authored PRs use the exact SHA-bound owner comment. Force push/delete remain blocked.</div>
+  <div class="grid">
+    <article class="card"><span class="tag green">Safe read</span><h3>Pull latest approved main</h3><div class="cmd" data-command>git switch main && git pull --ff-only origin main<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag blue">Contributor</span><h3>Create proposal branch</h3><div class="cmd" data-command>git switch -c proposal/my-change<button class="copy">Copy</button></div></article>
+    <article class="card wide"><span class="tag yellow">One-time bootstrap</span><h3>Enable Pages + protect main</h3><p class="muted">Requires authenticated GitHub CLI admin access. Enables Pages, least-privilege workflow permissions and protected main, then verifies state.</p><div class="cmd" data-command>bash "$HOME/Master-Repo-Use/scripts/enable-github-pro.sh"<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag green">Read-only</span><h3>Verify server state</h3><p class="muted">Check Pages, protection and workflow configuration without starting a runner.</p><div class="cmd" data-command>bash "$HOME/Master-Repo-Use/scripts/enable-github-pro.sh" --verify<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag blue">Deploy</span><h3>Deploy Pages once</h3><p class="muted">Pages has no recurring schedule after this PR merges.</p><div class="cmd" data-command>gh workflow run pages.yml -R Charlesganu2004/Master-Repo-Use<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag green">Billing</span><h3>Cost controls</h3><p class="muted">Routine target is $0 metered overage. No scheduled paid AI, Codespaces or larger runners.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/COST-CONTROL.md">Open cost-control guide ↗</a></article>
+    <article class="card"><span class="tag yellow">Owner setting</span><h3>Actions workflow permissions</h3><p class="muted">Allow Actions to create maintenance PRs. The workflow still cannot auto-merge main.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/settings/actions">Open Actions settings ↗</a></article>
+    <article class="card"><span class="tag blue">Pages</span><h3>GitHub Pages settings</h3><p class="muted">Publishing source is GitHub Actions; no custom domain is required.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/settings/pages">Open Pages settings ↗</a></article>
+  </div>
 </section>
 
-<footer>The deployed site intentionally contains only the interactive page and privacy-safe health counts. Full repo-by-repo status remains private and is visible in local mode/private GitHub files. Standard personal GitHub Pages is public even when the source repository is private.</footer>
+<div id="empty" class="empty">No cards match this search in the current section.</div>
+<footer><span>Public Pages intentionally exposes only this interface and aggregate health. Detailed catalog/security rows remain private.</span><span>Master Repo Use · owner-gated · cost-aware · privacy-safe</span></footer>
 </main>
+<div id="toast" class="toast" role="status" aria-live="polite">Copied to clipboard</div>
 <script>
 const tabs=[...document.querySelectorAll('.tab')];
-tabs.forEach(t=>t.onclick=()=>{tabs.forEach(x=>x.classList.remove('active'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.getElementById(t.dataset.view).classList.add('active');if(t.dataset.view==='health')loadHealth();});
+const views=[...document.querySelectorAll('.view')];
+const search=document.getElementById('search');
+const empty=document.getElementById('empty');
+const toast=document.getElementById('toast');
+let activeView='setup';
+function selectView(name){activeView=name;tabs.forEach(x=>x.classList.toggle('active',x.dataset.view===name));views.forEach(x=>x.classList.toggle('active',x.id===name));search.value='';filterCards();if(name==='health')loadHealth();history.replaceState(null,'','#'+name)}
+tabs.forEach(t=>t.addEventListener('click',()=>selectView(t.dataset.view)));
+function filterCards(){const q=search.value.trim().toLowerCase();const view=document.getElementById(activeView);const cards=[...view.querySelectorAll('.card')];let visible=0;cards.forEach(c=>{const show=!q||c.textContent.toLowerCase().includes(q);c.classList.toggle('hidden-search',!show);if(show)visible++});empty.classList.toggle('show',cards.length>0&&visible===0)}
+search.addEventListener('input',filterCards);
+document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement!==search&&!/input|textarea/i.test(document.activeElement.tagName)){e.preventDefault();search.focus()}if(e.key==='Escape'&&document.activeElement===search){search.value='';filterCards();search.blur()}});
 function textOf(box){const c=box.cloneNode(true);c.querySelectorAll('button').forEach(b=>b.remove());return c.textContent.trim()}
-async function copyBox(box,btn){const text=textOf(box);try{await navigator.clipboard.writeText(text)}catch(_){const a=document.createElement('textarea');a.value=text;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}const old=btn.textContent;btn.textContent='Copied';setTimeout(()=>btn.textContent=old,1000)}
-document.querySelectorAll('[data-command]').forEach(box=>{const btn=box.querySelector('.copy');box.tabIndex=0;box.title='Click to copy';box.onclick=e=>{if(e.target!==btn)copyBox(box,btn)};btn.onclick=e=>{e.stopPropagation();copyBox(box,btn)};box.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();copyBox(box,btn)}}});
-async function loadHealth(){const rows=document.getElementById('healthRows');try{const r=await fetch('docs/catalog-status.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(r.status);const d=await r.json();document.getElementById('updated').textContent='Updated '+(d.updated||'unknown');['healthy','stale','review','remove'].forEach(k=>document.getElementById(k).textContent=d.counts?.[k.toUpperCase()]??0);rows.innerHTML='';for(const x of d.repos||[]){const tr=document.createElement('tr');const vals=[x.repo,x.status,x.age_days==null?'—':x.age_days+'d',x.archived?'yes':'no',x.deep_scanned?'yes':'no',x.note||''];vals.forEach((v,i)=>{const td=document.createElement('td');td.textContent=v;if(i===1)td.className=v;tr.appendChild(td)});rows.appendChild(tr)}if(!(d.repos||[]).length){rows.innerHTML=d.public?'<tr><td colspan="6" class="muted">Public Pages intentionally exposes health counts only. Clone/serve the private repo locally to see repo-by-repo status and findings.</td></tr>':'<tr><td colspan="6" class="muted">No status rows yet. Run Catalog Guardian once.</td></tr>'}}catch(e){rows.innerHTML='<tr><td colspan="6" class="muted">Status JSON unavailable. Serve this repo through HTTP or run Catalog Guardian to generate docs/catalog-status.json.</td></tr>'}}
-document.getElementById('refresh').onclick=loadHealth;loadHealth();
+function showToast(message='Copied to clipboard'){toast.textContent=message;toast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.remove('show'),1400)}
+async function copyBox(box,btn){const text=textOf(box);try{await navigator.clipboard.writeText(text)}catch(_){const a=document.createElement('textarea');a.value=text;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}const old=btn.textContent;btn.textContent='Copied ✓';btn.classList.add('done');showToast();setTimeout(()=>{btn.textContent=old;btn.classList.remove('done')},1200)}
+document.querySelectorAll('[data-command]').forEach(box=>{const btn=box.querySelector('.copy');box.tabIndex=0;box.title='Click to copy';box.addEventListener('click',e=>{if(e.target!==btn)copyBox(box,btn)});btn.addEventListener('click',e=>{e.stopPropagation();copyBox(box,btn)});box.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();copyBox(box,btn)}})});
+async function loadHealth(){const rows=document.getElementById('healthRows');try{const r=await fetch('docs/catalog-status.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(r.status);const d=await r.json();document.getElementById('updated').textContent='Updated '+(d.updated||'unknown');document.getElementById('statusMeta').textContent=d.public?'Public privacy mode · aggregate only':'Private local mode · detailed rows available';document.getElementById('modeText').textContent=d.public?'Public privacy mode':'Private local mode';['healthy','stale','review','remove'].forEach(k=>document.getElementById(k).textContent=d.counts?.[k.toUpperCase()]??0);rows.innerHTML='';for(const x of d.repos||[]){const tr=document.createElement('tr');const vals=[x.repo,x.status,x.age_days==null?'—':x.age_days+'d',x.archived?'yes':'no',x.deep_scanned?'yes':'no',x.note||''];vals.forEach((v,i)=>{const td=document.createElement('td');td.textContent=v;if(i===1)td.className=v;tr.appendChild(td)});rows.appendChild(tr)}if(!(d.repos||[]).length){rows.innerHTML=d.public?'<tr><td colspan="6" class="muted">Public Pages intentionally exposes aggregate health only. Serve the private repository locally for repo-by-repo status and findings.</td></tr>':'<tr><td colspan="6" class="muted">No status rows yet. Run Catalog Guardian once.</td></tr>'}}catch(e){document.getElementById('modeText').textContent='Status unavailable';document.getElementById('statusMeta').textContent='Serve through HTTP or refresh catalog metadata';rows.innerHTML='<tr><td colspan="6" class="muted">Status JSON unavailable. Serve this repo through HTTP or run Catalog Guardian to generate docs/catalog-status.json.</td></tr>'}}
+document.getElementById('refresh').addEventListener('click',()=>{loadHealth();showToast('Health status refreshed')});
+const hash=location.hash.slice(1);if(hash&&document.getElementById(hash)&&tabs.some(t=>t.dataset.view===hash)){selectView(hash)}else{filterCards();loadHealth()}
 </script>
 </body>
 </html>
