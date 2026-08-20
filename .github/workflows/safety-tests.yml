@@ -1,0 +1,56 @@
+name: Safety Validation
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - 'index.html'
+      - '.github/workflows/**'
+      - 'docs/COST-CONTROL.md'
+      - 'docs/SECURITY-SCANNING.md'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - 'index.html'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: safety-validation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  safety-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Compile Python
+        shell: bash
+        run: python -m compileall -q scripts tests
+
+      - name: Run unit tests
+        shell: bash
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Build and verify privacy-safe Pages artifact
+        shell: bash
+        run: |
+          rm -rf _site
+          mkdir -p _site/docs
+          cp docs/catalog-status.svg _site/docs/catalog-status.svg
+          python scripts/build_public_site.py
+          python scripts/build_public_site.py --verify-only

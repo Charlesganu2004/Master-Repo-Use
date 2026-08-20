@@ -1,46 +1,38 @@
-name: Owner Approval Check
+name: Owner Approval Gate
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
   pull_request_review:
     types: [submitted, dismissed]
+  issue_comment:
+    types: [created, edited, deleted]
 
+# Trusted base-branch workflow only. It never checks out or executes PR-head code.
 permissions:
   contents: read
+  issues: read
   pull-requests: read
+  statuses: write
 
-# Supersede in-flight checks when a PR is pushed to again, so a burst of commits
-# costs one run instead of one per commit.
 concurrency:
-  group: owner-approval-${{ github.event.pull_request.number || github.event.review.id }}
+  group: owner-approval-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
-  owner-approval:
+  evaluate-owner-approval:
+    if: github.event_name != 'issue_comment' || github.event.issue.pull_request != null
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Require @Charlesganu2004 approval
-        uses: actions/github-script@v9
+      - name: Checkout trusted approval policy from main
+        uses: actions/checkout@v6
         with:
-          script: |
-            const owner = 'Charlesganu2004';
-            const { owner: repoOwner, repo } = context.repo;
-            const pull_number = context.payload.pull_request?.number || context.payload.review?.pull_request_url?.split('/').pop();
-            if (!pull_number) core.setFailed('Could not resolve pull request number.');
-            const reviews = await github.paginate(github.rest.pulls.listReviews, {
-              owner: repoOwner,
-              repo,
-              pull_number: Number(pull_number),
-              per_page: 100
-            });
-            const latest = new Map();
-            for (const review of reviews) {
-              if (!review.user?.login) continue;
-              latest.set(review.user.login.toLowerCase(), review.state);
-            }
-            const state = latest.get(owner.toLowerCase());
-            if (state !== 'APPROVED') {
-              core.setFailed(`@${owner} must approve this pull request before it can merge.`);
-            }
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Evaluate owner approval for current PR head
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: python scripts/owner_approval.py

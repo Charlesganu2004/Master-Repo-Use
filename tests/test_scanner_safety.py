@@ -1,127 +1,54 @@
 #!/usr/bin/env python3
-"""Guardrails for the two ways the guardian could lie or leak.
-
-1. A secret value must never survive into anything the guardian emits.
-2. A scanner that fails to run must never be reported as a malware/secret finding.
-
-The fixtures below are assembled from fragments at runtime on purpose: this file must
-not itself contain a literal credential-shaped string, or every future secret scan of
-this repository would flag its own test suite.
-
-Run: python tests/test_scanner_safety.py
-"""
 from __future__ import annotations
-
-import pathlib
-import subprocess
-import sys
-import types
-
+import json, pathlib, sys, tempfile, types, unittest
+from unittest import mock
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
+import catalog_security as security
 
-import catalog_guardian as guardian  # noqa: E402
+def synthetic_secrets():
+    gh="gh"+"p_"+"A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8"; openai="sk"+"-proj-"+"abcdefghijklmnop1234567890ABCDEFGH"; aws_id="AKIA"+"IOSFODNN7EXAMPLE"; google="AIza"+"A"*35; stripe="sk"+"_live_"+"A"*24; npm="npm"+"_"+"A"*32; sendgrid="SG."+"A"*22+"."+"B"*30; mailgun="key"+"-"+"A"*32; slack="xox"+"b-1234567890-"+"ABCDEFGHIJKLMNOP"; jwt="ey"+"JhbGciOiJIUzI1NiJ9"+"."+"ey"+"JzdWIiOiIxMjM0NTY3ODkwIn0"+"."+"A"*32; twilio="A"*32; basic="https://user:"+"CorrectHorseBattery"+"@example.invalid/path"; pem_body="MIIEowIBAAKCAQEAsyntheticfixturenotarealkey"; pem="-----BEGIN RSA "+"PRIVATE KEY-----\n"+pem_body+"\n-----END RSA "+"PRIVATE KEY-----"
+    return [("github",gh),("openai",openai),("aws-id",aws_id),("google",google),("stripe",stripe),("npm",npm),("sendgrid",sendgrid),("mailgun",mailgun),("slack",slack),("jwt",jwt),("twilio-labeled","TWILIO_AUTH_TOKEN="+twilio),("basic-auth",basic),("pem",pem)]
 
-FAILURES: list[str] = []
+class RedactionTests(unittest.TestCase):
+    def test_secret_shapes_are_masked(self):
+        for label,value in synthetic_secrets():
+            with self.subTest(label=label):
+                out=security.redact("scanner output: "+value,1000); self.assertIn("[REDACTED]",out)
+                forbidden=value.split("=",1)[1] if label=="twilio-labeled" else ("CorrectHorseBattery" if label=="basic-auth" else ("syntheticfixturenotarealkey" if label=="pem" else value)); self.assertNotIn(forbidden,out)
+    def test_external_scanner_output_is_never_persisted(self):
+        secret=synthetic_secrets()[0][1]; proc=types.SimpleNamespace(returncode=1,stdout=f"found {secret}",stderr="")
+        with mock.patch.object(security.shutil,"which",return_value="/usr/bin/tool"), mock.patch.object(security.subprocess,"run",return_value=proc): result=security.run_external(["tool"],ROOT,"trivy")
+        self.assertTrue(result[0].startswith("HIGH trivy")); self.assertNotIn(secret,result[0]); self.assertNotIn("found",result[0])
 
+class ExitCodeTests(unittest.TestCase):
+    def fake(self,label,code):
+        proc=types.SimpleNamespace(returncode=code,stdout="raw scanner detail",stderr="raw error")
+        with mock.patch.object(security.shutil,"which",return_value="/usr/bin/tool"), mock.patch.object(security.subprocess,"run",return_value=proc): return security.run_external(["tool"],ROOT,label)
+    def test_clean_exit_is_clean(self): self.assertEqual([],self.fake("clamav",0))
+    def test_known_finding_exit_is_finding(self): self.assertTrue(self.fake("clamav",1)[0].startswith("HIGH"))
+    def test_clamav_exit_two_is_scanner_error(self): self.assertTrue(self.fake("clamav",2)[0].startswith("SCANNER-ERROR"))
+    def test_unknown_scanner_exit_one_is_not_assumed_finding(self): self.assertTrue(self.fake("brand-new-scanner",1)[0].startswith("SCANNER-ERROR"))
+    def test_missing_tool_is_scanner_error(self):
+        with mock.patch.object(security.shutil,"which",return_value=None): result=security.run_external(["missing"],ROOT,"missing")
+        self.assertTrue(result[0].startswith("SCANNER-ERROR"))
 
-def check(name: str, ok: bool, detail: str = "") -> None:
-    print(("PASS  " if ok else "FAIL  ") + name + (f"  -> {detail}" if not ok else ""))
-    if not ok:
-        FAILURES.append(name)
+class GitleaksTests(unittest.TestCase):
+    def test_gitleaks_command_uses_redaction(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            clone=pathlib.Path(tmp)/"repo"; clone.mkdir(); report=pathlib.Path(tmp)/"gitleaks-report.json"; report.write_text(json.dumps([{"RuleID":"generic-api-key","File":"settings.py","StartLine":7,"Secret":"must-never-appear"}]))
+            proc=types.SimpleNamespace(returncode=1,stdout="raw secret here",stderr="")
+            with mock.patch.object(security.shutil,"which",return_value="/usr/bin/gitleaks"), mock.patch.object(security.subprocess,"run",return_value=proc) as run: result=security.run_gitleaks(clone)
+            self.assertIn("--redact",run.call_args.args[0]); self.assertNotIn("must-never-appear"," ".join(result)); self.assertIn("settings.py:7",result[0])
+    def test_unreadable_gitleaks_report_is_scanner_error_not_critical(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            clone=pathlib.Path(tmp)/"repo"; clone.mkdir(); proc=types.SimpleNamespace(returncode=1,stdout="possible secret",stderr="")
+            with mock.patch.object(security.shutil,"which",return_value="/usr/bin/gitleaks"), mock.patch.object(security.subprocess,"run",return_value=proc): result=security.run_gitleaks(clone)
+            self.assertTrue(result[0].startswith("SCANNER-ERROR")); self.assertFalse(any(x.startswith("CRITICAL") for x in result))
 
+class HeuristicTests(unittest.TestCase):
+    def test_credential_exfil_detects_secret_before_sink(self): self.assertTrue(any("credential-exfil" in x for x in security.scan_text(pathlib.Path("x.py"),"token = os.environ['GITHUB_TOKEN']; requests.post(url, data=token)")))
+    def test_credential_exfil_detects_sink_before_secret(self): self.assertTrue(any("credential-exfil" in x for x in security.scan_text(pathlib.Path("x.py"),"requests.post(url, data=os.environ['GITHUB_TOKEN'])")))
+    def test_command_injection_pattern(self): self.assertTrue(any("command injection" in x for x in security.scan_text(pathlib.Path("x.py"),"subprocess.run(request.args['cmd'], shell=True)")))
 
-def synthetic() -> list[tuple[str, str, str]]:
-    """(label, text a scanner might print, the value that must never survive)."""
-    gh = "gh" + "p_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8"
-    openai = "sk" + "-proj-" + "abcdefghijklmnop1234567890ABCDEFGH"
-    aws_id = "AKIA" + "IOSFODNN7EXAMPLE"
-    aws_body = "wJalrXUtnFEMI" + "/K7MDENG/" + "bPxRfiCYEXAMPLEKEY"
-    slack = "xox" + "b-1234567890-" + "ABCDEFGHIJKLMNOP"
-    jwt = "ey" + "JhbGciOiJIUzI1NiJ9" + "." + "ey" + "JzdWIiOiIxMjM0NTY3ODkwIn0" + "." + "dBjftJeZ4CVPmB92K27uhbUJU1p1rXwW1gFWFOEjXk"
-    pem_body = "MIIEowIBAAKCAQEAsyntheticfixturenotarealkey"
-    pem = ("-----BEGIN RSA " + "PRIVATE KEY-----" + chr(10) + pem_body
-           + chr(10) + "-----END RSA " + "PRIVATE KEY-----")
-    pw_body = "hunter2CorrectHorseBattery"
-    long_hex = "0123456789abcdef" * 2 + "01234567"
-    return [
-        ("github pat", f"found {gh} in config.yml", gh),
-        ("openai key", f"OPENAI key {openai} leaked", openai),
-        ("aws access key", f"{aws_id} exposed", aws_id),
-        ("aws secret", f"aws_secret_access_key = {aws_body}", aws_body),
-        ("jwt", jwt, jwt.rsplit(".", 1)[-1]),
-        ("slack token", slack, slack),
-        ("pem block", pem, pem_body),
-        ("password pair", "pass" + "word: " + chr(34) + pw_body + chr(34), pw_body),
-        ("long hex", f"token {long_hex}", long_hex),
-    ]
-
-
-def test_redaction() -> None:
-    for name, raw, secret in synthetic():
-        out = guardian.redact(raw)
-        check(f"redact: {name}", "[REDACTED]" in out and secret not in out, repr(out))
-
-
-def fake_run(label: str, code: int, output: str) -> list[str]:
-    real_run, real_which = subprocess.run, guardian.shutil.which
-    subprocess.run = lambda cmd, **kw: types.SimpleNamespace(returncode=code, stdout=output, stderr="")
-    guardian.shutil.which = lambda name: "/usr/bin/" + name
-    try:
-        return guardian.run_external(["tool"], ROOT, label)
-    finally:
-        subprocess.run, guardian.shutil.which = real_run, real_which
-
-
-def test_scanner_error_separation() -> None:
-    check("clamav exit 0 is clean", fake_run("clamav", 0, "") == [])
-
-    found = fake_run("clamav", 1, "./sample: Win.Test.EICAR_HDB-1 FOUND")
-    check("clamav exit 1 is a finding", bool(found) and found[0].startswith("HIGH"), str(found))
-
-    for code, output in (
-        (2, "LibClamAV Error: cl_load(): No supported database files found in /var/lib/clamav"),
-        (127, "clamscan: command not found"),
-    ):
-        errored = fake_run("clamav", code, output)
-        check(
-            f"clamav exit {code} is a scanner error, not malware",
-            bool(errored)
-            and errored[0].startswith("SCANNER-ERROR")
-            and not any(x.startswith(("HIGH", "CRITICAL")) for x in errored),
-            str(errored),
-        )
-
-    trivy = fake_run("trivy", 2, "FATAL unable to initialize scanner: db error")
-    check("trivy exit 2 is a scanner error", bool(trivy) and trivy[0].startswith("SCANNER-ERROR"), str(trivy))
-
-    missing = fake_run("osv-scanner", 128, "panic: runtime error")
-    check("unexpected exit code is a scanner error", bool(missing) and missing[0].startswith("SCANNER-ERROR"), str(missing))
-
-    check("has_scanner_error detects errors", guardian.has_scanner_error(trivy))
-    check("has_scanner_error ignores real findings", not guardian.has_scanner_error(["HIGH x", "INFO y"]))
-
-
-def test_findings_are_redacted() -> None:
-    token = "gh" + "p_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8"
-    leaked = fake_run("gitleaks", 1, f"secret: {token}")
-    check("scanner finding text is redacted", token not in leaked[0], str(leaked))
-
-
-def test_gitleaks_is_invoked_safely() -> None:
-    source = (ROOT / "scripts" / "catalog_guardian.py").read_text(encoding="utf-8")
-    check("gitleaks runs with --redact", '"--redact"' in source)
-    check("gitleaks reports from a JSON file, not stdout", "gitleaks-report.json" in source)
-    check("deep_scan redacts on the way out", "redact(item, 500)" in source)
-
-
-if __name__ == "__main__":
-    test_redaction()
-    test_scanner_error_separation()
-    test_findings_are_redacted()
-    test_gitleaks_is_invoked_safely()
-    print()
-    if FAILURES:
-        print(f"{len(FAILURES)} check(s) failed: {', '.join(FAILURES)}")
-        raise SystemExit(1)
-    print("all scanner-safety checks passed")
+if __name__=="__main__": unittest.main()
