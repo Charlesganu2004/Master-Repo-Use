@@ -6,8 +6,10 @@ The goal is not to claim that static scanning can prove a repository safe. The g
 
 Related files:
 
-- `scripts/catalog_guardian.py` — automated metadata + source guardian
+- `scripts/catalog_guardian.py` — automated metadata + source guardian entry point
+- `scripts/catalog_security.py` — fail-closed security/redaction helpers
 - `.github/workflows/catalog-guardian.yml` — GitHub Pro audit and owner-approval workflow
+- `.github/workflows/safety-tests.yml` — assertion-based scanner/approval/privacy CI
 - `docs/VETTING-REPORT.md` — vetting history
 - `docs/CATALOG-STATUS.md` — current private status
 - `docs/SECURITY.md` — repository-level agent/MCP security rules
@@ -71,34 +73,31 @@ Owner-approved/new-repo GitHub scans install or use:
 
 Guardian also supports **Trivy** automatically if it is installed in the runner/environment. The catalog contains additional security projects such as OpenGrep, TruffleHog, Cisco AI Defense MCP Scanner, OSSF Scorecard, Syft, Cosign, and Garak.
 
-## Secret redaction
+## Secret-output handling
 
-Guardian never emits a secret value. This is enforced in code, not by convention:
+The persistence boundary is designed so scanner-returned secret values are not copied into catalog state, issues, PR bodies, or Pages artifacts:
 
-- Gitleaks runs with `--redact` and writes a JSON report. Guardian reports only the
-  **rule ID, file, and line** from that report — never the matched value, never raw stdout.
-- Every other scanner's output passes through `redact()` in `scripts/catalog_guardian.py`,
-  which masks private-key blocks, GitHub/OpenAI/AWS/Slack tokens, JWTs, `key = value`
-  credential pairs, and long base64/hex blobs before the text is truncated and stored.
-- `deep_scan()` re-applies `redact()` to every finding on the way out, so a new scanner
-  cannot bypass masking by being added to the list.
-- The public Pages artifact carries counts and policy only. `scripts/build_public_site.py`
-  rebuilds it from scratch and then **fails the build** if a repository name, note, finding,
-  or scanner name appears in it.
+- Gitleaks runs with `--redact` and writes a JSON report. Guardian persists only safe metadata such as the **rule ID, file, and line**. An unreadable/empty report after a findings exit becomes `SCANNER-ERROR`, never a fabricated `CRITICAL` result.
+- Generic external scanners do **not** persist their stdout/stderr at all. A known findings exit produces a category-only message; a failure produces `SCANNER-ERROR`. Full scanner detail is intentionally left for a local/manual rerun.
+- Built-in source heuristics report category + path, not the matched credential value.
+- `redact()` in `scripts/catalog_security.py` is defense in depth for short exception/diagnostic strings and covers the credential shapes exercised by the test suite, including GitHub/OpenAI/AWS/Google/Stripe/npm/SendGrid/Mailgun/Slack/JWT/Twilio-labelled/basic-auth/private-key examples.
+- `deep_scan()` still applies a final masking pass before results leave the lifecycle engine.
+- The public Pages artifact carries counts and policy only. `scripts/build_public_site.py` rebuilds it from scratch and **fails the build** if repository names, private notes/findings, or scanner detail reaches the public artifact.
 
-Consequently no secret value can reach Actions logs, `docs/catalog-status.json`,
-`docs/catalog-status.svg`, the Pages site, a `[Catalog Audit]` issue, or a PR body.
+This is intentionally narrower than claiming that no imaginable secret format could ever be printed by any future tool. New scanner integrations must preserve the no-raw-output boundary and add tests for any new credential formats they may surface.
 
-`tests/test_scanner_safety.py` asserts this. Run it after touching the scanner code:
+`tests/test_scanner_safety.py` and `.github/workflows/safety-tests.yml` enforce the current contract with real `unittest` assertions. The CI suite also imports the actual `scripts/catalog_guardian.py` entry point so the tests cannot silently exercise an unused helper module.
+
+Run locally after touching scanner code:
 
 ```bash
-python tests/test_scanner_safety.py
+python -m unittest discover -s tests -p 'test_*.py' -v
+python scripts/catalog_guardian.py --help
 ```
 
 ## CLEAN vs FINDING vs SCANNER ERROR
 
-A scanner that fails to run tells you nothing about the repository, so Guardian keeps the
-three outcomes separate:
+A scanner that fails to run tells you nothing about the repository, so Guardian keeps the three outcomes separate:
 
 | Outcome | Prefix | Meaning |
 |---|---|---|
@@ -106,20 +105,16 @@ three outcomes separate:
 | Finding | `HIGH` / `CRITICAL` | The scanner ran and reported something real. |
 | Scanner error | `SCANNER-ERROR` | The scanner did not complete. **No conclusion about the repo.** |
 
-Only exit codes that a given tool documents as "findings present" become findings; every
-other non-zero exit is a scanner error. This matters most for ClamAV, whose exit code `1`
-means *infected* but whose exit code `2` means *the scan failed* — most commonly because
-the signature database was never downloaded. That used to be reported as
-`HIGH clamav reported findings`, which reads as a malware accusation against an innocent
-repository. It now reports:
+Only explicitly configured exit codes become findings. **Unknown scanners fail closed:** a non-zero exit from a scanner without an explicit exit-code policy is `SCANNER-ERROR`, not automatically a finding. This avoids repeating the original ClamAV bug.
+
+ClamAV is the clearest example: exit code `1` means *infected* while exit code `2` means *the scan failed*, commonly because the signature database is unavailable. A missing/uninitialised database reports:
 
 ```text
 SCANNER-ERROR clamav signature database is missing or not initialised (run freshclam);
 malware scanning was skipped and no malware conclusion can be drawn
 ```
 
-A `SCANNER-ERROR` marks the repository for **rescan**, clears `deep_scanned`, and blocks
-managed-adoption promotion. It never sets `CRITICAL` and never proposes removal.
+A `SCANNER-ERROR` marks the repository for **rescan**, clears `deep_scanned`, and blocks managed-adoption promotion. It never sets `CRITICAL` and never proposes removal by itself.
 
 ## Stage A — metadata only
 
@@ -163,7 +158,7 @@ trivy fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL target
 snyk test --all-projects --severity-threshold=high
 ```
 
-Always redact secret-scanner output before storing logs. Do not commit live secret material into this repo as “evidence.”
+Do not commit live secret material into this repo as “evidence.” For manual scanner runs, redact output before saving it anywhere persistent.
 
 ## Stage B2 — manual execution-path review
 
@@ -179,6 +174,8 @@ Static tools do not understand intent. Read the files that can execute automatic
 - MCP manifests and agent instructions that request broad filesystem/network/secrets access.
 - Browser automation or financial integrations that can perform real external actions.
 
+For this repository's own `pull_request_target` owner gate, the workflow checks out the trusted default branch only and never checks out or executes PR-head code.
+
 ## Hidden text and prompt injection
 
 The Guardian treats these as review signals:
@@ -190,11 +187,11 @@ The Guardian treats these as review signals:
 
 These heuristics can false-positive in security test fixtures or blocklists. Open every finding and read the surrounding context.
 
-## SQL injection review
+## SQL and command injection review
 
-A string containing SQL is not automatically unsafe. Distinguish:
+A string containing SQL or a shell command is not automatically unsafe. Distinguish parameterized/structured calls from user-controlled string construction.
 
-**Safer:**
+**Safer SQL:**
 
 ```text
 SELECT ... WHERE id = $1
@@ -202,11 +199,17 @@ SELECT ... WHERE id = $1
 
 with user input passed through a bound parameter.
 
-**Review/unsafe shape:**
+**Review/unsafe SQL shape:**
 
 ```text
 "SELECT ... WHERE id = " + user_input
 f"SELECT ... WHERE id = {user_input}"
+```
+
+**Review/unsafe command shape:**
+
+```text
+subprocess.run(request.args["cmd"], shell=True)
 ```
 
 Guardian/Semgrep findings are evidence for inspection, not an automatic guilty verdict.
