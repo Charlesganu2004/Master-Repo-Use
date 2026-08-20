@@ -8,7 +8,7 @@ The Master Repo is the shared **catalog + instructions + security/vetting layer*
 
 ## Live catalog health
 
-Once GitHub Pages is enabled, this visual refreshes every six hours without committing generated status changes to `main`:
+Once GitHub Pages is enabled, this visual refreshes when relevant catalog/site data changes on `main` or when the deployment is dispatched manually, without committing generated status changes to `main`:
 
 ![Master Repo live catalog health](https://charlesganu2004.github.io/Master-Repo-Use/docs/catalog-status.svg)
 
@@ -145,7 +145,7 @@ Local mode can display the full private repo-by-repo health table.
 
 ### GitHub Pages mode
 
-`.github/workflows/pages.yml` builds the command center from approved `main` and refreshes its health-count visual every six hours.
+`.github/workflows/pages.yml` builds the command center from approved `main`. The public health visual refreshes when relevant catalog/site data changes or when the workflow is manually dispatched. Routine catalog metadata auditing runs weekly. Deep security maintenance runs only when required or owner-approved. There is no recurring Pages schedule, so the site costs Actions minutes only when something actually changed.
 
 **One-time owner action:** open **Settings → Pages** and set **Source → GitHub Actions**.
 
@@ -215,15 +215,32 @@ APPROVE AI MAINTENANCE
 
 The AI may then work in the active session and prepare a branch/PR. It still may not merge `main` without your approval.
 
-## GitHub Pro usage controls
+## Cost control
 
-The recurring workflows are intentionally small:
+GitHub Pro is a fixed subscription that includes **3,000 Actions minutes/month** on
+Linux runners. Everything here runs on `ubuntu-latest` (1x multiplier), so routine use
+lands around **20-40 minutes/month** and the metered bill stays at **$0**.
 
-- Pages: lightweight metadata refresh + static deployment.
-- Catalog Guardian: weekly metadata audit; deep scanning only for new repos or owner-approved maintenance.
-- No recurring model/API calls.
+| Workflow | Trigger | Frequency |
+|---|---|---|
+| Pages | change to site/status files on `main`, or manual dispatch | **no recurring schedule** |
+| Catalog Guardian (audit) | weekly cron, catalog changes, manual | 1x/week |
+| Catalog Guardian (deep scan) | new repo added, flagged repo, owner approval | only when required |
+| Owner approval check | pull request events | per PR |
 
-Use GitHub **Billing & licensing / Budgets and alerts** to set an Actions budget/alerts if you want a hard financial guardrail in addition to the included GitHub Pro usage.
+- No recurring Pages deployment. The former six-hour cron was removed.
+- No scheduled AI or model calls of any kind: not Claude, OpenAI, Copilot, Codex, or Gemini.
+- No Codespaces requirement. No paid GitHub Models. No paid Snyk usage.
+- Every job has `timeout-minutes`; every workflow has `concurrency`.
+
+The gross figure GitHub displays is not the billed figure -- included usage is applied
+first. The number that matters is the net billed amount.
+
+Recommended one-time owner setup under **Settings -> Billing and licensing -> Budgets and
+alerts**: included-usage alerts at **90%** and **100%**, plus an Actions-scoped budget of
+**$1/month** with *Stop usage when budget limit is reached* enabled.
+
+Full detail, including the rules any new workflow has to follow: [docs/COST-CONTROL.md](docs/COST-CONTROL.md).
 
 ## How to use the Master Repo
 
@@ -380,7 +397,7 @@ The repository-side files alone cannot protect a branch; this GitHub server sett
 | `.github/copilot-instructions.md` | GitHub Copilot repo instructions |
 | `.github/CODEOWNERS` | owner review ownership |
 | `.github/workflows/catalog-guardian.yml` | weekly/on-change audit + owner-comment maintenance workflow |
-| `.github/workflows/pages.yml` | six-hour privacy-safe interactive deployment/status refresh |
+| `.github/workflows/pages.yml` | change-triggered/manual privacy-safe interactive deployment |
 | `.github/workflows/owner-approval.yml` | PR owner-approval check |
 | `agents/` | specialist agents |
 | `docs/` | setup, security, vetting, lifecycle, status, integration guides |
