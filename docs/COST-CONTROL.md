@@ -20,11 +20,11 @@ All repository workflows use `ubuntu-latest`. There are no Windows/macOS/larger/
 |---|---|---|
 | `catalog-guardian.yml` lightweight audit | weekly cron, catalog/security changes, manual | **1×/week** plus real changes |
 | `catalog-guardian.yml` deep maintenance | new repo intake or owner approval | **only when required** |
-| `pages.yml` | relevant push to `main`, manual | **no recurring schedule** |
+| `pages.yml` | relevant push to `main`, manual | **no recurring schedule after the cost-control PR is merged** |
 | `owner-approval.yml` | PR/review/owner-comment events | only while PRs need approval |
 | `safety-tests.yml` | relevant PR/main changes | only when security/workflow/site code changes |
 
-**There is no recurring Pages schedule.** The former `cron: '17 */6 * * *'` redeployed a static site four times a day even when nothing changed and was removed.
+**Desired Pages state has no recurring schedule.** The former `cron: '17 */6 * * *'` redeployed a static site four times a day even when nothing changed and is removed by the cost-control PR. Until that PR reaches `main`, the old default-branch workflow can still run; do not describe the branch-only removal as already live.
 
 **There are no scheduled AI/model calls.** No recurring workflow calls Anthropic, OpenAI, Copilot, Codex, Gemini, or another paid model API. `scripts/maintenance_request.py` only prepares a request for explicit human action; it is not a background model worker.
 
@@ -59,7 +59,7 @@ Do not re-dispatch a failing workflow merely to “see if it passes.” Diagnose
 
 ## Approval and cost interaction
 
-The required `owner-approval` status is event-driven and SHA-bound. It does not poll.
+The desired required `owner-approval` status is event-driven and SHA-bound. It does not poll.
 
 - Agent/bot/other-authored PRs require Charles's `APPROVED` review on the current head SHA.
 - Charles-authored PRs require the exact `APPROVE OWNER PR <CURRENT_HEAD_SHA>` PR conversation comment from Charles.
