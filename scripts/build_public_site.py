@@ -17,6 +17,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import html.parser
 import json
 import pathlib
 import re
@@ -25,8 +26,10 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PRIVATE_STATE = ROOT / "docs" / "catalog-status.json"
 SITE = ROOT / "_site"
+PRIVATE_INDEX = ROOT / "index.html"
 PUBLIC_STATE = SITE / "docs" / "catalog-status.json"
 PUBLIC_SVG = SITE / "docs" / "catalog-status.svg"
+PUBLIC_INDEX = SITE / "index.html"
 
 # Keys allowed to reach the public artifact. Anything else is dropped by construction.
 ALLOWED_TOP_LEVEL = {"updated", "policy", "counts", "public", "repos"}
@@ -46,6 +49,27 @@ PRIVATE_WORDS = ("finding", "note", "gitleaks", "clamav", "semgrep", "trivy", "s
 REPO_SLUG = re.compile(r"\b[A-Za-z0-9][A-Za-z0-9_.-]{0,38}/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}\b")
 
 
+OWN_REPO = "Charlesganu2004/Master-Repo-Use"
+
+
+def private_notes() -> set[str]:
+    """Lifecycle/security notes from the private state. None may reach the public site."""
+    if not PRIVATE_STATE.exists():
+        return set()
+    try:
+        state = json.loads(PRIVATE_STATE.read_text(encoding="utf-8"))
+    except ValueError:
+        return set()
+    notes = set()
+    for row in state.get("repos") or []:
+        note = str(row.get("note") or "").strip()
+        if len(note) > 25:
+            notes.add(note)
+        for finding in row.get("findings") or []:
+            notes.add(str(finding))
+    return notes
+
+
 def private_repo_names() -> set[str]:
     """Every repository slug the private side knows about, from state and lists."""
     names: set[str] = set()
@@ -63,6 +87,95 @@ def private_repo_names() -> set[str]:
             if slug.count("/") == 1 and slug:
                 names.add(slug)
     return names
+
+
+class PrivateStripper(html.parser.HTMLParser):
+    """Drop every element carrying a `data-private` attribute, and its subtree.
+
+    The command center is one page serving two audiences. Run from a local clone it
+    shows the full catalog; deployed to a public Pages site it must not. Marking the
+    private parts in the markup keeps the two views from drifting apart.
+    """
+
+    VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input",
+            "link", "meta", "param", "source", "track", "wbr"}
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=False)
+        self.out: list[str] = []
+        self.skip_depth = 0
+        self.skip_tag: str | None = None
+        self.removed = 0
+
+    def _emit(self, text: str) -> None:
+        if self.skip_depth == 0:
+            self.out.append(text)
+
+    def handle_starttag(self, tag, attrs):
+        if self.skip_depth:
+            if tag == self.skip_tag and tag not in self.VOID:
+                self.skip_depth += 1
+            return
+        if any(name == "data-private" for name, _ in attrs):
+            self.removed += 1
+            if tag not in self.VOID:
+                self.skip_depth, self.skip_tag = 1, tag
+            return
+        rebuilt = "".join(
+            f" {name}" if value is None else f' {name}="{value}"' for name, value in attrs
+        )
+        self._emit(f"<{tag}{rebuilt}>")
+
+    def handle_startendtag(self, tag, attrs):
+        if self.skip_depth:
+            return
+        if any(name == "data-private" for name, _ in attrs):
+            self.removed += 1
+            return
+        rebuilt = "".join(
+            f" {name}" if value is None else f' {name}="{value}"' for name, value in attrs
+        )
+        self._emit(f"<{tag}{rebuilt}/>")
+
+    def handle_endtag(self, tag):
+        if self.skip_depth:
+            if tag == self.skip_tag:
+                self.skip_depth -= 1
+                if self.skip_depth == 0:
+                    self.skip_tag = None
+            return
+        self._emit(f"</{tag}>")
+
+    def handle_data(self, data):
+        self._emit(data)
+
+    def handle_entityref(self, name):
+        self._emit(f"&{name};")
+
+    def handle_charref(self, name):
+        self._emit(f"&#{name};")
+
+    def handle_comment(self, data):
+        self._emit(f"<!--{data}-->")
+
+    def handle_decl(self, decl):
+        self._emit(f"<!{decl}>")
+
+    def unknown_decl(self, data):
+        self._emit(f"<![{data}]>")
+
+    def handle_pi(self, data):
+        self._emit(f"<?{data}>")
+
+
+def build_index() -> int:
+    """Write the public index.html with all `data-private` content removed."""
+    stripper = PrivateStripper()
+    stripper.feed(PRIVATE_INDEX.read_text(encoding="utf-8"))
+    stripper.close()
+    PUBLIC_INDEX.parent.mkdir(parents=True, exist_ok=True)
+    PUBLIC_INDEX.write_text("".join(stripper.out), encoding="utf-8")
+    return stripper.removed
 
 
 def build() -> dict:
@@ -117,6 +230,19 @@ def verify(payload: dict) -> list[str]:
             if word in svg.lower():
                 problems.append(f"public SVG mentions private detail: {word!r}")
 
+    if PUBLIC_INDEX.exists():
+        page = PUBLIC_INDEX.read_text(encoding="utf-8")
+        if "data-private" in page:
+            problems.append("public index.html still contains data-private markup")
+        # The page links to its own repository on purpose; every other catalogued
+        # repository is private catalog content and must not appear.
+        for name in sorted(catalog - {OWN_REPO}):
+            if name in page:
+                problems.append(f"public index.html names a catalogued repository: {name}")
+        for note in sorted(private_notes()):
+            if note in page:
+                problems.append(f"public index.html contains a private note: {note[:50]}...")
+
     return problems
 
 
@@ -138,6 +264,8 @@ def main() -> int:
         payload = build()
         PUBLIC_STATE.parent.mkdir(parents=True, exist_ok=True)
         PUBLIC_STATE.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+        removed = build_index()
+        print(f"public index.html written ({removed} private element(s) removed)")
 
     problems = verify(payload)
     if problems:

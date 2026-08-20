@@ -31,7 +31,7 @@
 <nav class="tabs" aria-label="Command-center sections">
   <button class="tab active" data-view="setup">Setup</button>
   <button class="tab" data-view="maintenance">Maintenance</button>
-  <button class="tab" data-view="tools">Tools</button>
+  <button class="tab" data-view="tools" data-private>Tools</button>
   <button class="tab" data-view="health">Health/Security</button>
   <button class="tab" data-view="access">Access/Deploy</button>
 </nav>
@@ -61,7 +61,7 @@
   </div>
 </section>
 
-<section id="tools" class="view">
+<section id="tools" class="view" data-private>
 <div class="grid">
   <article class="card"><span class="tag purple">Memory</span><h3>Claude-Mem</h3><div class="cmd" data-command>npx claude-mem install<button class="copy">Copy</button></div><a target="_blank" rel="noopener" href="https://github.com/thedotmack/claude-mem">Upstream ↗</a></article>
   <article class="card"><span class="tag purple">Context</span><h3>Headroom</h3><div class="cmd" data-command>uv tool install --python 3.13 "headroom-ai[all]" && headroom doctor<button class="copy">Copy</button></div><a target="_blank" rel="noopener" href="https://github.com/headroomlabs-ai/headroom">Upstream ↗</a></article>

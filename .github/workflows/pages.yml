@@ -69,9 +69,10 @@ jobs:
           set -euo pipefail
           rm -rf _site
           mkdir -p _site/docs
-          cp index.html _site/index.html
           touch _site/.nojekyll
           cp docs/catalog-status.svg _site/docs/catalog-status.svg
+          # Writes _site/index.html with all data-private markup stripped, plus the
+          # aggregate-only catalog-status.json. index.html is never copied verbatim.
           python scripts/build_public_site.py
 
       - name: Assert the public artifact leaks nothing private
@@ -80,11 +81,11 @@ jobs:
 
       - name: Configure GitHub Pages
         if: steps.pages.outputs.enabled == 'true'
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload Pages artifact
         if: steps.pages.outputs.enabled == 'true'
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
@@ -99,4 +100,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
