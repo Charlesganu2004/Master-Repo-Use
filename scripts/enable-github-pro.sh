@@ -2,9 +2,10 @@
 # One-time GitHub Pro bootstrap for Master-Repo-Use.
 #
 # Enables Pages (Actions build type), sets least-privilege workflow permissions,
-# protects main, then verifies. Pages is dispatched at most once, and only after
-# the API confirms Pages is actually enabled — repeatedly re-dispatching a
-# deployment that cannot succeed just burns Actions minutes.
+# applies the protected-main + SHA-bound owner-approval policy, then verifies.
+# Pages is dispatched at most once, and only after the API confirms Pages is
+# enabled — repeatedly re-dispatching a deployment that cannot succeed just burns
+# Actions minutes.
 #
 # Usage:
 #   scripts/enable-github-pro.sh              # bootstrap + verify
@@ -53,13 +54,13 @@ if [[ "$VERIFY_ONLY" -eq 0 ]]; then
 
   echo "[2/3] Setting least-privilege workflow permissions..."
   # Read-only GITHUB_TOKEN by default; each workflow widens what it needs.
-  # can_approve_pull_request_reviews lets the owner-approved job OPEN a PR. It cannot
-  # merge main: CODEOWNERS requires a review from @Charlesganu2004, and the bot is
-  # not a code owner.
+  # This repo-level setting lets the approved maintenance job OPEN a PR. It does
+  # not satisfy the required owner-approval status and does not let automation
+  # merge protected main.
   api_json PUT "repos/$REPO/actions/permissions/workflow" \
     '{"default_workflow_permissions":"read","can_approve_pull_request_reviews":true}'
 
-  echo "[3/3] Protecting main with PR + Code Owner approval..."
+  echo "[3/3] Protecting main with PR + SHA-bound owner approval..."
   gh_api --method PUT "repos/$REPO/branches/main/protection" \
     --input "$ROOT/scripts/branch-protection.json" >/dev/null
 fi
@@ -73,8 +74,10 @@ if pages_enabled; then
   echo "pages url:            $(gh_api "repos/$REPO/pages" --jq '.html_url')"
 fi
 echo "main protected:       $(gh_api "repos/$REPO/branches/main" --jq '.protected')"
+echo "required status:      $(gh_api "repos/$REPO/branches/main/protection" --jq '.required_status_checks.contexts | join(",")')"
 echo "required PR reviews:  $(gh_api "repos/$REPO/branches/main/protection" --jq '.required_pull_request_reviews.required_approving_review_count // "none"')"
 echo "code owner reviews:   $(gh_api "repos/$REPO/branches/main/protection" --jq '.required_pull_request_reviews.require_code_owner_reviews // false')"
+echo "conversation resolve: $(gh_api "repos/$REPO/branches/main/protection" --jq '.required_conversation_resolution.enabled')"
 echo "force pushes allowed: $(gh_api "repos/$REPO/branches/main/protection" --jq '.allow_force_pushes.enabled')"
 echo "deletions allowed:    $(gh_api "repos/$REPO/branches/main/protection" --jq '.allow_deletions.enabled')"
 
@@ -107,4 +110,8 @@ GitHub Pro bootstrap complete.
 
 Deep catalog maintenance still requires your exact owner comment on the audit
 issue: APPROVE CATALOG MAINTENANCE
+
+Protected-main PR approval is separate:
+  - agent/bot/other-authored PR: Charles approves the current head with a review;
+  - Charles-authored PR: comment APPROVE OWNER PR <CURRENT_HEAD_SHA> on that PR.
 EOF
