@@ -65,6 +65,8 @@ The workflow uses trusted default-branch code and never checks out or executes P
 
 A PR that *introduces a new owner-approval implementation* is a bootstrap case: the new workflow is not trusted default-branch code until that PR is merged. If the old protection policy itself deadlocks that PR, Charles may use the existing `enforce_admins:false` emergency bypass **only after explicitly approving that exact PR/head**, then immediately rerun this bootstrap from updated `main` so the server protection matches the newly merged policy.
 
+For the current migration PR, do not treat an old failed/missing `owner-approval` check as proof that the new branch implementation failed—the new implementation cannot become the trusted default-branch gate until that migration reaches `main`. The migration itself must still receive Charles's explicit merge approval before any emergency bypass is used.
+
 Do not permanently disable branch protection to get around the bootstrap.
 
 After that bootstrap merge, verify the server policy without dispatching Actions:
@@ -99,7 +101,7 @@ Use `APPROVE AI MAINTENANCE` only for the separate optional model-assisted moder
 
 ## GitHub Pages privacy note
 
-GitHub Pro can publish Pages from a private source repository, but the normal personal Pages site is public. For that reason `pages.yml` publishes only privacy-safe content:
+GitHub Pro can publish Pages from a private source repository, but the normal personal GitHub Pages site is public. For that reason `pages.yml` publishes only privacy-safe content:
 
 - a sanitized `index.html` with all `data-private` elements/subtrees stripped;
 - `docs/catalog-status.svg` containing aggregate counts only;
