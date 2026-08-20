@@ -4,9 +4,9 @@
 
 .DESCRIPTION
   Enables Pages (Actions build type), sets least-privilege workflow permissions,
-  protects main, then verifies. Pages is dispatched at most once, and only after
-  the API confirms Pages is actually enabled — repeatedly re-dispatching a
-  deployment that cannot succeed just burns Actions minutes.
+  applies the protected-main + SHA-bound owner-approval policy, then verifies.
+  Pages is dispatched at most once, and only after the API confirms Pages is
+  enabled so failed deployment loops do not waste Actions minutes.
 
 .EXAMPLE
   .\scripts\enable-github-pro.ps1
@@ -71,13 +71,12 @@ if (-not $VerifyOnly) {
 
   Write-Host '[2/3] Setting least-privilege workflow permissions...' -ForegroundColor Cyan
   # Read-only GITHUB_TOKEN by default; each workflow widens what it needs.
-  # can_approve_pull_request_reviews lets the owner-approved job OPEN a PR. It cannot
-  # merge main: CODEOWNERS requires a review from @Charlesganu2004, and the bot is
-  # not a code owner.
+  # This repo-level setting lets approved maintenance OPEN a PR. It does not
+  # satisfy owner-approval and does not let automation merge protected main.
   Invoke-GhJson -Method PUT -Endpoint "repos/$Repository/actions/permissions/workflow" `
     -Json '{"default_workflow_permissions":"read","can_approve_pull_request_reviews":true}'
 
-  Write-Host '[3/3] Protecting main with PR + Code Owner approval...' -ForegroundColor Cyan
+  Write-Host '[3/3] Protecting main with PR + SHA-bound owner approval...' -ForegroundColor Cyan
   gh api --method PUT `
     -H 'Accept: application/vnd.github+json' `
     -H "X-GitHub-Api-Version: $ApiVersion" `
@@ -95,8 +94,10 @@ if (Test-PagesEnabled) {
 }
 Write-Host ("main protected:       " + (Get-GhField "repos/$Repository/branches/main" '.protected'))
 $protection = "repos/$Repository/branches/main/protection"
+Write-Host ("required status:      " + (Get-GhField $protection '.required_status_checks.contexts | join(",")'))
 Write-Host ("required PR reviews:  " + (Get-GhField $protection '.required_pull_request_reviews.required_approving_review_count // "none"'))
 Write-Host ("code owner reviews:   " + (Get-GhField $protection '.required_pull_request_reviews.require_code_owner_reviews // false'))
+Write-Host ("conversation resolve: " + (Get-GhField $protection '.required_conversation_resolution.enabled'))
 Write-Host ("force pushes allowed: " + (Get-GhField $protection '.allow_force_pushes.enabled'))
 Write-Host ("deletions allowed:    " + (Get-GhField $protection '.allow_deletions.enabled'))
 
@@ -126,4 +127,6 @@ Write-Host '  Pages:           https://charlesganu2004.github.io/Master-Repo-Use
 Write-Host "  Audit trail:     https://github.com/$Repository/issues"
 Write-Host "  Main protection: https://github.com/$Repository/settings/branches"
 Write-Host ''
-Write-Host 'Deep catalog maintenance still requires your exact owner comment: APPROVE CATALOG MAINTENANCE' -ForegroundColor Yellow
+Write-Host 'Deep catalog maintenance: APPROVE CATALOG MAINTENANCE' -ForegroundColor Yellow
+Write-Host 'Agent/bot/other-authored PRs require Charles approval on the current head.'
+Write-Host 'Charles-authored PRs require: APPROVE OWNER PR <CURRENT_HEAD_SHA>'
