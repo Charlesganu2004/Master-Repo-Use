@@ -169,7 +169,7 @@ jobs:
       github.actor == 'Charlesganu2004' &&
       github.event.issue.pull_request == null &&
       startsWith(github.event.issue.title, '[Catalog Audit]') &&
-      contains(github.event.comment.body, 'APPROVE CATALOG MAINTENANCE')
+      github.event.comment.body == 'APPROVE CATALOG MAINTENANCE'
     runs-on: ubuntu-latest
     timeout-minutes: 75
     permissions:
