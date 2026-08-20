@@ -8,11 +8,9 @@ The Master Repo is the shared **catalog + instructions + security/vetting layer*
 
 ## Live catalog health
 
-Once GitHub Pages is enabled, this visual refreshes when relevant catalog/site data changes on `main` or when the deployment is dispatched manually, without committing generated status changes to `main`:
+Under the approved cost-control Pages workflow, the visual refreshes when relevant catalog/site data changes on `main` or when deployment is dispatched manually; there is no recurring Pages timer:
 
 ![Master Repo live catalog health](https://charlesganu2004.github.io/Master-Repo-Use/docs/catalog-status.svg)
-
-Until Pages is enabled, use the committed snapshot at [docs/catalog-status.svg](docs/catalog-status.svg).
 
 Detailed private status remains in:
 
@@ -21,7 +19,7 @@ Detailed private status remains in:
 - [docs/LIFECYCLE-REVIEW-2026-08-19.md](docs/LIFECYCLE-REVIEW-2026-08-19.md)
 - [managed-repos/README.md](managed-repos/README.md)
 
-The public Pages artifact exposes **health counts only**, not the private repo-by-repo catalog JSON. Local mode shows the complete table.
+The public Pages builder exposes **aggregate health information only**, not the private repo-by-repo catalog. Local mode shows the complete table.
 
 Lifecycle rules:
 
@@ -145,19 +143,19 @@ Local mode can display the full private repo-by-repo health table.
 
 ### GitHub Pages mode
 
-`.github/workflows/pages.yml` builds the command center from approved `main`. The public health visual refreshes when relevant catalog/site data changes or when the workflow is manually dispatched. Routine catalog metadata auditing runs weekly. Deep security maintenance runs only when required or owner-approved. There is no recurring Pages schedule, so the site costs Actions minutes only when something actually changed.
+`.github/workflows/pages.yml` in the cost-control change set builds the command center from approved `main`. The public health visual refreshes when relevant catalog/site data changes or when the workflow is manually dispatched. Routine catalog metadata auditing runs weekly. Deep security maintenance runs only when required or owner-approved. The desired workflow has no recurring Pages schedule.
 
-**One-time owner action:** open **Settings → Pages** and set **Source → GitHub Actions**.
-
-After that, deploy immediately with:
+Pages is configured through GitHub Actions. Deploy manually with:
 
 ```bash
 gh workflow run pages.yml -R Charlesganu2004/Master-Repo-Use
 ```
 
-The workflow now checks whether Pages is enabled before calling the Pages deployment actions. Until the one-time setting is enabled it exits successfully with a warning and skips deployment instead of repeatedly failing.
+The workflow checks whether Pages is enabled before calling deployment actions. If it is disabled, the job warns and skips deployment rather than repeatedly failing.
 
-GitHub Pro allows Pages to use a private source repository, but a normal personal GitHub Pages site is public. For that reason the workflow rebuilds `index.html` through `scripts/build_public_site.py` and publishes only privacy-safe page content plus a count-only status payload/SVG. It does **not** publish the private catalog or detailed findings, and CI fails if catalog slugs/private findings reach the public artifact.
+GitHub Pro allows Pages to use a private source repository, but a normal personal GitHub Pages site is public. The privacy-safe workflow therefore rebuilds `index.html` through `scripts/build_public_site.py`, strips `data-private` content, publishes a count-only status payload/SVG, and fails CI if catalog slugs/private findings reach the public artifact.
+
+**Change-state warning:** until the cost-control PR is merged, the current `main` workflow may still contain the former six-hour schedule and verbatim `index.html` staging. Do not treat the branch-only privacy/cost fixes as permanently live until approved `main` contains them and a clean Pages deployment completes.
 
 ## GitHub Pro automatic audit — no paid AI background loop
 
@@ -197,7 +195,7 @@ That owner comment triggers GitHub Actions to:
 
 It still **does not merge `main`**.
 
-One-time setting required for automatic PR creation: **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests**. This permission lets the bot create the PR; it does not satisfy the separate `owner-approval` gate and does not allow the bot to merge protected `main`.
+One-time setting required for automatic PR creation: **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests**. This permission lets the bot create the PR; it does not satisfy the separate `owner-approval` gate and does not let the bot merge protected `main`.
 
 ### Optional AI maintenance only when judgment is needed
 
@@ -217,30 +215,26 @@ The AI may then work in the active session and prepare a branch/PR. It still may
 
 ## Cost control
 
-GitHub Pro is a fixed subscription that includes **3,000 Actions minutes/month** on
-Linux runners. The routine workflows are intentionally small and use `ubuntu-latest`; the design goal is to remain comfortably inside included usage so routine metered **overage stays at $0**.
+GitHub Pro is the fixed subscription; the repository is designed to keep routine Actions overage at **$0** by limiting recurring work and using included runner usage first.
 
 | Workflow | Trigger | Frequency |
 |---|---|---|
-| Pages | change to site/status files on `main`, or manual dispatch | **no recurring schedule** |
-| Catalog Guardian (audit) | weekly cron, catalog changes, manual | 1x/week |
-| Catalog Guardian (deep scan) | new repo added, flagged repo, owner approval | only when required |
-| Owner approval gate | PR/review/owner-comment events | only while PRs need approval |
-| Safety validation | relevant PR/main changes | only on relevant changes |
+| Pages | relevant `main` change or manual dispatch | **no recurring schedule after merge of the cost-control workflow** |
+| Catalog Guardian (audit) | weekly cron, catalog changes, manual | 1x/week plus real changes |
+| Catalog Guardian (deep scan) | new repo added / owner-approved maintenance | only when required |
+| Owner approval gate | PR/review/owner-comment events | event-driven only |
+| Safety validation | relevant PR/main changes | event-driven only |
 
-- No recurring Pages deployment. The former six-hour cron was removed.
-- No scheduled AI or model calls of any kind: not Claude, OpenAI, Copilot, Codex, or Gemini.
-- No Codespaces requirement. No paid GitHub Models. No paid Snyk usage.
-- Jobs use timeouts and concurrency so stale/duplicate runs do not burn minutes indefinitely.
+- No scheduled paid AI/model calls.
+- No Codespaces requirement.
+- Snyk is optional and only runs if deliberately configured.
+- Jobs use timeouts and concurrency so stale/duplicate work cannot run indefinitely.
 
-The gross figure GitHub displays is not the billed figure -- included usage is applied
-first. The number that matters is the net billed amount.
+The GitHub billing UI can show **gross metered usage** even when included-usage discounts make the **billed/net amount $0**. The billed/net amount is what matters for actual overage.
 
-Recommended one-time owner setup under **Settings -> Billing and licensing -> Budgets and
-alerts**: included-usage alerts at **90%** and **100%**, plus an Actions-scoped budget of
-**$1/month** with *Stop usage when budget limit is reached* enabled.
+Recommended one-time owner setup under **Settings → Billing and licensing → Budgets and alerts**: included-usage alerts such as **90%** and **100%**, plus an Actions-scoped small hard budget if available.
 
-Full detail, including the rules any new workflow has to follow: [docs/COST-CONTROL.md](docs/COST-CONTROL.md).
+Full detail: [docs/COST-CONTROL.md](docs/COST-CONTROL.md).
 
 ## How to use the Master Repo
 
@@ -332,17 +326,15 @@ The built-in source scanner checks for:
 
 - Unicode bidirectional/invisible controls and hidden-text patterns;
 - prompt/instruction injection indicators in agent/MCP content;
-- suspicious download-and-execute, encoded PowerShell, base64/dynamic execution, and credential-exfiltration patterns;
+- suspicious download-and-execute, encoded PowerShell, base64/dynamic execution, and credential-exfiltration patterns in both sink/secret orderings;
 - SQL-injection-style dynamic query construction and command-injection patterns;
 - private keys/secrets;
 - embedded PE/ELF executables;
 - repository deleted/disabled/archive/freshness state.
 
-When installed, Guardian can additionally consume Semgrep, Snyk CLI, Trivy, OSV Scanner, Gitleaks, and ClamAV findings. The security catalog also includes OpenGrep, TruffleHog, Cisco AI Defense MCP Scanner, OSSF Scorecard, Syft, Cosign, and Garak.
+When installed, Guardian can additionally consume Semgrep, Snyk CLI, Trivy, OSV Scanner, Gitleaks, and ClamAV findings. External scanner stdout/stderr is not persisted as a finding: known result codes are classified, unknown/failure codes fail closed as `SCANNER-ERROR`, and Gitleaks persists redacted metadata only.
 
-Static scanners reduce risk but cannot prove third-party code is safe. HIGH findings require review; confirmed CRITICAL findings are removal candidates.
-
-The scanner preserves the latest expensive deep-scan state during lightweight metadata refreshes instead of erasing previous findings.
+Static scanners reduce risk but cannot prove third-party code is safe. HIGH findings require review; confirmed CRITICAL findings are removal candidates. Scanner infrastructure failures are rescan signals, not accusations against the repository.
 
 See [docs/SECURITY-SCANNING.md](docs/SECURITY-SCANNING.md) and [docs/NEW-REPO-VETTING.md](docs/NEW-REPO-VETTING.md).
 
@@ -377,12 +369,12 @@ Contributors work on branches and PRs. The repo includes:
 - `scripts/owner_approval.py` — verifies approval against the **current PR head SHA**.
 - `scripts/branch-protection.json` — one-command GitHub server protection policy.
 
-The owner gate deliberately supports two paths:
+The owner gate supports two paths:
 
 - **PR authored by an agent/bot/other user:** Charles must submit a normal GitHub `APPROVED` review whose `commit_id` matches the current PR head SHA.
 - **PR authored by Charles:** because GitHub does not permit self-approval reviews, Charles must add the exact PR conversation comment `APPROVE OWNER PR <CURRENT_HEAD_SHA>`. A new commit changes the SHA and invalidates the old approval automatically.
 
-The GitHub server review count is therefore set to zero and Code Owner review is not a separate required-review rule. The **required `owner-approval` status check is the authoritative Charles gate** and itself enforces Charles review for non-owner-authored PRs. This avoids the self-authored-PR deadlock without allowing agents to approve themselves.
+The desired GitHub server review count is `0` and Code Owner review is not a separate required-review rule. The **required `owner-approval` status check is the authoritative Charles gate** and itself enforces Charles review for non-owner-authored PRs. This avoids the self-authored-PR deadlock without allowing agents to approve themselves.
 
 ### One-line branch protection setup
 
@@ -392,9 +384,9 @@ Run after cloning and authenticating `gh` as the repo owner, and rerun after thi
 gh api --method PUT -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" repos/Charlesganu2004/Master-Repo-Use/branches/main/protection --input "$HOME/Master-Repo-Use/scripts/branch-protection.json"
 ```
 
-This requires pull requests and the SHA-bound `owner-approval` status, dismisses stale review state, requires conversation resolution, and blocks force-push/deletion. `enforce_admins` is left off so the repository owner retains an emergency recovery bypass.
+This requires pull requests and the SHA-bound `owner-approval` status, requires conversation resolution, and blocks force-push/deletion. `enforce_admins` is left off so the repository owner retains an emergency recovery bypass.
 
-The repository-side file describes the desired policy; the GitHub server setting must be applied after policy changes.
+The repository-side file describes the desired policy; the GitHub server setting must be applied after policy changes. See [docs/GITHUB-PRO-SETUP.md](docs/GITHUB-PRO-SETUP.md) for the bootstrap case where a PR is changing the approval policy itself.
 
 ## Repo map
 
