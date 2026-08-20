@@ -12,7 +12,7 @@ class PublicSitePrivacyTests(unittest.TestCase):
         payload=stage(); self.assertEqual([],builder.verify(payload)); self.assertEqual([],payload["repos"]); self.assertIs(True,payload["public"])
     def test_private_markup_is_removed(self):
         stage(); private=(ROOT/"index.html").read_text(encoding="utf-8"); public=builder.PUBLIC_INDEX.read_text(encoding="utf-8"); self.assertIn("data-private",private); self.assertNotIn("data-private",public); self.assertLess(len(public),len(private)); self.assertEqual([],sorted(n for n in builder.private_repo_names()-{builder.OWN_REPO} if n in public))
-        for keep in ("Health/Security","Access/Deploy","healthRows","loadHealth"):
+        for keep in ("Health & Security","Access & Deploy","healthRows","loadHealth","Public privacy mode"):
             with self.subTest(keep=keep): self.assertIn(keep,public)
     def test_verifier_rejects_per_repo_rows(self):
         payload=stage(); payload["repos"]=[{"repo":"FlowiseAI/Flowise","note":"x"}]; self.assertTrue(builder.verify(payload))
