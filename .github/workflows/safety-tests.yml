@@ -42,6 +42,10 @@ jobs:
         shell: bash
         run: python -m compileall -q scripts tests
 
+      - name: Import Guardian entry point
+        shell: bash
+        run: python scripts/catalog_guardian.py --help > /dev/null
+
       - name: Run unit tests
         shell: bash
         run: python -m unittest discover -s tests -p 'test_*.py' -v
