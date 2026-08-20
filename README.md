@@ -157,11 +157,11 @@ gh workflow run pages.yml -R Charlesganu2004/Master-Repo-Use
 
 The workflow now checks whether Pages is enabled before calling the Pages deployment actions. Until the one-time setting is enabled it exits successfully with a warning and skips deployment instead of repeatedly failing.
 
-GitHub Pro allows Pages to use a private source repository, but a normal personal GitHub Pages site is public. For that reason this workflow publishes only `index.html` plus a sanitized count-only status payload/SVG. It does **not** publish the private catalog or detailed findings.
+GitHub Pro allows Pages to use a private source repository, but a normal personal GitHub Pages site is public. For that reason the workflow rebuilds `index.html` through `scripts/build_public_site.py` and publishes only privacy-safe page content plus a count-only status payload/SVG. It does **not** publish the private catalog or detailed findings, and CI fails if catalog slugs/private findings reach the public artifact.
 
 ## GitHub Pro automatic audit — no paid AI background loop
 
-GitHub Actions now handles the routine maintenance checks. GPT, Claude, Copilot, and Codex are **not** called in the background.
+GitHub Actions handles the routine maintenance checks. GPT, Claude, Copilot, and Codex are **not** called in the background.
 
 `.github/workflows/catalog-guardian.yml` runs:
 
@@ -197,7 +197,7 @@ That owner comment triggers GitHub Actions to:
 
 It still **does not merge `main`**.
 
-One-time setting required for automatic PR creation: **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests**. This permission lets the bot create the PR; it does not bypass your branch/Code Owner approval policy.
+One-time setting required for automatic PR creation: **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests**. This permission lets the bot create the PR; it does not satisfy the separate `owner-approval` gate and does not allow the bot to merge protected `main`.
 
 ### Optional AI maintenance only when judgment is needed
 
@@ -218,20 +218,20 @@ The AI may then work in the active session and prepare a branch/PR. It still may
 ## Cost control
 
 GitHub Pro is a fixed subscription that includes **3,000 Actions minutes/month** on
-Linux runners. Everything here runs on `ubuntu-latest` (1x multiplier), so routine use
-lands around **20-40 minutes/month** and the metered bill stays at **$0**.
+Linux runners. The routine workflows are intentionally small and use `ubuntu-latest`; the design goal is to remain comfortably inside included usage so routine metered **overage stays at $0**.
 
 | Workflow | Trigger | Frequency |
 |---|---|---|
 | Pages | change to site/status files on `main`, or manual dispatch | **no recurring schedule** |
 | Catalog Guardian (audit) | weekly cron, catalog changes, manual | 1x/week |
 | Catalog Guardian (deep scan) | new repo added, flagged repo, owner approval | only when required |
-| Owner approval check | pull request events | per PR |
+| Owner approval gate | PR/review/owner-comment events | only while PRs need approval |
+| Safety validation | relevant PR/main changes | only on relevant changes |
 
 - No recurring Pages deployment. The former six-hour cron was removed.
 - No scheduled AI or model calls of any kind: not Claude, OpenAI, Copilot, Codex, or Gemini.
 - No Codespaces requirement. No paid GitHub Models. No paid Snyk usage.
-- Every job has `timeout-minutes`; every workflow has `concurrency`.
+- Jobs use timeouts and concurrency so stale/duplicate runs do not burn minutes indefinitely.
 
 The gross figure GitHub displays is not the billed figure -- included usage is applied
 first. The number that matters is the net billed amount.
@@ -372,21 +372,29 @@ git switch main && git pull --ff-only origin main
 
 Contributors work on branches and PRs. The repo includes:
 
-- `.github/CODEOWNERS` — `@Charlesganu2004` owns all files.
-- `.github/workflows/owner-approval.yml` — checks for Charles’s PR approval.
+- `.github/CODEOWNERS` — documents `@Charlesganu2004` as owner of all files.
+- `.github/workflows/owner-approval.yml` — trusted owner gate that never executes PR-head code.
+- `scripts/owner_approval.py` — verifies approval against the **current PR head SHA**.
 - `scripts/branch-protection.json` — one-command GitHub server protection policy.
+
+The owner gate deliberately supports two paths:
+
+- **PR authored by an agent/bot/other user:** Charles must submit a normal GitHub `APPROVED` review whose `commit_id` matches the current PR head SHA.
+- **PR authored by Charles:** because GitHub does not permit self-approval reviews, Charles must add the exact PR conversation comment `APPROVE OWNER PR <CURRENT_HEAD_SHA>`. A new commit changes the SHA and invalidates the old approval automatically.
+
+The GitHub server review count is therefore set to zero and Code Owner review is not a separate required-review rule. The **required `owner-approval` status check is the authoritative Charles gate** and itself enforces Charles review for non-owner-authored PRs. This avoids the self-authored-PR deadlock without allowing agents to approve themselves.
 
 ### One-line branch protection setup
 
-Run once after cloning and authenticating `gh` as the repo owner:
+Run after cloning and authenticating `gh` as the repo owner, and rerun after this protection policy changes:
 
 ```bash
-gh api --method PUT -H "Accept: application/vnd.github+json" repos/Charlesganu2004/Master-Repo-Use/branches/main/protection --input "$HOME/Master-Repo-Use/scripts/branch-protection.json"
+gh api --method PUT -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" repos/Charlesganu2004/Master-Repo-Use/branches/main/protection --input "$HOME/Master-Repo-Use/scripts/branch-protection.json"
 ```
 
-This requires PR review, requires Code Owner review, dismisses stale approvals, requires conversation resolution, and blocks force-push/deletion. `enforce_admins` is left off so the repository owner retains an emergency bypass.
+This requires pull requests and the SHA-bound `owner-approval` status, dismisses stale review state, requires conversation resolution, and blocks force-push/deletion. `enforce_admins` is left off so the repository owner retains an emergency recovery bypass.
 
-The repository-side files alone cannot protect a branch; this GitHub server setting must be enabled once.
+The repository-side file describes the desired policy; the GitHub server setting must be applied after policy changes.
 
 ## Repo map
 
@@ -395,10 +403,13 @@ The repository-side files alone cannot protect a branch; this GitHub server sett
 | `AGENTS.md` | portable cross-client contract |
 | `CLAUDE.md` | Claude Code entrypoint |
 | `.github/copilot-instructions.md` | GitHub Copilot repo instructions |
-| `.github/CODEOWNERS` | owner review ownership |
+| `.github/CODEOWNERS` | owner metadata |
 | `.github/workflows/catalog-guardian.yml` | weekly/on-change audit + owner-comment maintenance workflow |
 | `.github/workflows/pages.yml` | change-triggered/manual privacy-safe interactive deployment |
-| `.github/workflows/owner-approval.yml` | PR owner-approval check |
+| `.github/workflows/owner-approval.yml` | trusted SHA-bound PR owner-approval gate |
+| `.github/workflows/safety-tests.yml` | assertion-based scanner/approval/privacy CI |
+| `scripts/owner_approval.py` | owner-approval evaluator/status publisher |
+| `scripts/catalog_security.py` | fail-closed scanner/redaction helpers |
 | `agents/` | specialist agents |
 | `docs/` | setup, security, vetting, lifecycle, status, integration guides |
 | `repo-lists/` | curated repositories grouped by lane |
