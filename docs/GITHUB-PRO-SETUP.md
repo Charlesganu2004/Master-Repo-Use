@@ -49,7 +49,7 @@ There are two approval paths:
 APPROVE OWNER PR <CURRENT_HEAD_SHA>
 ```
 
-For example, obtain the current SHA with:
+Obtain the current SHA with:
 
 ```bash
 gh pr view PR_NUMBER -R Charlesganu2004/Master-Repo-Use --json headRefOid --jq .headRefOid
@@ -66,6 +66,14 @@ The workflow uses trusted default-branch code and never checks out or executes P
 A PR that *introduces a new owner-approval implementation* is a bootstrap case: the new workflow is not trusted default-branch code until that PR is merged. If the old protection policy itself deadlocks that PR, Charles may use the existing `enforce_admins:false` emergency bypass **only after explicitly approving that exact PR/head**, then immediately rerun this bootstrap from updated `main` so the server protection matches the newly merged policy.
 
 Do not permanently disable branch protection to get around the bootstrap.
+
+After that bootstrap merge, verify the server policy without dispatching Actions:
+
+```bash
+gh api repos/Charlesganu2004/Master-Repo-Use/branches/main/protection --jq '{status:.required_status_checks.contexts,reviews:.required_pull_request_reviews.required_approving_review_count,code_owner:.required_pull_request_reviews.require_code_owner_reviews,force:.allow_force_pushes.enabled,delete:.allow_deletions.enabled}'
+```
+
+Expected approval fields are `status:["owner-approval"]`, `reviews:0`, and `code_owner:false`; force push and deletion must remain `false`.
 
 ## What it does not do
 
