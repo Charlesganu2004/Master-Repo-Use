@@ -1,7 +1,6 @@
 # User-provided core repos
 bradygaster/squad
 bradygaster/Squad-IRL
-bradygaster/CustomAgent
 bradygaster/MultiAgent
 microsoft/agents
 OfficeDev/microsoft-365-agents-toolkit
@@ -87,7 +86,6 @@ ib-api-reloaded/ib_async  # replaces erdewit/ib_insync (unmaintained)
 Jesse-ai/jesse
 tradingstrategy-ai/getting-started
 TradingGoose/TradingGoose.github.io
-marcozanetti-dev/intraday-mean-reversion-costs-aware
 ebrahimpichka/DeepRL-trade
 RezaSoleymanifar/neuralHFT
 fsaavedra0003/Agentic-AI-Trading-Bot-with-LLM-reasoning-sentiment-analysis
@@ -142,7 +140,6 @@ cloud-custodian/cloud-custodian
 mlabouardy/komiser
 cloudquery/cloudquery
 turbot/steampipe
-phildougherty/infracost_mcp
 jasonwilbur/cloud-cost-mcp
 OptimNow/finops-mcp-resources
 OptimNow/cloud-finops-skills
@@ -157,9 +154,9 @@ google-gemini/gemini-cli
 browser-use/browser-use
 infiniflow/ragflow
 lobehub/lobe-chat
-geekan/MetaGPT
+FoundationAgents/MetaGPT  # transferred from geekan/MetaGPT 2026-08-25
 OpenBB-finance/OpenBB
-microsoft/autogen
+microsoft/autogen  # superseded 2026-08-25 by microsoft/agent-framework (AutoGen+SK merger); reference only
 microsoft/ai-agents-for-beginners
 mem0ai/mem0
 FlowiseAI/Flowise
@@ -271,3 +268,29 @@ github/awesome-copilot
 
 # Media tools — use only on media you own or are authorized to modify
 D-Ogi/WatermarkRemover-AI
+
+# --- Added 2026-08-25: local models, design/motion, ADK lanes ---
+AThevon/genjutsu
+LottieFiles/motion-design-skill
+google-deepmind/gemma
+google-gemini/cookbook
+google/adk-java
+google/adk-python
+google/adk-samples
+google/adk-web
+google/gemma.cpp
+googleapis/python-genai
+greensock/GSAP
+microsoft/BitNet
+microsoft/Olive
+microsoft/PhiCookBook
+microsoft/agent-framework
+microsoft/foundry-local
+microsoft/onnxruntime-genai
+microsoft/semantic-kernel
+mrdoob/three.js
+naplesblue/apple-design-skill
+ollama/ollama
+ollama/ollama-js
+ollama/ollama-python
+openai/openai-agents-python

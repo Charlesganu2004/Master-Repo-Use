@@ -50,7 +50,20 @@ PROMPT_INJECTION = [
 
 SQL = [
     re.compile(r"(?:execute|query|raw|exec)\s*\(\s*f?[\"'][^\n]*\b(?:select|insert|update|delete)\b[^\n]*(?:\{|\+|%s|format\()", re.I),
-    re.compile(r"(?:SELECT|INSERT|UPDATE|DELETE)[^\n]{0,200}(?:\+\s*\w+|\$\{\w+\}|\{\w+\})", re.I),
+    # Require real SQL *structure*, not just a keyword. The previous form matched any
+    # line containing "select"/"update"/"deleted" followed by a "+ word" or "{word}",
+    # which fires on ordinary English prose -- "connect/select private repo | connector
+    # + supported tools", "model selection built in {x}". Constant false HIGH findings
+    # teach the owner to ignore the scanner, so precision here is a safety property,
+    # not a style preference.
+    re.compile(
+        r"\b(?:SELECT\b[^\n]{0,200}?\bFROM\b"
+        r"|INSERT\s+INTO\b"
+        r"|UPDATE\b[^\n]{0,200}?\bSET\b"
+        r"|DELETE\s+FROM\b)"
+        r"[^\n]{0,200}(?:\+\s*\w+|\$\{\w+\}|\{\w+\}|%s|\bformat\s*\()",
+        re.I,
+    ),
 ]
 
 COMMAND = [

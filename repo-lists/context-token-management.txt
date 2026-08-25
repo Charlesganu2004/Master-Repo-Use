@@ -1,3 +1,18 @@
-# Context / Token Management
-microsoft/LLMLingua
-ZongqianLi/Prompt-Compression-Survey  # static academic reference; lifecycle override keeps it reference-only
+# Context / Token Management & Token Reducers
+# Reviewed 2026-08-25.
+#
+# Honest state of this field: it is small and noisy. Dozens of "token optimizer"
+# repos exist with single-digit stars and no track record. Only entries with real
+# adoption or a real paper behind them belong here. Everything below is either
+# widely used, vendor-backed, or explicitly marked reference-only.
+
+# --- Active tooling
+headroomlabs-ai/headroom          # context compression + cross-agent memory
+thedotmack/claude-mem             # persistent observation/search memory for Claude Code
+ooples/token-optimizer-mcp        # measures token savings per agent; MCP context optimizer
+lucasrosati/claude-code-memory-setup  # Obsidian-backed memory pattern; vendor-neutral technique
+
+# --- Research / reference (do not treat as runtime dependencies)
+microsoft/LLMLingua               # prompt compression; last release quiet since 2026-04, still the reference impl
+ZongqianLi/Prompt-Compression-Survey   # static academic survey; lifecycle override keeps it reference-only
+YuhaoLin2005/compact-counter-concept   # archived compaction measurement utility; reference-only

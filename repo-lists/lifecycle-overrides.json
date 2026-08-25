@@ -11,9 +11,61 @@
     "mode": "reference",
     "note": "Static academic survey/reference repository. No repository license was detected, so do not fork or copy code/content into a managed replacement without explicit permission."
   },
+  "bradygaster/MultiAgent": {
+    "mode": "reference",
+    "note": "Microsoft dev-advocate conference demo, point-in-time by construction. Reference only; do not depend on it. For real agent work use microsoft/agent-framework."
+  },
+  "bradygaster/Squad-IRL": {
+    "mode": "reference",
+    "note": "Microsoft dev-advocate demo project. Reference only."
+  },
+  "bradygaster/dotnet-cloud-native-build-2023": {
+    "mode": "reference",
+    "note": "Build 2023 conference demo. Pinned to that event; reference only."
+  },
+  "bukosabino/ta": {
+    "mode": "reference",
+    "note": "Technical-analysis indicator maths (5,180 stars). The formulas do not change; quiet is correct."
+  },
+  "coinbase/cdp-sdk-python": {
+    "mode": "reference",
+    "note": "Superseded 2026-08-25 by the coinbase/cdp-sdk monorepo (pushed 2026-08-25). Kept for existing Python integrations; prefer coinbase/cdp-sdk for new work."
+  },
+  "facebookresearch/vjepa2": {
+    "mode": "reference",
+    "note": "Meta research release. Finished artifact rather than a maintained runtime package."
+  },
+  "langchain-ai/open_deep_research": {
+    "mode": "reference",
+    "note": "Archived 2026-08-10 with a push 15d prior. Technique remains worth reading; not a maintained dependency. Continuation work lives in langchain-ai/langgraph."
+  },
+  "microsoft/LLMLingua": {
+    "mode": "reference",
+    "note": "Still the reference prompt-compression implementation with a published paper behind it. Reference-grade rather than fast-moving."
+  },
+  "microsoft/autogen": {
+    "mode": "reference",
+    "note": "Superseded 2026-08-25 by microsoft/agent-framework (the announced AutoGen + Semantic Kernel merger). Evidence: AutoGen last release python-v0.7.5 on 2025-09-30; agent-framework released dotnet-1.19.0 on 2026-08-22 and ships roughly weekly. Existing AutoGen code is not broken and needs no emergency migration; start new work on agent-framework. See docs/ADK-GUIDE.md."
+  },
+  "microsoft/lets-learn-mcp-python": {
+    "mode": "reference",
+    "note": "Official Microsoft course material pinned to a teaching moment. Not intended to track MCP spec changes."
+  },
+  "passiv/snaptrade-react": {
+    "mode": "reference",
+    "note": "Official vendor SDK for a stable API. Low churn is expected rather than a warning sign."
+  },
   "qiskit-community/ibm-quantum-challenge-fall-2021": {
     "mode": "reference",
     "note": "Historical IBM Quantum Challenge material. Static by design; keep only as an educational/reference artifact rather than an active runtime dependency."
+  },
+  "rmurai0610/MASt3R-SLAM": {
+    "mode": "reference",
+    "note": "Paper-code for a published SLAM method (3,166 stars). Research artifacts are finished, not stale; age is the wrong metric."
+  },
+  "rpng/open_vins": {
+    "mode": "reference",
+    "note": "Mature, widely-cited visual-inertial odometry library. Stability is the feature; low churn is expected."
   },
   "vision-x-nyu/thinking-in-space": {
     "mode": "reference",

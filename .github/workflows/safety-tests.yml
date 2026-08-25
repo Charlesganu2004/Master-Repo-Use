@@ -9,6 +9,9 @@ on:
       - '.github/workflows/**'
       - 'docs/COST-CONTROL.md'
       - 'docs/SECURITY-SCANNING.md'
+      - 'docs/hardware-profiles.json'
+      - 'repo-lists/public-allowlist.txt'
+      - 'repo-lists/lifecycle-overrides.json'
   push:
     branches: [main]
     paths:
@@ -16,6 +19,9 @@ on:
       - 'tests/**'
       - 'index.html'
       - '.github/workflows/**'
+      - 'docs/hardware-profiles.json'
+      - 'repo-lists/public-allowlist.txt'
+      - 'repo-lists/lifecycle-overrides.json'
   workflow_dispatch:
 
 permissions:

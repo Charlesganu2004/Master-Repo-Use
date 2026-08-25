@@ -368,9 +368,19 @@ def classify(repo: str, meta: dict | None, old: dict, override: dict, stale: int
 
     if disabled:
         status, note = "REMOVE", "repository disabled"
-    elif mode in {"keep", "reference", "archived-active"}:
-        status = "REVIEW" if archived or (age is not None and age > stale) else "HEALTHY"
+    elif mode in {"keep", "reference"}:
+        # An owner override is a decision that age is the wrong signal for this repo
+        # (finished research artifact, pinned course material, stable vendor SDK).
+        # Honour it: hold the row HEALTHY so the weekly audit converges instead of
+        # re-reporting the same accepted exception forever. Archival is a genuine
+        # state change the owner has not yet ruled on, so it still escalates.
+        status = "REVIEW" if archived else "HEALTHY"
         note = note or f"owner lifecycle override: {mode}"
+    elif mode == "archived-active":
+        # Deliberately stays REVIEW. This mode tracks a sunset in progress and is
+        # meant to keep nagging until the owner removes or replaces the entry.
+        status = "REVIEW"
+        note = note or "owner lifecycle override: archived-active"
     elif archived and age is not None and age <= stale:
         status, note = "REVIEW", f"archived but recently pushed {age}d ago; transition/release review required"
     elif archived and archived_days is not None and archived_days < archive_grace:

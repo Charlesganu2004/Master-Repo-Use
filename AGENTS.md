@@ -59,6 +59,9 @@ Routine maintenance is **GitHub-first and deterministic**, not an automatic paid
 - Optional token/work budget: `docs/TOKEN-BUDGET.md`
 - Optional AI maintenance: `docs/AI-MAINTENANCE.md`
 - Full curated list: `repo-lists/all-curated.txt`
+- Local model sizing: `docs/LOCAL-MODEL-HARDWARE.md` + `docs/hardware-profiles.json`
+- Agent development kits: `docs/ADK-GUIDE.md`
+- Current lifecycle triage: `docs/CATALOG-TRIAGE-2026-08-25.md`
 
 ## High-use cross-agent tools
 
@@ -72,6 +75,22 @@ Routine maintenance is **GitHub-first and deterministic**, not an automatic paid
 - `github/github-mcp-server`
 - `openai/codex`
 - `D-Ogi/WatermarkRemover-AI` — only for media the user owns or is authorized to modify.
+
+## Local-first model selection
+
+Before spending hosted tokens on a task a small local model can do, check what the machine can
+host: `docs/hardware-profiles.json` carries the sizing formula, tiers and per-model minimums, and
+`docs/LOCAL-MODEL-HARDWARE.md` explains them. Vendors in that lane are limited to Microsoft,
+Google/Gemini and Ollama. Below roughly 8 GB of RAM on Windows, local inference is not a real
+option and a hosted API is the correct answer — say so rather than recommending something
+that will swap.
+
+## Public vs private surface
+
+`repo-lists/public-allowlist.txt` is the only sanctioned way a catalog slug reaches the public
+Pages site. Do not add a slug there to make a build pass; a build failure means the artifact was
+about to publish private catalog composition. Elements flagged private in `index.html` are
+stripped at build time.
 
 ## Context efficiency
 

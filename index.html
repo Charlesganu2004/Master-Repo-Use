@@ -57,6 +57,60 @@ button{color:inherit}
 footer{margin-top:28px;border-top:1px solid var(--line);padding:18px 3px;color:#64748b;font-size:11px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .toast{position:fixed;right:20px;bottom:20px;border:1px solid rgba(52,211,153,.3);background:rgba(6,20,18,.94);color:#d1fae5;border-radius:12px;padding:11px 14px;box-shadow:var(--shadow);transform:translateY(30px);opacity:0;pointer-events:none;transition:.2s;z-index:10}.toast.show{transform:none;opacity:1}
 @media(max-width:1050px){.hero-grid{grid-template-columns:1fr}.dashboard{grid-template-columns:repeat(4,1fr)}.dashboard .meta{grid-column:1/-1}.card{grid-column:span 6}}
+/* ---- Local-model hardware advisor ---- */
+.advisor{display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:18px;align-items:start;margin:4px 0 18px}
+.advisor-controls{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;backdrop-filter:blur(8px)}
+.advisor-controls label{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.ram-readout{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+.ram-readout strong{font-size:38px;line-height:1;font-variant-numeric:tabular-nums}
+.ram-readout span{font-size:14px;color:var(--muted)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--purple));outline:none;margin:10px 0 4px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--blue);cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--blue);cursor:pointer}
+.ram-ticks{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
+.seg{display:flex;gap:6px;margin-top:16px}
+.seg button{flex:1;padding:7px 4px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;transition:.16s}
+.seg button:hover{border-color:var(--line-strong);color:var(--text)}
+.seg button.on{background:rgba(96,165,250,.16);border-color:rgba(96,165,250,.5);color:var(--blue)}
+.verdict{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;position:relative;overflow:hidden}
+.verdict:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--vc,var(--blue))}
+.verdict h3{margin:0 0 6px;font-size:22px}
+.verdict .vtag{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:color-mix(in srgb,var(--vc) 18%,transparent);color:var(--vc);border:1px solid color-mix(in srgb,var(--vc) 40%,transparent);margin-bottom:10px}
+.verdict p{margin:0 0 14px;color:var(--muted)}
+.vstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.vstat{background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 13px}
+.vstat small{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.vstat strong{font-size:17px;font-variant-numeric:tabular-nums}
+.fitlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:6px}
+.fit{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 15px;transition:.18s;position:relative}
+.fit:hover{border-color:var(--line-strong);transform:translateY(-2px)}
+.fit.no{opacity:.4}
+.fit-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px}
+.fit-head code{font-size:13px;color:var(--text);font-weight:600;background:none;padding:0}
+.fit .vend{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.fit p{margin:0 0 8px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.fit .need{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.fit .need b{color:var(--green)}
+.fit.no .need b{color:var(--red)}
+.formula{background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 16px;margin-top:16px;font-size:12.5px;color:var(--muted)}
+.formula code{display:block;margin:8px 0;padding:10px 12px;background:rgba(0,0,0,.32);border-radius:8px;color:var(--cyan);font-size:12px;overflow-x:auto;white-space:pre}
+/* ---- System map ---- */
+.mapwrap{display:grid;grid-template-columns:1fr minmax(260px,330px);gap:18px;align-items:start}
+.mapcanvas{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px;overflow-x:auto}
+.mapcanvas svg{width:100%;min-width:660px;height:auto;display:block}
+.mapnode{cursor:pointer}
+.mapnode rect{transition:.18s}
+.mapnode:hover rect,.mapnode.sel rect{stroke-width:2}
+.mapnode:focus{outline:none}
+.mapnode:focus rect{stroke:var(--cyan);stroke-width:2}
+.mapdetail{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;position:sticky;top:18px}
+.mapdetail h3{margin:0 0 4px;font-size:18px}
+.mapdetail .kind{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:block}
+.mapdetail p{margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.6}
+.mapdetail ul{margin:0 0 12px;padding-left:17px;font-size:12.5px;color:var(--muted);line-height:1.65}
+.maplegend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:11px;color:var(--muted)}
+.maplegend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:middle}
+@media(max-width:900px){.advisor,.mapwrap{grid-template-columns:1fr}.mapdetail{position:static}}
 @media(max-width:720px){.wrap{padding:18px 14px 30px}.topbar{align-items:flex-start}.top-actions{width:100%;justify-content:flex-start}.hero{padding:22px}.dashboard{grid-template-columns:1fr 1fr}.dashboard .meta{grid-column:1/-1}.commandbar{grid-template-columns:1fr}.tabs{width:100%}.card,.card.wide{grid-column:1/-1}.lifecycle{grid-template-columns:1fr 1fr}.section-head{align-items:flex-start;flex-direction:column}.hero h2{font-size:34px}}
 @media(max-width:430px){.dashboard{grid-template-columns:1fr}.dashboard .meta{grid-column:auto}.lifecycle{grid-template-columns:1fr}.top-actions .btn{flex:1}.brand-copy p{white-space:normal}.hero{border-radius:20px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
@@ -110,6 +164,10 @@ footer{margin-top:28px;border-top:1px solid var(--line);padding:18px 3px;color:#
     <button class="tab active" data-view="setup">Setup</button>
     <button class="tab" data-view="maintenance">Maintenance</button>
     <button class="tab" data-view="tools" data-private>Tools</button>
+    <button class="tab" data-view="models">Local Models</button>
+    <button class="tab" data-view="adk">ADKs</button>
+    <button class="tab" data-view="map">System Map</button>
+    <button class="tab" data-view="design">Design</button>
     <button class="tab" data-view="health">Health & Security</button>
     <button class="tab" data-view="access">Access & Deploy</button>
   </nav>
@@ -155,6 +213,192 @@ footer{margin-top:28px;border-top:1px solid var(--line);padding:18px 3px;color:#
   </div>
 </section>
 
+<section id="models" class="view">
+  <div class="section-head"><div><h2>Local models &amp; hardware fit</h2><p>Tell it how much RAM you have. It tells you what actually runs — and what to install.</p></div><div class="section-meta">Microsoft · Google/Gemini · Ollama only</div></div>
+
+  <div class="advisor">
+    <div class="advisor-controls">
+      <label for="ram">Installed system memory</label>
+      <div class="ram-readout"><strong id="ramVal">16</strong><span>GB RAM</span></div>
+      <input id="ram" type="range" min="4" max="32" step="4" value="16" aria-describedby="ramHint">
+      <div class="ram-ticks"><span>4</span><span>8</span><span>12</span><span>16</span><span>20</span><span>24</span><span>28</span><span>32</span></div>
+      <label for="osSeg" style="margin-top:18px">Operating system</label>
+      <div class="seg" id="osSeg" role="group" aria-label="Operating system">
+        <button data-os="windows" class="on">Windows</button>
+        <button data-os="macos">macOS</button>
+        <button data-os="linux">Linux</button>
+      </div>
+      <p id="ramHint" class="muted" style="font-size:11.5px;margin:14px 0 0;line-height:1.55">Discrete GPU VRAM substitutes for system RAM on the weights term — a 16 GB box with an 8 GB GPU behaves closer to 24 GB.</p>
+    </div>
+    <div class="verdict" id="verdict">
+      <span class="vtag" id="vTag">loading</span>
+      <h3 id="vTitle">Reading hardware profiles…</h3>
+      <p id="vSummary">Serve this page over HTTP so it can load <code>docs/hardware-profiles.json</code>.</p>
+      <div class="vstats">
+        <div class="vstat"><small>Usable</small><strong id="vUsable">—</strong></div>
+        <div class="vstat"><small>Models that fit</small><strong id="vModels">—</strong></div>
+        <div class="vstat"><small>Repos to install</small><strong id="vRepos">—</strong></div>
+        <div class="vstat"><small>Largest model</small><strong id="vLargest">—</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-head"><div><h3 style="font-size:16px;margin:0">Models</h3><p>Sorted by capability. Dimmed entries need more memory than you have.</p></div><div class="section-meta" id="modelCount"></div></div>
+  <div class="fitlist" id="modelList"></div>
+
+  <div class="section-head"><div><h3 style="font-size:16px;margin:0">Repos worth installing at this tier</h3><p>Filtered from the catalog&rsquo;s local-model lane.</p></div><div class="section-meta" id="repoCount"></div></div>
+  <div class="fitlist" id="repoList"></div>
+
+  <div class="formula">
+    <strong style="color:var(--text)">How these numbers are produced.</strong> Computed estimates, not benchmarks — deliberately conservative, so &ldquo;fits&rdquo; means fits. The arithmetic is published so you can disagree with it:
+    <code>weights_gb  = params_b × bytes_per_param[quant]
+required_gb = weights_gb + runtime_overhead + kv_cache
+usable_gb   = total_ram − os_reserve[platform]
+fits when   required_gb ≤ usable_gb</code>
+    <span id="formulaNums"></span> A unit test re-derives every published minimum from this formula and fails if the data drifts.
+  </div>
+
+  <div class="grid" style="margin-top:18px">
+    <article class="card"><span class="tag green">Step 1</span><h3>Install the runtime</h3><p class="muted">One binary. Everything else on this page assumes it.</p><div class="cmd" data-command>winget install Ollama.Ollama<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag blue">Step 2</span><h3>Pull a model that fits</h3><p class="muted">Substitute the tag the advisor recommends above.</p><div class="cmd" data-command>ollama pull gemma3:4b<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag blue">Step 3</span><h3>Confirm the real size</h3><p class="muted">Model libraries move faster than this page. Verify before relying on a tag.</p><div class="cmd" data-command>ollama show gemma3:4b<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag yellow">Licensing</span><h3>Gemma is not OSI-licensed</h3><p class="muted">Gemma ships under the Gemma Terms of Use with real use restrictions. Phi and BitNet are MIT. Read the terms before shipping a product on Gemma.</p></article>
+    <article class="card wide"><span class="tag purple">Full guide</span><h3>Local model &amp; hardware documentation</h3><p class="muted">Tier table, the 4 GB answer nobody wants, per-vendor notes, and the reasoning behind every figure above.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/LOCAL-MODEL-HARDWARE.md">Open hardware guide ↗</a></article>
+  </div>
+</section>
+
+<section id="adk" class="view">
+  <div class="section-head"><div><h2>Agent Development Kits</h2><p>First-party, vendor-maintained agent frameworks &mdash; the supported successors to the 2024-era community stacks.</p></div><div class="section-meta">Pick one, then keep tools in MCP</div></div>
+  <div class="grid">
+    <article class="card wide"><div class="card-head"><div><span class="tag green">Start here &middot; Python</span><h3>Google ADK for Python</h3></div><div class="iconbox">&#9670;</div></div><p class="muted">Largest ADK by adoption, with the strongest docs and sample set. Deploys to Vertex Agent Engine.</p><div class="cmd" data-command>pip install google-adk<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/google/adk-python">Upstream &#8599;</a></article>
+    <article class="card"><span class="tag blue">Debug UI</span><h3>ADK dev web UI</h3><p class="muted">Browser UI for stepping through an agent&rsquo;s tool calls. Pairs with the Python or Java runtime.</p><div class="cmd" data-command>adk web<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/google/adk-web">Upstream &#8599;</a></article>
+    <article class="card"><span class="tag blue">Read first</span><h3>ADK samples</h3><p class="muted">Working examples. Read these before writing anything of your own.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/google/adk-samples">Upstream &#8599;</a></article>
+    <article class="card"><span class="tag purple">.NET / Python</span><h3>Microsoft Agent Framework</h3><p class="muted">The announced merger of AutoGen and Semantic Kernel. Ships roughly weekly; deploys to Azure AI Foundry.</p><div class="cmd" data-command>pip install agent-framework<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/microsoft/agent-framework">Upstream &#8599;</a></article>
+    <article class="card"><span class="tag purple">JVM</span><h3>Google ADK for Java</h3><p class="muted">Same agent model, JVM-native, for enterprise Java stacks.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/google/adk-java">Upstream &#8599;</a></article>
+    <article class="card"><span class="tag blue">OpenAI models</span><h3>OpenAI Agents SDK</h3><p class="muted">Thin and unopinionated, oriented around handoffs between agents.</p><div class="cmd" data-command>pip install openai-agents<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/openai/openai-agents-python">Upstream &#8599;</a></article>
+    <article class="card wide"><span class="tag yellow">Supersession &middot; verified 2026-08-25</span><h3>AutoGen is superseded</h3><p class="muted">AutoGen&rsquo;s last release was <code>python-v0.7.5</code> on 2025-09-30. Microsoft Agent Framework released <code>dotnet-1.19.0</code> on 2026-08-22 and ships roughly weekly. Existing AutoGen code is not broken and needs no emergency migration &mdash; but new work should start on Agent Framework.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/ADK-GUIDE.md">Read the full comparison &#8599;</a></article>
+    <article class="card wide"><span class="tag green">Portability hedge</span><h3>Keep your tools in MCP, not in the framework</h3><p class="muted">All three ADKs speak MCP. Register a tool once as an MCP server and every kit above can call it &mdash; the cheapest insurance against picking the wrong framework.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/MCP-SERVERS.md">MCP servers &#8599;</a></article>
+    <article class="card"><span class="tag yellow">Cost</span><h3>Run samples against Ollama</h3><p class="muted">ADK samples default to hosted models. Point them at a local endpoint while developing.</p><div class="cmd" data-command>export OPENAI_BASE_URL=http://localhost:11434/v1<button class="copy">Copy</button></div></article>
+  </div>
+  <div class="formula"><strong style="color:var(--text)">When an ADK is overkill.</strong> Reach for one only when you need at least two of: multi-agent handoff, durable cross-turn memory, a tool registry shared by several agents, or a managed deployment target. For a single agent with three tools, call the API directly &mdash; the framework is pure overhead.</div>
+</section>
+
+<section id="design" class="view">
+  <div class="section-head"><div><h2>Design, motion &amp; 3D</h2><p>The reference material behind this interface &mdash; and an honest note on what is a library versus what is just advice.</p></div><div class="section-meta">Libraries &ne; skill packs</div></div>
+  <div class="grid">
+    <article class="card wide"><div class="card-head"><div><span class="tag green">Library &middot; load-bearing</span><h3>three.js</h3></div><div class="iconbox">&#9671;</div></div><p class="muted">The WebGL/WebGPU standard. 114k stars, MIT, shipping constantly. Reach for it when you genuinely need 3D &mdash; not for decoration.</p><div class="cmd" data-command>npm install three<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/mrdoob/three.js">Upstream &#8599;</a></article>
+    <article class="card wide"><div class="card-head"><div><span class="tag green">Library &middot; load-bearing</span><h3>GSAP</h3></div><div class="iconbox">&#8776;</div></div><p class="muted">The animation engine most motion work is built on. Note the licence: GSAP ships under GreenSock&rsquo;s own terms, <em>not</em> an OSI licence. Read them before commercial use.</p><div class="cmd" data-command>npm install gsap<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/greensock/GSAP">Upstream &#8599;</a></article>
+    <article class="card" data-private><span class="tag purple">Skill pack &middot; advisory</span><h3>Motion design skill</h3><p class="muted">LottieFiles&rsquo; motion-design instruction pack. The largest of the design skill packs by adoption.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/LottieFiles/motion-design-skill">Upstream &#8599;</a></article>
+    <article class="card" data-private><span class="tag purple">Skill pack &middot; advisory</span><h3>Apple design skill</h3><p class="muted">Human Interface Guidelines distilled into agent instructions.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/naplesblue/apple-design-skill">Upstream &#8599;</a></article>
+    <article class="card" data-private><span class="tag purple">Skill pack &middot; advisory</span><h3>Genjutsu</h3><p class="muted">Visual-effect and interaction pack for agent-driven UI work.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/AThevon/genjutsu">Upstream &#8599;</a></article>
+    <article class="card wide"><span class="tag yellow">Read this before adopting a skill pack</span><h3>Skill packs are prompts, not code</h3><p class="muted">The three entries above are instruction files, not dependencies. They are small, young and community-run &mdash; several near-identical forks exist for each. Read one end-to-end before pointing an agent at it; a skill pack can quietly change how every UI decision gets made. Nothing here is vendored into this repository: the catalog stores URLs only.</p></article>
+  </div>
+  <div class="section-head"><div><h3 style="font-size:16px;margin:0">Design rules this page follows</h3><p>Constraints, not preferences.</p></div></div>
+  <div class="grid">
+    <article class="card"><span class="tag blue">Constraint</span><h3>Single file, zero dependencies</h3><p class="muted">No bundler, no CDN, no runtime fetch beyond same-origin JSON. The motion here is CSS and inline SVG. That is why three.js and GSAP are catalogued as references rather than loaded.</p></article>
+    <article class="card"><span class="tag blue">Constraint</span><h3>Two audiences, one document</h3><p class="muted">Elements flagged private in the markup are stripped at build time for the public artifact. The private and public views can never drift apart because they are the same file.</p></article>
+    <article class="card"><span class="tag blue">Constraint</span><h3>Motion respects the OS</h3><p class="muted">Every animation is disabled under <code>prefers-reduced-motion</code>. Motion is feedback here, never decoration.</p></article>
+  </div>
+</section>
+
+<section id="map" class="view">
+  <div class="section-head"><div><h2>System map</h2><p>Every layer, from the client you type in to the model that answers. Click any node.</p></div><div class="section-meta">Click or tab to a node</div></div>
+  <div class="mapwrap">
+    <div class="mapcanvas">
+<svg viewBox="0 0 900 596" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Master Repo system map">
+<style>
+.mlabel{font:600 10px Inter,system-ui,sans-serif;fill:#64748b;letter-spacing:.14em;text-transform:uppercase}
+.mtitle{font:700 13px Inter,system-ui,sans-serif}
+.msub{font:400 10.5px Inter,system-ui,sans-serif;fill:#94a3b8}
+.mbus{stroke:rgba(148,163,184,.22);stroke-width:1}
+</style>
+  <line x1="125" y1="120" x2="785" y2="120" class="mbus"/>
+  <line x1="125" y1="88" x2="125" y2="120" class="mbus"/>
+  <line x1="125" y1="120" x2="125" y2="152" class="mbus"/>
+  <line x1="345" y1="88" x2="345" y2="120" class="mbus"/>
+  <line x1="345" y1="120" x2="345" y2="152" class="mbus"/>
+  <line x1="565" y1="88" x2="565" y2="120" class="mbus"/>
+  <line x1="565" y1="120" x2="565" y2="152" class="mbus"/>
+  <line x1="785" y1="88" x2="785" y2="120" class="mbus"/>
+  <line x1="785" y1="120" x2="785" y2="152" class="mbus"/>
+  <line x1="125" y1="236" x2="785" y2="236" class="mbus"/>
+  <line x1="125" y1="204" x2="125" y2="236" class="mbus"/>
+  <line x1="125" y1="236" x2="125" y2="268" class="mbus"/>
+  <line x1="345" y1="204" x2="345" y2="236" class="mbus"/>
+  <line x1="345" y1="236" x2="345" y2="268" class="mbus"/>
+  <line x1="565" y1="204" x2="565" y2="236" class="mbus"/>
+  <line x1="565" y1="236" x2="565" y2="268" class="mbus"/>
+  <line x1="785" y1="204" x2="785" y2="236" class="mbus"/>
+  <line x1="785" y1="236" x2="785" y2="268" class="mbus"/>
+  <line x1="125" y1="352" x2="785" y2="352" class="mbus"/>
+  <line x1="125" y1="320" x2="125" y2="352" class="mbus"/>
+  <line x1="125" y1="352" x2="125" y2="384" class="mbus"/>
+  <line x1="345" y1="320" x2="345" y2="352" class="mbus"/>
+  <line x1="345" y1="352" x2="345" y2="384" class="mbus"/>
+  <line x1="565" y1="320" x2="565" y2="352" class="mbus"/>
+  <line x1="565" y1="352" x2="565" y2="384" class="mbus"/>
+  <line x1="785" y1="320" x2="785" y2="352" class="mbus"/>
+  <line x1="785" y1="352" x2="785" y2="384" class="mbus"/>
+  <line x1="125" y1="468" x2="785" y2="468" class="mbus"/>
+  <line x1="125" y1="436" x2="125" y2="468" class="mbus"/>
+  <line x1="125" y1="468" x2="125" y2="500" class="mbus"/>
+  <line x1="345" y1="436" x2="345" y2="468" class="mbus"/>
+  <line x1="345" y1="468" x2="345" y2="500" class="mbus"/>
+  <line x1="565" y1="436" x2="565" y2="468" class="mbus"/>
+  <line x1="565" y1="468" x2="565" y2="500" class="mbus"/>
+  <line x1="785" y1="436" x2="785" y2="468" class="mbus"/>
+  <line x1="785" y1="468" x2="785" y2="500" class="mbus"/>
+  <text x="30" y="24" class="mlabel">Clients</text>
+  <g class="mapnode" data-node="claude" tabindex="0" role="button" aria-label="Claude Code"><rect x="30" y="36" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#60a5fa" stroke-opacity=".55"/><text x="44" y="58" class="mtitle" fill="#60a5fa">Claude Code</text><text x="44" y="75" class="msub">CLI &middot; desktop &middot; IDE</text></g>
+  <g class="mapnode" data-node="codex" tabindex="0" role="button" aria-label="Codex"><rect x="250" y="36" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#60a5fa" stroke-opacity=".55"/><text x="264" y="58" class="mtitle" fill="#60a5fa">Codex</text><text x="264" y="75" class="msub">OpenAI coding agent</text></g>
+  <g class="mapnode" data-node="copilot" tabindex="0" role="button" aria-label="GitHub Copilot"><rect x="470" y="36" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#60a5fa" stroke-opacity=".55"/><text x="484" y="58" class="mtitle" fill="#60a5fa">GitHub Copilot</text><text x="484" y="75" class="msub">IDE &middot; PR review</text></g>
+  <g class="mapnode" data-node="gemini" tabindex="0" role="button" aria-label="Gemini"><rect x="690" y="36" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#60a5fa" stroke-opacity=".55"/><text x="704" y="58" class="mtitle" fill="#60a5fa">Gemini</text><text x="704" y="75" class="msub">CLI &middot; Code Assist</text></g>
+  <text x="30" y="140" class="mlabel">Instruction layer</text>
+  <g class="mapnode" data-node="agentsmd" tabindex="0" role="button" aria-label="AGENTS.md"><rect x="30" y="152" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#a78bfa" stroke-opacity=".55"/><text x="44" y="174" class="mtitle" fill="#a78bfa">AGENTS.md</text><text x="44" y="191" class="msub">portable contract</text></g>
+  <g class="mapnode" data-node="claudemd" tabindex="0" role="button" aria-label="CLAUDE.md"><rect x="250" y="152" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#a78bfa" stroke-opacity=".55"/><text x="264" y="174" class="mtitle" fill="#a78bfa">CLAUDE.md</text><text x="264" y="191" class="msub">Claude entrypoint</text></g>
+  <g class="mapnode" data-node="geminimd" tabindex="0" role="button" aria-label="GEMINI.md"><rect x="470" y="152" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#a78bfa" stroke-opacity=".55"/><text x="484" y="174" class="mtitle" fill="#a78bfa">GEMINI.md</text><text x="484" y="191" class="msub">Gemini entrypoint</text></g>
+  <g class="mapnode" data-node="copilotmd" tabindex="0" role="button" aria-label="copilot-instructions"><rect x="690" y="152" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#a78bfa" stroke-opacity=".55"/><text x="704" y="174" class="mtitle" fill="#a78bfa">copilot-instructions</text><text x="704" y="191" class="msub">Copilot entrypoint</text></g>
+  <text x="30" y="256" class="mlabel">Master Repo core</text>
+  <g class="mapnode" data-node="lanes" tabindex="0" role="button" aria-label="repo-lists/"><rect x="30" y="268" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#22d3ee" stroke-opacity=".55"/><text x="44" y="290" class="mtitle" fill="#22d3ee">repo-lists/</text><text x="44" y="307" class="msub">29 curated lanes</text></g>
+  <g class="mapnode" data-node="skills" tabindex="0" role="button" aria-label="skills/"><rect x="250" y="268" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#22d3ee" stroke-opacity=".55"/><text x="264" y="290" class="mtitle" fill="#22d3ee">skills/</text><text x="264" y="307" class="msub">7 portable skills</text></g>
+  <g class="mapnode" data-node="agents" tabindex="0" role="button" aria-label="agents/"><rect x="470" y="268" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#22d3ee" stroke-opacity=".55"/><text x="484" y="290" class="mtitle" fill="#22d3ee">agents/</text><text x="484" y="307" class="msub">65 agent profiles</text></g>
+  <g class="mapnode" data-node="docs" tabindex="0" role="button" aria-label="docs/"><rect x="690" y="268" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#22d3ee" stroke-opacity=".55"/><text x="704" y="290" class="mtitle" fill="#22d3ee">docs/</text><text x="704" y="307" class="msub">setup &amp; policy</text></g>
+  <text x="30" y="372" class="mlabel">Automations</text>
+  <g class="mapnode" data-node="guardian" tabindex="0" role="button" aria-label="Catalog Guardian"><rect x="30" y="384" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#34d399" stroke-opacity=".55"/><text x="44" y="406" class="mtitle" fill="#34d399">Catalog Guardian</text><text x="44" y="423" class="msub">weekly &middot; deterministic</text></g>
+  <g class="mapnode" data-node="safety" tabindex="0" role="button" aria-label="Safety Validation"><rect x="250" y="384" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#34d399" stroke-opacity=".55"/><text x="264" y="406" class="mtitle" fill="#34d399">Safety Validation</text><text x="264" y="423" class="msub">tests on PR</text></g>
+  <g class="mapnode" data-node="pages" tabindex="0" role="button" aria-label="Pages deploy"><rect x="470" y="384" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#34d399" stroke-opacity=".55"/><text x="484" y="406" class="mtitle" fill="#34d399">Pages deploy</text><text x="484" y="423" class="msub">change-triggered</text></g>
+  <g class="mapnode" data-node="gate" tabindex="0" role="button" aria-label="Owner Approval"><rect x="690" y="384" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#34d399" stroke-opacity=".55"/><text x="704" y="406" class="mtitle" fill="#34d399">Owner Approval</text><text x="704" y="423" class="msub">SHA-bound gate</text></g>
+  <text x="30" y="488" class="mlabel">Runtimes</text>
+  <g class="mapnode" data-node="ollama" tabindex="0" role="button" aria-label="Ollama"><rect x="30" y="500" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#fbbf24" stroke-opacity=".55"/><text x="44" y="522" class="mtitle" fill="#fbbf24">Ollama</text><text x="44" y="539" class="msub">local &middot; 6&ndash;32 GB</text></g>
+  <g class="mapnode" data-node="foundry" tabindex="0" role="button" aria-label="Foundry Local"><rect x="250" y="500" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#fbbf24" stroke-opacity=".55"/><text x="264" y="522" class="mtitle" fill="#fbbf24">Foundry Local</text><text x="264" y="539" class="msub">Windows &middot; NPU</text></g>
+  <g class="mapnode" data-node="gemmacpp" tabindex="0" role="button" aria-label="gemma.cpp"><rect x="470" y="500" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#fbbf24" stroke-opacity=".55"/><text x="484" y="522" class="mtitle" fill="#fbbf24">gemma.cpp</text><text x="484" y="539" class="msub">minimal C++</text></g>
+  <g class="mapnode" data-node="hosted" tabindex="0" role="button" aria-label="Hosted APIs"><rect x="690" y="500" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#fbbf24" stroke-opacity=".55"/><text x="704" y="522" class="mtitle" fill="#fbbf24">Hosted APIs</text><text x="704" y="539" class="msub">fallback at 4 GB</text></g>
+</svg>
+    </div>
+    <aside class="mapdetail" id="mapDetail">
+      <span class="kind">Start here</span>
+      <h3>Five layers, one contract</h3>
+      <p>Four clients read one portable contract, which points into a curated catalog. Deterministic automations audit that catalog on GitHub. Models run locally where the hardware allows, and hosted only where it does not.</p>
+      <p class="muted" style="font-size:12px">Select a node for what it does, what reads it, and where it is configured.</p>
+      <div class="maplegend">
+        <span><i style="background:#60a5fa"></i>Clients</span>
+        <span><i style="background:#a78bfa"></i>Instructions</span>
+        <span><i style="background:#22d3ee"></i>Catalog</span>
+        <span><i style="background:#34d399"></i>Automations</span>
+        <span><i style="background:#fbbf24"></i>Runtimes</span>
+      </div>
+    </aside>
+  </div>
+
+  <div class="section-head"><div><h3 style="font-size:16px;margin:0">Building subgroups</h3><p>An agent profile alone does little. The value is in small, goal-shaped teams.</p></div><div class="section-meta">Compose, do not enumerate</div></div>
+  <div class="grid">
+    <article class="card"><span class="tag cyan">Recipe</span><h3>Catalog intake</h3><p class="muted">Goal: safely admit a new repository to the catalog.</p><p class="muted"><code>scanner-vault</code> &rarr; <code>dependency-watch-delta</code> &rarr; <code>compliance-lex</code> &rarr; <code>repo-issue-iris</code></p><p class="muted" style="font-size:12px">Stops at: an owner-review issue. Never self-approves.</p></article>
+    <article class="card"><span class="tag cyan">Recipe</span><h3>Local-first build</h3><p class="muted">Goal: ship a feature without spending hosted tokens.</p><p class="muted"><code>model-picker</code> &rarr; <code>fullstack-atlas</code> &rarr; <code>tester-probe</code> &rarr; <code>token-penny</code></p><p class="muted" style="font-size:12px">model-picker reads the hardware profile first, so the rest of the group runs on whatever fits.</p></article>
+    <article class="card"><span class="tag cyan">Recipe</span><h3>Cost review</h3><p class="muted">Goal: find recurring spend before it compounds.</p><p class="muted"><code>cost-cirrus</code> &rarr; <code>token-penny</code> &rarr; <code>doc-drift-echo</code></p><p class="muted" style="font-size:12px">Stops at: a written recommendation, not an applied change.</p></article>
+    <article class="card wide"><span class="tag yellow">Rule</span><h3>Every subgroup needs a stopping condition</h3><p class="muted">A group without a defined end state either loops or quietly widens its own scope. Each recipe above names what it produces and where it hands back to a human. That is the difference between an agent team and an expensive loop &mdash; and it is the same discipline the Owner Approval gate enforces at the repository level.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/AGENTS-OVERVIEW.md">All 65 agent profiles &#8599;</a></article>
+  </div>
+</section>
+
 <section id="health" class="view">
   <div class="section-head"><div><h2>Health & security</h2><p>Lifecycle pressure, scanner state and detailed private rows when running locally.</p></div><div class="section-meta">Metadata ≠ security verdict</div></div>
   <div class="lifecycle" aria-label="Lifecycle thresholds">
@@ -186,6 +430,7 @@ footer{margin-top:28px;border-top:1px solid var(--line);padding:18px 3px;color:#
 <div id="empty" class="empty">No cards match this search in the current section.</div>
 <footer><span>Public Pages intentionally exposes only this interface and aggregate health. Detailed catalog/security rows remain private.</span><span>Master Repo Use · owner-gated · cost-aware · privacy-safe</span></footer>
 </main>
+<script type="application/json" id="mapData">{"claude": ["Client", "Reads <code>~/.claude/CLAUDE.md</code>, which the global setup script points at this repo. Loads one catalog lane at a time, never the whole catalog.", ["Setup tab &rarr; global one-liner", "Repo entrypoint: CLAUDE.md"]], "codex": ["Client", "Reads <code>~/.codex/AGENTS.md</code>. Uses the portable contract only &mdash; no Codex-specific file, by design.", ["Shares AGENTS.md with every other client"]], "copilot": ["Client", "Reads <code>~/.copilot/copilot-instructions.md</code> plus the repo-local <code>.github/copilot-instructions.md</code>.", ["Can be installed alone with --copilot-only"]], "gemini": ["Client", "Two surfaces with different jobs: Gemini CLI reads <code>GEMINI.md</code>; Gemini Code Assist reviews PRs using <code>.gemini/config.yaml</code> and <code>.gemini/styleguide.md</code>.", ["No authority in the approval gate", "Reviews are a second opinion, never a merge signal"]], "agentsmd": ["Instruction", "The canonical portable contract. Every client reads this first; the per-client files only add what is genuinely client-specific.", ["One contract, four clients", "Change here propagates everywhere"]], "claudemd": ["Instruction", "Claude-specific defaults layered on AGENTS.md &mdash; maintenance policy, memory tools, approval phrasing.", []], "geminimd": ["Instruction", "Gemini-specific defaults, including the local-first preference: prefer a local model when one fits, fall back to hosted Gemini when RAM is the constraint.", ["Added 2026-08-25"]], "copilotmd": ["Instruction", "Copilot pointer installed at user scope so it applies across repositories.", []], "lanes": ["Catalog", "Curated URL lists &mdash; <strong>no third-party code is vendored</strong>. Each lane is a topic an agent can load in isolation instead of pulling the whole catalog into context.", ["local-models &middot; adk-agent-kits &middot; design-ui-motion", "public-allowlist controls what may go public"]], "skills": ["Catalog", "Portable skill definitions usable from any client: cite-or-abstain, verify-before-complete, scope-guard, dep-audit and others.", []], "agents": ["Catalog", "Named agent profiles &mdash; roles with a defined scope, tools and stopping condition. Compose these into subgroups.", ["See the subgroup recipes below the map"]], "docs": ["Catalog", "Setup, cost, security and policy documentation. This is what a client reads when it needs to know <em>how</em> rather than <em>what</em>.", []], "guardian": ["Automation", "Deterministic lifecycle and security audit. Refreshes metadata weekly and opens a single <code>[Catalog Audit]</code> issue that it edits rather than duplicates. <strong>Calls no paid AI API.</strong>", ["Deep scan only on new additions or owner approval", "Semgrep &middot; Gitleaks &middot; OSV &middot; ClamAV"]], "safety": ["Automation", "Unit tests on every PR touching scripts, tests, the page or workflows. Includes the privacy assertions that stop the public artifact leaking catalog contents.", ["54 tests", "concurrency cancels superseded runs"]], "pages": ["Automation", "Builds the privacy-safe public artifact and deploys it. No recurring schedule &mdash; it runs only when the site or its data actually changes.", ["Strips every element flagged private in the markup", "Degrades to the committed snapshot if the refresh fails"]], "gate": ["Automation", "Approval is bound to a commit SHA, so a force-push or a new commit invalidates it. Only the owner can approve, with an exact phrase.", ["APPROVE CATALOG MAINTENANCE", "Never merges main automatically"]], "ollama": ["Runtime", "The default local runtime. Everything in the Local Models tab assumes it. Genuinely useful from 8 GB; 16 GB is the sweet spot.", ["ollama pull gemma3:4b"]], "foundry": ["Runtime", "Microsoft&rsquo;s local runtime with hardware-aware model selection built in. Best CPU/NPU path on Windows.", ["Pairs with onnxruntime-genai"]], "gemmacpp": ["Runtime", "Minimal C++ Gemma runtime &mdash; lighter than a full serving stack when you only need Gemma.", []], "hosted": ["Runtime", "The honest answer at 4 GB: no local chat model fits after the OS takes its share. Use hosted Gemini rather than something that swaps.", ["See the Local Models tab"]]}</script>
 <div id="toast" class="toast" role="status" aria-live="polite">Copied to clipboard</div>
 <script>
 const tabs=[...document.querySelectorAll('.tab')];
@@ -194,7 +439,7 @@ const search=document.getElementById('search');
 const empty=document.getElementById('empty');
 const toast=document.getElementById('toast');
 let activeView='setup';
-function selectView(name){activeView=name;tabs.forEach(x=>x.classList.toggle('active',x.dataset.view===name));views.forEach(x=>x.classList.toggle('active',x.id===name));search.value='';filterCards();if(name==='health')loadHealth();history.replaceState(null,'','#'+name)}
+function selectView(name){activeView=name;tabs.forEach(x=>x.classList.toggle('active',x.dataset.view===name));views.forEach(x=>x.classList.toggle('active',x.id===name));search.value='';filterCards();if(name==='health')loadHealth();if(name==='models')loadProfiles();history.replaceState(null,'','#'+name)}
 tabs.forEach(t=>t.addEventListener('click',()=>selectView(t.dataset.view)));
 function filterCards(){const q=search.value.trim().toLowerCase();const view=document.getElementById(activeView);const cards=[...view.querySelectorAll('.card')];let visible=0;cards.forEach(c=>{const show=!q||c.textContent.toLowerCase().includes(q);c.classList.toggle('hidden-search',!show);if(show)visible++});empty.classList.toggle('show',cards.length>0&&visible===0)}
 search.addEventListener('input',filterCards);
@@ -205,6 +450,82 @@ async function copyBox(box,btn){const text=textOf(box);try{await navigator.clipb
 document.querySelectorAll('[data-command]').forEach(box=>{const btn=box.querySelector('.copy');box.tabIndex=0;box.title='Click to copy';box.addEventListener('click',e=>{if(e.target!==btn)copyBox(box,btn)});btn.addEventListener('click',e=>{e.stopPropagation();copyBox(box,btn)});box.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();copyBox(box,btn)}})});
 async function loadHealth(){const rows=document.getElementById('healthRows');try{const r=await fetch('docs/catalog-status.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(r.status);const d=await r.json();document.getElementById('updated').textContent='Updated '+(d.updated||'unknown');document.getElementById('statusMeta').textContent=d.public?'Public privacy mode · aggregate only':'Private local mode · detailed rows available';document.getElementById('modeText').textContent=d.public?'Public privacy mode':'Private local mode';['healthy','stale','review','remove'].forEach(k=>document.getElementById(k).textContent=d.counts?.[k.toUpperCase()]??0);rows.innerHTML='';for(const x of d.repos||[]){const tr=document.createElement('tr');const vals=[x.repo,x.status,x.age_days==null?'—':x.age_days+'d',x.archived?'yes':'no',x.deep_scanned?'yes':'no',x.note||''];vals.forEach((v,i)=>{const td=document.createElement('td');td.textContent=v;if(i===1)td.className=v;tr.appendChild(td)});rows.appendChild(tr)}if(!(d.repos||[]).length){rows.innerHTML=d.public?'<tr><td colspan="6" class="muted">Public Pages intentionally exposes aggregate health only. Serve the private repository locally for repo-by-repo status and findings.</td></tr>':'<tr><td colspan="6" class="muted">No status rows yet. Run Catalog Guardian once.</td></tr>'}}catch(e){document.getElementById('modeText').textContent='Status unavailable';document.getElementById('statusMeta').textContent='Serve through HTTP or refresh catalog metadata';rows.innerHTML='<tr><td colspan="6" class="muted">Status JSON unavailable. Serve this repo through HTTP or run Catalog Guardian to generate docs/catalog-status.json.</td></tr>'}}
 document.getElementById('refresh').addEventListener('click',()=>{loadHealth();showToast('Health status refreshed')});
+/* ---------------- Local-model hardware advisor ----------------
+   Reads docs/hardware-profiles.json and re-derives every fit decision in the
+   browser from the same published formula the unit tests check. Nothing here
+   hard-codes a verdict: change the JSON and the page changes with it. */
+let PROFILES=null,ramGB=16,osKey='windows';
+const $=id=>document.getElementById(id);
+function fmt(n){return (Math.round(n*10)/10).toString()}
+function usableGB(){return ramGB-(PROFILES.formula.os_reserve_gb[osKey]??3)}
+function requiredGB(m){const f=PROFILES.formula;return m.params_b*f.bytes_per_param[m.quant]+f.runtime_overhead_gb+f.kv_cache_gb_per_4k_ctx}
+function tierFor(gb){const t=[...PROFILES.tiers].sort((a,b)=>a.ram_gb-b.ram_gb);let best=t[0];for(const x of t){if(x.ram_gb<=gb)best=x}return best}
+function renderAdvisor(){
+  if(!PROFILES)return;
+  const tier=tierFor(ramGB),usable=usableGB();
+  const colour={red:'var(--red)',orange:'var(--orange)',yellow:'var(--yellow)',green:'var(--green)'}[tier.class]||'var(--blue)';
+  const v=$('verdict');v.style.setProperty('--vc',colour);
+  $('vTag').textContent=tier.verdict;$('vTitle').textContent=tier.label+' · '+fmt(usable)+' GB usable';
+  $('vSummary').textContent=tier.summary;
+  $('vUsable').textContent=fmt(usable)+' GB';
+  /* Sort by capability so the strongest option that fits reads first. */
+  const models=[...PROFILES.models].sort((a,b)=>b.params_b-a.params_b);
+  const fitsModel=m=>requiredGB(m)<=usable;
+  const fits=models.filter(fitsModel);
+  const reserveDelta=(PROFILES.formula.os_reserve_gb.windows??3)-(PROFILES.formula.os_reserve_gb[osKey]??3);
+  const effectiveGB=ramGB+reserveDelta;
+  const repos=PROFILES.repos.filter(r=>r.min_ram_gb<=effectiveGB);
+  $('vModels').textContent=fits.length;
+  $('vRepos').textContent=repos.length;
+  const chat=fits.filter(m=>m.id!=='embed-nomic');
+  $('vLargest').textContent=chat.length?chat[0].tag:'none';
+  $('modelCount').textContent=fits.length+' of '+models.length+' fit';
+  $('repoCount').textContent=repos.length+' of '+PROFILES.repos.length+' recommended';
+  $('modelList').innerHTML=models.map(m=>{
+    const need=requiredGB(m),ok=fitsModel(m);
+    const why=m.why_special?' <em style="color:var(--muted)">'+m.why_special+'</em>':'';
+    return '<article class="fit'+(ok?'':' no')+'"><div class="fit-head"><code>'+m.tag+'</code><span class="vend">'+m.vendor+'</span></div>'
+      +'<p>'+m.use+why+'</p>'
+      +'<div class="need">'+m.params_b+'B · '+m.quant.toUpperCase()+' · needs <b>'+fmt(need)+' GB</b> of '+fmt(usable)+' GB free · baseline min '+m.min_ram_gb+' GB on Windows</div></article>'}).join('');
+  $('repoList').innerHTML=PROFILES.repos.map(r=>{
+    const ok=r.min_ram_gb<=effectiveGB;
+    return '<article class="fit'+(ok?'':' no')+'"><div class="fit-head"><code>'+r.slug+'</code><span class="vend">'+r.role+'</span></div>'
+      +'<p>'+r.why+'</p><div class="need">min <b>'+r.min_ram_gb+' GB</b> · '+r.vendor+'</div></article>'}).join('');
+  const f=PROFILES.formula;
+  $('formulaNums').innerHTML=' For '+osKey+': reserve <b>'+f.os_reserve_gb[osKey]+' GB</b>, runtime <b>'+f.runtime_overhead_gb+' GB</b>, KV cache <b>'+f.kv_cache_gb_per_4k_ctx+' GB</b> at 4k context.';
+}
+async function loadProfiles(){
+  if(PROFILES)return renderAdvisor();
+  try{
+    const r=await fetch('docs/hardware-profiles.json',{cache:'no-store'});
+    if(!r.ok)throw Error(r.status);
+    PROFILES=await r.json();renderAdvisor();
+  }catch(e){
+    $('vTag').textContent='unavailable';
+    $('vTitle').textContent='Hardware profiles could not load';
+    $('vSummary').innerHTML='This page reads <code>docs/hardware-profiles.json</code> over HTTP. Open it from a served copy (<code>python -m http.server 8080</code>) rather than the file system.';
+  }
+}
+$('ram').addEventListener('input',e=>{ramGB=+e.target.value;$('ramVal').textContent=ramGB;renderAdvisor()});
+document.querySelectorAll('#osSeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#osSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');osKey=b.dataset.os;renderAdvisor()}));
+
+/* ---------------- System map ---------------- */
+const MAPDATA=JSON.parse(document.getElementById('mapData').textContent);
+function showNode(id,el){
+  const d=MAPDATA[id];if(!d)return;
+  document.querySelectorAll('.mapnode').forEach(n=>n.classList.remove('sel'));
+  if(el)el.classList.add('sel');
+  const title=el?el.querySelector('.mtitle').textContent:id;
+  const bullets=d[2]&&d[2].length?'<ul>'+d[2].map(x=>'<li>'+x+'</li>').join('')+'</ul>':'';
+  document.getElementById('mapDetail').innerHTML=
+    '<span class="kind">'+d[0]+'</span><h3>'+title+'</h3><p>'+d[1]+'</p>'+bullets;
+}
+document.querySelectorAll('.mapnode').forEach(n=>{
+  n.addEventListener('click',()=>showNode(n.dataset.node,n));
+  n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();showNode(n.dataset.node,n)}});
+});
 const hash=location.hash.slice(1);if(hash&&document.getElementById(hash)&&tabs.some(t=>t.dataset.view===hash)){selectView(hash)}else{filterCards();loadHealth()}
 </script>
 </body>

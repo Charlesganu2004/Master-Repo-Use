@@ -6,6 +6,26 @@ Repository: `Charlesganu2004/Master-Repo-Use`
 
 The Master Repo is the shared **catalog + instructions + security/vetting layer** used by your AI coding tools. Clone it once, keep it current, and let each client discover only the task-relevant repos, skills, MCP servers, and setup instructions when needed.
 
+## Setup site — start here
+
+**<https://charlesganu2004.github.io/Master-Repo-Use/>**
+
+The public command center is the fastest way to get set up. Nothing needs to be installed to
+read it, and every command card is click-to-copy:
+
+| Tab | What it gives you |
+|---|---|
+| **Setup** | One-liner global install for Claude Code, Codex, Copilot and Gemini |
+| **Local Models** | Move a slider to your RAM; it tells you which models actually run and which repos to install |
+| **ADKs** | Which agent development kit to pick, and when an ADK is overkill |
+| **System Map** | Clickable diagram of all five layers, from client to model |
+| **Design** | The libraries and skill packs behind the interface |
+| **Health & Security** | Aggregate catalog health |
+| **Access & Deploy** | Branch protection, Pages, cost controls |
+
+The public site shows **aggregate health only**. Repo-by-repo detail requires a local clone —
+see [Local/private mode](#localprivate-mode).
+
 ## Live catalog health
 
 Under the approved cost-control Pages workflow, the visual refreshes when relevant catalog/site data changes on `main` or when deployment is dispatched manually; there is no recurring Pages timer:
@@ -119,6 +139,21 @@ Full guide: [docs/COPILOT-SETUP.md](docs/COPILOT-SETUP.md).
 
 The interactive page is `index.html`. It is dependency-free and every command card is **click-to-copy**.
 
+Sections:
+
+- **Setup** — global and per-client installation.
+- **Maintenance** — run an audit, approve deterministic maintenance.
+- **Tools** *(private only)* — Claude-Mem, Headroom, Omni, Task Observer.
+- **Local Models** — the hardware advisor. Pick your RAM and OS; it re-derives every fit
+  decision live from the published formula in [docs/hardware-profiles.json](docs/hardware-profiles.json).
+  At 4 GB on Windows it tells you the truth: nothing fits, use hosted.
+- **ADKs** — Google ADK, Microsoft Agent Framework, OpenAI Agents SDK, and the AutoGen
+  supersession. See [docs/ADK-GUIDE.md](docs/ADK-GUIDE.md).
+- **System Map** — 20 clickable nodes across clients, instruction layer, catalog,
+  automations and runtimes, plus subgroup recipes.
+- **Design** — three.js and GSAP as load-bearing libraries, skill packs as advisory only.
+- **Health & Security** and **Access & Deploy** — as before.
+
 ### Local/private mode
 
 PowerShell:
@@ -143,7 +178,7 @@ Local mode can display the full private repo-by-repo health table.
 
 ### GitHub Pages mode
 
-`.github/workflows/pages.yml` in the cost-control change set builds the command center from approved `main`. The public health visual refreshes when relevant catalog/site data changes or when the workflow is manually dispatched. Routine catalog metadata auditing runs weekly. Deep security maintenance runs only when required or owner-approved. The desired workflow has no recurring Pages schedule.
+`.github/workflows/pages.yml` builds the command center from approved `main`. The public health visual refreshes when relevant catalog/site data changes or when the workflow is manually dispatched. Routine catalog metadata auditing runs weekly. Deep security maintenance runs only when required or owner-approved. The desired workflow has no recurring Pages schedule.
 
 Pages is configured through GitHub Actions. Deploy manually with:
 
@@ -153,9 +188,7 @@ gh workflow run pages.yml -R Charlesganu2004/Master-Repo-Use
 
 The workflow checks whether Pages is enabled before calling deployment actions. If it is disabled, the job warns and skips deployment rather than repeatedly failing.
 
-GitHub Pro allows Pages to use a private source repository, but a normal personal GitHub Pages site is public. The privacy-safe workflow therefore rebuilds `index.html` through `scripts/build_public_site.py`, strips `data-private` content, publishes a count-only status payload/SVG, and fails CI if catalog slugs/private findings reach the public artifact.
-
-**Change-state warning:** until the cost-control PR is merged, the current `main` workflow may still contain the former six-hour schedule and verbatim `index.html` staging. Do not treat the branch-only privacy/cost fixes as permanently live until approved `main` contains them and a clean Pages deployment completes.
+GitHub Pro allows Pages to use a private source repository, but a normal personal GitHub Pages site is public. The privacy-safe workflow therefore rebuilds `index.html` through `scripts/build_public_site.py`, strips private-flagged content, publishes a count-only status payload/SVG plus the hardware-advisor dataset, and fails CI if catalog slugs or private findings reach the public artifact. The advisor dataset is allowed to name repositories only because every slug in it is on the owner-controlled [public allowlist](repo-lists/public-allowlist.txt); an unlisted slug fails the build.
 
 ## GitHub Pro automatic audit — no paid AI background loop
 
@@ -219,7 +252,7 @@ GitHub Pro is the fixed subscription; the repository is designed to keep routine
 
 | Workflow | Trigger | Frequency |
 |---|---|---|
-| Pages | relevant `main` change or manual dispatch | **no recurring schedule after merge of the cost-control workflow** |
+| Pages | relevant `main` change or manual dispatch | **no recurring schedule** |
 | Catalog Guardian (audit) | weekly cron, catalog changes, manual | 1x/week plus real changes |
 | Catalog Guardian (deep scan) | new repo added / owner-approved maintenance | only when required |
 | Owner approval gate | PR/review/owner-comment events | event-driven only |
@@ -231,6 +264,29 @@ GitHub Pro is the fixed subscription; the repository is designed to keep routine
 - Jobs use timeouts and concurrency so stale/duplicate work cannot run indefinitely.
 
 The GitHub billing UI can show **gross metered usage** even when included-usage discounts make the **billed/net amount $0**. The billed/net amount is what matters for actual overage.
+
+**Measured, August 2026.** Actions minutes on this private repository, computed from real job
+durations (the `/actions/runs/{id}/timing` endpoint reports zeros and is unreliable — sum
+`started_at`/`completed_at` from the `jobs` endpoint instead):
+
+| Workflow | Billed minutes |
+|---|---:|
+| Catalog Guardian | 47 |
+| Pages deploy | 29 |
+| Safety Validation | 23 |
+| Catalog freshness + owner approval | 5 |
+| **Total** | **104 min ≈ $0.60–0.83 gross** |
+
+GitHub Pro includes **3,000** Actions minutes per month, so that is ~3% of the allowance and the
+net charge is **$0**. Most of August's total came from a single heavy development day (23 Safety
+Validation runs in about an hour), not from steady-state operation. Actions is free on public
+repositories; this repository is private by design, so its minutes are metered.
+
+Reading your own numbers:
+
+```bash
+gh api "repos/Charlesganu2004/Master-Repo-Use/actions/runs?per_page=100" --jq '.workflow_runs[] | select(.created_at >= "2026-08-01") | .id'
+```
 
 Recommended one-time owner setup under **Settings → Billing and licensing → Budgets and alerts**: included-usage alerts such as **90%** and **100%**, plus an Actions-scoped small hard budget if available.
 
@@ -254,6 +310,8 @@ Full detail: [docs/COST-CONTROL.md](docs/COST-CONTROL.md).
 | Claude Code local | `CLAUDE.md` + `~/.claude/CLAUDE.md` | MCP → skills/plugins/hooks → CLI/API → library |
 | Claude Code web | committed repo instructions | supported repo/cloud tools |
 | Codex local | `AGENTS.md` + `~/.codex/AGENTS.md` | skills → MCP → CLI/API → library |
+| Gemini CLI | `GEMINI.md` + `~/.gemini/GEMINI.md` | MCP → skills/extensions → CLI/API → library |
+| Gemini Code Assist | `.gemini/config.yaml` + `.gemini/styleguide.md` | automated PR review only |
 | Codex cloud / ChatGPT coding | committed `AGENTS.md` when repo selected | supported connected-repo tools |
 | ChatGPT web | connect/select private GitHub repo | GitHub connector + supported tools |
 | Claude.ai | connect/add private repo/project | GitHub integration + supported tools |
@@ -338,6 +396,61 @@ Static scanners reduce risk but cannot prove third-party code is safe. HIGH find
 
 See [docs/SECURITY-SCANNING.md](docs/SECURITY-SCANNING.md) and [docs/NEW-REPO-VETTING.md](docs/NEW-REPO-VETTING.md).
 
+## Local models and hardware fit
+
+Which models run on your machine, from three vendors only: **Microsoft**, **Google/Gemini**, and
+**Ollama**. General serving stacks stay in [repo-lists/llm-models-serving.txt](repo-lists/llm-models-serving.txt).
+
+| RAM | Verdict | Largest model that fits (Windows) |
+|---:|---|---|
+| 4 GB | no local chat model fits — use hosted Gemini | — |
+| 8 GB | first genuinely useful tier | `gemma3:4b` |
+| 16 GB | solid daily driver | `phi4` (14B) |
+| 32 GB | excellent | `gemma3:27b` |
+
+Figures are **computed, not benchmarked**, from a formula published in
+[docs/LOCAL-MODEL-HARDWARE.md](docs/LOCAL-MODEL-HARDWARE.md); `tests/test_hardware_profiles.py`
+re-derives every minimum and fails if the data drifts. Interactive version: the **Local Models**
+tab on the [setup site](https://charlesganu2004.github.io/Master-Repo-Use/).
+
+Catalog lane: [repo-lists/local-models.txt](repo-lists/local-models.txt)
+
+> **Licensing:** Gemma ships under the Gemma Terms of Use, not an OSI licence. Phi and BitNet are MIT.
+
+## Agent development kits
+
+First-party, vendor-maintained agent frameworks — the supported successors to the earlier
+community stacks. `microsoft/agent-framework` is the announced AutoGen + Semantic Kernel merger.
+
+Guide: [docs/ADK-GUIDE.md](docs/ADK-GUIDE.md) · Lane: [repo-lists/adk-agent-kits.txt](repo-lists/adk-agent-kits.txt)
+
+All three kits speak MCP, so keep tools in MCP servers rather than in the framework — the
+cheapest hedge against picking the wrong one.
+
+## Gemini
+
+Two Gemini surfaces touch this repository and they have different jobs:
+
+| Surface | Reads | Job |
+|---|---|---|
+| Gemini CLI | [GEMINI.md](GEMINI.md) | interactive local work |
+| Gemini Code Assist | [.gemini/config.yaml](.gemini/config.yaml), [.gemini/styleguide.md](.gemini/styleguide.md) | automated PR review |
+
+The style guide tells Code Assist what is deliberately out of scope (curation decisions in
+`repo-lists/`, dense single-file HTML, markdown prose style) so reviews stay signal. **Gemini has
+no authority in the approval gate**; only Charles approves, with the exact phrase.
+
+The global setup scripts install the Gemini pointer alongside Claude, Codex and Copilot.
+
+## Design, motion and 3D
+
+- **Libraries (load-bearing):** `mrdoob/three.js`, `greensock/GSAP` — note GSAP is not OSI-licensed.
+- **Skill packs (advisory only):** motion-design, apple-design, genjutsu. These are instruction
+  files, not dependencies: small, young, community-run, with near-identical forks. Read one
+  end-to-end before pointing an agent at it.
+
+Lane: [repo-lists/design-ui-motion.txt](repo-lists/design-ui-motion.txt)
+
 ## Current stale/archive decisions
 
 The 2026-08-19 in-depth review made these changes:
@@ -352,7 +465,22 @@ The 2026-08-19 in-depth review made these changes:
 - `FlowiseAI/Flowise` → retained temporarily as transition/reference material. Recent `3.1.4` activity is recorded, but the project’s explicit archive/sunset state means it is not treated as a newly maintained dependency.
 - Prompt Compression Survey, IBM Quantum Challenge 2021, VSI-Bench `thinking-in-space`, RoboPoint, and compact-counter remain reference-only where appropriate.
 
-Details: [docs/LIFECYCLE-REVIEW-2026-08-19.md](docs/LIFECYCLE-REVIEW-2026-08-19.md).
+The 2026-08-25 triage resolved the open `[Catalog Audit]` issue and cut items needing attention
+from 44 to 27 (REVIEW 16 → 4, REMOVE 1 → 0) while adding 21 repositories:
+
+- Removed: `marcozanetti-dev/intraday-mean-reversion-costs-aware` (deleted upstream, HTTP 404),
+  `phildougherty/infracost_mcp` and `bradygaster/CustomAgent` (both superseded by first-party
+  entries already catalogued).
+- Transferred: `geekan/MetaGPT` → `FoundationAgents/MetaGPT`. It only looked stale because the
+  catalog pointed at the pre-transfer namespace.
+- Superseded: `microsoft/autogen` → `microsoft/agent-framework`; `coinbase/cdp-sdk-python` →
+  `coinbase/cdp-sdk`; `FlowiseAI/Flowise` → `langflow-ai/langflow`.
+- **Flowise correction:** its `3.1.4` release on 2026-07-29 was the *final sunset* release, not
+  evidence of maintenance. Feature freeze 2026-07-27, archived 2026-08-10, EOL 2026-08-31. A
+  recent release does not imply a maintained project — check the `archived` flag.
+
+Details: [docs/CATALOG-TRIAGE-2026-08-25.md](docs/CATALOG-TRIAGE-2026-08-25.md) ·
+[docs/LIFECYCLE-REVIEW-2026-08-19.md](docs/LIFECYCLE-REVIEW-2026-08-19.md).
 
 ## Pull latest, but protect `main`
 
@@ -410,6 +538,14 @@ The repository-side file describes the desired policy; the GitHub server setting
 | `plugins/` | plugin packages/docs |
 | `scripts/` | setup, maintenance, auditing, guardian, branch-protection helpers |
 | `index.html` | click-to-copy interactive command center |
+| `GEMINI.md` | Gemini CLI entrypoint |
+| `.gemini/` | Gemini Code Assist review config and style guide |
+| `docs/hardware-profiles.json` | hardware advisor dataset (formula + tiers + models) |
+| `docs/LOCAL-MODEL-HARDWARE.md` | local model sizing guide |
+| `docs/ADK-GUIDE.md` | agent development kit comparison |
+| `docs/CATALOG-TRIAGE-2026-08-25.md` | lifecycle triage resolving the open catalog audit |
+| `repo-lists/public-allowlist.txt` | owner-controlled slugs permitted on the public site |
+| `scripts/catalog_freshness_gate.py` | annotates how stale the committed catalog metadata is |
 | `quantum/` | quantum-computing lane |
 | `cost-reduction/` | cloud/token/cost lane |
 

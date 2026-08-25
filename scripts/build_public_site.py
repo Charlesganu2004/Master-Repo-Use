@@ -30,6 +30,8 @@ PRIVATE_INDEX = ROOT / "index.html"
 PUBLIC_STATE = SITE / "docs" / "catalog-status.json"
 PUBLIC_SVG = SITE / "docs" / "catalog-status.svg"
 PUBLIC_INDEX = SITE / "index.html"
+PRIVATE_PROFILES = ROOT / "docs" / "hardware-profiles.json"
+PUBLIC_PROFILES = SITE / "docs" / "hardware-profiles.json"
 
 # Keys allowed to reach the public artifact. Anything else is dropped by construction.
 ALLOWED_TOP_LEVEL = {"updated", "policy", "counts", "public", "repos"}
@@ -50,6 +52,24 @@ REPO_SLUG = re.compile(r"\b[A-Za-z0-9][A-Za-z0-9_.-]{0,38}/[A-Za-z0-9][A-Za-z0-9
 
 
 OWN_REPO = "Charlesganu2004/Master-Repo-Use"
+
+# Slugs the owner has explicitly cleared for public display. The public setup page
+# has to be able to say "install Ollama" and link to it, and a well-known upstream
+# project reveals nothing about the private catalog's composition. Everything not
+# listed here is still treated as private and blocked from the artifact.
+PUBLIC_ALLOWLIST_FILE = ROOT / "repo-lists" / "public-allowlist.txt"
+
+
+def public_allowlist() -> set[str]:
+    """Owner-approved slugs that may appear in the public artifact."""
+    if not PUBLIC_ALLOWLIST_FILE.exists():
+        return set()
+    allowed: set[str] = set()
+    for line in PUBLIC_ALLOWLIST_FILE.read_text(encoding="utf-8").splitlines():
+        slug = line.split("#", 1)[0].strip()
+        if slug.count("/") == 1 and slug:
+            allowed.add(slug)
+    return allowed
 
 
 def private_notes() -> set[str]:
@@ -82,11 +102,16 @@ def private_repo_names() -> set[str]:
             if isinstance(row, dict) and row.get("repo"):
                 names.add(str(row["repo"]))
     for listing in (ROOT / "repo-lists").glob("*.txt"):
+        if listing == PUBLIC_ALLOWLIST_FILE:
+            continue
         for line in listing.read_text(encoding="utf-8").splitlines():
             slug = line.split("#", 1)[0].strip()
             if slug.count("/") == 1 and slug:
                 names.add(slug)
-    return names
+    # Allowlisted upstreams are public by owner decision, so they are not "private
+    # names" for leak-checking purposes. Subtracting last means adding a slug to a
+    # private lane can never quietly re-privatise something already published.
+    return names - public_allowlist()
 
 
 class PrivateStripper(html.parser.HTMLParser):
@@ -178,6 +203,63 @@ def build_index() -> int:
     return stripper.removed
 
 
+def profile_leaks(raw: str, label: str) -> list[str]:
+    """Repository slugs in the advisor dataset that the owner has not made public.
+
+    Checked against the *structured* slug fields rather than a regex over the whole
+    file: prose like "CPU/NPU" or "Node/TypeScript" matches an owner/repo pattern and
+    would otherwise produce false failures. Every declared slug must be allowlisted,
+    and any private catalog name appearing anywhere in the file — including free text —
+    is still a leak.
+    """
+    problems: list[str] = []
+    allowed = public_allowlist() | {OWN_REPO}
+    try:
+        data = json.loads(raw)
+    except ValueError as exc:
+        return [f"{label} is not valid JSON ({exc})"]
+
+    for entry in data.get("repos") or []:
+        slug = str(entry.get("slug") or "").strip()
+        if slug and slug not in allowed:
+            problems.append(f"{label} names a non-allowlisted repository: {slug}")
+    for model in data.get("models") or []:
+        tag = str(model.get("tag") or "").strip()
+        if tag.count("/") == 1 and tag not in allowed:
+            problems.append(f"{label} names a non-allowlisted repository: {tag}")
+
+    for name in sorted(private_repo_names() - {OWN_REPO}):
+        if name in raw:
+            problems.append(f"{label} mentions a private catalogued repository: {name}")
+    return problems
+
+
+def build_profiles() -> list[str]:
+    """Publish the hardware advisor's dataset, refusing anything not allowlisted.
+
+    The Local Models tab is useless without this file, so it has to reach the public
+    artifact. But it names repositories, which is exactly what the privacy contract
+    exists to stop. The compromise: copy it verbatim, then assert that every slug it
+    mentions is on the owner-controlled public allowlist. A slug added to the profile
+    data without also being allowlisted fails the build rather than shipping quietly.
+    """
+    problems: list[str] = []
+    if not PRIVATE_PROFILES.exists():
+        return ["docs/hardware-profiles.json is missing; the Local Models tab will not render"]
+
+    raw = PRIVATE_PROFILES.read_text(encoding="utf-8")
+    problems.extend(profile_leaks(raw, "hardware-profiles.json"))
+
+    for word in PRIVATE_WORDS:
+        if word in raw.lower():
+            problems.append(f"hardware-profiles.json mentions private detail: {word!r}")
+
+    if not problems:
+        PUBLIC_PROFILES.parent.mkdir(parents=True, exist_ok=True)
+        PUBLIC_PROFILES.write_text(raw, encoding="utf-8")
+    return problems
+
+
 def build() -> dict:
     source = json.loads(PRIVATE_STATE.read_text(encoding="utf-8"))
     policy = source.get("policy") or {}
@@ -230,6 +312,10 @@ def verify(payload: dict) -> list[str]:
             if word in svg.lower():
                 problems.append(f"public SVG mentions private detail: {word!r}")
 
+    if PUBLIC_PROFILES.exists():
+        problems.extend(profile_leaks(
+            PUBLIC_PROFILES.read_text(encoding="utf-8"), "public hardware-profiles.json"))
+
     if PUBLIC_INDEX.exists():
         page = PUBLIC_INDEX.read_text(encoding="utf-8")
         if "data-private" in page:
@@ -266,6 +352,12 @@ def main() -> int:
         PUBLIC_STATE.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         removed = build_index()
         print(f"public index.html written ({removed} private element(s) removed)")
+        profile_problems = build_profiles()
+        if profile_problems:
+            for problem in profile_problems:
+                print(f"PRIVACY FAILURE: {problem}", file=sys.stderr)
+            return 1
+        print("public hardware-profiles.json written (all slugs owner-allowlisted)")
 
     problems = verify(payload)
     if problems:
