@@ -1,7 +1,6 @@
 # Agent Frameworks
 bradygaster/squad
 bradygaster/Squad-IRL
-bradygaster/CustomAgent
 bradygaster/MultiAgent
 microsoft/agents
 OfficeDev/microsoft-365-agents-toolkit
@@ -12,3 +11,4 @@ github/copilot-cli
 omnigent-ai/omnigent
 getomnico/omni
 YeQing17-2026/OmniAgent  # license NOASSERTION - read before use
+FoundationAgents/MetaGPT

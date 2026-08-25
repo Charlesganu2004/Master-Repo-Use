@@ -38,6 +38,9 @@ if [ "$MODE" != "--copilot-only" ]; then
   upsert_block "$HOME/.claude/CLAUDE.md" "$common
 Claude-specific entrypoint: $REPO_PATH/CLAUDE.md"
   upsert_block "$HOME/.codex/AGENTS.md" "$common"
+  mkdir -p "$HOME/.gemini"
+  upsert_block "$HOME/.gemini/GEMINI.md" "$common
+Gemini-specific entrypoint: $REPO_PATH/GEMINI.md"
 fi
 
 mkdir -p "$HOME/.copilot"
@@ -87,7 +90,7 @@ esac
 echo "Master Repo global AI setup complete."
 echo "Repo: $REPO_PATH"
 echo "Copilot instructions: $HOME/.copilot/copilot-instructions.md"
-[ "$MODE" = "--copilot-only" ] || echo "Claude: $HOME/.claude/CLAUDE.md | Codex: $HOME/.codex/AGENTS.md"
+[ "$MODE" = "--copilot-only" ] || echo "Claude: $HOME/.claude/CLAUDE.md | Codex: $HOME/.codex/AGENTS.md | Gemini: $HOME/.gemini/GEMINI.md"
 echo "Watermark command: master-watermark <input> <output-folder>"
 echo "GitHub audit: gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use"
 echo "Optional AI request: python $REPO_PATH/scripts/maintenance_request.py --auto"

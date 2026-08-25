@@ -14,7 +14,6 @@ ib-api-reloaded/ib_async  # replaces erdewit/ib_insync (unmaintained)
 Jesse-ai/jesse
 tradingstrategy-ai/getting-started
 TradingGoose/TradingGoose.github.io
-marcozanetti-dev/intraday-mean-reversion-costs-aware
 ebrahimpichka/DeepRL-trade
 RezaSoleymanifar/neuralHFT
 fsaavedra0003/Agentic-AI-Trading-Bot-with-LLM-reasoning-sentiment-analysis

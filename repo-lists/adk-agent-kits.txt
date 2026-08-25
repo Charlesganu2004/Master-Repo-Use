@@ -1,0 +1,19 @@
+# Agent Development Kits (ADKs) — first-party, vendor-maintained agent frameworks
+# Vetted 2026-08-25. See docs/ADK-GUIDE.md for when to reach for which.
+#
+# These are the vendor-supported successors to the earlier generation of
+# community agent frameworks. microsoft/agent-framework in particular is the
+# merged successor to AutoGen + Semantic Kernel.
+
+# --- Google Agent Development Kit
+google/adk-python
+google/adk-java
+google/adk-samples
+google/adk-web
+
+# --- Microsoft
+microsoft/agent-framework
+microsoft/semantic-kernel
+
+# --- OpenAI
+openai/openai-agents-python

@@ -1,0 +1,26 @@
+# Local / On-Device Model Runtimes — Microsoft, Google (Gemini/Gemma), Ollama only
+# Vetted 2026-08-25. Scope is deliberately narrow: this lane answers "what can I
+# actually run on my own machine, from a vendor I already trust".
+#
+# General-purpose serving stacks (llama.cpp, vLLM, SGLang) stay in
+# llm-models-serving.txt. Hardware sizing lives in docs/LOCAL-MODEL-HARDWARE.md
+# and docs/hardware-profiles.json, which the command center reads directly.
+
+# --- Ollama: the default local runtime. One binary, pull-and-run model tags.
+ollama/ollama
+ollama/ollama-python
+ollama/ollama-js
+
+# --- Microsoft: CPU-first and small-language-model paths.
+microsoft/foundry-local
+microsoft/onnxruntime-genai
+microsoft/BitNet
+microsoft/PhiCookBook
+microsoft/Olive
+
+# --- Google / Gemini / Gemma: open-weight Gemma plus the Gemini client surface.
+google/gemma.cpp
+google-deepmind/gemma
+google-gemini/gemini-cli
+google-gemini/cookbook
+googleapis/python-genai

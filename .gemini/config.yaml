@@ -1,0 +1,37 @@
+# Gemini Code Assist — repository configuration
+# Docs: https://developers.google.com/gemini-code-assist/docs/customize-gemini-behavior-github
+#
+# Cost/noise policy for this repository: Gemini Code Assist reviews are a *second*
+# opinion layered on the deterministic Catalog Guardian and Safety Validation
+# checks, never a replacement for them. It must not become a chatty bot on every
+# push, and it has no authority in the owner-approval gate.
+
+have_fun: false
+
+code_review:
+  disable: false
+
+  # Only comment when it matters. The default severity floor is noisy on a repo
+  # that is mostly markdown catalogs and workflow YAML.
+  comment_severity_threshold: MEDIUM
+
+  # Cap review comments so a large catalog PR cannot bury the owner-approval status.
+  max_review_comments: 15
+
+  pull_request_opened:
+    # No auto-help/summary comment: the PR template and Guardian output already
+    # say what changed, and a third summary just costs review attention.
+    help: false
+    summary: true
+    code_review: true
+
+ignore_patterns:
+  # Generated artifacts. Reviewing these produces noise, not signal.
+  - "docs/catalog-status.json"
+  - "docs/catalog-status.svg"
+  - "docs/CATALOG-STATUS.md"
+  - "_site/**"
+  - "**/__pycache__/**"
+  # Curated URL catalogs: line-by-line review of repo slugs is not useful, and the
+  # lifecycle/security judgement for these lives in Catalog Guardian.
+  - "repo-lists/*.txt"

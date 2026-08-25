@@ -7,9 +7,9 @@ google-gemini/gemini-cli
 browser-use/browser-use
 infiniflow/ragflow
 lobehub/lobe-chat
-geekan/MetaGPT
+FoundationAgents/MetaGPT  # transferred from geekan/MetaGPT 2026-08-25
 OpenBB-finance/OpenBB
-microsoft/autogen
+microsoft/autogen  # superseded 2026-08-25 by microsoft/agent-framework (AutoGen+SK merger); reference only
 microsoft/ai-agents-for-beginners
 mem0ai/mem0
 FlowiseAI/Flowise  # sunset/archived transition reference; see lifecycle-overrides.json

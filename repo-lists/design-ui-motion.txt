@@ -1,0 +1,16 @@
+# Design, UI, Motion & 3D — reference material for the command center's own UI
+# Vetted 2026-08-25.
+#
+# Two kinds of entry live here and they are NOT interchangeable:
+#   * Upstream libraries — the real, load-bearing dependencies (three.js, GSAP).
+#   * Agent "skills" — prompt/instruction packs. Treat as advice, not code.
+# Skill packs are small, young and community-run; read before adopting.
+
+# --- Upstream libraries (load-bearing)
+mrdoob/three.js
+greensock/GSAP
+
+# --- Agent design-skill packs (advisory only; review before use)
+LottieFiles/motion-design-skill
+naplesblue/apple-design-skill
+AThevon/genjutsu

@@ -9,6 +9,9 @@ on:
       - 'index.html'
       - 'docs/catalog-status.json'
       - 'docs/catalog-status.svg'
+      - 'docs/hardware-profiles.json'
+      - 'repo-lists/public-allowlist.txt'
+      - 'scripts/catalog_freshness_gate.py'
       - 'repo-lists/**'
       - 'scripts/catalog_guardian.py'
       - 'scripts/catalog_guardian_legacy.py'
@@ -41,11 +44,25 @@ jobs:
         with:
           python-version: '3.12'
 
+      # Cost/robustness: refresh the metadata the visual renders, but never let a
+      # rate-limited or failing API sweep break a deploy. On failure the committed
+      # docs/catalog-status.json is served instead and the freshness gate annotates
+      # how old it is, so the site degrades to "slightly stale" rather than "broken".
       - name: Refresh lightweight catalog metadata for the visual
+        id: refresh
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: python scripts/catalog_guardian.py
+
+      - name: Report catalog metadata freshness
+        shell: bash
+        run: |
+          if [[ '${{ steps.refresh.outcome }}' != 'success' ]]; then
+            echo '::warning::Catalog refresh failed; deploying the committed snapshot instead.'
+          fi
+          python scripts/catalog_freshness_gate.py
 
       - name: Check whether GitHub Pages is enabled
         id: pages

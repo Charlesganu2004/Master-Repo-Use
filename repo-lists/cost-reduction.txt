@@ -11,7 +11,6 @@ cloud-custodian/cloud-custodian
 mlabouardy/komiser
 cloudquery/cloudquery
 turbot/steampipe
-phildougherty/infracost_mcp
 jasonwilbur/cloud-cost-mcp
 OptimNow/finops-mcp-resources
 OptimNow/cloud-finops-skills

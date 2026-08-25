@@ -20,6 +20,9 @@ Use `AGENTS.md` as the canonical portable contract for this repository and follo
 
 Canonical files:
 - `AGENTS.md`
+- `docs/LOCAL-MODEL-HARDWARE.md`
+- `docs/ADK-GUIDE.md`
+- `docs/CATALOG-TRIAGE-2026-08-25.md`
 - `docs/AI-MAINTENANCE.md`
 - `docs/CATALOG-STATUS.md`
 - `docs/REPO-CATALOG.md`

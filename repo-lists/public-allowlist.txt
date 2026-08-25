@@ -1,0 +1,47 @@
+# PUBLIC SHOWCASE ALLOWLIST
+#
+# The privacy model of this repository is that the *composition* of the catalog is
+# private: which repos Charles tracks, in which lane, with which security notes.
+# scripts/build_public_site.py therefore refuses to publish any slug that appears
+# in repo-lists/*.txt.
+#
+# That rule is right for the curated lanes and wrong for a handful of entries whose
+# whole purpose is to be shown: the public setup page has to be able to say
+# "install Ollama" and link to it. This file is the explicit, owner-controlled
+# exception list. A slug here may appear in the PUBLIC Pages artifact.
+#
+# Rules for adding a line here:
+#   1. It must be a well-known upstream project, not a niche or personal repo.
+#      Listing it publicly must reveal nothing about Charles's private interests.
+#   2. It must already be vetted in a normal catalog lane.
+#   3. Never add a private/internal repo, a security finding, or a lane name.
+#
+# Removing a line is always safe: the entry simply stops being publicly linkable.
+
+# Local runtimes the public setup page installs
+ollama/ollama
+ollama/ollama-python
+ollama/ollama-js
+microsoft/foundry-local
+microsoft/onnxruntime-genai
+microsoft/BitNet
+microsoft/PhiCookBook
+microsoft/Olive
+google/gemma.cpp
+google-deepmind/gemma
+google-gemini/gemini-cli
+google-gemini/cookbook
+googleapis/python-genai
+
+# Agent development kits the public ADK page documents
+google/adk-python
+google/adk-java
+google/adk-samples
+google/adk-web
+microsoft/agent-framework
+microsoft/semantic-kernel
+openai/openai-agents-python
+
+# Design/motion libraries the site itself is built against
+mrdoob/three.js
+greensock/GSAP

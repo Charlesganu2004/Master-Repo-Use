@@ -18,6 +18,7 @@ tastyware/tastytrade  # maintained Python alternative; old tastytrade/tastytrade
 tastyware/tastytrade-cli
 ferdousbhai/tasty-agent
 coinbase/coinbase-advanced-py
-coinbase/cdp-sdk-python
+coinbase/cdp-sdk  # active monorepo successor; prefer for new work
+coinbase/cdp-sdk-python  # superseded 2026-08-25 by coinbase/cdp-sdk; kept for existing integrations
 rhettre/coinbase-advancedtrade-python
 qmyhd/LLM-portfolio-project

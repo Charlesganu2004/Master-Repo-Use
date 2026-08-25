@@ -35,6 +35,7 @@ Routine maintenance is GitHub-first: use the repository Catalog Guardian and [Ca
 if (-not $CopilotOnly) {
   Set-MasterRepoBlock "$HOME\.claude\CLAUDE.md" ($common + "`nClaude-specific entrypoint: $RepoPath\CLAUDE.md")
   Set-MasterRepoBlock "$HOME\.codex\AGENTS.md" $common
+  Set-MasterRepoBlock "$HOME\.gemini\GEMINI.md" ($common + "`nGemini-specific entrypoint: $RepoPath\GEMINI.md")
 }
 Set-MasterRepoBlock "$HOME\.copilot\copilot-instructions.md" ($common + "`nCopilot-specific guide: $RepoPath\docs\COPILOT-SETUP.md")
 
@@ -73,7 +74,7 @@ if (($userPath -split ';') -notcontains $bin) {
 Write-Host 'Master Repo global AI setup complete.' -ForegroundColor Green
 Write-Host "Repo: $RepoPath"
 Write-Host "Copilot: $HOME\.copilot\copilot-instructions.md"
-if (-not $CopilotOnly) { Write-Host "Claude: $HOME\.claude\CLAUDE.md | Codex: $HOME\.codex\AGENTS.md" }
+if (-not $CopilotOnly) { Write-Host "Claude: $HOME\.claude\CLAUDE.md | Codex: $HOME\.codex\AGENTS.md | Gemini: $HOME\.gemini\GEMINI.md" }
 Write-Host "Watermark command: & '$bin\master-watermark.ps1' <input> <output-folder>"
 Write-Host 'GitHub audit: gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use'
 Write-Host "Optional AI request: python '$RepoPath\scripts\maintenance_request.py' --auto"
