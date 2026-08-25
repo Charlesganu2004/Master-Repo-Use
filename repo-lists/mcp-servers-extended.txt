@@ -15,3 +15,5 @@ alpacahq/alpaca-mcp-server
 ooples/token-optimizer-mcp
 yvgude/lean-ctx
 headroomlabs-ai/headroom
+MCP-UI-Org/mcp-ui                 # UI over MCP: protocol + SDK for interactive MCP responses
+Jpisnice/shadcn-ui-mcp-server     # gives an LLM shadcn/ui component structure, usage and install context

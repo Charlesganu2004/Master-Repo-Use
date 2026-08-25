@@ -16,12 +16,17 @@ read it, and every command card is click-to-copy:
 | Tab | What it gives you |
 |---|---|
 | **Setup** | One-liner global install for Claude Code, Codex, Copilot and Gemini |
-| **Local Models** | Move a slider to your RAM; it tells you which models actually run and which repos to install |
+| **Use It** | Six systems — instruction files, skills, local models, MCP, agent subgroups, security — each with the one-liner that starts it and the point where it hands back to you |
+| **Local Models** | Move a slider to your RAM and OS; 36 models re-sized live, plus an install checker that answers "can this machine run it" before you download |
 | **ADKs** | Which agent development kit to pick, and when an ADK is overkill |
-| **System Map** | Clickable diagram of all five layers, from client to model |
+| **System Map** | 20 clickable nodes across all five layers, from client to model |
 | **Design** | The libraries and skill packs behind the interface |
-| **Health & Security** | Aggregate catalog health |
+| **Health & Security** | Aggregate catalog health and deep-scan coverage |
 | **Access & Deploy** | Branch protection, Pages, cost controls |
+
+There is a **light/dark toggle** in the top bar, and a **build stamp** next to it showing which
+deployment you are looking at. If that stamp is older than the latest deploy, your browser is
+serving a cached copy — hard-refresh with `Ctrl+Shift+R` (`Cmd+Shift+R` on macOS).
 
 The public site shows **aggregate health only**. Repo-by-repo detail requires a local clone —
 see [Local/private mode](#localprivate-mode).
@@ -396,22 +401,92 @@ Static scanners reduce risk but cannot prove third-party code is safe. HIGH find
 
 See [docs/SECURITY-SCANNING.md](docs/SECURITY-SCANNING.md) and [docs/NEW-REPO-VETTING.md](docs/NEW-REPO-VETTING.md).
 
+## Security scanning — read this if you assumed it was already running
+
+Deep scanning existed in this repository long before it ever ran. On 2026-08-25 an audit of the
+scanner itself found:
+
+**0 of 252 catalogued repositories had ever been deep-scanned.**
+
+Not "scanned and clean" — never scanned. Three separate things caused it, and each one alone
+would have been enough:
+
+1. The weekly Catalog Guardian job was **metadata only**. It checked push dates and archive
+   flags. It never passed `--deep`.
+2. The scanner install step was gated on `if: steps.additions.outputs.repos != ''`, so on a
+   scheduled run it was **skipped entirely**. No Semgrep, no Gitleaks, no OSV, no ClamAV.
+3. `--deep` ran only inside the owner-approved maintenance job, behind a manual
+   `APPROVE CATALOG MAINTENANCE` comment that had never been given at scale. And when new repos
+   *were* added, the install crashed: `go install github.com/gitleaks/gitleaks/v8@latest` fails
+   because that module still declares its path as `github.com/zricethezav/gitleaks/v8`.
+
+Nothing was hiding a finding. There was simply **no scan to produce one**, and an empty findings
+list looked exactly like a clean bill of health.
+
+### What changed
+
+- **A rotating deep scan now runs on the weekly schedule**, read-only, with no approval gate.
+  Reporting a risk should never wait on a human; only *changing* the catalog stays owner-gated.
+  About 19 repos per run, full coverage in roughly 13 weeks.
+- **Scanner installs are non-fatal.** A broken installer degrades the run to `SCANNER-ERROR`
+  instead of killing it — which is what took the whole audit down on 2026-08-25.
+- **Coverage is displayed**, on the Health & Security tab and in a `[Security Scan]` issue, so
+  "never scanned" can never again be mistaken for "scanned and clean".
+- **`SCANNER-ERROR` means unverified**, never clean and never flagged. Those repos stay in the
+  rotation.
+
+What is scanned: malware (ClamAV), secrets (Gitleaks, `--redact`, values never printed), known
+vulnerabilities (OSV), code patterns (Semgrep), plus built-in checks for invisible/bidi
+characters, prompt injection, SQL injection and suspicious execution patterns.
+
+Run the same checks over any working tree yourself:
+
+```bash
+python scripts/static_audit.py .
+```
+
+Detail: [docs/SECURITY-SCANNING.md](docs/SECURITY-SCANNING.md).
+
 ## Local models and hardware fit
 
 Which models run on your machine, from three vendors only: **Microsoft**, **Google/Gemini**, and
-**Ollama**. General serving stacks stay in [repo-lists/llm-models-serving.txt](repo-lists/llm-models-serving.txt).
+**Ollama**. General training and serving stacks stay in
+[repo-lists/llm-models-serving.txt](repo-lists/llm-models-serving.txt) &mdash; llama.cpp, vLLM, SGLang,
+plus `NVIDIA/Megatron-LM` (large-scale training), `OptimalScale/LMFlow` (finetuning toolkit) and
+`openai/parameter-golf` (the smallest-LM-in-16MB challenge, and a genuinely useful way to think
+about the size/quality tradeoff). `Stability-AI/StableLM` is catalogued as a **historical
+reference only** &mdash; its last push was April 2024.
 
-| RAM | Verdict | Largest model that fits (Windows) |
-|---:|---|---|
-| 4 GB | no local chat model fits — use hosted Gemini | — |
-| 8 GB | first genuinely useful tier | `gemma3:4b` |
-| 16 GB | solid daily driver | `phi4` (14B) |
-| 32 GB | excellent | `gemma3:27b` |
+**36 models**, at least three from every vendor at every tier from 8 GB up:
+
+| RAM | Verdict | Models that fit | Microsoft | Google | Ollama |
+|---:|---|---:|---:|---:|---:|
+| 4 GB | severely constrained — sub-1B only | 8 | 1 | 3 | 4 |
+| 6 GB | tiny to small | 18 | 5 | 6 | 7 |
+| 8 GB | first comfortable tier | 22 | 5 | 7 | 10 |
+| 12 GB | comfortable small / tight mid | 25 | 5 | 9 | 11 |
+| 16 GB | solid daily driver | 30 | 8 | 9 | 13 |
+| 24 GB | strong | 34 | 8 | 11 | 15 |
+| 32 GB | excellent | 36 | 8 | 11 | 17 |
+
+At 4 GB, Microsoft's only entry is BitNet (1.58-bit weights) — it publishes no sub-1B open model.
+Microsoft's open-weight ceiling is 14B and Google's is 27B, so the largest options at 32 GB come
+from the wider Ollama library.
 
 Figures are **computed, not benchmarked**, from a formula published in
 [docs/LOCAL-MODEL-HARDWARE.md](docs/LOCAL-MODEL-HARDWARE.md); `tests/test_hardware_profiles.py`
 re-derives every minimum and fails if the data drifts. Interactive version: the **Local Models**
 tab on the [setup site](https://charlesganu2004.github.io/Master-Repo-Use/).
+
+Tag names could not be verified automatically when this data was written, so the repo ships a
+checker instead of an assurance — it already caught one tag that does not exist:
+
+```bash
+python scripts/verify_model_tags.py
+```
+
+Both the dataset and the guide are generated, so tables cannot drift from data:
+`scripts/generate_hardware_profiles.py` then `scripts/generate_hardware_doc.py`.
 
 Catalog lane: [repo-lists/local-models.txt](repo-lists/local-models.txt)
 
@@ -444,7 +519,11 @@ The global setup scripts install the Gemini pointer alongside Claude, Codex and 
 
 ## Design, motion and 3D
 
-- **Libraries (load-bearing):** `mrdoob/three.js`, `greensock/GSAP` — note GSAP is not OSI-licensed.
+- **Libraries (load-bearing):** `mrdoob/three.js`, `greensock/GSAP` — GSAP is not OSI-licensed.
+- **Design systems:** `zanwei/design-dna` (turns a reference UI into quantified design-token
+  JSON), `creativetimofficial/ui` (components and blocks exposed through a registry and MCP).
+- **UI over MCP:** `MCP-UI-Org/mcp-ui` (protocol + SDK for interactive MCP responses),
+  `Jpisnice/shadcn-ui-mcp-server` (gives an LLM real shadcn/ui component context).
 - **Skill packs (advisory only):** motion-design, apple-design, genjutsu. These are instruction
   files, not dependencies: small, young, community-run, with near-identical forks. Read one
   end-to-end before pointing an agent at it.
@@ -546,6 +625,10 @@ The repository-side file describes the desired policy; the GitHub server setting
 | `docs/CATALOG-TRIAGE-2026-08-25.md` | lifecycle triage resolving the open catalog audit |
 | `repo-lists/public-allowlist.txt` | owner-controlled slugs permitted on the public site |
 | `scripts/catalog_freshness_gate.py` | annotates how stale the committed catalog metadata is |
+| `scripts/security_report.py` | publishes deep-scan coverage and findings to a `[Security Scan]` issue |
+| `scripts/verify_model_tags.py` | checks every model tag in the advisor actually resolves |
+| `scripts/generate_hardware_profiles.py` | regenerates the advisor dataset from the sizing formula |
+| `scripts/generate_hardware_doc.py` | regenerates `docs/LOCAL-MODEL-HARDWARE.md` from that dataset |
 | `quantum/` | quantum-computing lane |
 | `cost-reduction/` | cloud/token/cost lane |
 

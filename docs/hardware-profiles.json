@@ -1,22 +1,22 @@
 {
   "generated": "2026-08-25",
-  "schema": 1,
-  "provenance": "Sizing figures below are COMPUTED from the stated formula, not measured benchmarks. They are deliberately conservative so a recommendation that says 'fits' actually fits. Verify a tag with `ollama show <tag>` before relying on it.",
+  "schema": 2,
+  "provenance": "min_ram_gb values are COMPUTED from the formula below, not measured. They are deliberately conservative so a recommendation that says 'fits' actually fits. Ollama tag names could not be verified automatically from the build environment; run scripts/verify_model_tags.py against your own Ollama install to confirm them.",
   "formula": {
-    "weights_gb": "params_b * bytes_per_param",
     "bytes_per_param": {
       "q4": 0.6,
       "q8": 1.1,
       "fp16": 2.05
     },
-    "runtime_overhead_gb": 0.5,
-    "kv_cache_gb_per_4k_ctx": 0.35,
+    "overhead_base_gb": 0.25,
+    "overhead_per_b_gb": 0.03,
+    "kv_cache_per_b_4k_gb": 0.02,
     "os_reserve_gb": {
       "windows": 3.0,
       "macos": 2.5,
       "linux": 1.5
     },
-    "explanation": "usable = total_ram - os_reserve[platform]. A model fits when weights + runtime_overhead_gb + kv_cache_gb_per_4k_ctx <= usable, where weights = params_b * bytes_per_param[quant]. Figures assume CPU/unified memory; discrete GPU VRAM substitutes for system RAM on the weights term, which is why a 16 GB machine with an 8 GB GPU behaves like a larger box."
+    "explanation": "required = params_b * (bytes_per_param[quant] + overhead_per_b_gb + kv_cache_per_b_4k_gb) + overhead_base_gb. usable = total_ram - os_reserve[platform]. A model fits when required <= usable. Overhead scales with parameter count: a flat term made tiny models look unrunnable on 4 GB and understated KV cache on 27B ones. Discrete GPU VRAM substitutes for system RAM on the weights term."
   },
   "tiers": [
     {
@@ -24,56 +24,98 @@
       "label": "4 GB",
       "usable_gb": 1.0,
       "verdict": "severely constrained",
-      "summary": "Below the practical floor for a general chat model on Windows. Sub-1B models and 1-bit (BitNet) builds only, and expect swapping. Treat local inference as experimental at this tier and use a hosted API for real work.",
-      "class": "red"
+      "class": "red",
+      "summary": "Tiny models only, and only just. Expect 1-2 GB free after Windows. Use these for classification and extraction, not conversation. Hosted Gemini is the honest answer for real work at this tier.",
+      "fits_total": 8,
+      "fits_by_vendor": {
+        "Microsoft": 1,
+        "Google": 3,
+        "Ollama": 4
+      }
     },
     {
       "ram_gb": 6,
       "label": "6 GB",
       "usable_gb": 3.0,
-      "verdict": "tiny models only",
-      "summary": "Runs 0.3B-1B assistants for autocomplete, classification, and extraction. Not a coding model. Close your browser first.",
-      "class": "orange"
+      "verdict": "tiny to small",
+      "class": "orange",
+      "summary": "The 3-4B class becomes reachable. Genuinely useful for summarising, rewriting and structured extraction. Close your browser first.",
+      "fits_total": 18,
+      "fits_by_vendor": {
+        "Microsoft": 5,
+        "Google": 6,
+        "Ollama": 7
+      }
     },
     {
       "ram_gb": 8,
       "label": "8 GB",
       "usable_gb": 5.0,
       "verdict": "small models, usable",
-      "summary": "The first genuinely useful tier. 3-4B Q4 models handle summarisation, rewriting, structured extraction and light code assistance.",
-      "class": "yellow"
+      "class": "yellow",
+      "summary": "The first comfortable tier. 4B general models plus a separate embedding model for RAG.",
+      "fits_total": 22,
+      "fits_by_vendor": {
+        "Microsoft": 5,
+        "Google": 7,
+        "Ollama": 10
+      }
     },
     {
       "ram_gb": 12,
       "label": "12 GB",
       "usable_gb": 9.0,
       "verdict": "comfortable small / tight mid",
-      "summary": "4B models run with room to spare; 12-14B Q4 fits but leaves little for context. Good general-purpose local tier.",
-      "class": "green"
+      "class": "green",
+      "summary": "7-9B models run with room for context. A local coding assistant becomes practical.",
+      "fits_total": 25,
+      "fits_by_vendor": {
+        "Microsoft": 5,
+        "Google": 9,
+        "Ollama": 11
+      }
     },
     {
       "ram_gb": 16,
       "label": "16 GB",
       "usable_gb": 13.0,
       "verdict": "solid daily driver",
-      "summary": "12-14B Q4 with real context length, or 4B at high quantisation with long context. This is the sweet spot for local coding help.",
-      "class": "green"
+      "class": "green",
+      "summary": "14B with real context length. This is the sweet spot for local coding help.",
+      "fits_total": 30,
+      "fits_by_vendor": {
+        "Microsoft": 8,
+        "Google": 9,
+        "Ollama": 13
+      }
     },
     {
       "ram_gb": 24,
       "label": "24 GB",
       "usable_gb": 21.0,
       "verdict": "strong",
-      "summary": "27B-class Q4 models fit, plus a separate embedding model for RAG running alongside.",
-      "class": "green"
+      "class": "green",
+      "summary": "24-30B class, including mixture-of-experts models that punch above their latency.",
+      "fits_total": 34,
+      "fits_by_vendor": {
+        "Microsoft": 8,
+        "Google": 11,
+        "Ollama": 15
+      }
     },
     {
       "ram_gb": 32,
       "label": "32 GB",
       "usable_gb": 29.0,
       "verdict": "excellent",
-      "summary": "27-32B Q4 with long context, or a 14B model plus embeddings, reranker and a vector store, all resident at once.",
-      "class": "green"
+      "class": "green",
+      "summary": "32B dense models, plus a full local RAG stack resident alongside. Note 27B is Google's open-weight ceiling and 14B is Microsoft's, so the largest options here come from the wider Ollama library.",
+      "fits_total": 36,
+      "fits_by_vendor": {
+        "Microsoft": 8,
+        "Google": 11,
+        "Ollama": 17
+      }
     }
   ],
   "models": [
@@ -85,8 +127,20 @@
       "quant": "q4",
       "runtime": "ollama",
       "tag": "gemma3:270m",
-      "min_ram_gb": 6,
-      "use": "Classification, tagging, tiny extraction. Not conversational.",
+      "min_ram_gb": 4,
+      "use": "Classification, tagging, keyword extraction. Not conversational.",
+      "license": "Gemma Terms of Use"
+    },
+    {
+      "id": "embeddinggemma",
+      "vendor": "Google",
+      "family": "Gemma",
+      "params_b": 0.31,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "embeddinggemma",
+      "min_ram_gb": 4,
+      "use": "Google's embedding model for local RAG. Runs alongside a chat model.",
       "license": "Gemma Terms of Use"
     },
     {
@@ -97,35 +151,21 @@
       "quant": "q4",
       "runtime": "ollama",
       "tag": "gemma3:1b",
-      "min_ram_gb": 6,
-      "use": "Short-form summarisation and structured extraction.",
+      "min_ram_gb": 4,
+      "use": "Short-form summarisation and structured extraction on very small machines.",
       "license": "Gemma Terms of Use"
     },
     {
-      "id": "bitnet-2b",
-      "vendor": "Microsoft",
-      "family": "BitNet b1.58",
-      "params_b": 2.4,
-      "quant": "q4",
-      "runtime": "bitnet.cpp",
-      "tag": "BitNet-b1.58-2B-4T",
-      "min_ram_gb": 6,
-      "use": "1-bit CPU-only inference. The one credible option at 4-6 GB; needs bitnet.cpp, not Ollama.",
-      "license": "MIT",
-      "why_special": "1.58-bit weights make this far smaller than its 2.4B parameter count implies; the generic q4 formula overestimates it.",
-      "repo": "microsoft/BitNet"
-    },
-    {
-      "id": "phi4-mini",
-      "vendor": "Microsoft",
-      "family": "Phi-4",
-      "params_b": 3.8,
+      "id": "gemma3n-e2b",
+      "vendor": "Google",
+      "family": "Gemma 3n",
+      "params_b": 2.0,
       "quant": "q4",
       "runtime": "ollama",
-      "tag": "phi4-mini",
-      "min_ram_gb": 8,
-      "use": "Reasoning-tuned small model. Strong instruction following for its size.",
-      "license": "MIT"
+      "tag": "gemma3n:e2b",
+      "min_ram_gb": 6,
+      "use": "On-device tuned; MatFormer architecture keeps active parameters low.",
+      "license": "Gemma Terms of Use"
     },
     {
       "id": "gemma3-4b",
@@ -135,8 +175,44 @@
       "quant": "q4",
       "runtime": "ollama",
       "tag": "gemma3:4b",
+      "min_ram_gb": 6,
+      "use": "General assistant with vision input. The sensible default at 8 GB.",
+      "license": "Gemma Terms of Use"
+    },
+    {
+      "id": "gemma3n-e4b",
+      "vendor": "Google",
+      "family": "Gemma 3n",
+      "params_b": 4.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "gemma3n:e4b",
+      "min_ram_gb": 6,
+      "use": "Larger on-device Gemma 3n; better reasoning than e2b at similar footprint.",
+      "license": "Gemma Terms of Use"
+    },
+    {
+      "id": "codegemma-7b",
+      "vendor": "Google",
+      "family": "CodeGemma",
+      "params_b": 7.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "codegemma:7b",
       "min_ram_gb": 8,
-      "use": "General assistant with vision input. Good default at 8 GB.",
+      "use": "Code completion and generation, fill-in-the-middle aware.",
+      "license": "Gemma Terms of Use"
+    },
+    {
+      "id": "gemma2-9b",
+      "vendor": "Google",
+      "family": "Gemma 2",
+      "params_b": 9.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "gemma2:9b",
+      "min_ram_gb": 12,
+      "use": "Previous-generation Gemma; still strong general chat at mid size.",
       "license": "Gemma Terms of Use"
     },
     {
@@ -148,20 +224,8 @@
       "runtime": "ollama",
       "tag": "gemma3:12b",
       "min_ram_gb": 12,
-      "use": "Capable general model; handles multi-step instructions and code review.",
+      "use": "Multi-step instructions and code review. Vision capable.",
       "license": "Gemma Terms of Use"
-    },
-    {
-      "id": "phi4-14b",
-      "vendor": "Microsoft",
-      "family": "Phi-4",
-      "params_b": 14.0,
-      "quant": "q4",
-      "runtime": "ollama",
-      "tag": "phi4",
-      "min_ram_gb": 16,
-      "use": "Best Microsoft open-weight reasoning model for a 16 GB machine.",
-      "license": "MIT"
     },
     {
       "id": "gemma3-27b",
@@ -176,15 +240,317 @@
       "license": "Gemma Terms of Use"
     },
     {
-      "id": "embed-nomic",
+      "id": "gemma2-27b",
+      "vendor": "Google",
+      "family": "Gemma 2",
+      "params_b": 27.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "gemma2:27b",
+      "min_ram_gb": 24,
+      "use": "Previous-generation 27B. Alternative to Gemma 3 if a workload is already tuned to it.",
+      "license": "Gemma Terms of Use"
+    },
+    {
+      "id": "bitnet-2b",
+      "vendor": "Microsoft",
+      "family": "BitNet b1.58",
+      "params_b": 2.4,
+      "quant": "q4",
+      "runtime": "bitnet.cpp",
+      "tag": "BitNet-b1.58-2B-4T",
+      "min_ram_gb": 4,
+      "use": "1.58-bit weights. The only credible Microsoft option below 8 GB; needs bitnet.cpp, not Ollama.",
+      "license": "MIT",
+      "repo": "microsoft/BitNet",
+      "why_special": "1.58-bit weights make this far smaller than its 2.4B parameter count implies, so the generic q4 term overestimates it."
+    },
+    {
+      "id": "phi4-mini",
+      "vendor": "Microsoft",
+      "family": "Phi-4",
+      "params_b": 3.8,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "phi4-mini",
+      "min_ram_gb": 6,
+      "use": "Reasoning-tuned small model with strong instruction following for its size.",
+      "license": "MIT"
+    },
+    {
+      "id": "phi4-mini-reasoning",
+      "vendor": "Microsoft",
+      "family": "Phi-4",
+      "params_b": 3.8,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "phi4-mini-reasoning",
+      "min_ram_gb": 6,
+      "use": "Chain-of-thought tuned variant of Phi-4-mini. Slower, better at multi-step maths.",
+      "license": "MIT"
+    },
+    {
+      "id": "phi3.5-mini",
+      "vendor": "Microsoft",
+      "family": "Phi-3.5",
+      "params_b": 3.8,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "phi3.5",
+      "min_ram_gb": 6,
+      "use": "Previous generation. Keep only if a workload is already tuned against it.",
+      "license": "MIT"
+    },
+    {
+      "id": "phi3-medium",
+      "vendor": "Microsoft",
+      "family": "Phi-3",
+      "params_b": 14.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "phi3:medium",
+      "min_ram_gb": 16,
+      "use": "Phi-3 Medium. Older than Phi-4 but a genuine mid-size Microsoft option.",
+      "license": "MIT"
+    },
+    {
+      "id": "phi3-mini",
+      "vendor": "Microsoft",
+      "family": "Phi-3",
+      "params_b": 3.8,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "phi3:mini",
+      "min_ram_gb": 6,
+      "use": "Compact Phi-3. Useful when a workload is pinned to the Phi-3 generation.",
+      "license": "MIT"
+    },
+    {
+      "id": "phi4-14b",
+      "vendor": "Microsoft",
+      "family": "Phi-4",
+      "params_b": 14.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "phi4",
+      "min_ram_gb": 16,
+      "use": "Best Microsoft open-weight general model for a 16 GB machine.",
+      "license": "MIT"
+    },
+    {
+      "id": "phi4-reasoning",
+      "vendor": "Microsoft",
+      "family": "Phi-4",
+      "params_b": 14.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "phi4-reasoning",
+      "min_ram_gb": 16,
+      "use": "Reasoning-tuned Phi-4. Competitive with much larger models on maths and logic.",
+      "license": "MIT"
+    },
+    {
+      "id": "smollm2-360m",
       "vendor": "Ollama",
-      "family": "Embeddings",
+      "family": "SmolLM2",
+      "params_b": 0.36,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "smollm2:360m",
+      "min_ram_gb": 4,
+      "use": "Tiny assistant for autocomplete and classification on 4 GB machines.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen3-0.6b",
+      "vendor": "Ollama",
+      "family": "Qwen3",
+      "params_b": 0.6,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "qwen3:0.6b",
+      "min_ram_gb": 4,
+      "use": "Smallest Qwen3. Surprisingly capable at structured extraction.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "llama3.2-1b",
+      "vendor": "Ollama",
+      "family": "Llama 3.2",
+      "params_b": 1.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "llama3.2:1b",
+      "min_ram_gb": 4,
+      "use": "Meta's smallest instruct model. Good summariser at 4 GB.",
+      "license": "Llama 3.2 Community"
+    },
+    {
+      "id": "nomic-embed",
+      "vendor": "Ollama",
+      "family": "Nomic",
       "params_b": 0.14,
       "quant": "fp16",
       "runtime": "ollama",
       "tag": "nomic-embed-text",
+      "min_ram_gb": 4,
+      "use": "The default local RAG embedding model. Pairs with any chat model.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen3-1.7b",
+      "vendor": "Ollama",
+      "family": "Qwen3",
+      "params_b": 1.7,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "qwen3:1.7b",
       "min_ram_gb": 6,
-      "use": "RAG embeddings. Runs alongside a chat model at any tier from 8 GB up.",
+      "use": "Step up from 0.6b with real multi-turn ability.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "llama3.2-3b",
+      "vendor": "Ollama",
+      "family": "Llama 3.2",
+      "params_b": 3.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "llama3.2:3b",
+      "min_ram_gb": 6,
+      "use": "Solid general assistant at the 6 GB tier.",
+      "license": "Llama 3.2 Community"
+    },
+    {
+      "id": "qwen3-4b",
+      "vendor": "Ollama",
+      "family": "Qwen3",
+      "params_b": 4.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "qwen3:4b",
+      "min_ram_gb": 6,
+      "use": "Strong all-rounder; hybrid thinking mode for harder prompts.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen2.5-coder-7b",
+      "vendor": "Ollama",
+      "family": "Qwen2.5-Coder",
+      "params_b": 7.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "qwen2.5-coder:7b",
+      "min_ram_gb": 8,
+      "use": "Best small local coding model. Fill-in-the-middle and repo-level context.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "mistral-7b",
+      "vendor": "Ollama",
+      "family": "Mistral",
+      "params_b": 7.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "mistral",
+      "min_ram_gb": 8,
+      "use": "Fast, permissive, well-understood baseline.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "deepseek-r1-7b",
+      "vendor": "Ollama",
+      "family": "DeepSeek-R1",
+      "params_b": 7.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "deepseek-r1:7b",
+      "min_ram_gb": 8,
+      "use": "Distilled reasoning model; shows its working.",
+      "license": "MIT"
+    },
+    {
+      "id": "qwen3-8b",
+      "vendor": "Ollama",
+      "family": "Qwen3",
+      "params_b": 8.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "qwen3:8b",
+      "min_ram_gb": 12,
+      "use": "The sweet spot for general local work once you have 12 GB.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "deepseek-r1-14b",
+      "vendor": "Ollama",
+      "family": "DeepSeek-R1",
+      "params_b": 14.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "deepseek-r1:14b",
+      "min_ram_gb": 16,
+      "use": "Reasoning at a size a 16 GB machine can actually hold.",
+      "license": "MIT"
+    },
+    {
+      "id": "qwen3-14b",
+      "vendor": "Ollama",
+      "family": "Qwen3",
+      "params_b": 14.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "qwen3:14b",
+      "min_ram_gb": 16,
+      "use": "Strong general + coding model at 16 GB.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "mistral-small-24b",
+      "vendor": "Ollama",
+      "family": "Mistral Small",
+      "params_b": 24.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "mistral-small",
+      "min_ram_gb": 24,
+      "use": "Near-frontier quality for a single consumer machine.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen3-30b-a3b",
+      "vendor": "Ollama",
+      "family": "Qwen3 MoE",
+      "params_b": 30.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "qwen3:30b-a3b",
+      "min_ram_gb": 24,
+      "use": "Mixture-of-experts: 30B total but ~3B active, so it runs far faster than its size implies.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen2.5-coder-32b",
+      "vendor": "Ollama",
+      "family": "Qwen2.5-Coder",
+      "params_b": 32.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "qwen2.5-coder:32b",
+      "min_ram_gb": 32,
+      "use": "The strongest local coding model that fits 32 GB.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen3-32b",
+      "vendor": "Ollama",
+      "family": "Qwen3",
+      "params_b": 32.0,
+      "quant": "q4",
+      "runtime": "ollama",
+      "tag": "qwen3:32b",
+      "min_ram_gb": 32,
+      "use": "Largest dense Qwen3 for a 32 GB box.",
       "license": "Apache-2.0"
     }
   ],
@@ -213,9 +579,44 @@
     {
       "slug": "microsoft/BitNet",
       "role": "runtime",
-      "min_ram_gb": 6,
+      "min_ram_gb": 4,
       "vendor": "Microsoft",
-      "why": "1-bit CPU inference. The only realistic local path below 8 GB."
+      "why": "1-bit CPU inference. The only realistic Microsoft path below 8 GB."
+    },
+    {
+      "slug": "microsoft/PhiCookBook",
+      "role": "reference",
+      "min_ram_gb": 4,
+      "vendor": "Microsoft",
+      "why": "Recipes and docs for the Phi family. No runtime cost."
+    },
+    {
+      "slug": "google-gemini/gemini-cli",
+      "role": "hosted",
+      "min_ram_gb": 4,
+      "vendor": "Google",
+      "why": "Hosted Gemini. Listed because it is the right answer when RAM is the binding constraint."
+    },
+    {
+      "slug": "google-gemini/cookbook",
+      "role": "reference",
+      "min_ram_gb": 4,
+      "vendor": "Google",
+      "why": "Gemini API recipes. No local footprint."
+    },
+    {
+      "slug": "googleapis/python-genai",
+      "role": "client",
+      "min_ram_gb": 4,
+      "vendor": "Google",
+      "why": "Official Google GenAI Python SDK."
+    },
+    {
+      "slug": "google/gemma.cpp",
+      "role": "runtime",
+      "min_ram_gb": 6,
+      "vendor": "Google",
+      "why": "Minimal C++ Gemma runtime; lighter than a full stack."
     },
     {
       "slug": "microsoft/foundry-local",
@@ -232,27 +633,6 @@
       "why": "ONNX generative runtime; best CPU/NPU path on Windows."
     },
     {
-      "slug": "microsoft/Olive",
-      "role": "tooling",
-      "min_ram_gb": 16,
-      "vendor": "Microsoft",
-      "why": "Model optimisation/quantisation. Needs headroom to convert models."
-    },
-    {
-      "slug": "microsoft/PhiCookBook",
-      "role": "reference",
-      "min_ram_gb": 4,
-      "vendor": "Microsoft",
-      "why": "Docs and recipes for the Phi family. No runtime cost."
-    },
-    {
-      "slug": "google/gemma.cpp",
-      "role": "runtime",
-      "min_ram_gb": 6,
-      "vendor": "Google",
-      "why": "Minimal C++ Gemma runtime; lighter than a full stack."
-    },
-    {
       "slug": "google-deepmind/gemma",
       "role": "reference",
       "min_ram_gb": 8,
@@ -260,25 +640,11 @@
       "why": "Reference Gemma implementations and weights guidance."
     },
     {
-      "slug": "google-gemini/gemini-cli",
-      "role": "hosted",
-      "min_ram_gb": 4,
-      "vendor": "Google",
-      "why": "Hosted Gemini, not local. Listed because it is the fallback when local RAM is the binding constraint."
-    },
-    {
-      "slug": "google-gemini/cookbook",
-      "role": "reference",
-      "min_ram_gb": 4,
-      "vendor": "Google",
-      "why": "Gemini API recipes. No local footprint."
-    },
-    {
-      "slug": "googleapis/python-genai",
-      "role": "client",
-      "min_ram_gb": 4,
-      "vendor": "Google",
-      "why": "Official Google GenAI Python SDK."
+      "slug": "microsoft/Olive",
+      "role": "tooling",
+      "min_ram_gb": 16,
+      "vendor": "Microsoft",
+      "why": "Model optimisation and quantisation. Needs headroom to convert models."
     }
   ]
 }

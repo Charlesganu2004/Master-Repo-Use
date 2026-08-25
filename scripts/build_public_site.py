@@ -203,6 +203,34 @@ def build_index() -> int:
     return stripper.removed
 
 
+def private_keys_present(raw: str, label: str) -> list[str]:
+    """Private lifecycle/security FIELDS appearing in a published payload.
+
+    Checked as object keys, not as substrings. The advisor dataset is prose-heavy and
+    an English "Note that ..." is not a leak; a `note` or `findings` key copied over
+    from the private catalog state is.
+    """
+    banned = {"note", "findings", "deep_scanned", "critical", "override", "archived"}
+    problems: list[str] = []
+    try:
+        data = json.loads(raw)
+    except ValueError as exc:
+        return [f"{label} is not valid JSON ({exc})"]
+
+    def walk(node, path="") -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key.lower() in banned:
+                    problems.append(f"{label} carries a private field: {path}{key}")
+                walk(value, f"{path}{key}.")
+        elif isinstance(node, list):
+            for item in node:
+                walk(item, path)
+
+    walk(data)
+    return problems
+
+
 def profile_leaks(raw: str, label: str) -> list[str]:
     """Repository slugs in the advisor dataset that the owner has not made public.
 
@@ -249,10 +277,7 @@ def build_profiles() -> list[str]:
 
     raw = PRIVATE_PROFILES.read_text(encoding="utf-8")
     problems.extend(profile_leaks(raw, "hardware-profiles.json"))
-
-    for word in PRIVATE_WORDS:
-        if word in raw.lower():
-            problems.append(f"hardware-profiles.json mentions private detail: {word!r}")
+    problems.extend(private_keys_present(raw, "hardware-profiles.json"))
 
     if not problems:
         PUBLIC_PROFILES.parent.mkdir(parents=True, exist_ok=True)
@@ -313,8 +338,9 @@ def verify(payload: dict) -> list[str]:
                 problems.append(f"public SVG mentions private detail: {word!r}")
 
     if PUBLIC_PROFILES.exists():
-        problems.extend(profile_leaks(
-            PUBLIC_PROFILES.read_text(encoding="utf-8"), "public hardware-profiles.json"))
+        published = PUBLIC_PROFILES.read_text(encoding="utf-8")
+        problems.extend(profile_leaks(published, "public hardware-profiles.json"))
+        problems.extend(private_keys_present(published, "public hardware-profiles.json"))
 
     if PUBLIC_INDEX.exists():
         page = PUBLIC_INDEX.read_text(encoding="utf-8")

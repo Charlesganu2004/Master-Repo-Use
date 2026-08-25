@@ -14,3 +14,7 @@ greensock/GSAP
 LottieFiles/motion-design-skill
 naplesblue/apple-design-skill
 AThevon/genjutsu
+
+# --- Design systems & component sources (added 2026-08-25)
+zanwei/design-dna                 # reference UI -> quantified design-token JSON, then generate matching UI
+creativetimofficial/ui            # open-source components/blocks exposed via Registry + MCP
