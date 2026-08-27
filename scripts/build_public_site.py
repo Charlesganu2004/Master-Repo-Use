@@ -419,6 +419,14 @@ def main() -> int:
                 print(f"PRIVACY FAILURE: {problem}", file=sys.stderr)
             return 1
         print("public hardware-profiles.json written (all slugs owner-allowlisted)")
+        # The palette picker is a plain page with no catalog content. Publishing it
+        # means design feedback needs a URL rather than a local server, which has
+        # been the recurring friction.
+        picker = ROOT / "design-options.html"
+        if picker.exists():
+            (SITE / "design-options.html").write_text(
+                picker.read_text(encoding="utf-8"), encoding="utf-8")
+            print("public design-options.html written")
         identifier = build_id()
         build_version(identifier)
         print(f"version.json written (build {identifier})")
