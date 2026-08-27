@@ -98,6 +98,19 @@ class BuildVersionTests(unittest.TestCase):
         dupes = [i for i, n in collections.Counter(ids).items() if n > 1]
         self.assertEqual([], dupes, f"duplicate element ids: {dupes}")
 
+    def test_no_em_or_en_dashes_in_the_page(self):
+        """House style: no em-dashes or en-dashes anywhere in the interface.
+
+        Reworded rather than swapped for hyphens, because a hyphen between two
+        words reads as a compound noun instead of a break in the sentence.
+        """
+        page = INDEX.read_text(encoding="utf-8")
+        offenders = []
+        for i, line in enumerate(page.splitlines(), 1):
+            if "—" in line or "–" in line:
+                offenders.append(f"line {i}: {line.strip()[:90]}")
+        self.assertEqual([], offenders, "em/en dashes found: " + "; ".join(offenders[:5]))
+
     def test_stale_banner_exists_and_is_distinct(self):
         page = INDEX.read_text(encoding="utf-8")
         self.assertIn('id="staleBar"', page)

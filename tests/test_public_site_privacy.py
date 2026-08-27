@@ -13,7 +13,8 @@ class PublicSitePrivacyTests(unittest.TestCase):
     def test_private_markup_is_removed(self):
         stage(); private=(ROOT/"index.html").read_text(encoding="utf-8"); public=builder.PUBLIC_INDEX.read_text(encoding="utf-8"); self.assertIn("data-private",private); self.assertNotIn("data-private",public); self.assertLess(len(public),len(private)); self.assertEqual([],sorted(n for n in builder.private_repo_names()-{builder.OWN_REPO} if n in public))
         # The public artifact must still be a working page, not a stripped husk.
-        for keep in ("Catalog health","loadHealth","Public privacy mode","System Map","hardware-profiles"):
+        for keep in ("Catalog health","loadHealth","Public privacy mode","Your setup",
+                     "Full system","Hybrid model routing","hardware-profiles","platSeg"):
             with self.subTest(keep=keep): self.assertIn(keep,public)
         # The repo-by-repo table now lives behind data-private, so it must NOT survive.
         for drop in ('id="healthRows"','Private rows','data-private'):
