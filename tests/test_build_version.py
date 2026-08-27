@@ -83,13 +83,25 @@ class BuildVersionTests(unittest.TestCase):
         page = INDEX.read_text(encoding="utf-8")
         self.assertIn("location.replace", page)
 
-    def test_banner_id_does_not_collide_with_the_stale_counter(self):
-        """id="stale" already belongs to the STALE dashboard figure."""
+    def test_no_duplicate_element_ids(self):
+        """A duplicate id makes getElementById silently return the wrong element.
+
+        This bit once already: a new stale-cache banner used id="stale", which the
+        STALE dashboard counter already owned, so the banner could never appear.
+        Asserting the general invariant catches the whole class rather than that one
+        instance.
+        """
+        import collections
+        import re
+        page = INDEX.read_text(encoding="utf-8")
+        ids = re.findall(r'\sid="([^"]+)"', page)
+        dupes = [i for i, n in collections.Counter(ids).items() if n > 1]
+        self.assertEqual([], dupes, f"duplicate element ids: {dupes}")
+
+    def test_stale_banner_exists_and_is_distinct(self):
         page = INDEX.read_text(encoding="utf-8")
         self.assertIn('id="staleBar"', page)
-        self.assertIn('id="stale"', page)
-        self.assertEqual(1, page.count('<div id="staleBar"'))
-        self.assertNotIn('<div id="stale"', page)
+        self.assertIn('id="staleReload"', page)
 
 
 if __name__ == "__main__":

@@ -459,7 +459,7 @@ def managed_candidate(result: Result) -> None:
 
 def render(results: list[Result], policy: dict) -> None:
     stamp = now().strftime("%Y-%m-%d %H:%M UTC")
-    keys = ["HEALTHY", "STALE", "REVIEW", "REMOVE"]
+    keys = ["HEALTHY", "STALE", "REVIEW", "REMOVE", "UNKNOWN"]
     counts = {key: sum(r.status == key for r in results) for key in keys}
     STATE.write_text(
         json.dumps({"updated": stamp, "policy": policy, "counts": counts, "repos": [asdict(r) for r in results]}, indent=2) + "\n",
@@ -472,7 +472,7 @@ def render(results: list[Result], policy: dict) -> None:
         "",
         f"Policy: stale **{policy['stale_after_days']}d** · adoption/replacement review **{policy['adoption_review_days']}d** · active-catalog removal **{policy['remove_stale_after_days']}d** · archived observation grace **{policy['archive_grace_days']}d**.",
         "",
-        f"🟢 Healthy **{counts['HEALTHY']}** · 🟡 Stale **{counts['STALE']}** · 🟠 Review **{counts['REVIEW']}** · 🔴 Remove **{counts['REMOVE']}**",
+        f"🟢 Healthy **{counts['HEALTHY']}** · 🟡 Stale **{counts['STALE']}** · 🟠 Review **{counts['REVIEW']}** · 🔴 Remove **{counts['REMOVE']}** · ⚪ Unknown **{counts['UNKNOWN']}**",
         "",
         "| Repo | Status | Push age | Archived | License | Deep scan | Managed | Note |",
         "|---|---|---:|---:|---|---:|---:|---|",
@@ -488,7 +488,7 @@ def render(results: list[Result], policy: dict) -> None:
         )
     REPORT.write_text("\n".join(rows) + "\n", encoding="utf-8")
     SVG.write_text(
-        f'''<svg xmlns="http://www.w3.org/2000/svg" width="850" height="120" role="img" aria-label="Master Repo live catalog health"><rect width="850" height="120" rx="10" fill="#0d1117"/><text x="24" y="30" fill="#f0f6fc" font-family="Segoe UI,Arial" font-size="17" font-weight="700">Master Repo — live catalog health &amp; security</text><text x="24" y="54" fill="#8b949e" font-family="Segoe UI,Arial" font-size="12">Updated {stamp} · stale {policy['stale_after_days']}d · review {policy['adoption_review_days']}d · remove {policy['remove_stale_after_days']}d</text><text x="24" y="88" fill="#3fb950" font-family="Segoe UI,Arial" font-size="16">● Healthy {counts['HEALTHY']}</text><text x="205" y="88" fill="#d29922" font-family="Segoe UI,Arial" font-size="16">● Stale {counts['STALE']}</text><text x="350" y="88" fill="#f0883e" font-family="Segoe UI,Arial" font-size="16">● Review {counts['REVIEW']}</text><text x="520" y="88" fill="#f85149" font-family="Segoe UI,Arial" font-size="16">● Remove {counts['REMOVE']}</text><text x="700" y="88" fill="#8b949e" font-family="Segoe UI,Arial" font-size="14">Total {len(results)}</text></svg>''',
+        f'''<svg xmlns="http://www.w3.org/2000/svg" width="850" height="120" role="img" aria-label="Master Repo live catalog health"><rect width="850" height="120" rx="10" fill="#0d1117"/><text x="24" y="30" fill="#f0f6fc" font-family="Segoe UI,Arial" font-size="17" font-weight="700">Master Repo — live catalog health &amp; security</text><text x="24" y="54" fill="#8b949e" font-family="Segoe UI,Arial" font-size="12">Updated {stamp} · stale {policy['stale_after_days']}d · review {policy['adoption_review_days']}d · remove {policy['remove_stale_after_days']}d</text><text x="24" y="88" fill="#3fb950" font-family="Segoe UI,Arial" font-size="16">● Healthy {counts['HEALTHY']}</text><text x="205" y="88" fill="#d29922" font-family="Segoe UI,Arial" font-size="16">● Stale {counts['STALE']}</text><text x="350" y="88" fill="#f0883e" font-family="Segoe UI,Arial" font-size="16">● Review {counts['REVIEW']}</text><text x="520" y="88" fill="#f85149" font-family="Segoe UI,Arial" font-size="16">● Remove {counts['REMOVE']}</text><text x="660" y="88" fill="#8b949e" font-family="Segoe UI,Arial" font-size="16">● Unknown {counts['UNKNOWN']}</text><text x="790" y="88" fill="#8b949e" font-family="Segoe UI,Arial" font-size="13">n={len(results)}</text></svg>''',
         encoding="utf-8",
     )
 
@@ -530,9 +530,14 @@ def main() -> int:
         try:
             meta = metadata(repo)
         except Exception as exc:
+            # A metadata fetch failure is an INFRASTRUCTURE problem, not a verdict
+            # about the repository. Defaulting a never-seen repo to REVIEW meant one
+            # DNS blip could silently label 21 healthy repos as needing a lifecycle
+            # decision. Keep the last known status when there is one; otherwise say
+            # UNKNOWN, which reads as "unverified, retry" rather than as a judgement.
             result = Result(
                 repo=repo,
-                status=old.get("status", "REVIEW"),
+                status=old.get("status") or "UNKNOWN",
                 pushed_at=old.get("pushed_at"),
                 age_days=old.get("age_days"),
                 archived=bool(old.get("archived")),

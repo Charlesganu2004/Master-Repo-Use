@@ -15,4 +15,3 @@ lucasrosati/claude-code-memory-setup  # Obsidian-backed memory pattern; vendor-n
 # --- Research / reference (do not treat as runtime dependencies)
 microsoft/LLMLingua               # prompt compression; last release quiet since 2026-04, still the reference impl
 ZongqianLi/Prompt-Compression-Survey   # static academic survey; lifecycle override keeps it reference-only
-YuhaoLin2005/compact-counter-concept   # archived compaction measurement utility; reference-only
