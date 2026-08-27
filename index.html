@@ -209,14 +209,23 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);display
   opacity:0;pointer-events:none;transition:.24s var(--ease)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* Grid children default to min-width:auto, so they refuse to shrink below their
+   content and punch out of the container. Every grid child here must be allowed
+   to shrink; the ones with wide content scroll internally instead. */
+.stage>*,.advisor>*,.tiles>*,.figs>*{min-width:0}
 @media(max-width:1080px){
-  .stage{grid-template-columns:1fr}
+  .stage{grid-template-columns:minmax(0,1fr)}
   .rail{position:static}
-  .advisor{grid-template-columns:1fr}
+  .advisor{grid-template-columns:minmax(0,1fr)}
 }
 @media(max-width:560px){
   .shell{padding:16px 14px 40px}
-  .views{display:grid;grid-template-columns:1fr 1fr}
+  .views{display:grid;grid-template-columns:1fr}
+  .seg{flex-wrap:wrap}
+  .seg button{flex:1 1 90px}
+  .top-right{width:100%;justify-content:flex-start}
+  .cmd{padding-right:12px;padding-bottom:38px}
+  .copy{right:auto;left:10px;top:auto;bottom:8px}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
