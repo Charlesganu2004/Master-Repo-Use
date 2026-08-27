@@ -25,7 +25,6 @@ bradygaster/dotnet-cloud-native-build-2023
 HappyHackingSpace/awesome-hackathon
 slidevjs/slidev
 marp-team/marpit
-dkorobtsov/pitch-deck
 modelcontextprotocol/servers
 github/github-mcp-server
 
@@ -49,9 +48,7 @@ tensorflow/quantum
 mit-han-lab/torchquantum
 jpmorganchase/QOKit
 qiskit-community/ibm-quantum-challenge-fall-2021
-VarunRathore137/The-Hybrid-Quantum-Portfolio-Optimizer
 BIKASH1002/QML-Stock-Predictor
-MrDecryptDecipher/Sentinel
 
 # Finance / trading / market analysis
 jmfernandes/robin_stocks
@@ -86,10 +83,7 @@ ib-api-reloaded/ib_async  # replaces erdewit/ib_insync (unmaintained)
 Jesse-ai/jesse
 tradingstrategy-ai/getting-started
 TradingGoose/TradingGoose.github.io
-ebrahimpichka/DeepRL-trade
 RezaSoleymanifar/neuralHFT
-fsaavedra0003/Agentic-AI-Trading-Bot-with-LLM-reasoning-sentiment-analysis
-padmarajkore/Ai-crypto-trading-system
 
 # Broker app integrations / Robinhood alternatives
 DhruvaBansal00/robin_stocks_v2
@@ -112,7 +106,6 @@ qmyhd/LLM-portfolio-project
 # Trading agent MCP / memory / risk tools
 mnemox-ai/tradememory-protocol
 wshobson/maverick-mcp
-aitrados/finance-trading-ai-agents-mcp
 atilaahmettaner/tradingview-mcp
 VictorVVedtion/trading-skills
 
@@ -304,3 +297,29 @@ Stability-AI/StableLM
 creativetimofficial/ui
 openai/parameter-golf
 zanwei/design-dna
+
+# --- Added 2026-08-27: local MCP servers, skill collections, self-hosted apps ---
+AppFlowy-IO/AppFlowy
+ChromeDevTools/chrome-devtools-mcp
+Stirling-Tools/Stirling-PDF
+activepieces/activepieces
+ahujasid/blender-mcp
+amruthpillai/reactive-resume
+anthropics/skills
+calcom/cal.diy
+cloudflare/mcp-server-cloudflare
+coollabsio/coolify
+dani-garcia/vaultwarden
+docusealco/docuseal
+exa-labs/exa-mcp-server
+firecrawl/firecrawl-mcp-server
+hustcc/mcp-mermaid
+immich-app/immich
+mindsdb/mindshub
+penpot/penpot
+rustdesk/rustdesk
+sickn33/agentic-awesome-skills
+sooperset/mcp-atlassian
+topoteretes/cognee
+wshobson/agents
+yusufkaraaslan/Skill_Seekers

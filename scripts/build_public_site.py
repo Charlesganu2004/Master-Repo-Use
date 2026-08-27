@@ -18,7 +18,9 @@ from __future__ import annotations
 
 import argparse
 import html.parser
+import datetime as dt
 import json
+import os
 import pathlib
 import re
 import sys
@@ -32,6 +34,7 @@ PUBLIC_SVG = SITE / "docs" / "catalog-status.svg"
 PUBLIC_INDEX = SITE / "index.html"
 PRIVATE_PROFILES = ROOT / "docs" / "hardware-profiles.json"
 PUBLIC_PROFILES = SITE / "docs" / "hardware-profiles.json"
+PUBLIC_VERSION = SITE / "version.json"
 
 # Keys allowed to reach the public artifact. Anything else is dropped by construction.
 ALLOWED_TOP_LEVEL = {"updated", "policy", "counts", "public", "repos"}
@@ -285,6 +288,38 @@ def build_profiles() -> list[str]:
     return problems
 
 
+def build_id() -> str:
+    """Identify this publish. Commit SHA in CI, timestamp locally."""
+    sha = os.environ.get("GITHUB_SHA", "").strip()
+    if sha:
+        return sha[:12]
+    return dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+
+def build_version(identifier: str) -> None:
+    """Publish version.json and stamp the same id into the public index.html.
+
+    The page compares the two at runtime. Without this, a browser holding a cached
+    index.html has no way to discover that a newer one exists -- and an ordinary
+    refresh will not tell it, because the cached copy's own metadata looks current.
+    """
+    PUBLIC_VERSION.parent.mkdir(parents=True, exist_ok=True)
+    PUBLIC_VERSION.write_text(
+        json.dumps({
+            "build_id": identifier,
+            "built_at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        }, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    page = PUBLIC_INDEX.read_text(encoding="utf-8")
+    stamped = page.replace('<meta name="build-id" content="dev">',
+                           f'<meta name="build-id" content="{identifier}">', 1)
+    if stamped == page:
+        print("::warning::index.html has no build-id placeholder; "
+              "stale-cache detection will not work")
+    PUBLIC_INDEX.write_text(stamped, encoding="utf-8")
+
+
 def build() -> dict:
     source = json.loads(PRIVATE_STATE.read_text(encoding="utf-8"))
     policy = source.get("policy") or {}
@@ -384,6 +419,9 @@ def main() -> int:
                 print(f"PRIVACY FAILURE: {problem}", file=sys.stderr)
             return 1
         print("public hardware-profiles.json written (all slugs owner-allowlisted)")
+        identifier = build_id()
+        build_version(identifier)
+        print(f"version.json written (build {identifier})")
 
     problems = verify(payload)
     if problems:

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#080b13">
+<meta name="build-id" content="dev">
 <title>Master Repo Use — Command Center</title>
 <style>
 :root{
@@ -126,6 +127,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .maplegend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:11px;color:var(--muted)}
 .maplegend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:middle}
 @media(max-width:900px){.advisor,.mapwrap{grid-template-columns:1fr}.mapdetail{position:static}}
+.stalebar{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;z-index:60;display:flex;align-items:center;gap:14px;
+  padding:12px 14px 12px 18px;border-radius:14px;border:1px solid rgba(251,191,36,.45);background:var(--panel-solid);
+  box-shadow:0 18px 48px rgba(0,0,0,.42);max-width:min(92vw,620px);font-size:13.5px}
+.stalebar[hidden]{display:none}
+.stalebar span{color:var(--text)}
+.stalebar .btn{white-space:nowrap;padding:8px 12px}
 /* ---------- readability + motion pass ---------- */
 /* Deliberately NO transition on body background/color. These resolve through custom
    properties redefined on <html>, and Chromium wedges such a transition at its start
@@ -597,6 +604,7 @@ fits when   required_gb ≤ usable_gb</code>
 <footer><span>Public Pages intentionally exposes only this interface and aggregate health. Detailed catalog/security rows remain private.</span><span>Master Repo Use · owner-gated · cost-aware · privacy-safe</span></footer>
 </main>
 <script type="application/json" id="mapData">{"claude": ["Client", "Reads <code>~/.claude/CLAUDE.md</code>, which the global setup script points at this repo. Loads one catalog lane at a time, never the whole catalog.", ["Setup tab &rarr; global one-liner", "Repo entrypoint: CLAUDE.md"]], "codex": ["Client", "Reads <code>~/.codex/AGENTS.md</code>. Uses the portable contract only &mdash; no Codex-specific file, by design.", ["Shares AGENTS.md with every other client"]], "copilot": ["Client", "Reads <code>~/.copilot/copilot-instructions.md</code> plus the repo-local <code>.github/copilot-instructions.md</code>.", ["Can be installed alone with --copilot-only"]], "gemini": ["Client", "Two surfaces with different jobs: Gemini CLI reads <code>GEMINI.md</code>; Gemini Code Assist reviews PRs using <code>.gemini/config.yaml</code> and <code>.gemini/styleguide.md</code>.", ["No authority in the approval gate", "Reviews are a second opinion, never a merge signal"]], "agentsmd": ["Instruction", "The canonical portable contract. Every client reads this first; the per-client files only add what is genuinely client-specific.", ["One contract, four clients", "Change here propagates everywhere"]], "claudemd": ["Instruction", "Claude-specific defaults layered on AGENTS.md &mdash; maintenance policy, memory tools, approval phrasing.", []], "geminimd": ["Instruction", "Gemini-specific defaults, including the local-first preference: prefer a local model when one fits, fall back to hosted Gemini when RAM is the constraint.", ["Added 2026-08-25"]], "copilotmd": ["Instruction", "Copilot pointer installed at user scope so it applies across repositories.", []], "lanes": ["Catalog", "Curated URL lists &mdash; <strong>no third-party code is vendored</strong>. Each lane is a topic an agent can load in isolation instead of pulling the whole catalog into context.", ["local-models &middot; adk-agent-kits &middot; design-ui-motion", "public-allowlist controls what may go public"]], "skills": ["Catalog", "Portable skill definitions usable from any client: cite-or-abstain, verify-before-complete, scope-guard, dep-audit and others.", []], "agents": ["Catalog", "Named agent profiles &mdash; roles with a defined scope, tools and stopping condition. Compose these into subgroups.", ["See the subgroup recipes below the map"]], "docs": ["Catalog", "Setup, cost, security and policy documentation. This is what a client reads when it needs to know <em>how</em> rather than <em>what</em>.", []], "guardian": ["Automation", "Deterministic lifecycle and security audit. Refreshes metadata weekly and opens a single <code>[Catalog Audit]</code> issue that it edits rather than duplicates. <strong>Calls no paid AI API.</strong>", ["Deep scan only on new additions or owner approval", "Semgrep &middot; Gitleaks &middot; OSV &middot; ClamAV"]], "safety": ["Automation", "Unit tests on every PR touching scripts, tests, the page or workflows. Includes the privacy assertions that stop the public artifact leaking catalog contents.", ["54 tests", "concurrency cancels superseded runs"]], "pages": ["Automation", "Builds the privacy-safe public artifact and deploys it. No recurring schedule &mdash; it runs only when the site or its data actually changes.", ["Strips every element flagged private in the markup", "Degrades to the committed snapshot if the refresh fails"]], "gate": ["Automation", "Approval is bound to a commit SHA, so a force-push or a new commit invalidates it. Only the owner can approve, with an exact phrase.", ["APPROVE CATALOG MAINTENANCE", "Never merges main automatically"]], "ollama": ["Runtime", "The default local runtime. Everything in the Local Models tab assumes it. Genuinely useful from 8 GB; 16 GB is the sweet spot.", ["ollama pull gemma3:4b"]], "foundry": ["Runtime", "Microsoft&rsquo;s local runtime with hardware-aware model selection built in. Best CPU/NPU path on Windows.", ["Pairs with onnxruntime-genai"]], "gemmacpp": ["Runtime", "Minimal C++ Gemma runtime &mdash; lighter than a full serving stack when you only need Gemma.", []], "hosted": ["Runtime", "The honest answer at 4 GB: no local chat model fits after the OS takes its share. Use hosted Gemini rather than something that swaps.", ["See the Local Models tab"]]}</script>
+<div id="staleBar" class="stalebar" role="alert" hidden><span>A newer version of this page has been deployed. You are viewing a cached copy.</span><button id="staleReload" class="btn primary" type="button">Reload now</button></div>
 <div id="toast" class="toast" role="status" aria-live="polite">Copied to clipboard</div>
 <script>
 const tabs=[...document.querySelectorAll('.tab')];
@@ -765,11 +773,38 @@ document.getElementById('themeToggle').addEventListener('click',()=>{
 /* ---------------- Build stamp ----------------
    A silently stale browser cache is indistinguishable from "nothing deployed".
    Showing which build is on screen makes that difference visible. */
+const BUILD_ID=(document.querySelector('meta[name="build-id"]')||{}).content||'dev';
 (function stamp(){
   const el=document.getElementById('buildId');if(!el)return;
-  const d=document.lastModified?new Date(document.lastModified):null;
-  el.textContent=d&&!isNaN(d)?d.toISOString().slice(0,16).replace('T',' '):'unknown';
+  el.textContent=BUILD_ID==='dev'?'local':BUILD_ID.slice(0,16);
 })();
+
+/* ---------------- Stale-cache detection ----------------
+   GitHub Pages serves index.html with a max-age, and browsers will happily keep
+   showing a cached copy through an ordinary refresh -- which is exactly how three
+   deploys in a row looked like "nothing changed". document.lastModified cannot help:
+   it reports the cached file's own date. So the build id is baked into the HTML at
+   publish time and compared against version.json fetched with cache:'no-store'. If
+   they disagree, the page says so and offers a real reload instead of leaving the
+   viewer to guess. */
+async function checkFresh(){
+  if(BUILD_ID==='dev')return;                       // served from a local clone
+  try{
+    const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return;
+    const live=await r.json();
+    if(!live.build_id||live.build_id===BUILD_ID)return;
+    const bar=document.getElementById('staleBar');
+    bar.querySelector('span').textContent=
+      'A newer version was deployed ('+String(live.build_id).slice(0,16)+'). You are viewing a cached copy from '+BUILD_ID.slice(0,16)+'.';
+    bar.hidden=false;
+  }catch(_){/* offline or blocked: never block the page on this */}
+}
+document.getElementById('staleReload').addEventListener('click',()=>{
+  /* A plain reload can still hit the disk cache; a fresh URL cannot. */
+  location.replace(location.pathname+'?v='+Date.now()+location.hash);
+});
+checkFresh();
 
 /* ---------------- Animated tab indicator ---------------- */
 const ink=document.createElement('div');ink.className='tab-ink';

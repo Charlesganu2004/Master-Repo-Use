@@ -1,0 +1,20 @@
+# Self-Hosted Apps — verified 2026-08-27
+# Deployable services, not agent tooling. Listed because they are the kind of thing a
+# local-first setup ends up running alongside the AI stack.
+#
+# LICENCE WARNING: most of this lane is AGPL-3.0. That is fine for running the
+# software, and fine for a URL-only catalog like this one. It is NOT fine to copy code
+# from these into a repository you intend to keep closed -- AGPL obligations follow the
+# code, including over a network. Check before adopting anything here.
+
+coollabsio/coolify                # self-hosting platform (Apache-2.0)
+activepieces/activepieces         # workflow automation (see repo for licence terms)
+Stirling-Tools/Stirling-PDF       # PDF toolkit (see repo for licence terms)
+calcom/cal.diy                    # scheduling; renamed from calcom/cal.com (MIT)
+penpot/penpot                     # design/prototyping (MPL-2.0)
+amruthpillai/reactive-resume      # resume builder (MIT)
+docusealco/docuseal               # document signing (AGPL-3.0)
+dani-garcia/vaultwarden           # Bitwarden-compatible vault (AGPL-3.0)
+AppFlowy-IO/AppFlowy              # Notion alternative (AGPL-3.0)
+immich-app/immich                 # photo/video backup (AGPL-3.0)
+rustdesk/rustdesk                 # remote desktop (AGPL-3.0)

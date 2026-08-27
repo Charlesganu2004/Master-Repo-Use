@@ -1,0 +1,36 @@
+# Local MCP Servers — verified 2026-08-27
+# Every slug below resolved against the GitHub API on 2026-08-27. Entries from the
+# source list that were generic descriptions rather than real repositories
+# ("Local File System MCP", "Local API Gateway MCP", "Local LLM Cache MCP",
+# "Local Security Scanner MCP") are intentionally absent: they describe servers that
+# live inside modelcontextprotocol/servers, not standalone projects.
+#
+# FIVE entries in the source list had been renamed upstream. Corrected here:
+#   mindsdb/mindsdb              -> mindsdb/mindshub
+#   mendableai/firecrawl-mcp-... -> firecrawl/firecrawl-mcp-server
+#   calcom/cal.com               -> calcom/cal.diy
+#   AmruthPillai/Reactive-Resume -> amruthpillai/reactive-resume
+#   sickn33/antigravity-...      -> sickn33/agentic-awesome-skills
+
+# --- Reference collections
+modelcontextprotocol/servers      # filesystem, sqlite, sequential-thinking and the rest live here
+upstash/context7                  # up-to-date library docs injected into coding prompts
+
+# --- Browser / desktop automation
+ChromeDevTools/chrome-devtools-mcp
+microsoft/playwright-mcp
+ahujasid/blender-mcp
+
+# --- Knowledge, memory and code context
+getzep/graphiti                   # temporally-aware knowledge graph
+topoteretes/cognee                # memory layer for agents
+mindsdb/mindshub                  # federated query engine over local data
+
+# --- SaaS / workspace bridges
+sooperset/mcp-atlassian
+firecrawl/firecrawl-mcp-server
+exa-labs/exa-mcp-server
+cloudflare/mcp-server-cloudflare
+
+# --- Diagram / design
+hustcc/mcp-mermaid

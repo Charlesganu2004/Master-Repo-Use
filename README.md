@@ -24,9 +24,14 @@ read it, and every command card is click-to-copy:
 | **Health & Security** | Aggregate catalog health and deep-scan coverage |
 | **Access & Deploy** | Branch protection, Pages, cost controls |
 
-There is a **light/dark toggle** in the top bar, and a **build stamp** next to it showing which
-deployment you are looking at. If that stamp is older than the latest deploy, your browser is
-serving a cached copy — hard-refresh with `Ctrl+Shift+R` (`Cmd+Shift+R` on macOS).
+There is a **light/dark toggle** in the top bar and a **build stamp** next to it.
+
+**If the site looks unchanged after a deploy, it is your browser, not the deploy.** GitHub Pages
+serves `index.html` with a cache lifetime, and browsers will keep showing the cached copy through
+an ordinary refresh. The page now detects this itself: it compares its baked-in build id against
+`version.json` fetched with `cache: 'no-store'`, and shows a **"a newer version was deployed"**
+banner with a reload button that navigates to a fresh URL. If you ever want to force it manually,
+`Ctrl+Shift+R` (`Cmd+Shift+R` on macOS).
 
 The public site shows **aggregate health only**. Repo-by-repo detail requires a local clone —
 see [Local/private mode](#localprivate-mode).
@@ -529,6 +534,58 @@ The global setup scripts install the Gemini pointer alongside Claude, Codex and 
   end-to-end before pointing an agent at it.
 
 Lane: [repo-lists/design-ui-motion.txt](repo-lists/design-ui-motion.txt)
+
+## Local MCP servers, skill collections and self-hosted apps
+
+Three lanes added 2026-08-27, every slug verified against the GitHub API:
+
+- [repo-lists/mcp-local-servers.txt](repo-lists/mcp-local-servers.txt) — Context7, Chrome
+  DevTools, Playwright, Blender, Graphiti, Cognee, Atlassian, Firecrawl, Exa, Cloudflare,
+  mermaid, and the `modelcontextprotocol/servers` collection that actually contains the
+  filesystem/SQLite/sequential-thinking servers.
+- [repo-lists/agent-skill-collections.txt](repo-lists/agent-skill-collections.txt) — the large
+  community skill libraries. **Advisory only:** a skill pack silently changes how an agent
+  decides things, so read one end-to-end before pointing an agent at it.
+- [repo-lists/self-hosted-apps.txt](repo-lists/self-hosted-apps.txt) — Coolify, Penpot, Immich,
+  Vaultwarden, RustDesk and friends. **Mostly AGPL-3.0**: fine to run, fine to link, *not* fine
+  to copy into a repository you intend to keep closed.
+
+Five entries from the source list had been **renamed upstream** and are corrected here:
+`mindsdb/mindsdb`→`mindsdb/mindshub`, `mendableai/…`→`firecrawl/firecrawl-mcp-server`,
+`calcom/cal.com`→`calcom/cal.diy`, `AmruthPillai/Reactive-Resume`→`amruthpillai/reactive-resume`,
+`sickn33/antigravity-awesome-skills`→`sickn33/agentic-awesome-skills`. Three more do not exist on
+GitHub at all (they were marketplace listings, not repositories) and were dropped.
+
+## Managed adoption — what can and cannot be absorbed
+
+Adopting an abandoned repository is a **licensing** question before it is an engineering one.
+A repository with no licence is not open source: copyright defaults to all rights reserved, so
+copying its code into a repository you own is infringement no matter how abandoned it looks.
+
+The 2026-08-27 licence audit of 29 stale/review candidates:
+
+| Licence | Count | Adoption |
+|---|---:|---|
+| MIT / Apache-2.0 / CC0 | 18 | permitted with attribution |
+| **No licence at all** | **7** | **forbidden** |
+| AGPL-3.0 | 1 | permitted, obligations follow the code |
+| NOASSERTION (custom) | 3 | read the actual LICENSE file first |
+
+Seven entries were **delisted, not adopted** — six were 1–21 star personal projects with no
+licence and nothing distinctive; the seventh (`aitrados/finance-trading-ai-agents-mcp`, 64
+stars) had real reach but is still legally unusable.
+
+Recommended adoption: **`langchain-ai/open_deep_research`** (MIT, 12.7k stars, archived) — worth
+taking for its planner → parallel searchers → synthesiser loop, not for its codebase.
+
+Explicitly **not** adopted: **`FlowiseAI/Flowise`**. It is a 55k-star product under a custom
+restricted licence reaching EOL on 2026-08-31 — "take what we can" is not a meaningful operation
+on it. Replace with `langflow-ai/langflow` instead.
+
+Nothing has been copied. Adoption stays owner-gated, and when approved it happens on a branch
+with upstream `LICENSE`/`NOTICE` preserved and an `ATTRIBUTION.md` recording the source commit.
+
+Full reasoning: [docs/MANAGED-ADOPTION-PLAN.md](docs/MANAGED-ADOPTION-PLAN.md).
 
 ## Current stale/archive decisions
 

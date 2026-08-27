@@ -2,4 +2,3 @@
 HappyHackingSpace/awesome-hackathon
 slidevjs/slidev
 marp-team/marpit
-dkorobtsov/pitch-deck

@@ -1,0 +1,15 @@
+# Agent Skill Collections — verified 2026-08-27
+# Large community skill libraries. Treat all of these as ADVISORY instruction packs,
+# not dependencies: a skill pack silently changes how an agent makes decisions, so
+# read one end-to-end before pointing an agent at it.
+#
+# Two entries from the source list do not exist on GitHub and were dropped:
+#   AlpacaLabsLLC/architecture-studio, nbossn/repository-architect,
+#   ppenumatsa1/repo-architecture  (all sourced from marketplace pages, not repos)
+
+anthropics/skills                     # the official reference; read this first
+VoltAgent/awesome-agent-skills
+alirezarezvani/claude-skills
+sickn33/agentic-awesome-skills        # renamed from antigravity-awesome-skills
+wshobson/agents                       # agents + orchestrators + skills, plugin-organised
+yusufkaraaslan/Skill_Seekers          # converts docs/repos/PDFs into skill + RAG assets

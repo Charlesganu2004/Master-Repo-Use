@@ -14,9 +14,6 @@ ib-api-reloaded/ib_async  # replaces erdewit/ib_insync (unmaintained)
 Jesse-ai/jesse
 tradingstrategy-ai/getting-started
 TradingGoose/TradingGoose.github.io
-ebrahimpichka/DeepRL-trade
 RezaSoleymanifar/neuralHFT
-fsaavedra0003/Agentic-AI-Trading-Bot-with-LLM-reasoning-sentiment-analysis
-padmarajkore/Ai-crypto-trading-system
 
 # oyi77/Crypto-RL-Trading-Bot removed after >365d without a push and no detected license.
