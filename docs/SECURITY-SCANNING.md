@@ -4,7 +4,7 @@
 > been deep-scanned. Not "scanned and clean" — never scanned. The weekly job was metadata-only,
 > the scanner install step was skipped on scheduled runs, and `--deep` sat behind a manual
 > approval that had never been given at scale. A rotating read-only deep scan now runs weekly
-> without a gate, and coverage is displayed on the Health & Security tab and in a
+> without a gate, and coverage is displayed on the site and in a
 > `[Security Scan]` issue. See the README section "Security scanning" for the full account.
 
 ## Rotation and coverage

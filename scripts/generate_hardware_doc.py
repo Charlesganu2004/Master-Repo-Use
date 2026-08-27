@@ -28,8 +28,8 @@ doc = f"""# Local Models & Hardware Fit
 **Question this page answers:** *"I have N GB of RAM. What can I actually run, and which
 repos in this catalog are worth installing on this machine?"*
 
-The command center has an interactive version under the **Local Models** tab, including an
-install checker. Both read the same file: [`docs/hardware-profiles.json`](hardware-profiles.json)
+The command center has an interactive version below the system map, including an install
+checker. Both read the same file: [`docs/hardware-profiles.json`](hardware-profiles.json)
 — **{len(d['models'])} models** across three vendors, sized against seven RAM tiers.
 
 ## Scope

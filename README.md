@@ -10,24 +10,21 @@ The Master Repo is the shared **catalog + instructions + security/vetting layer*
 
 **<https://charlesganu2004.github.io/Master-Repo-Use/>**
 
-The public command center is the fastest way to get set up. Nothing needs to be installed to
-read it, and every command card is click-to-copy:
+The command center is not a page of tabs and cards. It is **four drawings of how the system
+actually works**, and clicking any box in them gives you the one command that operates it.
 
-The **System Map** is the landing view: 20 clickable nodes across clients, instruction layer,
-catalog, automations and runtimes. Clicking one shows what it does *and the single command that
-operates it*, ready to copy.
-
-| Tab | What it gives you |
+| View | The mechanism it draws |
 |---|---|
-| **System Map** | *(landing)* click any node for its role and its one-liner |
-| **Setup** | One-liner global install for Claude Code, Codex, Copilot and Gemini |
-| **Use It** | Six systems — instruction files, skills, local models, MCP, agent subgroups, security — each with the one-liner that starts it and the point where it hands back to you |
-| **Local Models** | Move a slider to your RAM and OS; 36 models re-sized live, plus an install checker that answers "can this machine run it" before you download |
-| **ADKs** | Which agent development kit to pick, and when an ADK is overkill |
-| **System Map** | 20 clickable nodes across all five layers, from client to model |
-| **Design** | The libraries and skill packs behind the interface |
-| **Health & Security** | Aggregate catalog health and deep-scan coverage |
-| **Access & Deploy** | Branch protection, Pages, cost controls |
+| **Getting set up** | A task you type → the client → one shared contract → one catalog lane → the model your hardware can host |
+| **Shipping a change** | branch → PR → the two independent checks → `main` → the deployed site |
+| **Security scanning** | the catalog → weekly rotation → shallow clone → five scanners → a findings issue, or `SCANNER-ERROR` |
+| **Keeping the catalog honest** | days since last push → one of four verdicts, and the two things that override them |
+
+Every arrow carries a label saying what actually passes along it — `reads once`, `selects ONE lane`,
+`exact phrase + head SHA`, `tool failed →`. An unlabelled arrow would only say "related somehow".
+
+Below the map: a **hardware advisor** (set your RAM and OS, watch 36 models re-sort live) and
+**catalog health** with deep-scan coverage.
 
 There is a **light/dark toggle** in the top bar and a **build stamp** next to it.
 
@@ -62,6 +59,7 @@ Lifecycle rules:
 - 🟡 **121–269 days:** stale warning.
 - 🟠 **270–365 days:** replacement / managed-adoption review.
 - 🔴 **>365 days:** remove from the active/runtime catalog unless an owner-approved reference/stability exception applies.
+- ⚪ **UNKNOWN:** the metadata fetch failed. This is a network problem, **not a verdict** — the repository is unverified, not stale and not flagged. Re-run the audit to clear it.
 - **Archived + recent activity:** review releases, archive reason, sunset/EOL notice, successor, security, and reference value before deciding.
 - **Static research/reference repos:** may receive a `reference` override when inactivity is expected.
 - **Deleted/disabled or confirmed CRITICAL security finding:** immediate removal candidate.
@@ -440,7 +438,7 @@ list looked exactly like a clean bill of health.
   About 19 repos per run, full coverage in roughly 13 weeks.
 - **Scanner installs are non-fatal.** A broken installer degrades the run to `SCANNER-ERROR`
   instead of killing it — which is what took the whole audit down on 2026-08-25.
-- **Coverage is displayed**, on the Health & Security tab and in a `[Security Scan]` issue, so
+- **Coverage is displayed**, on the site and in a `[Security Scan]` issue, so
   "never scanned" can never again be mistaken for "scanned and clean".
 - **`SCANNER-ERROR` means unverified**, never clean and never flagged. Those repos stay in the
   rotation.
@@ -516,8 +514,8 @@ from the wider Ollama library.
 
 Figures are **computed, not benchmarked**, from a formula published in
 [docs/LOCAL-MODEL-HARDWARE.md](docs/LOCAL-MODEL-HARDWARE.md); `tests/test_hardware_profiles.py`
-re-derives every minimum and fails if the data drifts. Interactive version: the **Local Models**
-tab on the [setup site](https://charlesganu2004.github.io/Master-Repo-Use/).
+re-derives every minimum and fails if the data drifts. Interactive version: the hardware advisor
+on the [setup site](https://charlesganu2004.github.io/Master-Repo-Use/).
 
 Tag names could not be verified automatically when this data was written, so the repo ships a
 checker instead of an assurance — it already caught one tag that does not exist:
