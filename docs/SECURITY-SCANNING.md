@@ -1,5 +1,35 @@
 # Security Scanning and Third-Party Repo Intake
 
+> **Coverage audit, 2026-08-25.** Before this date, **0 of 252** catalogued repositories had ever
+> been deep-scanned. Not "scanned and clean" — never scanned. The weekly job was metadata-only,
+> the scanner install step was skipped on scheduled runs, and `--deep` sat behind a manual
+> approval that had never been given at scale. A rotating read-only deep scan now runs weekly
+> without a gate, and coverage is displayed on the Health & Security tab and in a
+> `[Security Scan]` issue. See the README section "Security scanning" for the full account.
+
+## Rotation and coverage
+
+- **Schedule:** weekly, `deep-scan-rotation` in `.github/workflows/catalog-guardian.yml`.
+- **Slice:** deterministic — whole weeks since the epoch, `--batch-size 20`. About 19 repos per
+  run; first full coverage in roughly 13 weeks. Re-running scans the same slice.
+- **Read-only:** the job never passes `--apply-removals`. Reporting a risk must not wait on a
+  human; *changing* the catalog still requires `APPROVE CATALOG MAINTENANCE`.
+- **State:** accumulates through the Actions cache, so `deep_scanned` coverage grows rather than
+  resetting every run.
+- **Non-fatal installs:** a scanner that fails to install degrades that scanner to
+  `SCANNER-ERROR`. It does not fail the run. (On 2026-08-25 a single `go install` failure took
+  the entire audit down; `tests/test_workflow_policy.py` now prevents that regression.)
+
+### SCANNER-ERROR means unverified
+
+Not clean. Not flagged. It means a scanner did not complete, so the repository's state is
+**unknown** and it stays in the rotation for a rescan. Never report it as a pass.
+
+### Known upstream gotcha
+
+`go install github.com/gitleaks/gitleaks/v8@latest` fails: the project moved org but its `go.mod`
+still declares `github.com/zricethezav/gitleaks/v8`. Install via the declared path.
+
 This is the security gate for repositories in `Charlesganu2004/Master-Repo-Use`.
 
 The goal is not to claim that static scanning can prove a repository safe. The goal is to catch common supply-chain, injection, malware, secret, lifecycle, and maintenance risks **before** a repo is trusted or executed.

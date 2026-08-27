@@ -7,3 +7,7 @@ sgl-project/sglang
 vllm-project/llm-compressor
 vllm-project/vllm
 zai-org/GLM-5
+NVIDIA/Megatron-LM                # large-scale transformer training; reference for tensor/pipeline parallelism
+OptimalScale/LMFlow               # extensible finetuning + inference toolkit for foundation models
+openai/parameter-golf             # smallest-LM-in-16MB challenge; the extreme end of the size/quality tradeoff
+Stability-AI/StableLM             # 2024 open-weight family; historical reference, see lifecycle override

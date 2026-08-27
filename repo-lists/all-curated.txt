@@ -294,3 +294,13 @@ ollama/ollama
 ollama/ollama-js
 ollama/ollama-python
 openai/openai-agents-python
+
+# --- Added 2026-08-25 (second pass): design/UI, UI-over-MCP, training & efficiency ---
+Jpisnice/shadcn-ui-mcp-server
+MCP-UI-Org/mcp-ui
+NVIDIA/Megatron-LM
+OptimalScale/LMFlow
+Stability-AI/StableLM
+creativetimofficial/ui
+openai/parameter-golf
+zanwei/design-dna

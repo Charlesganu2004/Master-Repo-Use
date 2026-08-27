@@ -1,10 +1,10 @@
 # Catalog Status
 
-Last automated update: **2026-08-25 18:42 UTC**
+Last automated update: **2026-08-25 19:42 UTC**
 
 Policy: stale **120d** · adoption/replacement review **270d** · active-catalog removal **365d** · archived observation grace **30d**.
 
-🟢 Healthy **225** · 🟡 Stale **23** · 🟠 Review **4** · 🔴 Remove **0**
+🟢 Healthy **231** · 🟡 Stale **25** · 🟠 Review **4** · 🔴 Remove **0**
 
 | Repo | Status | Push age | Archived | License | Deep scan | Managed | Note |
 |---|---|---:|---:|---|---:|---:|---|
@@ -23,12 +23,15 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `HKUDS/Vibe-Trading` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `HappyHackingSpace/awesome-hackathon` | 🟢 HEALTHY | 111d | no | — | no | no |  |
 | `Jesse-ai/jesse` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
+| `Jpisnice/shadcn-ui-mcp-server` | 🟢 HEALTHY | 101d | no | mit | no | no |  |
 | `LQF-dev/Zero-code` | 🟢 HEALTHY | 108d | no | mit | no | no |  |
 | `LottieFiles/motion-design-skill` | 🟢 HEALTHY | 99d | no | mit | no | no |  |
 | `Lumiwealth/lumibot` | 🟢 HEALTHY | 4d | no | gpl-3.0 | no | no |  |
+| `MCP-UI-Org/mcp-ui` | 🟢 HEALTHY | 48d | no | apache-2.0 | no | no |  |
 | `MIT-SPARK/Hydra` | 🟢 HEALTHY | 0d | no | bsd-2-clause | no | no |  |
 | `MingyuJ666/Stockagent` | 🟢 HEALTHY | 69d | no | — | no | no |  |
 | `MrNeRF/LichtFeld-Studio` | 🟢 HEALTHY | 0d | no | gpl-3.0 | no | no |  |
+| `NVIDIA/Megatron-LM` | 🟢 HEALTHY | 0d | no | other | no | no |  |
 | `NVIDIA/cosmos` | 🟢 HEALTHY | 0d | no | other | no | no |  |
 | `NVIDIA/cuda-quantum` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `NVIDIA/garak` | 🟢 HEALTHY | 4d | no | apache-2.0 | no | no |  |
@@ -37,6 +40,7 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `OpenBB-finance/OpenBB` | 🟢 HEALTHY | 26d | no | other | no | no |  |
 | `OptimNow/cloud-finops-skills` | 🟢 HEALTHY | 2d | no | other | no | no |  |
 | `OptimNow/finops-mcp-resources` | 🟢 HEALTHY | 9d | no | other | no | no |  |
+| `OptimalScale/LMFlow` | 🟢 HEALTHY | 15d | no | apache-2.0 | no | no |  |
 | `PennyLaneAI/pennylane` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `PennyLaneAI/pennylane-qiskit` | 🟢 HEALTHY | 5d | no | apache-2.0 | no | no |  |
 | `Physical-Intelligence/openpi` | 🟢 HEALTHY | 1d | no | apache-2.0 | no | no |  |
@@ -45,8 +49,9 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `QwenLM/Qwen3.6` | 🟢 HEALTHY | 8d | no | apache-2.0 | no | no |  |
 | `RezaSoleymanifar/neuralHFT` | 🟢 HEALTHY | 19d | no | mit | no | no |  |
 | `RyanWeb31110/codex-thread-handoff` | 🟢 HEALTHY | 76d | no | mit | no | no |  |
-| `Sapience-AI/openclaw-middleware-suite` | 🟢 HEALTHY | 2d | no | apache-2.0 | no | no |  |
+| `Sapience-AI/openclaw-middleware-suite` | 🟢 HEALTHY | 3d | no | apache-2.0 | no | no |  |
 | `Significant-Gravitas/AutoGPT` | 🟢 HEALTHY | 0d | no | other | no | no |  |
+| `Stability-AI/StableLM` | 🟢 HEALTHY | 869d | no | apache-2.0 | no | no | Last push 2024-04-08 -- roughly 870 days at time of adding, far past the 365d removal threshold. Added deliberately as a historical reference: StableLM was a landmark 2024 open-weight release and the repo is useful for understanding that generation. It is NOT a current runtime choice; for local inference today use the Gemma / Phi / Ollama lanes in repo-lists/local-models.txt. Re-review only if Stability resumes development. |
 | `ToolJet/ToolJet` | 🟢 HEALTHY | 0d | no | agpl-3.0 | no | no |  |
 | `TradingAgents-AI/TradingAgents` | 🟢 HEALTHY | 38d | no | apache-2.0 | no | no |  |
 | `VoltAgent/awesome-agent-skills` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
@@ -87,7 +92,7 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `dwavesystems/dwave-ocean-sdk` | 🟢 HEALTHY | 4d | no | apache-2.0 | no | no |  |
 | `expo/examples` | 🟢 HEALTHY | 8d | no | mit | no | no |  |
 | `expo/expo` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
-| `facebookresearch/map-anything` | 🟢 HEALTHY | 17d | no | apache-2.0 | no | no |  |
+| `facebookresearch/map-anything` | 🟢 HEALTHY | 18d | no | apache-2.0 | no | no |  |
 | `facebookresearch/vggt` | 🟢 HEALTHY | 98d | no | other | no | no |  |
 | `facebookresearch/vjepa2` | 🟢 HEALTHY | 155d | no | mit | no | no | Meta research release. Finished artifact rather than a maintained runtime package. |
 | `ferdousbhai/tasty-agent` | 🟢 HEALTHY | 11d | no | mit | no | no |  |
@@ -134,7 +139,7 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `mem0ai/mem0` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `microsoft/Agents-for-net` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `microsoft/BitNet` | 🟢 HEALTHY | 29d | no | mit | no | no |  |
-| `microsoft/LLMLingua` | 🟢 HEALTHY | 138d | no | mit | no | no | Still the reference prompt-compression implementation with a published paper behind it. Reference-grade rather than fast-moving. |
+| `microsoft/LLMLingua` | 🟢 HEALTHY | 139d | no | mit | no | no | Still the reference prompt-compression implementation with a published paper behind it. Reference-grade rather than fast-moving. |
 | `microsoft/Olive` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `microsoft/PhiCookBook` | 🟢 HEALTHY | 14d | no | mit | no | no |  |
 | `microsoft/agent-framework` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
@@ -171,6 +176,7 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `ooples/token-optimizer-mcp` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `openai/codex` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `openai/openai-agents-python` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
+| `openai/parameter-golf` | 🟢 HEALTHY | 112d | no | mit | no | no |  |
 | `opencost/opencost` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `opencost/opencost-helm-chart` | 🟢 HEALTHY | 20d | no | apache-2.0 | no | no |  |
 | `opengrep/opengrep` | 🟢 HEALTHY | 0d | no | lgpl-2.1 | no | no |  |
@@ -209,7 +215,7 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `snyk/cli` | 🟢 HEALTHY | 0d | no | other | no | no |  |
 | `soolaugust/0CompactMem` | 🟢 HEALTHY | 42d | no | — | no | no |  |
 | `stella-cv/stella_vslam` | 🟢 HEALTHY | 11d | no | other | no | no |  |
-| `tastytrade/tastytrade-api-js` | 🟢 HEALTHY | 99d | no | mit | no | no |  |
+| `tastytrade/tastytrade-api-js` | 🟢 HEALTHY | 100d | no | mit | no | no |  |
 | `tastyware/tastytrade` | 🟢 HEALTHY | 17d | no | mit | no | no |  |
 | `tastyware/tastytrade-cli` | 🟢 HEALTHY | 14d | no | mit | no | no |  |
 | `tauricresearch/tradingagents` | 🟢 HEALTHY | 38d | no | apache-2.0 | no | no |  |
@@ -248,6 +254,7 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `TradingGoose/TradingGoose.github.io` | 🟡 STALE | 124d | no | agpl-3.0 | no | no | no push for 124d; stale warning starts at 120d |
 | `VarunRathore137/The-Hybrid-Quantum-Portfolio-Optimizer` | 🟡 STALE | 216d | no | — | no | no | no push for 216d; stale warning starts at 120d |
 | `VictorVVedtion/trading-skills` | 🟡 STALE | 140d | no | mit | no | no | no push for 140d; stale warning starts at 120d |
+| `creativetimofficial/ui` | 🟡 STALE | 163d | no | mit | no | no | no push for 163d; stale warning starts at 120d |
 | `dkorobtsov/pitch-deck` | 🟡 STALE | 155d | no | mit | no | no | no push for 155d; stale warning starts at 120d |
 | `ebrahimpichka/DeepRL-trade` | 🟡 STALE | 193d | no | — | no | no | no push for 193d; stale warning starts at 120d |
 | `fsaavedra0003/Agentic-AI-Trading-Bot-with-LLM-reasoning-sentiment-analysis` | 🟡 STALE | 168d | no | — | no | no | no push for 168d; stale warning starts at 120d |
@@ -256,7 +263,8 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `mlabouardy/komiser` | 🟡 STALE | 135d | no | other | no | no | no push for 135d; stale warning starts at 120d |
 | `ollama/ollama-js` | 🟡 STALE | 187d | no | mit | no | no | no push for 187d; stale warning starts at 120d |
 | `padmarajkore/Ai-crypto-trading-system` | 🟡 STALE | 219d | no | — | no | no | no push for 219d; stale warning starts at 120d |
-| `qiskit-community/qiskit-finance` | 🟡 STALE | 255d | no | apache-2.0 | no | no | no push for 255d; stale warning starts at 120d |
-| `thammo4/uvatradier` | 🟡 STALE | 128d | no | apache-2.0 | no | no | no push for 128d; stale warning starts at 120d |
+| `qiskit-community/qiskit-finance` | 🟡 STALE | 256d | no | apache-2.0 | no | no | no push for 256d; stale warning starts at 120d |
+| `thammo4/uvatradier` | 🟡 STALE | 129d | no | apache-2.0 | no | no | no push for 129d; stale warning starts at 120d |
 | `upstash/rag-chat` | 🟡 STALE | 253d | no | mit | no | no | no push for 253d; stale warning starts at 120d |
 | `upstash/vector-js` | 🟡 STALE | 169d | no | mit | no | no | no push for 169d; stale warning starts at 120d |
+| `zanwei/design-dna` | 🟡 STALE | 134d | no | mit | no | no | no push for 134d; stale warning starts at 120d |

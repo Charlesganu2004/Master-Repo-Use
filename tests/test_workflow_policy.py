@@ -25,6 +25,27 @@ class WorkflowPolicyTests(unittest.TestCase):
         self.assertNotIn("api.openai.com", guardian)
         self.assertNotIn("generativelanguage.googleapis.com", guardian)
 
+    def test_scanner_installs_are_non_fatal(self):
+        """A broken installer must degrade the audit to SCANNER-ERROR, not kill the run.
+
+        On 2026-08-25 the whole Catalog Guardian run failed because one `go install`
+        returned non-zero. Guardian is explicitly designed to treat a missing scanner
+        as "rescan needed" rather than "clean", so the install step must not be the
+        thing that takes the audit down.
+        """
+        guardian = self.text(".github/workflows/catalog-guardian.yml")
+        for scanner in ("semgrep", "gitleaks", "osv-scanner", "clamav"):
+            with self.subTest(scanner=scanner):
+                self.assertIn(f"install_failed+=({scanner})", guardian,
+                              f"{scanner} install must be guarded and recorded, not fail-hard")
+        self.assertIn("SCANNER-ERROR", guardian)
+
+    def test_gitleaks_uses_the_module_path_its_gomod_declares(self):
+        """gitleaks moved org but its go.mod still says zricethezav; the new path 404s."""
+        guardian = self.text(".github/workflows/catalog-guardian.yml")
+        self.assertIn("go install github.com/zricethezav/gitleaks/v8@latest", guardian)
+        self.assertNotIn("go install github.com/gitleaks/gitleaks/v8@latest", guardian)
+
     def test_automation_pr_seeds_owner_approval_status(self):
         guardian = self.text(".github/workflows/catalog-guardian.yml")
         self.assertIn("statuses: write", guardian)

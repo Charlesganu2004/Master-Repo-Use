@@ -75,15 +75,37 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m pip install --disable-pip-version-check semgrep
-          go install github.com/gitleaks/gitleaks/v8@latest
-          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest
+          # Each scanner installs independently and NON-FATALLY. Guardian already
+          # treats a missing scanner as SCANNER-ERROR rather than "clean", so one
+          # broken installer must degrade the audit, not kill it. This step used to
+          # be fail-hard and took the whole run down on 2026-08-25.
+          install_failed=()
+
+          python -m pip install --disable-pip-version-check semgrep \
+            || { install_failed+=(semgrep); echo '::warning::semgrep install failed; findings from it will report as SCANNER-ERROR.'; }
+
+          # gitleaks moved to the gitleaks org but its go.mod still declares the
+          # module path as github.com/zricethezav/gitleaks/v8. Installing via the
+          # new org path fails with "module declares its path as ...".
+          go install github.com/zricethezav/gitleaks/v8@latest \
+            || { install_failed+=(gitleaks); echo '::warning::gitleaks install failed; secret scanning will report as SCANNER-ERROR.'; }
+
+          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest \
+            || { install_failed+=(osv-scanner); echo '::warning::osv-scanner install failed; dependency scanning will report as SCANNER-ERROR.'; }
+
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq clamav
+          sudo apt-get update -qq || true
+          sudo apt-get install -y -qq clamav \
+            || { install_failed+=(clamav); echo '::warning::clamav install failed; malware scanning will report as SCANNER-ERROR.'; }
           sudo systemctl stop clamav-freshclam 2>/dev/null || true
           sudo freshclam --quiet || echo '::warning::freshclam could not update ClamAV signatures; malware scanning will be reported as a scanner error, not as a finding.'
-          if [[ -n "${SNYK_TOKEN:-}" ]]; then npm install -g snyk; fi
+          if [[ -n "${SNYK_TOKEN:-}" ]]; then
+            npm install -g snyk || { install_failed+=(snyk); echo '::warning::snyk install failed; it will be skipped.'; }
+          fi
+
+          if (( ${#install_failed[@]} )); then
+            echo "::warning::Scanners unavailable this run: ${install_failed[*]}. Guardian reports these as SCANNER-ERROR, which means 'rescan needed', not 'nothing found'."
+          fi
 
       - name: Refresh metadata and deep-scan new additions
         env:
@@ -163,6 +185,104 @@ jobs:
             gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file /tmp/catalog-audit.md --assignee Charlesganu2004
           fi
 
+  # ---------------------------------------------------------------------------
+  # Rotating deep security scan.
+  #
+  # Why this exists: before 2026-08-25, deep scanning ran ONLY on newly-added repos
+  # or after a manual `APPROVE CATALOG MAINTENANCE` comment. Neither had ever
+  # happened at scale, so 0 of 252 catalogued repositories had ever been scanned for
+  # malware, secrets, invisible/bidi characters, prompt injection or SQL injection.
+  # The weekly job was metadata-only and silently skipped the scanner install.
+  #
+  # Scanning is READ-ONLY, so it does not need the owner gate. Owner approval still
+  # governs anything that CHANGES the catalog (`--apply-removals`), which this job
+  # deliberately does not pass. Findings are reported; removals stay owner-gated.
+  #
+  # Cost: one shallow blobless clone per repo, ~19 repos per run at batch-size 20,
+  # full catalog coverage in about 13 weeks. State accumulates through the Actions
+  # cache so `deep_scanned` coverage grows instead of resetting every run.
+  deep-scan-rotation:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      issues: write
+    concurrency:
+      group: catalog-guardian-deep-rotation
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
+      - name: Restore accumulated scan state
+        uses: actions/cache@v4
+        with:
+          path: docs/catalog-status.json
+          key: catalog-scan-state-${{ github.run_id }}
+          restore-keys: |
+            catalog-scan-state-
+
+      - name: Install scanners
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          install_failed=()
+          python -m pip install --disable-pip-version-check semgrep \
+            || { install_failed+=(semgrep); echo '::warning::semgrep install failed; findings from it will report as SCANNER-ERROR.'; }
+          go install github.com/zricethezav/gitleaks/v8@latest \
+            || { install_failed+=(gitleaks); echo '::warning::gitleaks install failed; secret scanning will report as SCANNER-ERROR.'; }
+          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest \
+            || { install_failed+=(osv-scanner); echo '::warning::osv-scanner install failed; dependency scanning will report as SCANNER-ERROR.'; }
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          sudo apt-get update -qq || true
+          sudo apt-get install -y -qq clamav \
+            || { install_failed+=(clamav); echo '::warning::clamav install failed; malware scanning will report as SCANNER-ERROR.'; }
+          sudo systemctl stop clamav-freshclam 2>/dev/null || true
+          sudo freshclam --quiet || echo '::warning::freshclam could not update ClamAV signatures; malware scanning reports SCANNER-ERROR, not a finding.'
+          if (( ${#install_failed[@]} )); then
+            echo "::warning::Scanners unavailable this run: ${install_failed[*]}. SCANNER-ERROR means 'rescan needed', not 'nothing found'."
+          fi
+
+      - name: Pick this week's rotation slice
+        id: slice
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Deterministic rotation: whole weeks since the epoch. No randomness, so a
+          # re-run scans the same slice and the schedule advances predictably.
+          week=$(( $(date -u +%s) / 604800 ))
+          echo "index=$week" >> "$GITHUB_OUTPUT"
+          echo "Rotation batch index: $week"
+
+      - name: Rotating deep scan (read-only, no removals)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/catalog_guardian.py --deep --batch-size 20 \
+            --batch-index '${{ steps.slice.outputs.index }}'
+
+      - name: Report security findings
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: python scripts/security_report.py
+
   approved-maintenance:
     if: >-
       github.event_name == 'issue_comment' &&
@@ -202,15 +322,37 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m pip install --disable-pip-version-check semgrep
-          go install github.com/gitleaks/gitleaks/v8@latest
-          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest
+          # Each scanner installs independently and NON-FATALLY. Guardian already
+          # treats a missing scanner as SCANNER-ERROR rather than "clean", so one
+          # broken installer must degrade the audit, not kill it. This step used to
+          # be fail-hard and took the whole run down on 2026-08-25.
+          install_failed=()
+
+          python -m pip install --disable-pip-version-check semgrep \
+            || { install_failed+=(semgrep); echo '::warning::semgrep install failed; findings from it will report as SCANNER-ERROR.'; }
+
+          # gitleaks moved to the gitleaks org but its go.mod still declares the
+          # module path as github.com/zricethezav/gitleaks/v8. Installing via the
+          # new org path fails with "module declares its path as ...".
+          go install github.com/zricethezav/gitleaks/v8@latest \
+            || { install_failed+=(gitleaks); echo '::warning::gitleaks install failed; secret scanning will report as SCANNER-ERROR.'; }
+
+          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest \
+            || { install_failed+=(osv-scanner); echo '::warning::osv-scanner install failed; dependency scanning will report as SCANNER-ERROR.'; }
+
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq clamav
+          sudo apt-get update -qq || true
+          sudo apt-get install -y -qq clamav \
+            || { install_failed+=(clamav); echo '::warning::clamav install failed; malware scanning will report as SCANNER-ERROR.'; }
           sudo systemctl stop clamav-freshclam 2>/dev/null || true
           sudo freshclam --quiet || echo '::warning::freshclam could not update ClamAV signatures; malware scanning will be reported as a scanner error, not as a finding.'
-          if [[ -n "${SNYK_TOKEN:-}" ]]; then npm install -g snyk; fi
+          if [[ -n "${SNYK_TOKEN:-}" ]]; then
+            npm install -g snyk || { install_failed+=(snyk); echo '::warning::snyk install failed; it will be skipped.'; }
+          fi
+
+          if (( ${#install_failed[@]} )); then
+            echo "::warning::Scanners unavailable this run: ${install_failed[*]}. Guardian reports these as SCANNER-ERROR, which means 'rescan needed', not 'nothing found'."
+          fi
 
       - name: Run deep guardian and prepare lifecycle changes
         env:

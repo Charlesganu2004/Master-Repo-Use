@@ -3,6 +3,10 @@
     "mode": "archived-active",
     "note": "Officially sunset: 3.1.4 released 2026-07-29, feature freeze 2026-07-27, GitHub archive 2026-08-10, EOL 2026-08-31. Keep temporarily as transition/reference material, not as a newly maintained dependency. Re-review for a maintained community fork after EOL."
   },
+  "Stability-AI/StableLM": {
+    "mode": "reference",
+    "note": "Last push 2024-04-08 -- roughly 870 days at time of adding, far past the 365d removal threshold. Added deliberately as a historical reference: StableLM was a landmark 2024 open-weight release and the repo is useful for understanding that generation. It is NOT a current runtime choice; for local inference today use the Gemma / Phi / Ollama lanes in repo-lists/local-models.txt. Re-review only if Stability resumes development."
+  },
   "YuhaoLin2005/compact-counter-concept": {
     "mode": "reference",
     "note": "Archived MIT research/measurement utility, last push 2026-07-02. Keep as reference-only while Claude context-compaction behavior is still relevant; do not treat it as an actively maintained runtime dependency."
