@@ -1,0 +1,30 @@
+# Multi-Model Data Stores & Multi-Model AI — verified 2026-08-27
+#
+# "Multi-model" means two different things in the supplied list and they are not
+# related, so they are separated here:
+#   * multi-model DATABASE  — one engine serving documents + graphs + key-value
+#   * multi-model AI        — one interface driving several LLM providers
+#
+# --- Multi-model databases
+arangodb/arangodb                 # documents + graphs + key-value in one engine
+skytable/skytable                 # NoSQL with BlueQL  # AGPL-3.0
+
+# --- Multi-model / multi-provider AI interfaces
+enricoros/big-AGI                 # multi-model chat, image, voice, code exec (MIT)
+SkyworkAI/DeepResearchAgent       # hierarchical multi-agent research system (MIT)
+
+# --- Graph tooling from the supplied links
+exogee-technology/graphweaver     # the real project behind docs.graphweaver.com and the npm package
+nevil-mathew/GraphWeave           # MIT, active, but 0 stars -- reference only, do not depend on it
+CartographAI/mcp-server-codegraph # code-graph MCP server ("cartographer"); MIT, quiet since 2025-10
+
+# --- Research reference
+kk7nc/RMDL                        # Random Multimodel Deep Learning  # GPL-3.0: copying is viral
+
+# NOT ADDED, and why:
+#   rahulnanda1999/GraphWeave  -- 0 stars, NO LICENCE, last push 2025-06-12 (~440d).
+#     Past the 365d removal threshold on arrival and legally un-adoptable. Adding it
+#     would recreate exactly the class of entry that was just delisted.
+#   CodeWhale, Hermes Studio, Open-Codesign -- these names appear in a Bing-rendered
+#     GitHub topic page but do not resolve to findable repositories. Not guessed at.
+#   graphweave.ai -- a company site, not a repository.
