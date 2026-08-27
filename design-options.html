@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Master Repo Use: Palette Options</title>
+<style>
+/* Six complete palettes, each applied to the real components from index.html:
+   a map node, a preset chip, a command block, a stat tile, buttons and body copy.
+   Judge them on the actual widgets rather than on swatches. */
+*{box-sizing:border-box}
+body{margin:0;background:#0f0f10;color:#f2f2f3;font:16px/1.6 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1500px;margin:auto;padding:26px 24px 70px}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:-.02em}
+.sub{color:#a5a5aa;margin:0 0 22px;font-size:16px;max-width:78ch}
+.sub b{color:#f2f2f3}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px;align-items:center}
+.ctlbtn{border:1px solid #35353a;background:#1b1b1e;color:#e7e7ea;border-radius:10px;padding:9px 14px;
+  cursor:pointer;font:inherit;font-size:14.5px;font-weight:650}
+.ctlbtn.on{background:#e7e7ea;color:#141416;border-color:transparent}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:22px}
+.grid>*{min-width:0}
+
+/* ---- one option card: everything inside inherits that option's tokens ---- */
+.opt{border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--bg);
+  color:var(--ink);box-shadow:0 18px 44px rgba(0,0,0,.4)}
+.opt-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;
+  justify-content:space-between;align-items:center;gap:12px;background:var(--panel)}
+.opt-head h2{margin:0;font-size:18px;letter-spacing:-.02em}
+.opt-head p{margin:3px 0 0;font-size:13px;color:var(--ink-3);font-weight:500}
+.opt-head .num{font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--accent)}
+.opt-body{padding:20px;display:grid;gap:16px}
+.swatches{display:flex;gap:7px}
+.swatches i{width:30px;height:30px;border-radius:8px;display:block;border:1px solid rgba(255,255,255,.14)}
+
+/* real components, tokenised */
+.demo-node{border:1.8px solid var(--accent);border-left:5px solid var(--accent);border-radius:13px;
+  background:var(--panel-2);padding:13px 16px;position:relative}
+.demo-node b{display:block;font-size:15.5px;font-weight:700;color:var(--accent)}
+.demo-node span{display:block;font-size:12.5px;font-weight:500;color:var(--ink-3);margin-top:3px}
+.demo-node .tick{position:absolute;right:14px;top:14px;width:22px;height:22px;border-radius:50%;
+  background:var(--accent);color:var(--bg);display:grid;place-items:center;font-size:13px;font-weight:900}
+.row{display:flex;gap:9px;flex-wrap:wrap}
+.demo-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);
+  background:var(--panel);border-radius:11px;padding:9px 13px;font-size:14px;font-weight:650;color:var(--ink-2)}
+.demo-chip i{width:9px;height:9px;border-radius:3px;background:var(--c);flex:none}
+.demo-chip.sel{border-color:var(--accent);background:var(--panel-2);color:var(--ink)}
+.demo-cmd{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:13px 15px;
+  font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--code-ink);white-space:pre-wrap}
+.demo-cmd .c{color:var(--ink-3)}
+.tilerow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.demo-tile{border:1px solid var(--line);border-left:4px solid var(--t);border-radius:10px;
+  background:var(--panel);padding:12px 14px}
+.demo-tile small{display:block;font-size:10.5px;font-weight:800;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-3)}
+.demo-tile strong{display:block;font-size:26px;font-weight:800;color:var(--t);margin-top:3px;
+  font-variant-numeric:tabular-nums}
+.demo-copy{font-size:14.5px;color:var(--ink-2);margin:0}
+.demo-copy b{color:var(--ink)}
+.btnrow{display:flex;gap:9px;flex-wrap:wrap}
+.demo-btn{border:1px solid var(--line);background:var(--panel);color:var(--ink-2);border-radius:10px;
+  padding:9px 14px;font-size:14px;font-weight:650}
+.demo-btn.solid{background:linear-gradient(140deg,var(--accent),var(--accent-2));border-color:transparent;
+  color:var(--bg);font-weight:750}
+.meta{font-size:12.5px;color:var(--ink-3);border-top:1px solid var(--line);padding-top:12px;
+  display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:500}
+.meta b{color:var(--ink-2);font-weight:700}
+.pickline{margin-top:34px;padding:18px 20px;border:1px solid #35353a;border-radius:14px;background:#1b1b1e;
+  font-size:15.5px;color:#c9c9ce}
+.pickline b{color:#f2f2f3}
+.pickline code{background:#0f0f10;padding:2px 7px;border-radius:6px;font-size:14px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.tilerow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Palette options</h1>
+<p class="sub">Six complete palettes, each applied to the <b>real components</b> from the page:
+a map node, preset chips, a command block, stat tiles and buttons. Judge them on the widgets,
+not on swatches. Option 1 is what is live now.</p>
+
+<div class="controls">
+  <button class="ctlbtn on" data-mode="dark" type="button">Night mode</button>
+  <button class="ctlbtn" data-mode="light" type="button">Day mode</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="pickline">
+  <b>Tell me a number</b> and I will apply it to <code>index.html</code> in one pass, both themes,
+  with the contrast re-measured. Mixing is fine too: <i>"3 but the accent from 5"</i>.
+</div>
+</div>
+
+<script>
+/* Each option defines both themes. Contrast figures are computed below from the
+   real values rather than asserted, so a pretty palette that fails legibility
+   shows it here instead of after it ships. */
+const OPTIONS=[
+ {n:'Ember',note:'Live now. Warm amber on lifted brown-black.',
+  dark:{bg:'#191410',panel:'#261e18',panel2:'#312720',line:'rgba(233,209,180,.20)',
+    ink:'#fefbf6',ink2:'#e3d4c0',ink3:'#bda98f',accent:'#ffbb52',accent2:'#f5906a',
+    ok:'#7fe0a0',warn:'#f5c451',bad:'#f5817a',codeBg:'#100c09',codeInk:'#f8ecdb'},
+  light:{bg:'#fdf9f3',panel:'#ffffff',panel2:'#f7f0e6',line:'rgba(60,40,24,.16)',
+    ink:'#191108',ink2:'#4d3d2e',ink3:'#6f5b46',accent:'#8f5205',accent2:'#a13c1c',
+    ok:'#116336',warn:'#775406',bad:'#96261d',codeBg:'#2a2018',codeInk:'#f8ecdb'}},
+
+ {n:'Moss',note:'Deep forest ground, moss and wheat. Calmest of the six.',
+  dark:{bg:'#101613',panel:'#18211c',panel2:'#212c25',line:'rgba(200,225,200,.18)',
+    ink:'#f3f9f4',ink2:'#cadbcd',ink3:'#9bb2a1',accent:'#a8dc8a',accent2:'#e2c878',
+    ok:'#7fe0a0',warn:'#e8c76a',bad:'#f08a80',codeBg:'#0b110d',codeInk:'#e8f4e9'},
+  light:{bg:'#f7faf6',panel:'#ffffff',panel2:'#eef4ec',line:'rgba(28,50,34,.16)',
+    ink:'#101a12',ink2:'#3a4c3f',ink3:'#5c7062',accent:'#38661f',accent2:'#7a5a10',
+    ok:'#136135',warn:'#6f5208',bad:'#96261d',codeBg:'#18231b',codeInk:'#e8f4e9'}},
+
+ {n:'Plum',note:'Aubergine ground with gold and rose. The most distinctive.',
+  dark:{bg:'#17101a',panel:'#211725',panel2:'#2c2031',line:'rgba(228,204,236,.18)',
+    ink:'#faf4fb',ink2:'#dcc9e2',ink3:'#ab95b3',accent:'#f0c65e',accent2:'#e58fb0',
+    ok:'#82ddab',warn:'#f0c65e',bad:'#f2848c',codeBg:'#100a12',codeInk:'#f6ecf8'},
+  light:{bg:'#fcf8fd',panel:'#ffffff',panel2:'#f5edf7',line:'rgba(58,30,66,.16)',
+    ink:'#180f1b',ink2:'#4a3a50',ink3:'#6b5872',accent:'#7a5205',accent2:'#9b3560',
+    ok:'#14653a',warn:'#6f5208',bad:'#9a2733',codeBg:'#241829',codeInk:'#f6ecf8'}},
+
+ {n:'Slate & Lime',note:'Neutral cool-grey ground with one acid accent. No blue.',
+  dark:{bg:'#141614',panel:'#1d201d',panel2:'#272b27',line:'rgba(220,226,214,.18)',
+    ink:'#f7f8f4',ink2:'#d3d8cc',ink3:'#9ba396',accent:'#c8ed5c',accent2:'#8fd15a',
+    ok:'#8ae09b',warn:'#e6cc55',bad:'#ef8378',codeBg:'#0d0f0d',codeInk:'#eef2e7'},
+  light:{bg:'#f8f9f6',panel:'#ffffff',panel2:'#eff2ea',line:'rgba(30,36,26,.16)',
+    ink:'#121410',ink2:'#3f453a',ink3:'#5f6659',accent:'#4c6205',accent2:'#3f6a1c',
+    ok:'#14653a',warn:'#6b5406',bad:'#96261d',codeBg:'#1c201b',codeInk:'#eef2e7'}},
+
+ {n:'Clay & Mint',note:'Terracotta with a mint counterpoint. Warmest contrast pair.',
+  dark:{bg:'#171311',panel:'#211b18',panel2:'#2c2421',line:'rgba(236,214,200,.19)',
+    ink:'#fdf7f4',ink2:'#e2cfc5',ink3:'#b39c90',accent:'#f0855f',accent2:'#6fd8b4',
+    ok:'#6fd8b4',warn:'#eec25c',bad:'#f0796f',codeBg:'#100c0a',codeInk:'#f9eee7'},
+  light:{bg:'#fdf8f5',panel:'#ffffff',panel2:'#f6eee9',line:'rgba(62,36,26,.16)',
+    ink:'#1a1210',ink2:'#4e3c34',ink3:'#6f594e',accent:'#a33d17',accent2:'#0f6b52',
+    ok:'#0f6b52',warn:'#725209',bad:'#9a2b21',codeBg:'#271c17',codeInk:'#f9eee7'}},
+
+ {n:'Graphite',note:'Near-monochrome with one hot accent. Least decorative.',
+  dark:{bg:'#131314',panel:'#1c1c1e',panel2:'#262628',line:'rgba(228,228,232,.17)',
+    ink:'#fafafb',ink2:'#d2d2d7',ink3:'#98989f',accent:'#ff8a3d',accent2:'#ffb347',
+    ok:'#77dd9a',warn:'#e9c452',bad:'#f27c72',codeBg:'#0c0c0d',codeInk:'#ededf0'},
+  light:{bg:'#fafafb',panel:'#ffffff',panel2:'#f0f0f2',line:'rgba(20,20,24,.15)',
+    ink:'#121214',ink2:'#3e3e44',ink3:'#5e5e66',accent:'#a34505',accent2:'#8a5a06',
+    ok:'#12643a',warn:'#6d5306',bad:'#98271e',codeBg:'#1b1b1d',codeInk:'#ededf0'}}
+];
+
+function hex2rgb(h){
+  if(h.startsWith('rgba')||h.startsWith('rgb'))return h.match(/\d+/g).slice(0,3).map(Number);
+  const v=h.replace('#','');
+  return [0,2,4].map(i=>parseInt(v.substr(i,2),16));
+}
+function lum(h){return hex2rgb(h).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)})
+  .reduce((a,c,i)=>a+[.2126,.7152,.0722][i]*c,0)}
+function ratio(a,b){const A=lum(a),B=lum(b);return ((Math.max(A,B)+.05)/(Math.min(A,B)+.05)).toFixed(1)}
+
+let mode='dark';
+function paint(){
+  document.getElementById('grid').innerHTML=OPTIONS.map((o,i)=>{
+    const t=o[mode];
+    const vars=`--bg:${t.bg};--panel:${t.panel};--panel-2:${t.panel2};--line:${t.line};`
+      +`--ink:${t.ink};--ink-2:${t.ink2};--ink-3:${t.ink3};--accent:${t.accent};--accent-2:${t.accent2};`
+      +`--code-bg:${t.codeBg};--code-ink:${t.codeInk}`;
+    const body=ratio(t.bg,t.ink), small=ratio(t.panel,t.ink3), acc=ratio(t.panel,t.accent);
+    const flag=v=>parseFloat(v)>=4.5?'✓':'low';
+    return `<article class="opt" style="${vars}">
+      <div class="opt-head">
+        <div><h2>${i+1}. ${o.n}</h2><p>${o.note}</p></div>
+        <div class="num">0${i+1}</div>
+      </div>
+      <div class="opt-body">
+        <div class="swatches">
+          <i style="background:${t.bg}"></i><i style="background:${t.panel2}"></i>
+          <i style="background:${t.accent}"></i><i style="background:${t.accent2}"></i>
+          <i style="background:${t.ok}"></i><i style="background:${t.warn}"></i><i style="background:${t.bad}"></i>
+        </div>
+        <div class="demo-node"><b>Install instructions</b><span>all four clients at once</span>
+          <span class="tick">✓</span></div>
+        <div class="row">
+          <span class="demo-chip sel" style="--c:${t.accent}"><i></i>Fresh machine</span>
+          <span class="demo-chip" style="--c:${t.accent2}"><i></i>Local RAG stack</span>
+          <span class="demo-chip" style="--c:${t.ok}"><i></i>Security sweep</span>
+        </div>
+        <div class="demo-cmd"><span class="c"># 2. Install instructions</span>
+bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh"</div>
+        <div class="tilerow">
+          <div class="demo-tile" style="--t:${t.ok}"><small>Healthy</small><strong>292</strong></div>
+          <div class="demo-tile" style="--t:${t.warn}"><small>Stale</small><strong>0</strong></div>
+          <div class="demo-tile" style="--t:${t.bad}"><small>Review</small><strong>1</strong></div>
+        </div>
+        <p class="demo-copy">Body copy at the size the page actually uses, so you can tell whether
+          it reads comfortably. <b>Bold sits here.</b> Muted detail sits one step down.</p>
+        <div class="btnrow">
+          <button class="demo-btn solid" type="button">Copy all</button>
+          <button class="demo-btn" type="button">Clear selection</button>
+        </div>
+        <div class="meta">
+          <span>body <b>${body}:1</b> ${flag(body)}</span>
+          <span>muted <b>${small}:1</b> ${flag(small)}</span>
+          <span>accent <b>${acc}:1</b> ${flag(acc)}</span>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+}
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-mode]').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); mode=b.dataset.mode; paint();
+}));
+paint();
+</script>
+</body>
+</html>
