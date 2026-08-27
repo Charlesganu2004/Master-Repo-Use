@@ -1,0 +1,38 @@
+# Design & Diagram Agent Skills — verified 2026-08-27
+# Sourced from the awesome-lists and articles Charles supplied. Every slug below
+# resolved against the GitHub API on 2026-08-27.
+#
+# ADVISORY, NOT DEPENDENCIES. These are instruction packs that change how an agent
+# makes design decisions. Read one end-to-end before pointing an agent at it.
+#
+# LICENCE NOTE: entries marked NO-LICENCE are all-rights-reserved. Link to them,
+# learn from them, but do not copy their contents into this repository.
+
+# --- Architecture & system diagrams (directly relevant to this repo's System Map)
+tt-a1i/archify                              # architecture diagrams, dark/light, multi-format export
+Cocoon-AI/architecture-diagram-generator    # dark-themed system architecture diagrams
+nicobailon/visual-explainer                 # HTML pages for architecture overviews and visual diffs
+Agents365-ai/drawio-skill                   # draw.io diagrams from natural language
+supabase/agent-skills                       # editorial diagram types without Mermaid
+Graphify-Labs/graphify                      # renamed from safishamsi/graphify
+
+# --- Design systems and UI judgement
+VoltAgent/awesome-claude-design             # 68 ready-to-use DESIGN.md system files
+nextlevelbuilder/ui-ux-pro-max-skill        # UI/UX design intelligence across platforms
+bergside/awesome-design-skills              # directory of design skills for agent tools
+ibelick/ui-skills                           # interface polish and refinement
+emilkowalski/skills                         # design-engineering capabilities
+Owl-Listener/designer-skills                # designer commands and templates
+hamen/material-3-skill                      # Material Design 3 components and theming
+ZeroZ-lab/cc-design                         # high-fidelity HTML prototypes  # NO-LICENCE: link only
+
+# --- Motion and 3D
+greensock/gsap-skills                       # GSAP animation skills (MIT, unlike GSAP itself)
+CloudAI-X/threejs-skills                    # Three.js skill collection  # NO-LICENCE: link only
+
+# --- Broader Claude Code frameworks referenced alongside the design lists
+obra/superpowers                            # plan -> test -> code methodology
+hesreallyhim/awesome-claude-code            # the largest Claude Code index
+SuperClaude-Org/SuperClaude_Framework       # commands and personas
+mattpocock/skills                           # coding-practice skills targeting agent failure modes
+yamadashy/repomix                           # packs a codebase into one file for model consumption

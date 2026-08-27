@@ -13,8 +13,13 @@ The Master Repo is the shared **catalog + instructions + security/vetting layer*
 The public command center is the fastest way to get set up. Nothing needs to be installed to
 read it, and every command card is click-to-copy:
 
+The **System Map** is the landing view: 20 clickable nodes across clients, instruction layer,
+catalog, automations and runtimes. Clicking one shows what it does *and the single command that
+operates it*, ready to copy.
+
 | Tab | What it gives you |
 |---|---|
+| **System Map** | *(landing)* click any node for its role and its one-liner |
 | **Setup** | One-liner global install for Claude Code, Codex, Copilot and Gemini |
 | **Use It** | Six systems — instruction files, skills, local models, MCP, agent subgroups, security — each with the one-liner that starts it and the point where it hands back to you |
 | **Local Models** | Move a slider to your RAM and OS; 36 models re-sized live, plus an install checker that answers "can this machine run it" before you download |
@@ -452,6 +457,37 @@ python scripts/static_audit.py .
 
 Detail: [docs/SECURITY-SCANNING.md](docs/SECURITY-SCANNING.md).
 
+## Terminal advisor — check this machine, then install
+
+The web advisor asks you for your RAM. The terminal one just looks:
+
+```bash
+python scripts/local_model_advisor.py
+```
+
+It reads installed RAM, OS, CPU, discrete GPU VRAM (via `nvidia-smi`), free disk and whether
+Ollama is running, then recommends the largest chat model that actually fits. VRAM counts toward
+the budget at 85%, so a laptop with 16 GB and a 6 GB GPU is treated as the ~17.8 GB machine it
+effectively is.
+
+Installing is deliberately two-tier:
+
+| Tier | What | Gate |
+|---|---|---|
+| 1 | the recommendation, and anything else that **fits** | ordinary `y/N` confirmation |
+| 2 | anything that **does not fit** | `--i-accept-the-risk` **and** typing `I ACCEPT THE RISK` |
+
+Tier 2 exists because the failure mode is nasty and silent: an oversized model does not refuse,
+it swaps. The gate prints exactly what will happen — disk thrashing, seconds-per-word generation,
+an unresponsive desktop on Windows, other apps killed by the memory manager — before it will let
+you continue. You can always override; you cannot do it by accident.
+
+```bash
+python scripts/local_model_advisor.py --list                 # everything, and whether it fits
+python scripts/local_model_advisor.py --install              # install the recommendation
+python scripts/local_model_advisor.py --install qwen3:32b --i-accept-the-risk
+```
+
 ## Local models and hardware fit
 
 Which models run on your machine, from three vendors only: **Microsoft**, **Google/Gemini**, and
@@ -534,6 +570,24 @@ The global setup scripts install the Gemini pointer alongside Claude, Codex and 
   end-to-end before pointing an agent at it.
 
 Lane: [repo-lists/design-ui-motion.txt](repo-lists/design-ui-motion.txt)
+
+## Design & diagram agent skills
+
+Sourced from the awesome-lists and articles supplied 2026-08-27; every slug verified against the
+GitHub API. Lane: [repo-lists/design-agent-skills.txt](repo-lists/design-agent-skills.txt).
+
+Directly relevant to this repo's own System Map: `tt-a1i/archify` (19k),
+`Cocoon-AI/architecture-diagram-generator` (7k), `nicobailon/visual-explainer` (9.6k).
+Design systems: `VoltAgent/awesome-claude-design` (68 ready-made `DESIGN.md` files),
+`nextlevelbuilder/ui-ux-pro-max-skill` (121k), `bergside/awesome-design-skills`.
+Frameworks referenced alongside them: `obra/superpowers`, `hesreallyhim/awesome-claude-code`,
+`SuperClaude_Framework`, `mattpocock/skills`, `yamadashy/repomix`.
+
+`safishamsi/graphify` has moved to `Graphify-Labs/graphify` and is catalogued under the new name.
+
+**Three entries are marked NO-LICENCE** (`ZeroZ-lab/cc-design`, `CloudAI-X/threejs-skills`,
+`dgreenheck/webgpu-claude-skill`): link to them and learn from them, but their contents may not
+be copied into this repository.
 
 ## Local MCP servers, skill collections and self-hosted apps
 
