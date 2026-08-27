@@ -1,7 +1,6 @@
 # Trading Agent MCP / Memory / Risk / Research Tools
 mnemox-ai/tradememory-protocol
 wshobson/maverick-mcp
-aitrados/finance-trading-ai-agents-mcp
 atilaahmettaner/tradingview-mcp
 VictorVVedtion/trading-skills
 alpacahq/alpaca-mcp-server

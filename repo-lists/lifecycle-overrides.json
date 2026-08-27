@@ -9,7 +9,7 @@
   },
   "YuhaoLin2005/compact-counter-concept": {
     "mode": "reference",
-    "note": "Archived MIT research/measurement utility, last push 2026-07-02. Keep as reference-only while Claude context-compaction behavior is still relevant; do not treat it as an actively maintained runtime dependency."
+    "note": "Archived MIT research utility, 0 stars. Small enough to absorb outright if the measurement approach is still wanted -- see docs/MANAGED-ADOPTION-PLAN.md. Otherwise reference-only."
   },
   "ZongqianLi/Prompt-Compression-Survey": {
     "mode": "reference",
@@ -41,7 +41,7 @@
   },
   "langchain-ai/open_deep_research": {
     "mode": "reference",
-    "note": "Archived 2026-08-10 with a push 15d prior. Technique remains worth reading; not a maintained dependency. Continuation work lives in langchain-ai/langgraph."
+    "note": "Archived 2026-08-10. MIT-licensed, so managed adoption IS legally permitted. Queued as the highest-value adoption candidate -- see docs/MANAGED-ADOPTION-PLAN.md. Until adoption completes, treat as reference: the technique is worth reading, the repo is not maintained. Continuation work upstream lives in langchain-ai/langgraph."
   },
   "microsoft/LLMLingua": {
     "mode": "reference",

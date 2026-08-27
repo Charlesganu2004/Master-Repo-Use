@@ -8,8 +8,6 @@ AI4Finance-Foundation/FinGPT
 AI4Finance-Foundation/FinRL
 MingyuJ666/Stockagent
 qmyhd/LLM-portfolio-project
-fsaavedra0003/Agentic-AI-Trading-Bot-with-LLM-reasoning-sentiment-analysis
-padmarajkore/Ai-crypto-trading-system
 alpacahq/alpaca-py
 alpacahq/alpaca-mcp-server
 quantconnect/Lean
