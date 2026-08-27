@@ -42,6 +42,9 @@ microsoft/agent-framework
 microsoft/semantic-kernel
 openai/openai-agents-python
 
+# Clients the public setup page installs by name
+openai/codex
+
 # Design/motion libraries the site itself is built against
 mrdoob/three.js
 greensock/GSAP

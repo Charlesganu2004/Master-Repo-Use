@@ -323,3 +323,26 @@ sooperset/mcp-atlassian
 topoteretes/cognee
 wshobson/agents
 yusufkaraaslan/Skill_Seekers
+
+# --- Added 2026-08-27: design & diagram agent skills ---
+Agents365-ai/drawio-skill
+CloudAI-X/threejs-skills
+Cocoon-AI/architecture-diagram-generator
+Graphify-Labs/graphify
+Owl-Listener/designer-skills
+SuperClaude-Org/SuperClaude_Framework
+VoltAgent/awesome-claude-design
+ZeroZ-lab/cc-design
+bergside/awesome-design-skills
+emilkowalski/skills
+greensock/gsap-skills
+hamen/material-3-skill
+hesreallyhim/awesome-claude-code
+ibelick/ui-skills
+mattpocock/skills
+nextlevelbuilder/ui-ux-pro-max-skill
+nicobailon/visual-explainer
+obra/superpowers
+supabase/agent-skills
+tt-a1i/archify
+yamadashy/repomix

@@ -10,67 +10,72 @@
 <style>
 :root{
   color-scheme:dark;
-  /* Contrast was the main readability complaint: muted body text sat at ~3.4:1 on
-     the panel background. These values clear 4.5:1 for body copy and 3:1 for the
-     small meta text, at the same visual weight. */
-  --bg:#070a12;--bg2:#0b1020;--panel:rgba(19,27,44,.82);--panel-solid:#111827;--panel2:#182135;
-  --line:rgba(148,163,184,.22);--line-strong:rgba(148,163,184,.42);
-  --text:#f2f5ff;--muted:#b3c0d6;--muted-dim:#93a1b8;
-  --blue:#7cb6ff;--cyan:#3fdcf0;--green:#4fe0ae;--yellow:#fdc74a;--orange:#ff9f57;--red:#ff8598;--purple:#b79cff;
-  --shadow:0 24px 70px rgba(0,0,0,.42);--radius:18px;--radius-sm:12px;
+  /* Warm palette. No blue anywhere -- the previous scheme leaned on blue/violet for
+     every accent, which made the whole interface read as one undifferentiated cool
+     wash. Amber, copper and sage separate cleanly from each other at a glance and
+     stay legible against a warm near-black. */
+  --bg:#0c0a09;--bg2:#151110;--panel:rgba(32,27,24,.86);--panel-solid:#1b1614;--panel2:#241d19;
+  --line:rgba(219,193,164,.19);--line-strong:rgba(219,193,164,.40);
+  --text:#f7f2ea;--muted:#c6b6a3;--muted-dim:#a2907c;
+  --amber:#f0a92e;--copper:#e07a55;--sage:#a8c07d;--rose:#dd8fa8;--gold:#e9c96b;
+  --green:#6fcf8b;--yellow:#e9b53c;--orange:#e2803c;--red:#e26a60;
+  --shadow:0 26px 72px rgba(0,0,0,.55);--radius:18px;--radius-sm:12px;
   --ease:cubic-bezier(.22,1,.36,1);
   --fs-body:15px;--fs-card:13.5px;--fs-meta:12px;
 }
 html[data-theme="light"]{
   color-scheme:light;
-  --bg:#f6f8fc;--bg2:#eef2f9;--panel:rgba(255,255,255,.92);--panel-solid:#ffffff;--panel2:#f1f5fb;
-  --line:rgba(15,23,42,.13);--line-strong:rgba(15,23,42,.26);
-  --text:#0d1526;--muted:#42546e;--muted-dim:#5d6d85;
-  --blue:#1d5fd0;--cyan:#0b7f95;--green:#0f7a55;--yellow:#8a6100;--orange:#a04f0d;--red:#b32340;--purple:#5b3fc4;
-  --shadow:0 18px 48px rgba(15,23,42,.12);
+  --bg:#faf6f0;--bg2:#f2ebe1;--panel:rgba(255,253,250,.94);--panel-solid:#fffdfa;--panel2:#f5efe6;
+  --line:rgba(60,42,28,.14);--line-strong:rgba(60,42,28,.28);
+  --text:#1c1512;--muted:#5a4a3c;--muted-dim:#7a6756;
+  --amber:#a86412;--copper:#b04a28;--sage:#4f6b2a;--rose:#a3436a;--gold:#8a6a12;
+  --green:#1f7a44;--yellow:#8a6410;--orange:#a2521a;--red:#a83228;
+  --shadow:0 18px 48px rgba(60,42,28,.13);
 }
+
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;min-height:100vh;background-color:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font:var(--fs-body)/1.62 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-x:hidden}
 body:before,body:after{content:"";position:fixed;pointer-events:none;filter:blur(90px);opacity:.24;z-index:-2;border-radius:999px}
-body:before{width:520px;height:520px;background:#2563eb;top:-220px;left:-180px}
-body:after{width:480px;height:480px;background:#7c3aed;right:-180px;top:180px}
-.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:-3;background-image:linear-gradient(rgba(148,163,184,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.035) 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(to bottom,#000,transparent 78%)}
-a{color:var(--blue);text-decoration:none}a:hover{color:#93c5fd}
+body:before{width:520px;height:520px;background:#c2410c;top:-220px;left:-180px}
+body:after{width:480px;height:480px;background:#7a6320;right:-180px;top:180px}
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:-3;background-image:linear-gradient(rgba(219,193,164,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(219,193,164,.05) 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(to bottom,#000,transparent 78%)}
+a{color:var(--amber);text-decoration:none}a:hover{color:var(--gold)}
 button,input{font:inherit}
 button{color:inherit}
 .wrap{max-width:1440px;margin:auto;padding:28px 30px 40px}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}
 .brand{display:flex;align-items:center;gap:13px;min-width:0}
-.logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-weight:900;letter-spacing:-.04em;background:linear-gradient(135deg,#2563eb,#7c3aed 58%,#22d3ee);box-shadow:0 12px 36px rgba(99,102,241,.32),inset 0 1px 0 rgba(255,255,255,.3)}
+.logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-weight:900;letter-spacing:-.04em;background:linear-gradient(135deg,#f0a92e,#e07a55 55%,#a8c07d);box-shadow:0 12px 36px rgba(224,122,85,.34),inset 0 1px 0 rgba(255,255,255,.3)}
 .brand-copy{min-width:0}.brand-copy h1{font-size:18px;line-height:1.2;margin:0;font-weight:800;letter-spacing:-.02em}.brand-copy p{margin:3px 0 0;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}
-.mode-badge,.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:rgba(15,23,42,.72);border-radius:999px;padding:7px 10px;color:#cbd5e1;font-size:12px;backdrop-filter:blur(14px)}
+.mode-badge,.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:rgba(26,21,19,.74);border-radius:999px;padding:7px 10px;color:var(--muted);font-size:12px;backdrop-filter:blur(14px)}
 .mode-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 14px currentColor}
-.btn{border:1px solid var(--line);background:rgba(15,23,42,.78);color:#dbeafe;border-radius:11px;padding:9px 12px;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:.18s ease;backdrop-filter:blur(14px)}
-.btn:hover{transform:translateY(-1px);border-color:rgba(96,165,250,.5);background:rgba(30,41,59,.9);box-shadow:0 10px 26px rgba(0,0,0,.18)}
-.btn.primary{background:linear-gradient(135deg,#2563eb,#4f46e5);border-color:rgba(129,140,248,.55);color:#fff;box-shadow:0 8px 26px rgba(37,99,235,.24)}
-.hero{position:relative;border:1px solid var(--line);background:linear-gradient(135deg,rgba(15,23,42,.88),rgba(17,24,39,.64));border-radius:26px;padding:30px;overflow:hidden;box-shadow:var(--shadow);backdrop-filter:blur(20px)}
-.hero:after{content:"";position:absolute;width:360px;height:360px;border-radius:50%;right:-90px;top:-150px;background:radial-gradient(circle,rgba(34,211,238,.22),transparent 67%);pointer-events:none}
-.eyebrow{display:flex;align-items:center;gap:8px;color:#93c5fd;font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:10px;margin-bottom:11px}.pulse{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 0 0 rgba(52,211,153,.55);animation:pulse 2.4s infinite}
-@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.btn{border:1px solid var(--line);background:rgba(26,21,19,.8);color:var(--text);border-radius:11px;padding:9px 12px;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:.18s ease;backdrop-filter:blur(14px)}
+.btn:hover{transform:translateY(-1px);border-color:rgba(240,169,46,.52);background:rgba(30,41,59,.9);box-shadow:0 10px 26px rgba(0,0,0,.18)}
+.btn.primary{background:linear-gradient(135deg,#c2740f,#a8511f);border-color:rgba(240,169,46,.55);color:#fff;box-shadow:0 8px 26px rgba(194,116,15,.28)}
+.hero{position:relative;border:1px solid var(--line);background:linear-gradient(135deg,rgba(28,23,20,.9),rgba(34,28,24,.66));border-radius:26px;padding:30px;overflow:hidden;box-shadow:var(--shadow);backdrop-filter:blur(20px)}
+.hero:after{content:"";position:absolute;width:360px;height:360px;border-radius:50%;right:-90px;top:-150px;background:radial-gradient(circle,rgba(240,169,46,.20),transparent 67%);pointer-events:none}
+.eyebrow{display:flex;align-items:center;gap:8px;color:var(--amber);font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:10px;margin-bottom:11px}.pulse{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 0 0 rgba(111,207,139,.55);animation:pulse 2.4s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(111,207,139,0)}100%{box-shadow:0 0 0 0 rgba(111,207,139,0)}}
 .hero-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,.7fr);gap:28px;align-items:end}
-.hero h2{font-size:clamp(28px,4vw,50px);line-height:1.04;letter-spacing:-.045em;margin:0;max-width:820px}.grad{background:linear-gradient(90deg,#fff,#bfdbfe 42%,#c4b5fd 72%,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{color:#aebbd0;font-size:15px;max-width:760px;margin:14px 0 0}
-.hero-quick{display:grid;gap:9px;position:relative;z-index:1}.quick-row{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);background:rgba(2,6,23,.4);border-radius:13px;padding:11px 13px}.quick-row span:first-child{color:var(--muted);font-size:12px}.quick-row strong{font-size:12px;color:#e2e8f0;text-align:right}
+.hero h2{font-size:clamp(28px,4vw,50px);line-height:1.04;letter-spacing:-.045em;margin:0;max-width:820px}.grad{background:linear-gradient(90deg,#fff,#f6d79a 40%,#e8a074 70%,#bcd193);-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{color:var(--muted);font-size:15px;max-width:760px;margin:14px 0 0}
+.hero-quick{display:grid;gap:9px;position:relative;z-index:1}.quick-row{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);background:rgba(10,8,7,.42);border-radius:13px;padding:11px 13px}.quick-row span:first-child{color:var(--muted);font-size:12px}.quick-row strong{font-size:12px;color:var(--text);text-align:right}
 .dashboard{display:grid;grid-template-columns:minmax(240px,1.5fr) repeat(4,minmax(120px,.7fr));gap:12px;margin:16px 0}
 .stat{position:relative;border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:15px 16px;overflow:hidden;backdrop-filter:blur(18px);transition:.18s ease}.stat:hover{transform:translateY(-2px);border-color:var(--line-strong)}.stat:after{content:"";position:absolute;inset:auto -20px -28px auto;width:80px;height:80px;border-radius:50%;background:currentColor;opacity:.055}.stat small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}.stat strong{display:block;font-size:24px;letter-spacing:-.04em;margin-top:4px}.stat.meta strong{font-size:14px;letter-spacing:0}.stat.meta span{display:block;color:var(--muted);font-size:12px;margin-top:3px}.HEALTHY{color:var(--green)}.STALE{color:var(--yellow)}.REVIEW{color:var(--orange)}.REMOVE{color:var(--red)}
-.commandbar{display:grid;grid-template-columns:minmax(230px,1fr) auto;gap:12px;align-items:center;margin:20px 0 14px}.search-wrap{position:relative}.search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:#64748b}.search{width:100%;height:43px;border:1px solid var(--line);background:rgba(15,23,42,.72);color:#e2e8f0;border-radius:13px;padding:0 44px 0 40px;outline:none;transition:.18s;backdrop-filter:blur(16px)}.search:focus{border-color:rgba(96,165,250,.55);box-shadow:0 0 0 3px rgba(59,130,246,.12)}.shortcut{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:1px solid var(--line);background:#0f172a;border-radius:7px;padding:2px 7px;color:#64748b;font-size:11px}
-.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px;border:1px solid var(--line);background:rgba(15,23,42,.62);border-radius:14px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{border:0;background:transparent;color:#94a3b8;border-radius:10px;padding:8px 11px;cursor:pointer;white-space:nowrap;transition:.16s}.tab:hover{color:#e2e8f0;background:rgba(51,65,85,.42)}.tab.active{color:#fff;background:linear-gradient(135deg,rgba(37,99,235,.88),rgba(79,70,229,.88));box-shadow:0 5px 18px rgba(37,99,235,.18)}
+.commandbar{display:grid;grid-template-columns:minmax(230px,1fr) auto;gap:12px;align-items:center;margin:20px 0 14px}.search-wrap{position:relative}.search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:var(--muted-dim)}.search{width:100%;height:43px;border:1px solid var(--line);background:rgba(26,21,19,.74);color:var(--text);border-radius:13px;padding:0 44px 0 40px;outline:none;transition:.18s;backdrop-filter:blur(16px)}.search:focus{border-color:rgba(240,169,46,.55);box-shadow:0 0 0 3px rgba(240,169,46,.14)}.shortcut{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:1px solid var(--line);background:#1b1614;border-radius:7px;padding:2px 7px;color:var(--muted-dim);font-size:11px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px;border:1px solid var(--line);background:rgba(26,21,19,.66);border-radius:14px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{border:0;background:transparent;color:var(--muted);border-radius:10px;padding:8px 11px;cursor:pointer;white-space:nowrap;transition:.16s}.tab:hover{color:var(--text);background:rgba(90,72,58,.42)}.tab.active{color:#fff;background:linear-gradient(135deg,rgba(194,116,15,.92),rgba(168,81,31,.92));box-shadow:0 5px 18px rgba(194,116,15,.22)}
 .view{display:none;animation:fade .2s ease}.view.active{display:block}@keyframes fade{from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:none}}
-.section-head{display:flex;justify-content:space-between;align-items:end;gap:18px;margin:22px 2px 13px}.section-head h2{font-size:20px;margin:0;letter-spacing:-.025em}.section-head p{margin:3px 0 0;color:var(--muted);font-size:12px}.section-meta{color:#64748b;font-size:11px}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}.card{grid-column:span 4;position:relative;border:1px solid var(--line);background:linear-gradient(145deg,rgba(17,24,39,.82),rgba(15,23,42,.7));border-radius:var(--radius);padding:17px;min-width:0;transition:.2s ease;backdrop-filter:blur(18px);overflow:hidden}.card:hover{transform:translateY(-3px);border-color:rgba(96,165,250,.34);box-shadow:0 18px 44px rgba(0,0,0,.22)}.card.wide{grid-column:span 6}.card.full{grid-column:1/-1}.card h3{font-size:14px;line-height:1.3;margin:3px 0 7px;color:#f8fafc}.card p{margin:0 0 12px}.card.hidden-search{display:none}.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.iconbox{flex:0 0 auto;width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:rgba(30,41,59,.7);display:grid;place-items:center;font-size:16px}.tag{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:3px 8px;margin-bottom:8px;font-size:10px;font-weight:700;letter-spacing:.03em;color:#cbd5e1;background:rgba(15,23,42,.56)}.tag.green{color:#6ee7b7;border-color:rgba(52,211,153,.22)}.tag.yellow{color:#fde68a;border-color:rgba(251,191,36,.25)}.tag.purple{color:#c4b5fd;border-color:rgba(167,139,250,.28)}.tag.blue{color:#93c5fd;border-color:rgba(96,165,250,.28)}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:18px;margin:22px 2px 13px}.section-head h2{font-size:20px;margin:0;letter-spacing:-.025em}.section-head p{margin:3px 0 0;color:var(--muted);font-size:12px}.section-meta{color:var(--muted-dim);font-size:11px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}.card{grid-column:span 4;position:relative;border:1px solid var(--line);background:linear-gradient(145deg,rgba(34,28,24,.86),rgba(24,19,17,.74));border-radius:var(--radius);padding:17px;min-width:0;transition:.2s ease;backdrop-filter:blur(18px);overflow:hidden}.card:hover{transform:translateY(-3px);border-color:rgba(240,169,46,.34);box-shadow:0 18px 44px rgba(0,0,0,.22)}.card.wide{grid-column:span 6}.card.full{grid-column:1/-1}.card h3{font-size:14px;line-height:1.3;margin:3px 0 7px;color:var(--text)}.card p{margin:0 0 12px}.card.hidden-search{display:none}.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.iconbox{flex:0 0 auto;width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:rgba(48,39,33,.7);display:grid;place-items:center;font-size:16px}.tag{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:3px 8px;margin-bottom:8px;font-size:10px;font-weight:700;letter-spacing:.03em;color:var(--muted);background:rgba(28,23,20,.6)}.tag.green{color:var(--green);border-color:rgba(111,207,139,.28)}.tag.yellow{color:var(--yellow);border-color:rgba(233,181,60,.3)}.tag.sage{color:var(--sage);border-color:rgba(168,192,125,.32)}.tag.amber{color:var(--amber);border-color:rgba(240,169,46,.32)}
+.tag.copper{color:var(--copper);border-color:rgba(224,122,85,.32)}
 .muted{color:var(--muted)}
-.cmd{position:relative;background:#060912;border:1px solid rgba(148,163,184,.18);border-radius:12px;padding:12px 78px 12px 12px;white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer;min-height:48px;font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;color:#dbeafe;transition:.16s}.cmd:hover,.cmd:focus{outline:none;border-color:rgba(96,165,250,.42);background:#080d18}.copy{position:absolute;right:7px;top:7px;border:1px solid var(--line);background:#151c2b;color:#cbd5e1;border-radius:8px;padding:6px 9px;cursor:pointer;font-size:11px;transition:.16s}.copy:hover{background:#1e293b;color:white}.copy.done{color:#6ee7b7;border-color:rgba(52,211,153,.35)}
-.card-link{display:inline-flex;align-items:center;gap:6px;margin-top:3px;font-weight:600;font-size:12px}.notice{border:1px solid rgba(251,191,36,.2);background:linear-gradient(90deg,rgba(120,53,15,.22),rgba(15,23,42,.64));padding:13px 15px;border-radius:14px;margin-bottom:12px;color:#dbe4f0}.notice.ok{border-color:rgba(52,211,153,.2);background:linear-gradient(90deg,rgba(6,78,59,.24),rgba(15,23,42,.64))}.notice strong{color:#f8fafc}
-.health-wrap{border:1px solid var(--line);border-radius:16px;overflow:auto;background:rgba(15,23,42,.64)}.health{width:100%;border-collapse:collapse;font-size:12px;min-width:760px}.health th{position:sticky;top:0;background:#111827;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;font-size:10px}.health th,.health td{border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}.health tr:last-child td{border-bottom:0}.health tbody tr:hover{background:rgba(51,65,85,.2)}
+.cmd{position:relative;background:#0a0807;border:1px solid rgba(219,193,164,.18);border-radius:12px;padding:12px 78px 12px 12px;white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer;min-height:48px;font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;color:var(--text);transition:.16s}.cmd:hover,.cmd:focus{outline:none;border-color:rgba(240,169,46,.44);background:#100c0a}.copy{position:absolute;right:7px;top:7px;border:1px solid var(--line);background:#2a221d;color:var(--muted);border-radius:8px;padding:6px 9px;cursor:pointer;font-size:11px;transition:.16s}.copy:hover{background:#3a2f27;color:#fff}.copy.done{color:var(--green);border-color:rgba(111,207,139,.4)}
+.card-link{display:inline-flex;align-items:center;gap:6px;margin-top:3px;font-weight:600;font-size:12px}.notice{border:1px solid rgba(251,191,36,.2);background:linear-gradient(90deg,rgba(120,53,15,.22),rgba(15,23,42,.64));padding:13px 15px;border-radius:14px;margin-bottom:12px;color:#dbe4f0}.notice.ok{border-color:rgba(52,211,153,.2);background:linear-gradient(90deg,rgba(6,78,59,.24),rgba(15,23,42,.64))}.notice strong{color:var(--text)}
+.health-wrap{border:1px solid var(--line);border-radius:16px;overflow:auto;background:rgba(15,23,42,.64)}.health{width:100%;border-collapse:collapse;font-size:12px;min-width:760px}.health th{position:sticky;top:0;background:#111827;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:10px}.health th,.health td{border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}.health tr:last-child td{border-bottom:0}.health tbody tr:hover{background:rgba(51,65,85,.2)}
 .lifecycle{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}.life{border:1px solid var(--line);border-radius:13px;padding:11px 12px;background:rgba(15,23,42,.64)}.life b{display:block;font-size:12px}.life span{display:block;color:var(--muted);font-size:11px;margin-top:2px}
 .empty{display:none;text-align:center;border:1px dashed var(--line);border-radius:16px;padding:36px 16px;color:var(--muted);margin-top:12px}.empty.show{display:block}
-footer{margin-top:28px;border-top:1px solid var(--line);padding:18px 3px;color:#64748b;font-size:11px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer{margin-top:28px;border-top:1px solid var(--line);padding:18px 3px;color:var(--muted-dim);font-size:11px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .toast{position:fixed;right:20px;bottom:20px;border:1px solid rgba(52,211,153,.3);background:rgba(6,20,18,.94);color:#d1fae5;border-radius:12px;padding:11px 14px;box-shadow:var(--shadow);transform:translateY(30px);opacity:0;pointer-events:none;transition:.2s;z-index:10}.toast.show{transform:none;opacity:1}
 @media(max-width:1050px){.hero-grid{grid-template-columns:1fr}.dashboard{grid-template-columns:repeat(4,1fr)}.dashboard .meta{grid-column:1/-1}.card{grid-column:span 6}}
 /* ---- Local-model hardware advisor ---- */
@@ -80,16 +85,16 @@ footer{margin-top:28px;border-top:1px solid var(--line);padding:18px 3px;color:#
 .ram-readout{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
 .ram-readout strong{font-size:38px;line-height:1;font-variant-numeric:tabular-nums}
 .ram-readout span{font-size:14px;color:var(--muted)}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--purple));outline:none;margin:10px 0 4px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--blue);cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.5)}
-input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--blue);cursor:pointer}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;background:linear-gradient(90deg,var(--amber),var(--copper));outline:none;margin:10px 0 4px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--amber);cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--amber);cursor:pointer}
 .ram-ticks{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
 .seg{display:flex;gap:6px;margin-top:16px}
 .seg button{flex:1;padding:7px 4px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;transition:.16s}
 .seg button:hover{border-color:var(--line-strong);color:var(--text)}
-.seg button.on{background:rgba(96,165,250,.16);border-color:rgba(96,165,250,.5);color:var(--blue)}
+.seg button.on{background:rgba(240,169,46,.16);border-color:rgba(240,169,46,.52);color:var(--amber)}
 .verdict{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;position:relative;overflow:hidden}
-.verdict:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--vc,var(--blue))}
+.verdict:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--vc,var(--amber))}
 .verdict h3{margin:0 0 6px;font-size:22px}
 .verdict .vtag{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:color-mix(in srgb,var(--vc) 18%,transparent);color:var(--vc);border:1px solid color-mix(in srgb,var(--vc) 40%,transparent);margin-bottom:10px}
 .verdict p{margin:0 0 14px;color:var(--muted)}
@@ -109,7 +114,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .fit .need b{color:var(--green)}
 .fit.no .need b{color:var(--red)}
 .formula{background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 16px;margin-top:16px;font-size:12.5px;color:var(--muted)}
-.formula code{display:block;margin:8px 0;padding:10px 12px;background:rgba(0,0,0,.32);border-radius:8px;color:var(--cyan);font-size:12px;overflow-x:auto;white-space:pre}
+.formula code{display:block;margin:8px 0;padding:10px 12px;background:rgba(0,0,0,.32);border-radius:8px;color:var(--copper);font-size:12px;overflow-x:auto;white-space:pre}
 /* ---- System map ---- */
 .mapwrap{display:grid;grid-template-columns:1fr minmax(260px,330px);gap:18px;align-items:start}
 .mapcanvas{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px;overflow-x:auto}
@@ -118,7 +123,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .mapnode rect{transition:.18s}
 .mapnode:hover rect,.mapnode.sel rect{stroke-width:2}
 .mapnode:focus{outline:none}
-.mapnode:focus rect{stroke:var(--cyan);stroke-width:2}
+.mapnode:focus rect{stroke:var(--copper);stroke-width:2}
 .mapdetail{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;position:sticky;top:18px}
 .mapdetail h3{margin:0 0 4px;font-size:18px}
 .mapdetail .kind{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:block}
@@ -133,6 +138,36 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .stalebar[hidden]{display:none}
 .stalebar span{color:var(--text)}
 .stalebar .btn{white-space:nowrap;padding:8px 12px}
+/* ---------- system map: primary surface ---------- */
+.mapcanvas{position:relative;background:
+  radial-gradient(1200px 400px at 20% -10%,rgba(240,169,46,.09),transparent 60%),
+  radial-gradient(900px 380px at 90% 110%,rgba(224,122,85,.08),transparent 60%),var(--panel)}
+.mapnode rect{transition:stroke-opacity .25s var(--ease),filter .25s var(--ease)}
+.mapnode:hover rect{stroke-opacity:1;filter:drop-shadow(0 0 10px currentColor)}
+.mapnode.sel rect{stroke-opacity:1;stroke-width:2.2;filter:drop-shadow(0 0 14px currentColor)}
+.mapnode .mtitle{transition:fill .2s var(--ease)}
+/* Nodes settle in layer by layer, so the structure reads top-down on first view. */
+@keyframes nodeIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.mapcanvas svg .mapnode{animation:nodeIn .5s var(--ease) both}
+/* A signal travelling down the buses: the layers are connected, not just stacked. */
+@keyframes dash{to{stroke-dashoffset:-28}}
+.mapcanvas svg .mbus{stroke-dasharray:3 11;animation:dash 2.6s linear infinite}
+.detail-cmd{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.detail-cmd small{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-dim);margin-bottom:7px}
+.detail-cmd .cmd{font-size:11.5px;padding:11px 70px 11px 11px}
+@keyframes flashIn{from{opacity:.35;transform:translateY(6px)}to{opacity:1;transform:none}}
+.mapdetail.flash{animation:flashIn .32s var(--ease)}
+.maphint{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted-dim);margin:0 2px 10px}
+.maphint b{color:var(--amber);font-weight:600}
+@media(prefers-reduced-motion:reduce){
+  .mapcanvas svg .mapnode,.mapdetail.flash{animation:none}
+  .mapcanvas svg .mbus{animation:none;stroke-dasharray:none}
+}
+.mapcanvas svg .mapnode:nth-of-type(n+1):nth-of-type(-n+4){animation-delay:0.00s}
+.mapcanvas svg .mapnode:nth-of-type(n+5):nth-of-type(-n+8){animation-delay:0.07s}
+.mapcanvas svg .mapnode:nth-of-type(n+9):nth-of-type(-n+12){animation-delay:0.14s}
+.mapcanvas svg .mapnode:nth-of-type(n+13):nth-of-type(-n+16){animation-delay:0.21s}
+.mapcanvas svg .mapnode:nth-of-type(n+17):nth-of-type(-n+20){animation-delay:0.28s}
 /* ---------- readability + motion pass ---------- */
 /* Deliberately NO transition on body background/color. These resolve through custom
    properties redefined on <html>, and Chromium wedges such a transition at its start
@@ -140,12 +175,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
    light-mode text. The theme swap is instant instead, which also avoids a half-themed
    frame. Transitions on transform/border/opacity elsewhere are unaffected. */
 html[data-theme="light"] body:before,html[data-theme="light"] body:after{opacity:.11}
-html[data-theme="light"] .bg-grid{background-image:linear-gradient(rgba(15,23,42,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.05) 1px,transparent 1px)}
-html[data-theme="light"] .logo{box-shadow:0 10px 26px rgba(37,99,235,.28)}
-html[data-theme="light"] .cmd{background:#0f172a;color:#e6edff}
+html[data-theme="light"] .bg-grid{background-image:linear-gradient(rgba(60,42,28,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(60,42,28,.06) 1px,transparent 1px)}
+html[data-theme="light"] .logo{box-shadow:0 10px 26px rgba(168,100,18,.28)}
+html[data-theme="light"] .cmd{background:#1b1614;color:#f2e7d8}
 html[data-theme="light"] .hero{background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(241,245,251,.86))}
 html[data-theme="light"] .hero p{color:var(--muted)}
-html[data-theme="light"] .grad{background:linear-gradient(90deg,#0d1526,#1d5fd0 45%,#5b3fc4 75%,#0b7f95)}
+html[data-theme="light"] .grad{background:linear-gradient(90deg,#1c1512,#a86412 45%,#b04a28 75%,#4f6b2a)}
 
 /* Body copy sizes: the old 12-12.5px muted text was the core "hard to read" problem. */
 .card p,.card .muted{font-size:var(--fs-card);line-height:1.62;color:var(--muted)}
@@ -179,11 +214,11 @@ html:not([data-theme="light"]) .theme-toggle .i-sun{display:none}
 
 /* Animated tab indicator */
 .tabs{position:relative}
-.tab-ink{position:absolute;bottom:4px;height:3px;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--purple));transition:left .38s var(--ease),width .38s var(--ease);pointer-events:none}
+.tab-ink{position:absolute;bottom:4px;height:3px;border-radius:99px;background:linear-gradient(90deg,var(--amber),var(--copper));transition:left .38s var(--ease),width .38s var(--ease);pointer-events:none}
 
 /* Vendor grouping in the model list */
 .vendor-head{display:flex;align-items:center;gap:10px;margin:20px 2px 10px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-dim)}
-.vendor-head:before{content:"";width:9px;height:9px;border-radius:3px;background:var(--vh,var(--blue))}
+.vendor-head:before{content:"";width:9px;height:9px;border-radius:3px;background:var(--vh,var(--amber))}
 .vendor-head span{flex:1;height:1px;background:var(--line)}
 .vendor-head b{color:var(--text);font-size:11px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
 
@@ -205,7 +240,7 @@ html:not([data-theme="light"]) .theme-toggle .i-sun{display:none}
 .lane>p{margin:0 0 14px;color:var(--muted);font-size:var(--fs-card);line-height:1.6;max-width:78ch}
 .steps{display:grid;gap:9px}
 .step{display:grid;grid-template-columns:26px 1fr;gap:12px;align-items:start}
-.step i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--panel2);border:1px solid var(--line);font-style:normal;font-size:11px;font-weight:700;color:var(--blue)}
+.step i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--panel2);border:1px solid var(--line);font-style:normal;font-size:11px;font-weight:700;color:var(--amber)}
 .step .sbody{min-width:0}
 .step .stitle{font-size:13px;font-weight:600;margin-bottom:5px}
 
@@ -266,30 +301,30 @@ html:not([data-theme="light"]) .theme-toggle .i-sun{display:none}
     <span class="shortcut">/</span>
   </div>
   <nav class="tabs" aria-label="Command-center sections">
-    <button class="tab active" data-view="setup">Setup</button>
+    <button class="tab" data-view="setup">Setup</button>
     <button class="tab" data-view="maintenance">Maintenance</button>
     <button class="tab" data-view="tools" data-private>Tools</button>
     <button class="tab" data-view="use">Use It</button>
     <button class="tab" data-view="models">Local Models</button>
     <button class="tab" data-view="adk">ADKs</button>
-    <button class="tab" data-view="map">System Map</button>
+    <button class="tab active" data-view="map">System Map</button>
     <button class="tab" data-view="design">Design</button>
     <button class="tab" data-view="health">Health & Security</button>
     <button class="tab" data-view="access">Access & Deploy</button>
   </nav>
 </div>
 
-<section id="setup" class="view active">
+<section id="setup" class="view">
   <div class="section-head"><div><h2>Get connected</h2><p>Start with one global setup, or configure only the client you need.</p></div><div class="section-meta">Click any command to copy</div></div>
   <div class="grid">
     <article class="card wide"><div class="card-head"><div><span class="tag green">Windows · Recommended</span><h3>Global Claude + Codex + Copilot setup</h3></div><div class="iconbox">⌘</div></div><p class="muted">Updates or clones the private Master Repo, then installs shared instruction pointers.</p><div class="cmd" data-command>$p="$HOME\Master-Repo-Use"; if (Test-Path "$p\.git") { git -C $p pull --ff-only } else { gh repo clone Charlesganu2004/Master-Repo-Use $p }; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p<button class="copy">Copy</button></div></article>
     <article class="card wide"><div class="card-head"><div><span class="tag green">Bash / WSL / macOS / Linux</span><h3>Global Claude + Codex + Copilot setup</h3></div><div class="iconbox">$_</div></div><p class="muted">Same global instruction layer for Bash-compatible environments.</p><div class="cmd" data-command>p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull --ff-only; else gh repo clone Charlesganu2004/Master-Repo-Use "$p"; fi; bash "$p/scripts/setup-global-ai.sh" "$p"<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag purple">Copilot</span><h3>Copilot-only · PowerShell</h3><p class="muted">Install only the GitHub Copilot instruction pointer.</p><div class="cmd" data-command>$p="$HOME\Master-Repo-Use"; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -CopilotOnly<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag purple">Copilot</span><h3>Copilot-only · Bash</h3><p class="muted">Lightweight Copilot-only setup for Unix-style shells.</p><div class="cmd" data-command>bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --copilot-only<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag blue">Private local mode</span><h3>Launch locally · PowerShell</h3><p class="muted">Local mode can show detailed repo-by-repo health.</p><div class="cmd" data-command>Set-Location "$HOME\Master-Repo-Use"; python -m http.server 8080<button class="copy">Copy</button></div><a class="card-link" href="http://localhost:8080/">Open localhost ↗</a></article>
-    <article class="card"><span class="tag blue">Private local mode</span><h3>Launch locally · Bash</h3><p class="muted">Serve the private command center from your clone.</p><div class="cmd" data-command>cd "$HOME/Master-Repo-Use" && python3 -m http.server 8080<button class="copy">Copy</button></div><a class="card-link" href="http://localhost:8080/">Open localhost ↗</a></article>
+    <article class="card"><span class="tag sage">Copilot</span><h3>Copilot-only · PowerShell</h3><p class="muted">Install only the GitHub Copilot instruction pointer.</p><div class="cmd" data-command>$p="$HOME\Master-Repo-Use"; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -CopilotOnly<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag sage">Copilot</span><h3>Copilot-only · Bash</h3><p class="muted">Lightweight Copilot-only setup for Unix-style shells.</p><div class="cmd" data-command>bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --copilot-only<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag amber">Private local mode</span><h3>Launch locally · PowerShell</h3><p class="muted">Local mode can show detailed repo-by-repo health.</p><div class="cmd" data-command>Set-Location "$HOME\Master-Repo-Use"; python -m http.server 8080<button class="copy">Copy</button></div><a class="card-link" href="http://localhost:8080/">Open localhost ↗</a></article>
+    <article class="card"><span class="tag amber">Private local mode</span><h3>Launch locally · Bash</h3><p class="muted">Serve the private command center from your clone.</p><div class="cmd" data-command>cd "$HOME/Master-Repo-Use" && python3 -m http.server 8080<button class="copy">Copy</button></div><a class="card-link" href="http://localhost:8080/">Open localhost ↗</a></article>
     <article class="card"><span class="tag yellow">Separate opt-in</span><h3>Token / work budget</h3><p class="muted">Paid caps and compatible free/local fallback stay separate from the large setup commands.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/TOKEN-BUDGET.md">Open token budget guide ↗</a></article>
-    <article class="card"><span class="tag blue">Hosted clients</span><h3>GPT / Claude / GitHub online</h3><p class="muted">Connect or select this private repository so hosted clients can use committed instructions.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/GLOBAL-AI-SETUP.md">Open online setup ↗</a></article>
+    <article class="card"><span class="tag amber">Hosted clients</span><h3>GPT / Claude / GitHub online</h3><p class="muted">Connect or select this private repository so hosted clients can use committed instructions.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/GLOBAL-AI-SETUP.md">Open online setup ↗</a></article>
   </div>
 </section>
 
@@ -298,24 +333,24 @@ html:not([data-theme="light"]) .theme-toggle .i-sun{display:none}
   <div class="notice ok"><strong>Default path:</strong> GitHub performs the lightweight audit. An issue is the audit trail and approval gate. Your approval launches deeper deterministic maintenance and creates a PR; it never merges automatically.</div>
   <div class="grid">
     <article class="card wide"><span class="tag green">GitHub Pro · Lightweight</span><h3>Run catalog audit now</h3><p class="muted">The same metadata audit runs weekly and when catalog/security rules change.</p><div class="cmd" data-command>gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag blue">Audit trail</span><h3>Open catalog audit issues</h3><p class="muted">One open audit is refreshed rather than duplicated.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/issues?q=is%3Aissue+%22%5BCatalog+Audit%5D%22">Open audit trail ↗</a></article>
+    <article class="card"><span class="tag amber">Audit trail</span><h3>Open catalog audit issues</h3><p class="muted">One open audit is refreshed rather than duplicated.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/issues?q=is%3Aissue+%22%5BCatalog+Audit%5D%22">Open audit trail ↗</a></article>
     <article class="card"><span class="tag yellow">Owner gate</span><h3>Approve deterministic maintenance</h3><p class="muted">Comment this exact phrase on the active Catalog Audit issue.</p><div class="cmd" data-command>APPROVE CATALOG MAINTENANCE<button class="copy">Copy</button></div></article>
     <article class="card wide"><span class="tag yellow">Owner gate · CLI</span><h3>Approve current audit · Bash</h3><p class="muted">Find the current audit issue and post the deterministic maintenance approval.</p><div class="cmd" data-command>n=$(gh issue list -R Charlesganu2004/Master-Repo-Use --state open --search 'in:title [Catalog Audit]' --json number,title --jq '[.[] | select(.title | startswith("[Catalog Audit]"))][0].number'); gh issue comment "$n" -R Charlesganu2004/Master-Repo-Use --body 'APPROVE CATALOG MAINTENANCE'<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag purple">Optional AI</span><h3>Request AI modernization</h3><p class="muted">Only for judgment-heavy work such as modernizing useful abandoned code.</p><div class="cmd" data-command>python "$HOME/Master-Repo-Use/scripts/maintenance_request.py" --auto<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag purple">AI owner gate</span><h3>Approve optional AI maintenance</h3><p class="muted">AI stays session-based and must prepare a branch/PR.</p><div class="cmd" data-command>APPROVE AI MAINTENANCE<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag sage">Optional AI</span><h3>Request AI modernization</h3><p class="muted">Only for judgment-heavy work such as modernizing useful abandoned code.</p><div class="cmd" data-command>python "$HOME/Master-Repo-Use/scripts/maintenance_request.py" --auto<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag sage">AI owner gate</span><h3>Approve optional AI maintenance</h3><p class="muted">AI stays session-based and must prepare a branch/PR.</p><div class="cmd" data-command>APPROVE AI MAINTENANCE<button class="copy">Copy</button></div></article>
   </div>
 </section>
 
 <section id="tools" class="view" data-private>
   <div class="section-head"><div><h2>Private tool shelf</h2><p>Curated local tools and agent extensions. This section is removed from public Pages.</p></div><div class="section-meta">Private/local only</div></div>
   <div class="grid">
-    <article class="card"><span class="tag purple">Memory</span><h3>Claude-Mem</h3><div class="cmd" data-command>npx claude-mem install<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/thedotmack/claude-mem">Upstream ↗</a></article>
-    <article class="card"><span class="tag purple">Context</span><h3>Headroom</h3><div class="cmd" data-command>uv tool install --python 3.13 "headroom-ai[all]" && headroom doctor<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/headroomlabs-ai/headroom">Upstream ↗</a></article>
-    <article class="card"><span class="tag purple">Agent</span><h3>Omni</h3><div class="cmd" data-command>git clone https://github.com/getomnico/omni.git<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/getomnico/omni">Upstream ↗</a></article>
-    <article class="card"><span class="tag purple">Observer</span><h3>Task Observer / Agent Monitor</h3><div class="cmd" data-command>git clone https://github.com/hoangsonww/Claude-Code-Agent-Monitor.git<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/hoangsonww/Claude-Code-Agent-Monitor">Upstream ↗</a></article>
+    <article class="card"><span class="tag sage">Memory</span><h3>Claude-Mem</h3><div class="cmd" data-command>npx claude-mem install<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/thedotmack/claude-mem">Upstream ↗</a></article>
+    <article class="card"><span class="tag sage">Context</span><h3>Headroom</h3><div class="cmd" data-command>uv tool install --python 3.13 "headroom-ai[all]" && headroom doctor<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/headroomlabs-ai/headroom">Upstream ↗</a></article>
+    <article class="card"><span class="tag sage">Agent</span><h3>Omni</h3><div class="cmd" data-command>git clone https://github.com/getomnico/omni.git<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/getomnico/omni">Upstream ↗</a></article>
+    <article class="card"><span class="tag sage">Observer</span><h3>Task Observer / Agent Monitor</h3><div class="cmd" data-command>git clone https://github.com/hoangsonww/Claude-Code-Agent-Monitor.git<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/hoangsonww/Claude-Code-Agent-Monitor">Upstream ↗</a></article>
     <article class="card"><span class="tag yellow">Authorized media only</span><h3>Watermark remover</h3><div class="cmd" data-command>master-watermark INPUT_FILE OUTPUT_FOLDER<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/D-Ogi/WatermarkRemover-AI">Upstream ↗</a></article>
-    <article class="card"><span class="tag blue">Catalog</span><h3>GitHub Copilot repo lane</h3><p class="muted">Open the curated Copilot-specific private list.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/repo-lists/github-copilot.txt">Open private list ↗</a></article>
-    <article class="card"><span class="tag blue">Catalog</span><h3>All AI client tools</h3><p class="muted">Browse every client/tool integration in the private catalog.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/repo-lists/ai-client-tools.txt">Open private list ↗</a></article>
+    <article class="card"><span class="tag amber">Catalog</span><h3>GitHub Copilot repo lane</h3><p class="muted">Open the curated Copilot-specific private list.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/repo-lists/github-copilot.txt">Open private list ↗</a></article>
+    <article class="card"><span class="tag amber">Catalog</span><h3>All AI client tools</h3><p class="muted">Browse every client/tool integration in the private catalog.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/repo-lists/ai-client-tools.txt">Open private list ↗</a></article>
   </div>
 </section>
 
@@ -432,10 +467,10 @@ fits when   required_gb ≤ usable_gb</code>
 
   <div class="grid" style="margin-top:18px">
     <article class="card"><span class="tag green">Step 1</span><h3>Install the runtime</h3><p class="muted">One binary. Everything else on this page assumes it.</p><div class="cmd" data-command>winget install Ollama.Ollama<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag blue">Step 2</span><h3>Pull a model that fits</h3><p class="muted">Substitute the tag the advisor recommends above.</p><div class="cmd" data-command>ollama pull gemma3:4b<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag blue">Step 3</span><h3>Confirm the real size</h3><p class="muted">Model libraries move faster than this page. Verify before relying on a tag.</p><div class="cmd" data-command>ollama show gemma3:4b<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag amber">Step 2</span><h3>Pull a model that fits</h3><p class="muted">Substitute the tag the advisor recommends above.</p><div class="cmd" data-command>ollama pull gemma3:4b<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag amber">Step 3</span><h3>Confirm the real size</h3><p class="muted">Model libraries move faster than this page. Verify before relying on a tag.</p><div class="cmd" data-command>ollama show gemma3:4b<button class="copy">Copy</button></div></article>
     <article class="card"><span class="tag yellow">Licensing</span><h3>Gemma is not OSI-licensed</h3><p class="muted">Gemma ships under the Gemma Terms of Use with real use restrictions. Phi and BitNet are MIT. Read the terms before shipping a product on Gemma.</p></article>
-    <article class="card wide"><span class="tag purple">Full guide</span><h3>Local model &amp; hardware documentation</h3><p class="muted">Tier table, the 4 GB answer nobody wants, per-vendor notes, and the reasoning behind every figure above.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/LOCAL-MODEL-HARDWARE.md">Open hardware guide ↗</a></article>
+    <article class="card wide"><span class="tag sage">Full guide</span><h3>Local model &amp; hardware documentation</h3><p class="muted">Tier table, the 4 GB answer nobody wants, per-vendor notes, and the reasoning behind every figure above.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/LOCAL-MODEL-HARDWARE.md">Open hardware guide ↗</a></article>
   </div>
 </section>
 
@@ -443,11 +478,11 @@ fits when   required_gb ≤ usable_gb</code>
   <div class="section-head"><div><h2>Agent Development Kits</h2><p>First-party, vendor-maintained agent frameworks &mdash; the supported successors to the 2024-era community stacks.</p></div><div class="section-meta">Pick one, then keep tools in MCP</div></div>
   <div class="grid">
     <article class="card wide"><div class="card-head"><div><span class="tag green">Start here &middot; Python</span><h3>Google ADK for Python</h3></div><div class="iconbox">&#9670;</div></div><p class="muted">Largest ADK by adoption, with the strongest docs and sample set. Deploys to Vertex Agent Engine.</p><div class="cmd" data-command>pip install google-adk<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/google/adk-python">Upstream &#8599;</a></article>
-    <article class="card"><span class="tag blue">Debug UI</span><h3>ADK dev web UI</h3><p class="muted">Browser UI for stepping through an agent&rsquo;s tool calls. Pairs with the Python or Java runtime.</p><div class="cmd" data-command>adk web<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/google/adk-web">Upstream &#8599;</a></article>
-    <article class="card"><span class="tag blue">Read first</span><h3>ADK samples</h3><p class="muted">Working examples. Read these before writing anything of your own.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/google/adk-samples">Upstream &#8599;</a></article>
-    <article class="card"><span class="tag purple">.NET / Python</span><h3>Microsoft Agent Framework</h3><p class="muted">The announced merger of AutoGen and Semantic Kernel. Ships roughly weekly; deploys to Azure AI Foundry.</p><div class="cmd" data-command>pip install agent-framework<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/microsoft/agent-framework">Upstream &#8599;</a></article>
-    <article class="card"><span class="tag purple">JVM</span><h3>Google ADK for Java</h3><p class="muted">Same agent model, JVM-native, for enterprise Java stacks.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/google/adk-java">Upstream &#8599;</a></article>
-    <article class="card"><span class="tag blue">OpenAI models</span><h3>OpenAI Agents SDK</h3><p class="muted">Thin and unopinionated, oriented around handoffs between agents.</p><div class="cmd" data-command>pip install openai-agents<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/openai/openai-agents-python">Upstream &#8599;</a></article>
+    <article class="card"><span class="tag amber">Debug UI</span><h3>ADK dev web UI</h3><p class="muted">Browser UI for stepping through an agent&rsquo;s tool calls. Pairs with the Python or Java runtime.</p><div class="cmd" data-command>adk web<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/google/adk-web">Upstream &#8599;</a></article>
+    <article class="card"><span class="tag amber">Read first</span><h3>ADK samples</h3><p class="muted">Working examples. Read these before writing anything of your own.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/google/adk-samples">Upstream &#8599;</a></article>
+    <article class="card"><span class="tag sage">.NET / Python</span><h3>Microsoft Agent Framework</h3><p class="muted">The announced merger of AutoGen and Semantic Kernel. Ships roughly weekly; deploys to Azure AI Foundry.</p><div class="cmd" data-command>pip install agent-framework<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/microsoft/agent-framework">Upstream &#8599;</a></article>
+    <article class="card"><span class="tag sage">JVM</span><h3>Google ADK for Java</h3><p class="muted">Same agent model, JVM-native, for enterprise Java stacks.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/google/adk-java">Upstream &#8599;</a></article>
+    <article class="card"><span class="tag amber">OpenAI models</span><h3>OpenAI Agents SDK</h3><p class="muted">Thin and unopinionated, oriented around handoffs between agents.</p><div class="cmd" data-command>pip install openai-agents<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/openai/openai-agents-python">Upstream &#8599;</a></article>
     <article class="card wide"><span class="tag yellow">Supersession &middot; verified 2026-08-25</span><h3>AutoGen is superseded</h3><p class="muted">AutoGen&rsquo;s last release was <code>python-v0.7.5</code> on 2025-09-30. Microsoft Agent Framework released <code>dotnet-1.19.0</code> on 2026-08-22 and ships roughly weekly. Existing AutoGen code is not broken and needs no emergency migration &mdash; but new work should start on Agent Framework.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/ADK-GUIDE.md">Read the full comparison &#8599;</a></article>
     <article class="card wide"><span class="tag green">Portability hedge</span><h3>Keep your tools in MCP, not in the framework</h3><p class="muted">All three ADKs speak MCP. Register a tool once as an MCP server and every kit above can call it &mdash; the cheapest insurance against picking the wrong framework.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/MCP-SERVERS.md">MCP servers &#8599;</a></article>
     <article class="card"><span class="tag yellow">Cost</span><h3>Run samples against Ollama</h3><p class="muted">ADK samples default to hosted models. Point them at a local endpoint while developing.</p><div class="cmd" data-command>export OPENAI_BASE_URL=http://localhost:11434/v1<button class="copy">Copy</button></div></article>
@@ -460,28 +495,29 @@ fits when   required_gb ≤ usable_gb</code>
   <div class="grid">
     <article class="card wide"><div class="card-head"><div><span class="tag green">Library &middot; load-bearing</span><h3>three.js</h3></div><div class="iconbox">&#9671;</div></div><p class="muted">The WebGL/WebGPU standard. 114k stars, MIT, shipping constantly. Reach for it when you genuinely need 3D &mdash; not for decoration.</p><div class="cmd" data-command>npm install three<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/mrdoob/three.js">Upstream &#8599;</a></article>
     <article class="card wide"><div class="card-head"><div><span class="tag green">Library &middot; load-bearing</span><h3>GSAP</h3></div><div class="iconbox">&#8776;</div></div><p class="muted">The animation engine most motion work is built on. Note the licence: GSAP ships under GreenSock&rsquo;s own terms, <em>not</em> an OSI licence. Read them before commercial use.</p><div class="cmd" data-command>npm install gsap<button class="copy">Copy</button></div><a class="card-link" target="_blank" rel="noopener" href="https://github.com/greensock/GSAP">Upstream &#8599;</a></article>
-    <article class="card" data-private><span class="tag purple">Skill pack &middot; advisory</span><h3>Motion design skill</h3><p class="muted">LottieFiles&rsquo; motion-design instruction pack. The largest of the design skill packs by adoption.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/LottieFiles/motion-design-skill">Upstream &#8599;</a></article>
-    <article class="card" data-private><span class="tag purple">Skill pack &middot; advisory</span><h3>Apple design skill</h3><p class="muted">Human Interface Guidelines distilled into agent instructions.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/naplesblue/apple-design-skill">Upstream &#8599;</a></article>
-    <article class="card" data-private><span class="tag purple">Skill pack &middot; advisory</span><h3>Genjutsu</h3><p class="muted">Visual-effect and interaction pack for agent-driven UI work.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/AThevon/genjutsu">Upstream &#8599;</a></article>
+    <article class="card" data-private><span class="tag sage">Skill pack &middot; advisory</span><h3>Motion design skill</h3><p class="muted">LottieFiles&rsquo; motion-design instruction pack. The largest of the design skill packs by adoption.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/LottieFiles/motion-design-skill">Upstream &#8599;</a></article>
+    <article class="card" data-private><span class="tag sage">Skill pack &middot; advisory</span><h3>Apple design skill</h3><p class="muted">Human Interface Guidelines distilled into agent instructions.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/naplesblue/apple-design-skill">Upstream &#8599;</a></article>
+    <article class="card" data-private><span class="tag sage">Skill pack &middot; advisory</span><h3>Genjutsu</h3><p class="muted">Visual-effect and interaction pack for agent-driven UI work.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/AThevon/genjutsu">Upstream &#8599;</a></article>
     <article class="card wide"><span class="tag yellow">Read this before adopting a skill pack</span><h3>Skill packs are prompts, not code</h3><p class="muted">The three entries above are instruction files, not dependencies. They are small, young and community-run &mdash; several near-identical forks exist for each. Read one end-to-end before pointing an agent at it; a skill pack can quietly change how every UI decision gets made. Nothing here is vendored into this repository: the catalog stores URLs only.</p></article>
   </div>
   <div class="section-head"><div><h3 style="font-size:16px;margin:0">Design rules this page follows</h3><p>Constraints, not preferences.</p></div></div>
   <div class="grid">
-    <article class="card"><span class="tag blue">Constraint</span><h3>Single file, zero dependencies</h3><p class="muted">No bundler, no CDN, no runtime fetch beyond same-origin JSON. The motion here is CSS and inline SVG. That is why three.js and GSAP are catalogued as references rather than loaded.</p></article>
-    <article class="card"><span class="tag blue">Constraint</span><h3>Two audiences, one document</h3><p class="muted">Elements flagged private in the markup are stripped at build time for the public artifact. The private and public views can never drift apart because they are the same file.</p></article>
-    <article class="card"><span class="tag blue">Constraint</span><h3>Motion respects the OS</h3><p class="muted">Every animation is disabled under <code>prefers-reduced-motion</code>. Motion is feedback here, never decoration.</p></article>
+    <article class="card"><span class="tag amber">Constraint</span><h3>Single file, zero dependencies</h3><p class="muted">No bundler, no CDN, no runtime fetch beyond same-origin JSON. The motion here is CSS and inline SVG. That is why three.js and GSAP are catalogued as references rather than loaded.</p></article>
+    <article class="card"><span class="tag amber">Constraint</span><h3>Two audiences, one document</h3><p class="muted">Elements flagged private in the markup are stripped at build time for the public artifact. The private and public views can never drift apart because they are the same file.</p></article>
+    <article class="card"><span class="tag amber">Constraint</span><h3>Motion respects the OS</h3><p class="muted">Every animation is disabled under <code>prefers-reduced-motion</code>. Motion is feedback here, never decoration.</p></article>
   </div>
 </section>
 
-<section id="map" class="view">
+<section id="map" class="view active">
   <div class="section-head"><div><h2>System map</h2><p>Every layer, from the client you type in to the model that answers. Click any node.</p></div><div class="section-meta">Click or tab to a node</div></div>
+  <p class="maphint"><b>&#9654;</b> Click any node to see what it does and the one command that operates it.</p>
   <div class="mapwrap">
     <div class="mapcanvas">
 <svg viewBox="0 0 900 596" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Master Repo system map">
 <style>
-.mlabel{font:600 10px Inter,system-ui,sans-serif;fill:#64748b;letter-spacing:.14em;text-transform:uppercase}
+.mlabel{font:600 10px Inter,system-ui,sans-serif;fill:var(--muted-dim);letter-spacing:.14em;text-transform:uppercase}
 .mtitle{font:700 13px Inter,system-ui,sans-serif}
-.msub{font:400 10.5px Inter,system-ui,sans-serif;fill:#94a3b8}
+.msub{font:400 10.5px Inter,system-ui,sans-serif;fill:var(--muted)}
 .mbus{stroke:rgba(148,163,184,.22);stroke-width:1}
 </style>
   <line x1="125" y1="120" x2="785" y2="120" class="mbus"/>
@@ -521,30 +557,30 @@ fits when   required_gb ≤ usable_gb</code>
   <line x1="785" y1="436" x2="785" y2="468" class="mbus"/>
   <line x1="785" y1="468" x2="785" y2="500" class="mbus"/>
   <text x="30" y="24" class="mlabel">Clients</text>
-  <g class="mapnode" data-node="claude" tabindex="0" role="button" aria-label="Claude Code"><rect x="30" y="36" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#60a5fa" stroke-opacity=".55"/><text x="44" y="58" class="mtitle" fill="#60a5fa">Claude Code</text><text x="44" y="75" class="msub">CLI &middot; desktop &middot; IDE</text></g>
-  <g class="mapnode" data-node="codex" tabindex="0" role="button" aria-label="Codex"><rect x="250" y="36" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#60a5fa" stroke-opacity=".55"/><text x="264" y="58" class="mtitle" fill="#60a5fa">Codex</text><text x="264" y="75" class="msub">OpenAI coding agent</text></g>
-  <g class="mapnode" data-node="copilot" tabindex="0" role="button" aria-label="GitHub Copilot"><rect x="470" y="36" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#60a5fa" stroke-opacity=".55"/><text x="484" y="58" class="mtitle" fill="#60a5fa">GitHub Copilot</text><text x="484" y="75" class="msub">IDE &middot; PR review</text></g>
-  <g class="mapnode" data-node="gemini" tabindex="0" role="button" aria-label="Gemini"><rect x="690" y="36" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#60a5fa" stroke-opacity=".55"/><text x="704" y="58" class="mtitle" fill="#60a5fa">Gemini</text><text x="704" y="75" class="msub">CLI &middot; Code Assist</text></g>
+  <g class="mapnode" data-node="claude" tabindex="0" role="button" aria-label="Claude Code"><rect x="30" y="36" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#f0a92e" stroke-opacity=".55"/><text x="44" y="58" class="mtitle" fill="#f0a92e">Claude Code</text><text x="44" y="75" class="msub">CLI &middot; desktop &middot; IDE</text></g>
+  <g class="mapnode" data-node="codex" tabindex="0" role="button" aria-label="Codex"><rect x="250" y="36" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#f0a92e" stroke-opacity=".55"/><text x="264" y="58" class="mtitle" fill="#f0a92e">Codex</text><text x="264" y="75" class="msub">OpenAI coding agent</text></g>
+  <g class="mapnode" data-node="copilot" tabindex="0" role="button" aria-label="GitHub Copilot"><rect x="470" y="36" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#f0a92e" stroke-opacity=".55"/><text x="484" y="58" class="mtitle" fill="#f0a92e">GitHub Copilot</text><text x="484" y="75" class="msub">IDE &middot; PR review</text></g>
+  <g class="mapnode" data-node="gemini" tabindex="0" role="button" aria-label="Gemini"><rect x="690" y="36" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#f0a92e" stroke-opacity=".55"/><text x="704" y="58" class="mtitle" fill="#f0a92e">Gemini</text><text x="704" y="75" class="msub">CLI &middot; Code Assist</text></g>
   <text x="30" y="140" class="mlabel">Instruction layer</text>
-  <g class="mapnode" data-node="agentsmd" tabindex="0" role="button" aria-label="AGENTS.md"><rect x="30" y="152" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#a78bfa" stroke-opacity=".55"/><text x="44" y="174" class="mtitle" fill="#a78bfa">AGENTS.md</text><text x="44" y="191" class="msub">portable contract</text></g>
-  <g class="mapnode" data-node="claudemd" tabindex="0" role="button" aria-label="CLAUDE.md"><rect x="250" y="152" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#a78bfa" stroke-opacity=".55"/><text x="264" y="174" class="mtitle" fill="#a78bfa">CLAUDE.md</text><text x="264" y="191" class="msub">Claude entrypoint</text></g>
-  <g class="mapnode" data-node="geminimd" tabindex="0" role="button" aria-label="GEMINI.md"><rect x="470" y="152" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#a78bfa" stroke-opacity=".55"/><text x="484" y="174" class="mtitle" fill="#a78bfa">GEMINI.md</text><text x="484" y="191" class="msub">Gemini entrypoint</text></g>
-  <g class="mapnode" data-node="copilotmd" tabindex="0" role="button" aria-label="copilot-instructions"><rect x="690" y="152" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#a78bfa" stroke-opacity=".55"/><text x="704" y="174" class="mtitle" fill="#a78bfa">copilot-instructions</text><text x="704" y="191" class="msub">Copilot entrypoint</text></g>
+  <g class="mapnode" data-node="agentsmd" tabindex="0" role="button" aria-label="AGENTS.md"><rect x="30" y="152" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#dd8fa8" stroke-opacity=".55"/><text x="44" y="174" class="mtitle" fill="#dd8fa8">AGENTS.md</text><text x="44" y="191" class="msub">portable contract</text></g>
+  <g class="mapnode" data-node="claudemd" tabindex="0" role="button" aria-label="CLAUDE.md"><rect x="250" y="152" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#dd8fa8" stroke-opacity=".55"/><text x="264" y="174" class="mtitle" fill="#dd8fa8">CLAUDE.md</text><text x="264" y="191" class="msub">Claude entrypoint</text></g>
+  <g class="mapnode" data-node="geminimd" tabindex="0" role="button" aria-label="GEMINI.md"><rect x="470" y="152" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#dd8fa8" stroke-opacity=".55"/><text x="484" y="174" class="mtitle" fill="#dd8fa8">GEMINI.md</text><text x="484" y="191" class="msub">Gemini entrypoint</text></g>
+  <g class="mapnode" data-node="copilotmd" tabindex="0" role="button" aria-label="copilot-instructions"><rect x="690" y="152" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#dd8fa8" stroke-opacity=".55"/><text x="704" y="174" class="mtitle" fill="#dd8fa8">copilot-instructions</text><text x="704" y="191" class="msub">Copilot entrypoint</text></g>
   <text x="30" y="256" class="mlabel">Master Repo core</text>
-  <g class="mapnode" data-node="lanes" tabindex="0" role="button" aria-label="repo-lists/"><rect x="30" y="268" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#22d3ee" stroke-opacity=".55"/><text x="44" y="290" class="mtitle" fill="#22d3ee">repo-lists/</text><text x="44" y="307" class="msub">29 curated lanes</text></g>
-  <g class="mapnode" data-node="skills" tabindex="0" role="button" aria-label="skills/"><rect x="250" y="268" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#22d3ee" stroke-opacity=".55"/><text x="264" y="290" class="mtitle" fill="#22d3ee">skills/</text><text x="264" y="307" class="msub">7 portable skills</text></g>
-  <g class="mapnode" data-node="agents" tabindex="0" role="button" aria-label="agents/"><rect x="470" y="268" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#22d3ee" stroke-opacity=".55"/><text x="484" y="290" class="mtitle" fill="#22d3ee">agents/</text><text x="484" y="307" class="msub">65 agent profiles</text></g>
-  <g class="mapnode" data-node="docs" tabindex="0" role="button" aria-label="docs/"><rect x="690" y="268" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#22d3ee" stroke-opacity=".55"/><text x="704" y="290" class="mtitle" fill="#22d3ee">docs/</text><text x="704" y="307" class="msub">setup &amp; policy</text></g>
+  <g class="mapnode" data-node="lanes" tabindex="0" role="button" aria-label="repo-lists/"><rect x="30" y="268" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#e07a55" stroke-opacity=".55"/><text x="44" y="290" class="mtitle" fill="#e07a55">repo-lists/</text><text x="44" y="307" class="msub">29 curated lanes</text></g>
+  <g class="mapnode" data-node="skills" tabindex="0" role="button" aria-label="skills/"><rect x="250" y="268" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#e07a55" stroke-opacity=".55"/><text x="264" y="290" class="mtitle" fill="#e07a55">skills/</text><text x="264" y="307" class="msub">7 portable skills</text></g>
+  <g class="mapnode" data-node="agents" tabindex="0" role="button" aria-label="agents/"><rect x="470" y="268" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#e07a55" stroke-opacity=".55"/><text x="484" y="290" class="mtitle" fill="#e07a55">agents/</text><text x="484" y="307" class="msub">65 agent profiles</text></g>
+  <g class="mapnode" data-node="docs" tabindex="0" role="button" aria-label="docs/"><rect x="690" y="268" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#e07a55" stroke-opacity=".55"/><text x="704" y="290" class="mtitle" fill="#e07a55">docs/</text><text x="704" y="307" class="msub">setup &amp; policy</text></g>
   <text x="30" y="372" class="mlabel">Automations</text>
-  <g class="mapnode" data-node="guardian" tabindex="0" role="button" aria-label="Catalog Guardian"><rect x="30" y="384" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#34d399" stroke-opacity=".55"/><text x="44" y="406" class="mtitle" fill="#34d399">Catalog Guardian</text><text x="44" y="423" class="msub">weekly &middot; deterministic</text></g>
-  <g class="mapnode" data-node="safety" tabindex="0" role="button" aria-label="Safety Validation"><rect x="250" y="384" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#34d399" stroke-opacity=".55"/><text x="264" y="406" class="mtitle" fill="#34d399">Safety Validation</text><text x="264" y="423" class="msub">tests on PR</text></g>
-  <g class="mapnode" data-node="pages" tabindex="0" role="button" aria-label="Pages deploy"><rect x="470" y="384" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#34d399" stroke-opacity=".55"/><text x="484" y="406" class="mtitle" fill="#34d399">Pages deploy</text><text x="484" y="423" class="msub">change-triggered</text></g>
-  <g class="mapnode" data-node="gate" tabindex="0" role="button" aria-label="Owner Approval"><rect x="690" y="384" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#34d399" stroke-opacity=".55"/><text x="704" y="406" class="mtitle" fill="#34d399">Owner Approval</text><text x="704" y="423" class="msub">SHA-bound gate</text></g>
+  <g class="mapnode" data-node="guardian" tabindex="0" role="button" aria-label="Catalog Guardian"><rect x="30" y="384" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#6fcf8b" stroke-opacity=".55"/><text x="44" y="406" class="mtitle" fill="#6fcf8b">Catalog Guardian</text><text x="44" y="423" class="msub">weekly &middot; deterministic</text></g>
+  <g class="mapnode" data-node="safety" tabindex="0" role="button" aria-label="Safety Validation"><rect x="250" y="384" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#6fcf8b" stroke-opacity=".55"/><text x="264" y="406" class="mtitle" fill="#6fcf8b">Safety Validation</text><text x="264" y="423" class="msub">tests on PR</text></g>
+  <g class="mapnode" data-node="pages" tabindex="0" role="button" aria-label="Pages deploy"><rect x="470" y="384" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#6fcf8b" stroke-opacity=".55"/><text x="484" y="406" class="mtitle" fill="#6fcf8b">Pages deploy</text><text x="484" y="423" class="msub">change-triggered</text></g>
+  <g class="mapnode" data-node="gate" tabindex="0" role="button" aria-label="Owner Approval"><rect x="690" y="384" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#6fcf8b" stroke-opacity=".55"/><text x="704" y="406" class="mtitle" fill="#6fcf8b">Owner Approval</text><text x="704" y="423" class="msub">SHA-bound gate</text></g>
   <text x="30" y="488" class="mlabel">Runtimes</text>
-  <g class="mapnode" data-node="ollama" tabindex="0" role="button" aria-label="Ollama"><rect x="30" y="500" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#fbbf24" stroke-opacity=".55"/><text x="44" y="522" class="mtitle" fill="#fbbf24">Ollama</text><text x="44" y="539" class="msub">local &middot; 6&ndash;32 GB</text></g>
-  <g class="mapnode" data-node="foundry" tabindex="0" role="button" aria-label="Foundry Local"><rect x="250" y="500" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#fbbf24" stroke-opacity=".55"/><text x="264" y="522" class="mtitle" fill="#fbbf24">Foundry Local</text><text x="264" y="539" class="msub">Windows &middot; NPU</text></g>
-  <g class="mapnode" data-node="gemmacpp" tabindex="0" role="button" aria-label="gemma.cpp"><rect x="470" y="500" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#fbbf24" stroke-opacity=".55"/><text x="484" y="522" class="mtitle" fill="#fbbf24">gemma.cpp</text><text x="484" y="539" class="msub">minimal C++</text></g>
-  <g class="mapnode" data-node="hosted" tabindex="0" role="button" aria-label="Hosted APIs"><rect x="690" y="500" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#fbbf24" stroke-opacity=".55"/><text x="704" y="522" class="mtitle" fill="#fbbf24">Hosted APIs</text><text x="704" y="539" class="msub">fallback at 4 GB</text></g>
+  <g class="mapnode" data-node="ollama" tabindex="0" role="button" aria-label="Ollama"><rect x="30" y="500" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#e9b53c" stroke-opacity=".55"/><text x="44" y="522" class="mtitle" fill="#e9b53c">Ollama</text><text x="44" y="539" class="msub">local &middot; 6&ndash;32 GB</text></g>
+  <g class="mapnode" data-node="foundry" tabindex="0" role="button" aria-label="Foundry Local"><rect x="250" y="500" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#e9b53c" stroke-opacity=".55"/><text x="264" y="522" class="mtitle" fill="#e9b53c">Foundry Local</text><text x="264" y="539" class="msub">Windows &middot; NPU</text></g>
+  <g class="mapnode" data-node="gemmacpp" tabindex="0" role="button" aria-label="gemma.cpp"><rect x="470" y="500" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#e9b53c" stroke-opacity=".55"/><text x="484" y="522" class="mtitle" fill="#e9b53c">gemma.cpp</text><text x="484" y="539" class="msub">minimal C++</text></g>
+  <g class="mapnode" data-node="hosted" tabindex="0" role="button" aria-label="Hosted APIs"><rect x="690" y="500" width="190" height="52" rx="12" fill="rgba(15,23,42,.86)" stroke="#e9b53c" stroke-opacity=".55"/><text x="704" y="522" class="mtitle" fill="#e9b53c">Hosted APIs</text><text x="704" y="539" class="msub">fallback at 4 GB</text></g>
 </svg>
     </div>
     <aside class="mapdetail" id="mapDetail">
@@ -553,20 +589,20 @@ fits when   required_gb ≤ usable_gb</code>
       <p>Four clients read one portable contract, which points into a curated catalog. Deterministic automations audit that catalog on GitHub. Models run locally where the hardware allows, and hosted only where it does not.</p>
       <p class="muted" style="font-size:12px">Select a node for what it does, what reads it, and where it is configured.</p>
       <div class="maplegend">
-        <span><i style="background:#60a5fa"></i>Clients</span>
-        <span><i style="background:#a78bfa"></i>Instructions</span>
-        <span><i style="background:#22d3ee"></i>Catalog</span>
-        <span><i style="background:#34d399"></i>Automations</span>
-        <span><i style="background:#fbbf24"></i>Runtimes</span>
+        <span><i style="background:#f0a92e"></i>Clients</span>
+        <span><i style="background:#dd8fa8"></i>Instructions</span>
+        <span><i style="background:#e07a55"></i>Catalog</span>
+        <span><i style="background:#6fcf8b"></i>Automations</span>
+        <span><i style="background:#e9b53c"></i>Runtimes</span>
       </div>
     </aside>
   </div>
 
   <div class="section-head"><div><h3 style="font-size:16px;margin:0">Building subgroups</h3><p>An agent profile alone does little. The value is in small, goal-shaped teams.</p></div><div class="section-meta">Compose, do not enumerate</div></div>
   <div class="grid">
-    <article class="card"><span class="tag cyan">Recipe</span><h3>Catalog intake</h3><p class="muted">Goal: safely admit a new repository to the catalog.</p><p class="muted"><code>scanner-vault</code> &rarr; <code>dependency-watch-delta</code> &rarr; <code>compliance-lex</code> &rarr; <code>repo-issue-iris</code></p><p class="muted" style="font-size:12px">Stops at: an owner-review issue. Never self-approves.</p></article>
-    <article class="card"><span class="tag cyan">Recipe</span><h3>Local-first build</h3><p class="muted">Goal: ship a feature without spending hosted tokens.</p><p class="muted"><code>model-picker</code> &rarr; <code>fullstack-atlas</code> &rarr; <code>tester-probe</code> &rarr; <code>token-penny</code></p><p class="muted" style="font-size:12px">model-picker reads the hardware profile first, so the rest of the group runs on whatever fits.</p></article>
-    <article class="card"><span class="tag cyan">Recipe</span><h3>Cost review</h3><p class="muted">Goal: find recurring spend before it compounds.</p><p class="muted"><code>cost-cirrus</code> &rarr; <code>token-penny</code> &rarr; <code>doc-drift-echo</code></p><p class="muted" style="font-size:12px">Stops at: a written recommendation, not an applied change.</p></article>
+    <article class="card"><span class="tag copper">Recipe</span><h3>Catalog intake</h3><p class="muted">Goal: safely admit a new repository to the catalog.</p><p class="muted"><code>scanner-vault</code> &rarr; <code>dependency-watch-delta</code> &rarr; <code>compliance-lex</code> &rarr; <code>repo-issue-iris</code></p><p class="muted" style="font-size:12px">Stops at: an owner-review issue. Never self-approves.</p></article>
+    <article class="card"><span class="tag copper">Recipe</span><h3>Local-first build</h3><p class="muted">Goal: ship a feature without spending hosted tokens.</p><p class="muted"><code>model-picker</code> &rarr; <code>fullstack-atlas</code> &rarr; <code>tester-probe</code> &rarr; <code>token-penny</code></p><p class="muted" style="font-size:12px">model-picker reads the hardware profile first, so the rest of the group runs on whatever fits.</p></article>
+    <article class="card"><span class="tag copper">Recipe</span><h3>Cost review</h3><p class="muted">Goal: find recurring spend before it compounds.</p><p class="muted"><code>cost-cirrus</code> &rarr; <code>token-penny</code> &rarr; <code>doc-drift-echo</code></p><p class="muted" style="font-size:12px">Stops at: a written recommendation, not an applied change.</p></article>
     <article class="card wide"><span class="tag yellow">Rule</span><h3>Every subgroup needs a stopping condition</h3><p class="muted">A group without a defined end state either loops or quietly widens its own scope. Each recipe above names what it produces and where it hands back to a human. That is the difference between an agent team and an expensive loop &mdash; and it is the same discipline the Owner Approval gate enforces at the repository level.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/agents/AGENTS-OVERVIEW.md">All 65 agent profiles &#8599;</a></article>
   </div>
 </section>
@@ -590,20 +626,20 @@ fits when   required_gb ≤ usable_gb</code>
   <div class="notice ok"><strong>Protected-main model:</strong> the required <code>owner-approval</code> status check is the authoritative gate. Other authors need Charles's current-head review; Charles-authored PRs use the exact SHA-bound owner comment. Force push/delete remain blocked.</div>
   <div class="grid">
     <article class="card"><span class="tag green">Safe read</span><h3>Pull latest approved main</h3><div class="cmd" data-command>git switch main && git pull --ff-only origin main<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag blue">Contributor</span><h3>Create proposal branch</h3><div class="cmd" data-command>git switch -c proposal/my-change<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag amber">Contributor</span><h3>Create proposal branch</h3><div class="cmd" data-command>git switch -c proposal/my-change<button class="copy">Copy</button></div></article>
     <article class="card wide"><span class="tag yellow">One-time bootstrap</span><h3>Enable Pages + protect main</h3><p class="muted">Requires authenticated GitHub CLI admin access. Enables Pages, least-privilege workflow permissions and protected main, then verifies state.</p><div class="cmd" data-command>bash "$HOME/Master-Repo-Use/scripts/enable-github-pro.sh"<button class="copy">Copy</button></div></article>
     <article class="card"><span class="tag green">Read-only</span><h3>Verify server state</h3><p class="muted">Check Pages, protection and workflow configuration without starting a runner.</p><div class="cmd" data-command>bash "$HOME/Master-Repo-Use/scripts/enable-github-pro.sh" --verify<button class="copy">Copy</button></div></article>
-    <article class="card"><span class="tag blue">Deploy</span><h3>Deploy Pages once</h3><p class="muted">Pages has no recurring schedule after this PR merges.</p><div class="cmd" data-command>gh workflow run pages.yml -R Charlesganu2004/Master-Repo-Use<button class="copy">Copy</button></div></article>
+    <article class="card"><span class="tag amber">Deploy</span><h3>Deploy Pages once</h3><p class="muted">Pages has no recurring schedule after this PR merges.</p><div class="cmd" data-command>gh workflow run pages.yml -R Charlesganu2004/Master-Repo-Use<button class="copy">Copy</button></div></article>
     <article class="card"><span class="tag green">Billing</span><h3>Cost controls</h3><p class="muted">Routine target is $0 metered overage. No scheduled paid AI, Codespaces or larger runners.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/COST-CONTROL.md">Open cost-control guide ↗</a></article>
     <article class="card"><span class="tag yellow">Owner setting</span><h3>Actions workflow permissions</h3><p class="muted">Allow Actions to create maintenance PRs. The workflow still cannot auto-merge main.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/settings/actions">Open Actions settings ↗</a></article>
-    <article class="card"><span class="tag blue">Pages</span><h3>GitHub Pages settings</h3><p class="muted">Publishing source is GitHub Actions; no custom domain is required.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/settings/pages">Open Pages settings ↗</a></article>
+    <article class="card"><span class="tag amber">Pages</span><h3>GitHub Pages settings</h3><p class="muted">Publishing source is GitHub Actions; no custom domain is required.</p><a class="card-link" target="_blank" rel="noopener" href="https://github.com/Charlesganu2004/Master-Repo-Use/settings/pages">Open Pages settings ↗</a></article>
   </div>
 </section>
 
 <div id="empty" class="empty">No cards match this search in the current section.</div>
 <footer><span>Public Pages intentionally exposes only this interface and aggregate health. Detailed catalog/security rows remain private.</span><span>Master Repo Use · owner-gated · cost-aware · privacy-safe</span></footer>
 </main>
-<script type="application/json" id="mapData">{"claude": ["Client", "Reads <code>~/.claude/CLAUDE.md</code>, which the global setup script points at this repo. Loads one catalog lane at a time, never the whole catalog.", ["Setup tab &rarr; global one-liner", "Repo entrypoint: CLAUDE.md"]], "codex": ["Client", "Reads <code>~/.codex/AGENTS.md</code>. Uses the portable contract only &mdash; no Codex-specific file, by design.", ["Shares AGENTS.md with every other client"]], "copilot": ["Client", "Reads <code>~/.copilot/copilot-instructions.md</code> plus the repo-local <code>.github/copilot-instructions.md</code>.", ["Can be installed alone with --copilot-only"]], "gemini": ["Client", "Two surfaces with different jobs: Gemini CLI reads <code>GEMINI.md</code>; Gemini Code Assist reviews PRs using <code>.gemini/config.yaml</code> and <code>.gemini/styleguide.md</code>.", ["No authority in the approval gate", "Reviews are a second opinion, never a merge signal"]], "agentsmd": ["Instruction", "The canonical portable contract. Every client reads this first; the per-client files only add what is genuinely client-specific.", ["One contract, four clients", "Change here propagates everywhere"]], "claudemd": ["Instruction", "Claude-specific defaults layered on AGENTS.md &mdash; maintenance policy, memory tools, approval phrasing.", []], "geminimd": ["Instruction", "Gemini-specific defaults, including the local-first preference: prefer a local model when one fits, fall back to hosted Gemini when RAM is the constraint.", ["Added 2026-08-25"]], "copilotmd": ["Instruction", "Copilot pointer installed at user scope so it applies across repositories.", []], "lanes": ["Catalog", "Curated URL lists &mdash; <strong>no third-party code is vendored</strong>. Each lane is a topic an agent can load in isolation instead of pulling the whole catalog into context.", ["local-models &middot; adk-agent-kits &middot; design-ui-motion", "public-allowlist controls what may go public"]], "skills": ["Catalog", "Portable skill definitions usable from any client: cite-or-abstain, verify-before-complete, scope-guard, dep-audit and others.", []], "agents": ["Catalog", "Named agent profiles &mdash; roles with a defined scope, tools and stopping condition. Compose these into subgroups.", ["See the subgroup recipes below the map"]], "docs": ["Catalog", "Setup, cost, security and policy documentation. This is what a client reads when it needs to know <em>how</em> rather than <em>what</em>.", []], "guardian": ["Automation", "Deterministic lifecycle and security audit. Refreshes metadata weekly and opens a single <code>[Catalog Audit]</code> issue that it edits rather than duplicates. <strong>Calls no paid AI API.</strong>", ["Deep scan only on new additions or owner approval", "Semgrep &middot; Gitleaks &middot; OSV &middot; ClamAV"]], "safety": ["Automation", "Unit tests on every PR touching scripts, tests, the page or workflows. Includes the privacy assertions that stop the public artifact leaking catalog contents.", ["54 tests", "concurrency cancels superseded runs"]], "pages": ["Automation", "Builds the privacy-safe public artifact and deploys it. No recurring schedule &mdash; it runs only when the site or its data actually changes.", ["Strips every element flagged private in the markup", "Degrades to the committed snapshot if the refresh fails"]], "gate": ["Automation", "Approval is bound to a commit SHA, so a force-push or a new commit invalidates it. Only the owner can approve, with an exact phrase.", ["APPROVE CATALOG MAINTENANCE", "Never merges main automatically"]], "ollama": ["Runtime", "The default local runtime. Everything in the Local Models tab assumes it. Genuinely useful from 8 GB; 16 GB is the sweet spot.", ["ollama pull gemma3:4b"]], "foundry": ["Runtime", "Microsoft&rsquo;s local runtime with hardware-aware model selection built in. Best CPU/NPU path on Windows.", ["Pairs with onnxruntime-genai"]], "gemmacpp": ["Runtime", "Minimal C++ Gemma runtime &mdash; lighter than a full serving stack when you only need Gemma.", []], "hosted": ["Runtime", "The honest answer at 4 GB: no local chat model fits after the OS takes its share. Use hosted Gemini rather than something that swaps.", ["See the Local Models tab"]]}</script>
+<script type="application/json" id="mapData">{"claude": ["Client", "Reads <code>~/.claude/CLAUDE.md</code>, which the global setup script points at this repo. Loads one catalog lane at a time, never the whole catalog.", ["Setup tab &rarr; global one-liner", "Repo entrypoint: CLAUDE.md"], "npm install -g @anthropic-ai/claude-code && claude"], "codex": ["Client", "Reads <code>~/.codex/AGENTS.md</code>. Uses the portable contract only &mdash; no Codex-specific file, by design.", ["Shares AGENTS.md with every other client"], "npm install -g @openai/codex && codex"], "copilot": ["Client", "Reads <code>~/.copilot/copilot-instructions.md</code> plus the repo-local <code>.github/copilot-instructions.md</code>.", ["Can be installed alone with --copilot-only"], "gh extension install github/gh-copilot"], "gemini": ["Client", "Two surfaces with different jobs: Gemini CLI reads <code>GEMINI.md</code>; Gemini Code Assist reviews PRs using <code>.gemini/config.yaml</code> and <code>.gemini/styleguide.md</code>.", ["No authority in the approval gate", "Reviews are a second opinion, never a merge signal"], "npx https://github.com/google-gemini/gemini-cli"], "agentsmd": ["Instruction", "The canonical portable contract. Every client reads this first; the per-client files only add what is genuinely client-specific.", ["One contract, four clients", "Change here propagates everywhere"], "cat \"$HOME/Master-Repo-Use/AGENTS.md\""], "claudemd": ["Instruction", "Claude-specific defaults layered on AGENTS.md &mdash; maintenance policy, memory tools, approval phrasing.", [], "cat \"$HOME/.claude/CLAUDE.md\""], "geminimd": ["Instruction", "Gemini-specific defaults, including the local-first preference: prefer a local model when one fits, fall back to hosted Gemini when RAM is the constraint.", ["Added 2026-08-25"], "cat \"$HOME/.gemini/GEMINI.md\""], "copilotmd": ["Instruction", "Copilot pointer installed at user scope so it applies across repositories.", [], "cat \"$HOME/.copilot/copilot-instructions.md\""], "lanes": ["Catalog", "Curated URL lists &mdash; <strong>no third-party code is vendored</strong>. Each lane is a topic an agent can load in isolation instead of pulling the whole catalog into context.", ["local-models &middot; adk-agent-kits &middot; design-ui-motion", "public-allowlist controls what may go public"], "ls \"$HOME/Master-Repo-Use/repo-lists/\""], "skills": ["Catalog", "Portable skill definitions usable from any client: cite-or-abstain, verify-before-complete, scope-guard, dep-audit and others.", [], "cp -r \"$HOME/Master-Repo-Use/skills/.\" \"$HOME/.claude/skills/\""], "agents": ["Catalog", "Named agent profiles &mdash; roles with a defined scope, tools and stopping condition. Compose these into subgroups.", ["See the subgroup recipes below the map"], "ls \"$HOME/Master-Repo-Use/agents/\""], "docs": ["Catalog", "Setup, cost, security and policy documentation. This is what a client reads when it needs to know <em>how</em> rather than <em>what</em>.", [], "ls \"$HOME/Master-Repo-Use/docs/\""], "guardian": ["Automation", "Deterministic lifecycle and security audit. Refreshes metadata weekly and opens a single <code>[Catalog Audit]</code> issue that it edits rather than duplicates. <strong>Calls no paid AI API.</strong>", ["Deep scan only on new additions or owner approval", "Semgrep &middot; Gitleaks &middot; OSV &middot; ClamAV"], "gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use"], "safety": ["Automation", "Unit tests on every PR touching scripts, tests, the page or workflows. Includes the privacy assertions that stop the public artifact leaking catalog contents.", ["54 tests", "concurrency cancels superseded runs"], "python -m unittest discover -s tests -p \"test_*.py\""], "pages": ["Automation", "Builds the privacy-safe public artifact and deploys it. No recurring schedule &mdash; it runs only when the site or its data actually changes.", ["Strips every element flagged private in the markup", "Degrades to the committed snapshot if the refresh fails"], "gh workflow run pages.yml -R Charlesganu2004/Master-Repo-Use"], "gate": ["Automation", "Approval is bound to a commit SHA, so a force-push or a new commit invalidates it. Only the owner can approve, with an exact phrase.", ["APPROVE CATALOG MAINTENANCE", "Never merges main automatically"], "gh pr comment <PR> -R Charlesganu2004/Master-Repo-Use --body \"APPROVE OWNER PR <sha>\""], "ollama": ["Runtime", "The default local runtime. Everything in the Local Models tab assumes it. Genuinely useful from 8 GB; 16 GB is the sweet spot.", ["ollama pull gemma3:4b"], "python scripts/local_model_advisor.py --install"], "foundry": ["Runtime", "Microsoft&rsquo;s local runtime with hardware-aware model selection built in. Best CPU/NPU path on Windows.", ["Pairs with onnxruntime-genai"], "winget install Microsoft.FoundryLocal"], "gemmacpp": ["Runtime", "Minimal C++ Gemma runtime &mdash; lighter than a full serving stack when you only need Gemma.", [], "git clone https://github.com/google/gemma.cpp"], "hosted": ["Runtime", "The honest answer at 4 GB: no local chat model fits after the OS takes its share. Use hosted Gemini rather than something that swaps.", ["See the Local Models tab"], "npx https://github.com/google-gemini/gemini-cli"]}</script>
 <div id="staleBar" class="stalebar" role="alert" hidden><span>A newer version of this page has been deployed. You are viewing a cached copy.</span><button id="staleReload" class="btn primary" type="button">Reload now</button></div>
 <div id="toast" class="toast" role="status" aria-live="polite">Copied to clipboard</div>
 <script>
@@ -612,7 +648,7 @@ const views=[...document.querySelectorAll('.view')];
 const search=document.getElementById('search');
 const empty=document.getElementById('empty');
 const toast=document.getElementById('toast');
-let activeView='setup';
+let activeView='map';
 function selectView(name){activeView=name;tabs.forEach(x=>x.classList.toggle('active',x.dataset.view===name));views.forEach(x=>x.classList.toggle('active',x.id===name));search.value='';filterCards();if(name==='health')loadHealth();if(name==='models')loadProfiles();moveInk();revealNow();history.replaceState(null,'','#'+name)}
 tabs.forEach(t=>t.addEventListener('click',()=>selectView(t.dataset.view)));
 function filterCards(){const q=search.value.trim().toLowerCase();const view=document.getElementById(activeView);const cards=[...view.querySelectorAll('.card')];let visible=0;cards.forEach(c=>{const show=!q||c.textContent.toLowerCase().includes(q);c.classList.toggle('hidden-search',!show);if(show)visible++});empty.classList.toggle('show',cards.length>0&&visible===0)}
@@ -621,7 +657,16 @@ document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement!=
 function textOf(box){const c=box.cloneNode(true);c.querySelectorAll('button').forEach(b=>b.remove());return c.textContent.trim()}
 function showToast(message='Copied to clipboard'){toast.textContent=message;toast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.remove('show'),1400)}
 async function copyBox(box,btn){const text=textOf(box);try{await navigator.clipboard.writeText(text)}catch(_){const a=document.createElement('textarea');a.value=text;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}const old=btn.textContent;btn.textContent='Copied ✓';btn.classList.add('done');showToast();setTimeout(()=>{btn.textContent=old;btn.classList.remove('done')},1200)}
-document.querySelectorAll('[data-command]').forEach(box=>{const btn=box.querySelector('.copy');box.tabIndex=0;box.title='Click to copy';box.addEventListener('click',e=>{if(e.target!==btn)copyBox(box,btn)});btn.addEventListener('click',e=>{e.stopPropagation();copyBox(box,btn)});box.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();copyBox(box,btn)}})});
+function wireCommands(scope){
+  scope.querySelectorAll('[data-command]').forEach(box=>{
+    if(box.dataset.wired)return;box.dataset.wired='1';
+    const btn=box.querySelector('.copy');box.tabIndex=0;box.title='Click to copy';
+    box.addEventListener('click',e=>{if(e.target!==btn)copyBox(box,btn)});
+    btn.addEventListener('click',e=>{e.stopPropagation();copyBox(box,btn)});
+    box.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();copyBox(box,btn)}});
+  });
+}
+wireCommands(document);
 async function loadHealth(){const rows=document.getElementById('healthRows');try{const r=await fetch('docs/catalog-status.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(r.status);const d=await r.json();document.getElementById('updated').textContent='Updated '+(d.updated||'unknown');document.getElementById('statusMeta').textContent=d.public?'Public privacy mode · aggregate only':'Private local mode · detailed rows available';document.getElementById('modeText').textContent=d.public?'Public privacy mode':'Private local mode';['healthy','stale','review','remove'].forEach(k=>countTo(document.getElementById(k),d.counts?.[k.toUpperCase()]??0));renderCoverage(d);rows.innerHTML='';for(const x of d.repos||[]){const tr=document.createElement('tr');const vals=[x.repo,x.status,x.age_days==null?'—':x.age_days+'d',x.archived?'yes':'no',x.deep_scanned?'yes':'no',x.note||''];vals.forEach((v,i)=>{const td=document.createElement('td');td.textContent=v;if(i===1)td.className=v;tr.appendChild(td)});rows.appendChild(tr)}if(!(d.repos||[]).length){rows.innerHTML=d.public?'<tr><td colspan="6" class="muted">Public Pages intentionally exposes aggregate health only. Serve the private repository locally for repo-by-repo status and findings.</td></tr>':'<tr><td colspan="6" class="muted">No status rows yet. Run Catalog Guardian once.</td></tr>'}}catch(e){document.getElementById('modeText').textContent='Status unavailable';document.getElementById('statusMeta').textContent='Serve through HTTP or refresh catalog metadata';rows.innerHTML='<tr><td colspan="6" class="muted">Status JSON unavailable. Serve this repo through HTTP or run Catalog Guardian to generate docs/catalog-status.json.</td></tr>'}}
 document.getElementById('refresh').addEventListener('click',()=>{loadHealth();showToast('Health status refreshed')});
 /* ---------------- Local-model hardware advisor ----------------
@@ -637,7 +682,7 @@ function tierFor(gb){const t=[...PROFILES.tiers].sort((a,b)=>a.ram_gb-b.ram_gb);
 function renderAdvisor(){
   if(!PROFILES)return;
   const tier=tierFor(ramGB),usable=usableGB();
-  const colour={red:'var(--red)',orange:'var(--orange)',yellow:'var(--yellow)',green:'var(--green)'}[tier.class]||'var(--blue)';
+  const colour={red:'var(--red)',orange:'var(--orange)',yellow:'var(--yellow)',green:'var(--green)'}[tier.class]||'var(--amber)';
   const v=$('verdict');v.style.setProperty('--vc',colour);
   $('vTag').textContent=tier.verdict;$('vTitle').textContent=tier.label+' · '+fmt(usable)+' GB usable';
   $('vSummary').textContent=tier.summary;
@@ -660,7 +705,7 @@ function renderAdvisor(){
   $('repoCount').textContent=repos.length+' of '+PROFILES.repos.length+' recommended';
   /* Grouped by vendor so "three per vendor" is visible at a glance rather than
      something you have to count out of a flat list. */
-  const VEND=[['Microsoft','var(--blue)'],['Google','var(--green)'],['Ollama','var(--purple)']];
+  const VEND=[['Microsoft','var(--amber)'],['Google','var(--green)'],['Ollama','var(--sage)']];
   $('modelList').innerHTML=VEND.map(([v,colour])=>{
     const mine=models.filter(m=>m.vendor===v);
     const fitting=mine.filter(fitsModel);
@@ -706,8 +751,14 @@ function showNode(id,el){
   if(el)el.classList.add('sel');
   const title=el?el.querySelector('.mtitle').textContent:id;
   const bullets=d[2]&&d[2].length?'<ul>'+d[2].map(x=>'<li>'+x+'</li>').join('')+'</ul>':'';
-  document.getElementById('mapDetail').innerHTML=
-    '<span class="kind">'+d[0]+'</span><h3>'+title+'</h3><p>'+d[1]+'</p>'+bullets;
+  /* The one-liner is the payload. Everything above it is context for deciding
+     whether to run it. */
+  const cmd=d[3]?'<div class="detail-cmd"><small>Run it</small>'
+    +'<div class="cmd" data-command>'+d[3].replace(/</g,'&lt;')+'<button class="copy">Copy</button></div></div>':'';
+  const panel=document.getElementById('mapDetail');
+  panel.innerHTML='<span class="kind">'+d[0]+'</span><h3>'+title+'</h3><p>'+d[1]+'</p>'+bullets+cmd;
+  panel.classList.remove('flash');void panel.offsetWidth;panel.classList.add('flash');
+  wireCommands(panel);
 }
 document.querySelectorAll('.mapnode').forEach(n=>{
   n.addEventListener('click',()=>showNode(n.dataset.node,n));
@@ -856,7 +907,7 @@ function renderCoverage(d){
   const counts=d.counts||{};
   const known=repos.length||Object.values(counts).reduce((a,b)=>a+(+b||0),0);
   if(!repos.length){
-    box.innerHTML='<div class="chk" style="--ck:var(--blue)"><h4>Scan coverage<span class="badge">private</span></h4>'
+    box.innerHTML='<div class="chk" style="--ck:var(--amber)"><h4>Scan coverage<span class="badge">private</span></h4>'
       +'<p>Public Pages shows aggregate health only. Serve the repository locally to see per-repo scan state.</p></div>';
     return;
   }
@@ -874,7 +925,7 @@ function renderCoverage(d){
     +'<div class="chk" style="--ck:'+(errored?'var(--yellow)':'var(--green)')+'"><h4>Scanner errors<span class="badge">'+errored+'</span></h4>'
     +'<p>'+(errored?'A scanner failed to run on these, so they are <b>unverified</b> &mdash; not clean, not flagged. They stay in the rotation.':'Every scan in the current state completed.')+'</p></div>';
 }
-const hash=location.hash.slice(1);if(hash&&document.getElementById(hash)&&tabs.some(t=>t.dataset.view===hash)){selectView(hash)}else{filterCards();loadHealth()}
+const hash=location.hash.slice(1);if(hash&&document.getElementById(hash)&&tabs.some(t=>t.dataset.view===hash)){selectView(hash)}else{selectView('map');loadHealth()}
 moveInk();revealNow();
 </script>
 </body>
