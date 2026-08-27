@@ -2,7 +2,6 @@
 mnemox-ai/tradememory-protocol
 wshobson/maverick-mcp
 atilaahmettaner/tradingview-mcp
-VictorVVedtion/trading-skills
 alpacahq/alpaca-mcp-server
 infracost/infracost
 opencost/opencost

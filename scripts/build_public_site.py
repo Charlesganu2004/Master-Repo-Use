@@ -44,7 +44,7 @@ ALLOWED_POLICY = {
     "remove_stale_after_days",
     "archive_grace_days",
 }
-ALLOWED_COUNTS = {"HEALTHY", "STALE", "REVIEW", "REMOVE"}
+ALLOWED_COUNTS = {"HEALTHY", "STALE", "REVIEW", "REMOVE", "UNKNOWN"}
 
 # Words that only ever appear in private security detail.
 PRIVATE_WORDS = ("finding", "note", "gitleaks", "clamav", "semgrep", "trivy", "snyk", "osv", "scanner-error")
@@ -327,7 +327,7 @@ def build() -> dict:
     return {
         "updated": source.get("updated"),
         "policy": {key: policy[key] for key in ALLOWED_POLICY if key in policy},
-        "counts": {key: counts.get(key, 0) for key in ("HEALTHY", "STALE", "REVIEW", "REMOVE")},
+        "counts": {key: counts.get(key, 0) for key in ("HEALTHY", "STALE", "REVIEW", "REMOVE", "UNKNOWN")},
         "public": True,
         "repos": [],
     }

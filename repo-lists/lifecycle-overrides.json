@@ -1,15 +1,31 @@
 {
-  "FlowiseAI/Flowise": {
-    "mode": "archived-active",
-    "note": "Officially sunset: 3.1.4 released 2026-07-29, feature freeze 2026-07-27, GitHub archive 2026-08-10, EOL 2026-08-31. Keep temporarily as transition/reference material, not as a newly maintained dependency. Re-review for a maintained community fork after EOL."
+  "AnswerDotAI/rerankers": {
+    "mode": "reference",
+    "note": "Widely used reranking wrapper (1.6k stars). Feature-complete."
+  },
+  "D-Ogi/WatermarkRemover-AI": {
+    "mode": "reference",
+    "note": "Authorized-media utility (1.9k stars). Feature-complete."
+  },
+  "FlagOpen/RoboBrain2.5": {
+    "mode": "reference",
+    "note": "Research release. Finished artifact rather than a maintained package."
+  },
+  "FoundationAgents/MetaGPT": {
+    "mode": "reference",
+    "note": "Major multi-agent framework, 70k stars. A quiet quarter is not abandonment."
+  },
+  "RoggeOhta/awesome-codex-cli": {
+    "mode": "reference",
+    "note": "An awesome-list. Updated when the ecosystem moves, not on a cadence."
+  },
+  "SkyworkAI/Matrix-Game": {
+    "mode": "reference",
+    "note": "Research release, same reasoning."
   },
   "Stability-AI/StableLM": {
     "mode": "reference",
     "note": "Last push 2024-04-08 -- roughly 870 days at time of adding, far past the 365d removal threshold. Added deliberately as a historical reference: StableLM was a landmark 2024 open-weight release and the repo is useful for understanding that generation. It is NOT a current runtime choice; for local inference today use the Gemma / Phi / Ollama lanes in repo-lists/local-models.txt. Re-review only if Stability resumes development."
-  },
-  "YuhaoLin2005/compact-counter-concept": {
-    "mode": "reference",
-    "note": "Archived MIT research utility, 0 stars. Small enough to absorb outright if the measurement approach is still wanted -- see docs/MANAGED-ADOPTION-PLAN.md. Otherwise reference-only."
   },
   "ZongqianLi/Prompt-Compression-Survey": {
     "mode": "reference",
@@ -35,9 +51,21 @@
     "mode": "reference",
     "note": "Superseded 2026-08-25 by the coinbase/cdp-sdk monorepo (pushed 2026-08-25). Kept for existing Python integrations; prefer coinbase/cdp-sdk for new work."
   },
+  "creativetimofficial/ui": {
+    "mode": "reference",
+    "note": "Component library (12k stars) exposed via registry and MCP. Design systems move slowly by design."
+  },
   "facebookresearch/vjepa2": {
     "mode": "reference",
     "note": "Meta research release. Finished artifact rather than a maintained runtime package."
+  },
+  "greensock/GSAP": {
+    "mode": "reference",
+    "note": "The animation standard (28k stars), deliberately not OSI-licensed. Linked dependency, never copied. Removing it over a quiet quarter would be absurd."
+  },
+  "jmfernandes/robin_stocks": {
+    "mode": "reference",
+    "note": "The de-facto Robinhood Python library (2.1k stars). Tracks a stable API."
   },
   "langchain-ai/open_deep_research": {
     "mode": "reference",
@@ -55,6 +83,14 @@
     "mode": "reference",
     "note": "Official Microsoft course material pinned to a teaching moment. Not intended to track MCP spec changes."
   },
+  "mlabouardy/komiser": {
+    "mode": "reference",
+    "note": "Cloud cost tool (4.1k stars). Mature."
+  },
+  "ollama/ollama-js": {
+    "mode": "reference",
+    "note": "Official Ollama JS client. Thin wrapper over a stable HTTP API."
+  },
   "passiv/snaptrade-react": {
     "mode": "reference",
     "note": "Official vendor SDK for a stable API. Low churn is expected rather than a warning sign."
@@ -62,6 +98,10 @@
   "qiskit-community/ibm-quantum-challenge-fall-2021": {
     "mode": "reference",
     "note": "Historical IBM Quantum Challenge material. Static by design; keep only as an educational/reference artifact rather than an active runtime dependency."
+  },
+  "qiskit-community/qiskit-finance": {
+    "mode": "reference",
+    "note": "Official Qiskit finance module, Apache-2.0. Stable API; quiet is expected."
   },
   "rmurai0610/MASt3R-SLAM": {
     "mode": "reference",
@@ -71,6 +111,18 @@
     "mode": "reference",
     "note": "Mature, widely-cited visual-inertial odometry library. Stability is the feature; low churn is expected."
   },
+  "thammo4/uvatradier": {
+    "mode": "reference",
+    "note": "Active Tradier Python client, Apache-2.0. Small but current."
+  },
+  "upstash/rag-chat": {
+    "mode": "reference",
+    "note": "Vendor SDK for a stable API. Low churn is normal, not decay."
+  },
+  "upstash/vector-js": {
+    "mode": "reference",
+    "note": "Vendor SDK, same reasoning."
+  },
   "vision-x-nyu/thinking-in-space": {
     "mode": "reference",
     "note": "Official VSI-Bench research/evaluation artifact. Treat research artifacts separately from runtime packages; keep as reference while still relevant to spatial reasoning evaluation."
@@ -78,5 +130,9 @@
   "wentaoyuan/RoboPoint": {
     "mode": "reference",
     "note": "Apache-2.0 research artifact for spatial affordance prediction. Keep as reference while still relevant; do not interpret paper-code quietness as runtime-package abandonment."
+  },
+  "zanwei/design-dna": {
+    "mode": "reference",
+    "note": "Design-token extraction tool (1.5k stars). Small, focused, complete."
   }
 }

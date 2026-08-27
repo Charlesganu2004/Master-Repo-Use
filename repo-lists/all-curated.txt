@@ -82,7 +82,6 @@ pmorissette/bt
 ib-api-reloaded/ib_async  # replaces erdewit/ib_insync (unmaintained)
 Jesse-ai/jesse
 tradingstrategy-ai/getting-started
-TradingGoose/TradingGoose.github.io
 RezaSoleymanifar/neuralHFT
 
 # Broker app integrations / Robinhood alternatives
@@ -90,7 +89,6 @@ DhruvaBansal00/robin_stocks_v2
 ib-api-reloaded/ib_async
 tylerebowers/Schwabdev  # replaces stale alexgolec/schwab-py
 thammo4/uvatradier
-Lumiwealth/lumiwealth-tradier
 passiv/snaptrade-sdks
 passiv/snaptrade-cli
 passiv/snaptrade-react
@@ -107,7 +105,6 @@ qmyhd/LLM-portfolio-project
 mnemox-ai/tradememory-protocol
 wshobson/maverick-mcp
 atilaahmettaner/tradingview-mcp
-VictorVVedtion/trading-skills
 
 # MCP servers and SDKs
 modelcontextprotocol/typescript-sdk
@@ -152,7 +149,6 @@ OpenBB-finance/OpenBB
 microsoft/autogen  # superseded 2026-08-25 by microsoft/agent-framework (AutoGen+SK merger); reference only
 microsoft/ai-agents-for-beginners
 mem0ai/mem0
-FlowiseAI/Flowise
 crewAIInc/crewAI
 mudler/LocalAI
 CherryHQ/cherry-studio
@@ -167,7 +163,6 @@ Yuchen20/Context-Crumb
 zzallirog/weighted-compact
 soolaugust/0CompactMem
 guorunjie/codex-relay-baton-guardian
-YuhaoLin2005/compact-counter-concept
 RyanWeb31110/codex-thread-handoff
 
 # Spatial Reasoning VLMs & World Models (added 2026-08-05, vetted)
