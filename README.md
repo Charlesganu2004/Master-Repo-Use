@@ -589,6 +589,22 @@ Frameworks referenced alongside them: `obra/superpowers`, `hesreallyhim/awesome-
 `dgreenheck/webgpu-claude-skill`): link to them and learn from them, but their contents may not
 be copied into this repository.
 
+## Multi-model data stores and graph tooling
+
+Lane: [repo-lists/multi-model-data.txt](repo-lists/multi-model-data.txt). "Multi-model" covers two
+unrelated things, kept separate there: multi-model *databases* (`arangodb/arangodb`,
+`skytable/skytable`) and multi-model *AI interfaces* (`enricoros/big-AGI`,
+`SkyworkAI/DeepResearchAgent`).
+
+Graph tooling from the supplied links: `exogee-technology/graphweaver` is the real project behind
+`docs.graphweaver.com` and the npm package — note it is a different thing from **GraphWeave**.
+`CartographAI/mcp-server-codegraph` is the code-graph MCP server.
+
+Deliberately **not** added, with reasons recorded in the lane file: `rahulnanda1999/GraphWeave`
+(0 stars, no licence, ~440 days since last push — past the removal threshold on arrival), and
+CodeWhale / Hermes Studio / Open-Codesign, whose names appear in a Bing-rendered GitHub topic page
+but do not resolve to findable repositories.
+
 ## Local MCP servers, skill collections and self-hosted apps
 
 Three lanes added 2026-08-27, every slug verified against the GitHub API:
@@ -671,6 +687,27 @@ from 44 to 27 (REVIEW 16 → 4, REMOVE 1 → 0) while adding 21 repositories:
 
 Details: [docs/CATALOG-TRIAGE-2026-08-25.md](docs/CATALOG-TRIAGE-2026-08-25.md) ·
 [docs/LIFECYCLE-REVIEW-2026-08-19.md](docs/LIFECYCLE-REVIEW-2026-08-19.md).
+
+## If your own PRs will not merge
+
+**Branch protection is not a file** — it lives on GitHub's servers, not in the repo, so nothing
+you edit in VS Code or in a workflow YAML changes it.
+
+GitHub does not allow anyone to approve their own pull request, and `.github/CODEOWNERS` names
+Charles as the only code owner. So while `main` requires *1 approving review + code-owner review*,
+every PR he authors is **structurally unmergeable** and only goes through via
+"Merge without waiting for requirements". The committed policy in
+[scripts/branch-protection.json](scripts/branch-protection.json) already says 0 reviews with
+`owner-approval` as the single gate; the live setting drifted from it.
+
+```bash
+gh api --method PUT repos/Charlesganu2004/Master-Repo-Use/branches/main/protection   --input scripts/branch-protection.json
+```
+
+This does not weaken anything: the SHA-bound `owner-approval` check stays required, and what is
+removed is a requirement that has never once been satisfied.
+
+Step-by-step, including the web-UI route: [docs/BRANCH-PROTECTION-FIX.md](docs/BRANCH-PROTECTION-FIX.md).
 
 ## Pull latest, but protect `main`
 

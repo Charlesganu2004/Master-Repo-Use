@@ -346,3 +346,13 @@ obra/superpowers
 supabase/agent-skills
 tt-a1i/archify
 yamadashy/repomix
+
+# --- Added 2026-08-27: multi-model data stores and graph tooling ---
+CartographAI/mcp-server-codegraph
+SkyworkAI/DeepResearchAgent
+arangodb/arangodb
+enricoros/big-AGI
+exogee-technology/graphweaver
+kk7nc/RMDL
+nevil-mathew/GraphWeave
+skytable/skytable
