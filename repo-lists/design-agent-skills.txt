@@ -36,3 +36,17 @@ hesreallyhim/awesome-claude-code            # the largest Claude Code index
 SuperClaude-Org/SuperClaude_Framework       # commands and personas
 mattpocock/skills                           # coding-practice skills targeting agent failure modes
 yamadashy/repomix                           # packs a codebase into one file for model consumption
+
+# --- Added 2026-08-27: interactive and high-definition design references
+freshtechbro/claudedesignskills   # design skill pack; 792 stars, MIT, quiet since 2025-11
+freeCodeCamp/freeCodeCamp         # interactive HTML/CSS/JS curriculum; 454k stars, BSD-3
+Chalarangelo/30-seconds-of-css    # ARCHIVED 2023; CC-BY-4.0 snippet reference only
+
+# NOT ADDED, and why:
+#   Hiro04526/Hiro-Portfolio  -- 0 stars and NO LICENCE. All rights reserved, so it
+#     cannot be built on, and it is exactly the profile already delisted twice.
+#   FlavorFusion, Chug-SPYLT, macos-portfolio, Repolis -- display names from a
+#     Bing-rendered GitHub topic page that do not resolve to findable repositories.
+#   Superdesign, Awwwards, Colorlib, Frontend Mentor -- websites and galleries, not
+#     repositories. Useful to browse; nothing to catalogue.
+

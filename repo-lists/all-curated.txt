@@ -351,3 +351,8 @@ exogee-technology/graphweaver
 kk7nc/RMDL
 nevil-mathew/GraphWeave
 skytable/skytable
+
+# --- Added 2026-08-27: interactive design references ---
+Chalarangelo/30-seconds-of-css
+freeCodeCamp/freeCodeCamp
+freshtechbro/claudedesignskills

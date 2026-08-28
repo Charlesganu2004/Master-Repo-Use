@@ -280,6 +280,10 @@ def run_gitleaks(clone: pathlib.Path) -> list[str]:
     return findings
 
 
+# Only these can justify a CRITICAL. Everything else is a heuristic hint.
+EXTERNAL_SCANNERS = ("clamav", "gitleaks", "osv", "semgrep", "snyk", "trivy")
+
+
 def deep_scan(repo: str) -> tuple[list[str], bool]:
     """Return (findings, critical). Scanner failures never set critical."""
     findings: list[str] = []
@@ -337,7 +341,14 @@ def deep_scan(repo: str) -> tuple[list[str], bool]:
             findings += run_external(["snyk", "test", "--all-projects", "--severity-threshold=high"], clone, "snyk")
     # Redact defensively: nothing leaves this function without passing the masker.
     findings = [redact(item, 500) for item in findings]
-    critical = any(item.startswith("CRITICAL") for item in findings)
+    # CRITICAL removes a repository from the catalog, so only a real scanner may
+    # raise it. The built-in heuristics match on text and cannot tell an exploit
+    # from a paragraph explaining one, which is how issue #14 came to recommend
+    # deleting anthropics/skills.
+    critical = any(
+        item.startswith("CRITICAL") and any(tool in item for tool in EXTERNAL_SCANNERS)
+        for item in findings
+    )
     return findings, critical
 
 

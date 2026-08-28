@@ -32,6 +32,10 @@ PRIVATE_INDEX = ROOT / "index.html"
 PUBLIC_STATE = SITE / "docs" / "catalog-status.json"
 PUBLIC_SVG = SITE / "docs" / "catalog-status.svg"
 PUBLIC_INDEX = SITE / "index.html"
+PRIVATE_DESIGN_STUDIO = ROOT / "design-options.html"
+PRIVATE_DESIGN_STUDIO_JS = ROOT / "design-options.js"
+PUBLIC_DESIGN_STUDIO = SITE / "design-options.html"
+PUBLIC_DESIGN_STUDIO_JS = SITE / "design-options.js"
 PRIVATE_PROFILES = ROOT / "docs" / "hardware-profiles.json"
 PUBLIC_PROFILES = SITE / "docs" / "hardware-profiles.json"
 PUBLIC_VERSION = SITE / "version.json"
@@ -206,6 +210,22 @@ def build_index() -> int:
     return stripper.removed
 
 
+def build_design_studio() -> list[str]:
+    """Publish the standalone design studio and its dependency-free runtime."""
+    assets = (
+        (PRIVATE_DESIGN_STUDIO, PUBLIC_DESIGN_STUDIO),
+        (PRIVATE_DESIGN_STUDIO_JS, PUBLIC_DESIGN_STUDIO_JS),
+    )
+    missing = [source.name for source, _ in assets if not source.exists()]
+    if missing:
+        return [f"UI design studio assets are missing: {', '.join(missing)}"]
+
+    for source, destination in assets:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+    return []
+
+
 def private_keys_present(raw: str, label: str) -> list[str]:
     """Private lifecycle/security FIELDS appearing in a published payload.
 
@@ -297,7 +317,7 @@ def build_id() -> str:
 
 
 def build_version(identifier: str) -> None:
-    """Publish version.json and stamp the same id into the public index.html.
+    """Publish version.json and stamp the same id into both public HTML pages.
 
     The page compares the two at runtime. Without this, a browser holding a cached
     index.html has no way to discover that a newer one exists -- and an ordinary
@@ -311,13 +331,20 @@ def build_version(identifier: str) -> None:
         }, indent=2) + "\n",
         encoding="utf-8",
     )
-    page = PUBLIC_INDEX.read_text(encoding="utf-8")
-    stamped = page.replace('<meta name="build-id" content="dev">',
-                           f'<meta name="build-id" content="{identifier}">', 1)
-    if stamped == page:
-        print("::warning::index.html has no build-id placeholder; "
-              "stale-cache detection will not work")
-    PUBLIC_INDEX.write_text(stamped, encoding="utf-8")
+    for page_path, label in (
+        (PUBLIC_INDEX, "index.html"),
+        (PUBLIC_DESIGN_STUDIO, "design-options.html"),
+    ):
+        if not page_path.exists():
+            print(f"::warning::{label} is missing; it could not be build stamped")
+            continue
+        page = page_path.read_text(encoding="utf-8")
+        stamped = page.replace('<meta name="build-id" content="dev">',
+                               f'<meta name="build-id" content="{identifier}">', 1)
+        if stamped == page:
+            print(f"::warning::{label} has no build-id placeholder; "
+                  "stale-cache detection will not work")
+        page_path.write_text(stamped, encoding="utf-8")
 
 
 def build() -> dict:
@@ -377,18 +404,26 @@ def verify(payload: dict) -> list[str]:
         problems.extend(profile_leaks(published, "public hardware-profiles.json"))
         problems.extend(private_keys_present(published, "public hardware-profiles.json"))
 
-    if PUBLIC_INDEX.exists():
-        page = PUBLIC_INDEX.read_text(encoding="utf-8")
+    public_ui_assets = (
+        (PUBLIC_INDEX, "public index.html"),
+        (PUBLIC_DESIGN_STUDIO, "public design-options.html"),
+        (PUBLIC_DESIGN_STUDIO_JS, "public design-options.js"),
+    )
+    for page_path, label in public_ui_assets:
+        if not page_path.exists():
+            problems.append(f"{label} is missing")
+            continue
+        page = page_path.read_text(encoding="utf-8")
         if "data-private" in page:
-            problems.append("public index.html still contains data-private markup")
-        # The page links to its own repository on purpose; every other catalogued
-        # repository is private catalog content and must not appear.
+            problems.append(f"{label} still contains data-private markup")
+        # The index links to its own repository on purpose. Every other catalogued
+        # repository remains private catalog content and cannot reach any UI asset.
         for name in sorted(catalog - {OWN_REPO}):
             if name in page:
-                problems.append(f"public index.html names a catalogued repository: {name}")
+                problems.append(f"{label} names a catalogued repository: {name}")
         for note in sorted(private_notes()):
             if note in page:
-                problems.append(f"public index.html contains a private note: {note[:50]}...")
+                problems.append(f"{label} contains a private note: {note[:50]}...")
 
     return problems
 
@@ -419,14 +454,12 @@ def main() -> int:
                 print(f"PRIVACY FAILURE: {problem}", file=sys.stderr)
             return 1
         print("public hardware-profiles.json written (all slugs owner-allowlisted)")
-        # The palette picker is a plain page with no catalog content. Publishing it
-        # means design feedback needs a URL rather than a local server, which has
-        # been the recurring friction.
-        picker = ROOT / "design-options.html"
-        if picker.exists():
-            (SITE / "design-options.html").write_text(
-                picker.read_text(encoding="utf-8"), encoding="utf-8")
-            print("public design-options.html written")
+        studio_problems = build_design_studio()
+        if studio_problems:
+            for problem in studio_problems:
+                print(f"PRIVACY FAILURE: {problem}", file=sys.stderr)
+            return 1
+        print("public UI design studio written")
         identifier = build_id()
         build_version(identifier)
         print(f"version.json written (build {identifier})")

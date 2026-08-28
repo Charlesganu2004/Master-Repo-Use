@@ -33,6 +33,7 @@ def stage() -> dict:
     payload = builder.build()
     builder.PUBLIC_STATE.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     builder.build_index()
+    assert not builder.build_design_studio()
     builder.build_version(builder.build_id())
     return payload
 
@@ -55,10 +56,14 @@ class BuildVersionTests(unittest.TestCase):
     def test_published_html_is_stamped_with_the_same_id(self):
         stage()
         published = builder.PUBLIC_INDEX.read_text(encoding="utf-8")
+        studio = builder.PUBLIC_DESIGN_STUDIO.read_text(encoding="utf-8")
         identifier = json.loads(builder.PUBLIC_VERSION.read_text(encoding="utf-8"))["build_id"]
         self.assertIn(f'<meta name="build-id" content="{identifier}">', published)
+        self.assertIn(f'<meta name="build-id" content="{identifier}">', studio)
         self.assertNotIn('content="dev"', published,
                          "the placeholder must be replaced, or every page looks local")
+        self.assertNotIn('content="dev"', studio,
+                         "the design studio placeholder must be replaced")
 
     def test_build_id_prefers_the_commit_sha(self):
         import os

@@ -8,6 +8,8 @@ on:
     paths:
       - 'index.html'
       - 'design-options.html'
+      - 'design-options.js'
+      - 'design-options.ts'
       - 'docs/catalog-status.json'
       - 'docs/catalog-status.svg'
       - 'docs/hardware-profiles.json'

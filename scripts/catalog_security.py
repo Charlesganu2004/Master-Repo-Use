@@ -128,15 +128,36 @@ def redact(text: str, limit: int = 400) -> str:
     return text[:limit]
 
 
+# Prose, not program text. A skill file teaching REST API design legitimately
+# contains SQL; a doc about API error codes legitimately says "do not log your
+# key". Running the code-injection heuristics over these produces confident
+# nonsense, so they are scanned only for the things that are dangerous in any
+# file: invisible/bidi characters and real secret material.
+PROSE_SUFFIXES = {".md", ".markdown", ".mdx", ".rst", ".txt", ".adoc", ".org"}
+
+
+def is_prose(path: pathlib.Path) -> bool:
+    return path.suffix.lower() in PROSE_SUFFIXES
+
+
 def scan_text(path: pathlib.Path, text: str) -> list[str]:
-    """Heuristic source scan that reports category + path, never matched values."""
+    """Heuristic source scan that reports category + path, never matched values.
+
+    Severity here caps at HIGH. Only the real scanners (ClamAV, Gitleaks, OSV,
+    Semgrep) may raise CRITICAL, because only they can distinguish a live threat
+    from a sentence describing one. A pattern match in a text file is evidence
+    worth a human look, never evidence enough to delete a repository.
+    """
     out: list[str] = []
     controls = sorted({f"U+{ord(c):04X}" for c in text if c in INVISIBLE})
     if controls:
         out.append(f"HIGH invisible/bidi controls {','.join(controls)} in {path}")
     for name, pattern in SUSPICIOUS:
         if pattern.search(text):
-            out.append(f"{'CRITICAL' if name == 'credential-exfil' else 'HIGH'} {name} pattern in {path}")
+            out.append(f"HIGH {name} pattern in {path}")
+    if is_prose(path):
+        # Documentation stops here. Everything below describes code constructs.
+        return out
     if any(pattern.search(text) for pattern in PROMPT_INJECTION):
         out.append(f"HIGH possible prompt/instruction injection text in {path}")
     if any(pattern.search(text) for pattern in SQL):
