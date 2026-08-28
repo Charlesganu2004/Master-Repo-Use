@@ -47,6 +47,28 @@ def exact_owner_command(head_sha: str) -> str:
     return f"APPROVE OWNER PR {head_sha}"
 
 
+APPROVAL_RE = re.compile(r"^\s*APPROVE\s+OWNER\s+PR\s+([0-9a-fA-F]{7,40})\s*$", re.IGNORECASE)
+
+
+def is_owner_approval(body: str, head_sha: str) -> bool:
+    """True when this comment approves exactly this head SHA.
+
+    Tolerates any casing, surrounding whitespace, and any SHA prefix from 7
+    characters up. Retyping 40 hex characters by hand is where this check
+    actually failed, and a prefix still names one commit.
+
+    A bare "APPROVE OWNER PR" with no SHA is deliberately rejected. The SHA is
+    the whole security property: it makes approval expire the moment new commits
+    are pushed. Without it, one comment would keep authorising a branch whose
+    contents changed afterwards, which is the exact review bypass this file
+    exists to prevent.
+    """
+    match = APPROVAL_RE.match(body or "")
+    if not match:
+        return False
+    return head_sha.lower().startswith(match.group(1).lower())
+
+
 def evaluate_approval(pr: dict[str, Any], comments: list[dict[str, Any]], reviews: list[dict[str, Any]], owner: str = OWNER) -> Decision:
     head_sha = str(((pr.get("head") or {}).get("sha") or "")).lower()
     author = str(((pr.get("user") or {}).get("login") or ""))
@@ -59,9 +81,11 @@ def evaluate_approval(pr: dict[str, Any], comments: list[dict[str, Any]], review
         for comment in comments:
             login = str(((comment.get("user") or {}).get("login") or ""))
             body = str(comment.get("body") or "").strip()
-            if same_login(login, owner) and body == command:
+            if same_login(login, owner) and is_owner_approval(body, head_sha):
                 return Decision(True, "owner-comment", "owner approved this exact PR head SHA")
-        return Decision(False, "owner-comment", f"owner-authored PR requires exact comment: {command}")
+        return Decision(False, "owner-comment",
+                        f"owner-authored PR requires comment: {command} "
+                        f"(the short form APPROVE OWNER PR {head_sha[:7]} also works)")
     decisive: list[tuple[str, int, str]] = []
     for review in reviews:
         login = str(((review.get("user") or {}).get("login") or ""))

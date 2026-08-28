@@ -1,6 +1,7 @@
 param(
   [string]$RepoPath = "$HOME\Master-Repo-Use",
-  [switch]$CopilotOnly
+  [switch]$CopilotOnly,
+  [switch]$AutoSkills
 )
 
 $ErrorActionPreference = 'Stop'
@@ -31,6 +32,12 @@ Master Repo path: $RepoPath
 Use $RepoPath\AGENTS.md as the canonical portable contract. For tasks that may benefit from an agent framework, RAG, memory, MCP, observability, security, cloud/cost, quantum, Copilot, or another cataloged tool, search the Master Repo first and load only the relevant lane. Do not load the entire catalog into context. Follow its vetting, health, and security gates before installing or executing third-party code.
 Routine maintenance is GitHub-first: use the repository Catalog Guardian and [Catalog Audit] owner-approval issue rather than scheduling model calls. Only Charles may approve deterministic maintenance with `APPROVE CATALOG MAINTENANCE`. Use `python "$RepoPath\scripts\maintenance_request.py" --auto` only when a maintenance task genuinely needs model judgment, and do not perform that work until Charles states `APPROVE AI MAINTENANCE`. Never merge main without Charles approval.
 "@
+
+$autoFile = Join-Path $RepoPath "docs/auto-mode-block.txt"
+if ($AutoSkills) {
+  if (-not (Test-Path $autoFile)) { throw "Auto mode block not found at $autoFile" }
+  $common = $common.TrimEnd() + "`n" + (Get-Content -Raw -Path $autoFile).TrimEnd()
+}
 
 if (-not $CopilotOnly) {
   Set-MasterRepoBlock "$HOME\.claude\CLAUDE.md" ($common + "`nClaude-specific entrypoint: $RepoPath\CLAUDE.md")
@@ -79,3 +86,5 @@ Write-Host "Watermark command: & '$bin\master-watermark.ps1' <input> <output-fol
 Write-Host 'GitHub audit: gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use'
 Write-Host "Optional AI request: python '$RepoPath\scripts\maintenance_request.py' --auto"
 Write-Host "Token budget remains opt-in: $RepoPath\docs\TOKEN-BUDGET.md"
+if ($AutoSkills) { Write-Host 'Auto mode written to every client instruction file.' -ForegroundColor Green }
+else { Write-Host 'Auto mode not enabled. Re-run with -AutoSkills to turn it on.' }

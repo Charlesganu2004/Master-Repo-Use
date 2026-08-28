@@ -2,7 +2,14 @@
 set -euo pipefail
 
 REPO_PATH="${1:-$HOME/Master-Repo-Use}"
-MODE="${2:-all}"
+MODE="all"
+AUTO=0
+for arg in "$@"; do
+  case "$arg" in
+    --copilot-only) MODE="--copilot-only" ;;
+    --auto-skills)  AUTO=1 ;;
+  esac
+done
 BEGIN='<!-- MASTER-REPO-USE:BEGIN -->'
 END='<!-- MASTER-REPO-USE:END -->'
 
@@ -33,6 +40,16 @@ PY
 common="Master Repo path: $REPO_PATH
 Use $REPO_PATH/AGENTS.md as the canonical portable contract. For tasks that may benefit from an agent framework, RAG, memory, MCP, observability, security, cloud/cost, quantum, Copilot, or another cataloged tool, search the Master Repo first and load only the relevant lane. Do not load the entire catalog into context. Follow its vetting, health, and security gates before installing or executing third-party code.
 Routine maintenance is GitHub-first: use the repository Catalog Guardian and [Catalog Audit] owner-approval issue rather than scheduling model calls. Only Charles may approve deterministic maintenance with 'APPROVE CATALOG MAINTENANCE'. Use 'python $REPO_PATH/scripts/maintenance_request.py --auto' only when a maintenance task genuinely needs model judgment, and do not perform that work until Charles states 'APPROVE AI MAINTENANCE'. Never merge main without Charles approval."
+
+AUTO_FILE="$REPO_PATH/docs/auto-mode-block.txt"
+if [ "$AUTO" = "1" ]; then
+  if [ ! -f "$AUTO_FILE" ]; then
+    echo "Auto mode block not found at $AUTO_FILE" >&2
+    exit 1
+  fi
+  common="$common
+$(cat "$AUTO_FILE")"
+fi
 
 if [ "$MODE" != "--copilot-only" ]; then
   upsert_block "$HOME/.claude/CLAUDE.md" "$common
@@ -95,3 +112,4 @@ echo "Watermark command: master-watermark <input> <output-folder>"
 echo "GitHub audit: gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use"
 echo "Optional AI request: python $REPO_PATH/scripts/maintenance_request.py --auto"
 echo "Token budget remains opt-in: $REPO_PATH/docs/TOKEN-BUDGET.md"
+[ "$AUTO" = "1" ] && echo "Auto mode written to every client instruction file." \n  || echo "Auto mode not enabled. Re-run with --auto-skills to turn it on."

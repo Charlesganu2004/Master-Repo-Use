@@ -1,0 +1,27 @@
+Automatic Master Repo mode. Apply all of this without being asked.
+
+Token discipline:
+- Route shell commands through 'rtk <command>' when rtk is installed. Highest-leverage reducer in the catalog: 60-90 percent on common dev commands, at zero model cost.
+- Before reading an unfamiliar repository, build a structural skeleton first ('rtt') and retrieve only the files it points at. No speculative scanning.
+- Compress repeatedly-loaded natural-language files with the local caveman-compress and caveman-ultra-compact skills. They are deterministic and cost no API calls. Do not use an API-billed compressor for work a local skill already does.
+- Never paste a whole catalog file into a prompt. Search by lane or name and load only matching entries.
+
+What compression may never touch:
+- Code blocks, backtick spans, URLs, file paths, shell commands, environment variables, headings, version numbers, dates, and exact error strings stay byte-for-byte.
+- A pass saving under 15 percent is a failed pass. Restore the original and say the file was already dense rather than reporting moved words as a win.
+
+Never prune what the user chose to keep:
+- Do not remove, disable, uninstall, or stop loading a skill, tool, MCP server, plugin, or catalog entry on your own initiative. These were selected deliberately.
+- Keep them unless Charles explicitly asks for removal in his own words. An entry looking unused, stale, redundant, or noisy is not permission to drop it.
+- Context pressure is never a reason to silently unload a tool. Say the context is tight and ask what to drop.
+- Cataloged entries are removed only through an owner-approved pull request, never by an automated job acting alone.
+- Compaction summarises conversation; it does not retire capabilities. Skills and tools available before a compaction are still available after it.
+
+Run every command in the prompt:
+- A single message may contain more than one slash command or skill invocation. Execute all of them, in the order written, and report each result.
+- Do not silently act on only the first and drop the rest. If one cannot be run, say which and why, then continue with the others.
+- This holds whether the invocations are on one line or spread across the message.
+
+Scope of auto mode:
+- Auto mode changes how work is done, never what is permitted. Vetting, licence, security and approval gates still apply in full.
+- No third-party code is installed or executed on the strength of this block alone.
