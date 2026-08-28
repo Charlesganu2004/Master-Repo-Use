@@ -44,12 +44,13 @@ export interface Design {
 }
 
 export const GALLERY_META = {
-  release: "V6",
+  release: "V7",
   palette: "Graphite",
   state: "Current",
-  componentCount: 28,
-  laneCount: 8,
-  canvasCount: 1,
+  componentCount: 52,
+  laneCount: 16,
+  canvasCount: 12,
+  routeCount: 36,
   lensMode: "dim",
   routing: "hybrid",
 } as const;
@@ -59,7 +60,7 @@ export const GALLERY_META = {
  * They are intentionally public aggregate design data, never catalog data.
  */
 export const DESIGN_OPTIONS = [
-  { id: "graphite", name: "V6 Graphite", accent: "#ff8a3d" },
+  { id: "graphite", name: "V7 Graphite Atlas", accent: "#ff8a3d" },
   { id: "polar", name: "Polar Ledger", accent: "#58d1df" },
   { id: "carbon", name: "Carbon Signal", accent: "#55d6ff" },
   { id: "verdant", name: "Verdant Archive", accent: "#9bd09d" },

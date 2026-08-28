@@ -1,63 +1,140 @@
 # Auto mode
 
-One command writes a shared behaviour block into every AI client's global
-instruction file, so Claude Code, Codex, Gemini and Copilot all start a session
-under the same rules. The rules themselves live in one place,
-`docs/auto-mode-block.txt`, and both setup scripts splice that same file in.
+Auto mode makes your skills, tools, agents and MCP servers behave the same way
+in every conversation, on every client, without paying for that consistency in
+tokens on each session.
 
-## The one liner
+## Why it is built in three layers
 
-Windows PowerShell:
+The obvious approach, writing the rules into each client's global instruction
+file, costs about **616 tokens per session per client**. Four clients, every
+session, forever. That is worse than the problem it solves.
+
+So the rules are split by what each layer actually costs:
+
+| Layer | File | Cost per session | Carries |
+|---|---|---|---|
+| Hook | `scripts/hooks/no_prune_guard.py` | **0 tokens** | Deletion protection, enforced outside the model |
+| Skill | `skills/master-repo-auto/SKILL.md` | Name and description only | Token discipline, compression safety, full no-prune policy |
+| Block | `docs/auto-mode-block.txt` | About 120 tokens | The two rules that must be known before any lookup |
+
+Total standing cost is roughly **120 tokens** instead of 616, and the deletion
+protection is genuinely free because a hook runs outside the model context.
+
+### What "carries over with no token cost" can and cannot mean
+
+Honestly: a capability the model must *know about* costs something. A skill's
+name and description sit in the listing, roughly 20 to 40 tokens each. That is
+the floor for anything discoverable.
+
+Truly zero is available only for things that do not need the model at all, which
+is why deletion protection is a hook rather than a sentence in a prompt. A hook
+works when the model is distracted, mid-compaction, or on a different client
+entirely.
+
+## Install
+
+Every path below wires all three layers and is safe to re-run. The block is
+delimited by `<!-- MASTER-REPO-USE:BEGIN -->` and `<!-- MASTER-REPO-USE:END -->`
+and replaced in place, so it never duplicates and never disturbs your own text.
+
+### Any machine with Python (the portable path)
+
+```bash
+python scripts/install_auto_mode.py
+```
+
+This detects Windows, WSL, macOS or Linux on its own. Add `--dry-run` to see
+exactly what it would touch first, `--no-hook` to install instructions only.
+
+### Windows PowerShell
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "$HOME\Downloads\Master-Repo-Use\scripts\install_auto_mode.py"
+```
+
+Or the older wrapper, which also sets the Copilot environment variable and the
+watermark helper:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File "$HOME\Downloads\Master-Repo-Use\scripts\setup-global-ai.ps1" -RepoPath "$HOME\Downloads\Master-Repo-Use" -AutoSkills
 ```
 
-WSL, Linux, macOS:
+### WSL and Ubuntu
+
+WSL has its own home directory and its own client config, separate from Windows.
+Installing on Windows does **not** cover it, so run it inside the distro too:
+
+```bash
+wsl -e bash -lc "cd /mnt/c/Users/Charl/Downloads/Master-Repo-Use && python3 scripts/install_auto_mode.py"
+```
+
+From inside Ubuntu directly:
+
+```bash
+python3 /mnt/c/Users/Charl/Downloads/Master-Repo-Use/scripts/install_auto_mode.py
+```
+
+### macOS and Linux
 
 ```bash
 bash ~/Master-Repo-Use/scripts/setup-global-ai.sh ~/Master-Repo-Use --auto-skills
 ```
 
-Re-run it any time. The block is delimited by `<!-- MASTER-REPO-USE:BEGIN -->`
-and `<!-- MASTER-REPO-USE:END -->` markers and is replaced in place, so it never
-duplicates and never disturbs anything you wrote around it.
+### A machine that does not have the repo yet
 
-Omit the flag to install the Master Repo block without the auto-mode rules.
+```bash
+git clone https://github.com/Charlesganu2004/Master-Repo-Use.git ~/Master-Repo-Use && python3 ~/Master-Repo-Use/scripts/install_auto_mode.py
+```
 
-## What the block turns on
+### A machine where you cannot register hooks
 
-- **Token discipline.** Route commands through `rtk`, skeleton a repo with `rtt`
-  before reading it, compress with the local caveman skills, never paste a whole
-  catalog file.
-- **Compression safety.** Code blocks, backtick spans, URLs, paths, commands,
-  environment variables, headings, versions, dates and error strings stay
-  byte-for-byte. A pass saving under 15 percent is a failed pass.
-- **No pruning.** Skills, tools, MCP servers, plugins and catalog entries are
-  never removed, disabled or unloaded on the model's own initiative. Only an
-  explicit request from Charles removes one. Context pressure is not a reason to
-  drop a tool silently; the model says the context is tight and asks.
-- **Every command runs.** A prompt may carry more than one slash command. All of
-  them run, in the order written, each reporting its own result.
+```bash
+python scripts/install_auto_mode.py --no-hook
+```
 
-Auto mode changes how work is done, never what is permitted. Vetting, licence,
-security and approval gates apply exactly as before, and nothing third-party is
-installed or executed on the strength of this block.
+Instructions and skill only. Deletion protection then depends on the model
+reading the rules, which is weaker, so prefer the hook wherever it is allowed.
+
+## What the no-prune hook does
+
+It blocks a destructive command aimed at a protected path: `.claude/skills`,
+`.claude/plugins`, `.claude/agents`, `.claude/settings.json`, `.mcp.json`,
+`repo-lists/`, `skills/`, and the client contract files.
+
+It is deliberately narrow, because a guard that interrupts ordinary work gets
+switched off and then protects nothing. It ignores:
+
+- heredoc bodies and single-quoted strings, so writing or grepping text that
+  merely mentions a deletion is not treated as one
+- plain `>` redirects, which are how these files get written in the first place
+- every tool other than Bash
+
+To delete something on purpose, append the override:
+
+```bash
+rm -rf ~/.claude/skills/old-thing  # APPROVED PRUNE
+```
+
+That is a typed statement of intent, which is the bar the policy asks for.
+
+## Verify an install
+
+```bash
+python -m unittest discover -s tests -p 'test_*.py'
+```
+
+To confirm the hook is live on this machine, check that `settings.json` has a
+`PreToolUse` entry naming `no_prune_guard`, and that
+`~/.claude/skills/master-repo-auto` exists.
 
 ## Honest limits
 
-The block is instruction text, which is the only mechanism all four clients
-share. It steers behaviour reliably but it is not a sandbox.
-
-Two things it cannot do by itself:
-
-- It cannot change a client's own slash-command parser. Claude Code still routes
-  the single leading `/command` of a message into that skill. The rule makes the
-  model act on further invocations it finds in the body; it does not make the
+- The block cannot change a client's slash-command parser. Claude Code still
+  routes the single leading `/command` into that skill. The rule makes a model
+  act on further invocations it finds in the message body; it does not make the
   terminal parse two leading slash commands.
-- It cannot stop a client from compacting a long conversation. What it does stop
-  is a model treating compaction as licence to forget which tools it had.
-
-The deterministic parts are wired separately and do not depend on the block:
-`rtk` runs as a Claude Code hook, and catalog entries can only be removed
-through an owner-approved pull request.
+- The hook only sees Bash tool calls. Deletions through a client's own UI, or
+  through the Write and Edit tools, do not pass through it.
+- `rtk` and `rtt` have to be installed separately. The rules reference them, but
+  referencing a tool does not install it.

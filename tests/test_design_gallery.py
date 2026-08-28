@@ -24,15 +24,16 @@ class DesignGalleryTests(unittest.TestCase):
         self.assertIn("const DESIGNS", runtime)
         self.assertIn("design-options.ts", runtime)
 
-    def test_v6_graphite_source_facts_are_explicit(self):
+    def test_v7_graphite_atlas_source_facts_are_explicit(self):
         contract = TS.read_text(encoding="utf-8")
         for fragment in (
-            'release: "V6"',
+            'release: "V7"',
             'palette: "Graphite"',
             'state: "Current"',
-            "componentCount: 28",
-            "laneCount: 8",
-            "canvasCount: 1",
+            "componentCount: 52",
+            "laneCount: 16",
+            "canvasCount: 12",
+            "routeCount: 36",
             'lensMode: "dim"',
             'routing: "hybrid"',
         ):

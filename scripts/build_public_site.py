@@ -36,6 +36,10 @@ PRIVATE_DESIGN_STUDIO = ROOT / "design-options.html"
 PRIVATE_DESIGN_STUDIO_JS = ROOT / "design-options.js"
 PUBLIC_DESIGN_STUDIO = SITE / "design-options.html"
 PUBLIC_DESIGN_STUDIO_JS = SITE / "design-options.js"
+PRIVATE_ATLAS_CSS = ROOT / "atlas.css"
+PRIVATE_ATLAS_JS = ROOT / "atlas.js"
+PUBLIC_ATLAS_CSS = SITE / "atlas.css"
+PUBLIC_ATLAS_JS = SITE / "atlas.js"
 PRIVATE_PROFILES = ROOT / "docs" / "hardware-profiles.json"
 PUBLIC_PROFILES = SITE / "docs" / "hardware-profiles.json"
 PUBLIC_VERSION = SITE / "version.json"
@@ -211,10 +215,12 @@ def build_index() -> int:
 
 
 def build_design_studio() -> list[str]:
-    """Publish the standalone design studio and its dependency-free runtime."""
+    """Publish every dependency-free user interface asset."""
     assets = (
         (PRIVATE_DESIGN_STUDIO, PUBLIC_DESIGN_STUDIO),
         (PRIVATE_DESIGN_STUDIO_JS, PUBLIC_DESIGN_STUDIO_JS),
+        (PRIVATE_ATLAS_CSS, PUBLIC_ATLAS_CSS),
+        (PRIVATE_ATLAS_JS, PUBLIC_ATLAS_JS),
     )
     missing = [source.name for source, _ in assets if not source.exists()]
     if missing:
@@ -406,6 +412,8 @@ def verify(payload: dict) -> list[str]:
 
     public_ui_assets = (
         (PUBLIC_INDEX, "public index.html"),
+        (PUBLIC_ATLAS_CSS, "public atlas.css"),
+        (PUBLIC_ATLAS_JS, "public atlas.js"),
         (PUBLIC_DESIGN_STUDIO, "public design-options.html"),
         (PUBLIC_DESIGN_STUDIO_JS, "public design-options.js"),
     )

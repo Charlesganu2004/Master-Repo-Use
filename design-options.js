@@ -1,6 +1,6 @@
 // @ts-check
 /*
-  Browser runtime for the V6 Graphite design studio.
+  Browser runtime for the V7 Graphite Atlas design studio.
 
   This file intentionally has no runtime dependencies. The matching
   design-options.ts contract keeps the palette model explicit for editor and CI checks.
@@ -23,9 +23,9 @@ const toast = $('toast');
 /** @type {Design[]} */
 const DESIGNS = [
   {
-    id: 'graphite', index: '01', name: 'V6 Graphite', layout: 'graphite',
+    id: 'graphite', index: '01', name: 'V7 Graphite Atlas', layout: 'graphite',
     label: 'Current reference',
-    description: 'Near monochrome tooling with one hot orange accent. One map keeps all 28 components and 8 lanes visible while lenses dim unrelated routes.',
+    description: 'Near monochrome tooling with one hot orange accent. The atlas keeps all 52 components and 16 lanes visible across 12 focused canvases.',
     dark: { bg: '#131314', panel: '#1c1c1e', panel2: '#262628', ink: '#fafafb', ink2: '#d2d2d7', ink3: '#a9a9b2', accent: '#ff8a3d', accent2: '#ffb347', onAccent: '#18110c', ok: '#77dd9a', codeBg: '#0c0c0d', codeInk: '#ededf0', codeMuted: '#a9a9b2', r: '12px', rSm: '9px', shadow: '0 20px 52px rgba(0,0,0,.34)', fontDisplay: '"Segoe UI",Tahoma,Arial,sans-serif', fontBody: '"Segoe UI",Tahoma,Arial,sans-serif', fontMono: 'Consolas,"Lucida Console",monospace', texture: 'none' },
     light: { bg: '#f5f5f6', panel: '#ffffff', panel2: '#eeeeef', ink: '#171719', ink2: '#3f4045', ink3: '#666870', accent: '#a84709', accent2: '#9a6200', onAccent: '#ffffff', ok: '#177344', codeBg: '#171719', codeInk: '#f7f7f8', codeMuted: '#bfc0c5', r: '12px', rSm: '9px', shadow: '0 16px 38px rgba(23,23,25,.13)', fontDisplay: '"Segoe UI",Tahoma,Arial,sans-serif', fontBody: '"Segoe UI",Tahoma,Arial,sans-serif', fontMono: 'Consolas,"Lucida Console",monospace', texture: 'none' }
   },
@@ -137,7 +137,7 @@ const DESIGNS = [
   {
     id: 'pixel', index: '17', name: 'Paper Pixel', layout: 'pixel',
     label: 'Compact game menu',
-    description: 'A high precision pixel grid makes all 28 components feel like inventory slots. The bright green routing marks are quick to scan at a glance.',
+    description: 'A high precision pixel grid makes all 52 components feel like inventory slots. The bright green routing marks are quick to scan at a glance.',
     dark: { bg: '#151912', panel: '#242a1f', panel2: '#2d3527', ink: '#fffdf4', ink2: '#dddac8', ink3: '#aaa78f', accent: '#69dfb8', accent2: '#f18a63', onAccent: '#07120e', ok: '#98d981', codeBg: '#0b0e09', codeInk: '#fffdf4', codeMuted: '#aaa78f', r: '0px', rSm: '0px', shadow: '4px 4px 0 #070907', fontDisplay: '"Lucida Console","Courier New",monospace', fontBody: 'Verdana,"Segoe UI",sans-serif', fontMono: '"Lucida Console","Courier New",monospace', texture: 'radial-gradient(circle,rgba(255,253,244,.11) 0 1px,transparent 1px)' },
     light: { bg: '#fffdf4', panel: '#ffffff', panel2: '#f7f4e9', ink: '#231d0e', ink2: '#504936', ink3: '#716a55', accent: '#006b54', accent2: '#943a1f', onAccent: '#ffffff', ok: '#35651f', codeBg: '#231d0e', codeInk: '#fffdf4', codeMuted: '#b2aa91', r: '0px', rSm: '0px', shadow: '4px 4px 0 #231d0e', fontDisplay: '"Lucida Console","Courier New",monospace', fontBody: 'Verdana,"Segoe UI",sans-serif', fontMono: '"Lucida Console","Courier New",monospace', texture: 'radial-gradient(circle,rgba(35,29,14,.1) 0 1px,transparent 1px)' }
   },
@@ -239,12 +239,12 @@ function makeCard(design, preview) {
       <span class="mock-health"><i></i>map live</span>
     </div>
     <div class="mock-intro"><span class="mock-index">${design.index} ${escapeHTML(design.label)}</span><h2 id="${headingId}">${escapeHTML(design.name)}</h2><p>${escapeHTML(design.description)}</p></div>
-    <div class="mock-tabs" aria-label="V6 Graphite map facts"><span class="mock-tab on">Full map 28</span><span class="mock-tab">8 lanes</span><span class="mock-tab">One canvas</span><span class="mock-tab">Hybrid routes</span></div>
+    <div class="mock-tabs" aria-label="V7 Graphite Atlas facts"><span class="mock-tab on">Full map 52</span><span class="mock-tab">16 lanes</span><span class="mock-tab">12 canvases</span><span class="mock-tab">36 routes</span></div>
     <div class="mock-work">
       <section class="mock-map" aria-label="Graphite map preview">${nodes}</section>
       <aside class="mock-rail"><div><h3>Setup rail</h3><div class="rail-meta">3 selected in route order</div><span class="mock-chip" style="--chip:${palette.accent}"><i></i>Router</span><span class="mock-chip" style="--chip:${palette.accent2}"><i></i>Hosted fallback</span><span class="mock-chip" style="--chip:${palette.ok}"><i></i>Guardian</span></div><div class="mock-code"><span># hybrid routing</span>mru route local then hosted</div></aside>
     </div>
-    <div class="mock-metrics"><div class="mock-stat" style="--stat:${palette.accent}"><small>Components</small><strong>28</strong></div><div class="mock-stat" style="--stat:${palette.accent2}"><small>Lanes</small><strong>8</strong></div><div class="mock-stat" style="--stat:${palette.ok}"><small>Canvas</small><strong>1</strong></div></div>
+    <div class="mock-metrics"><div class="mock-stat" style="--stat:${palette.accent}"><small>Components</small><strong>52</strong></div><div class="mock-stat" style="--stat:${palette.accent2}"><small>Lanes</small><strong>16</strong></div><div class="mock-stat" style="--stat:${palette.ok}"><small>Canvases</small><strong>12</strong></div></div>
     <footer class="card-foot"><div class="contrast" data-contrast><span><b>${textRatio}:1</b> text</span><span><b>${accentRatio}:1</b> accent</span></div><div class="card-actions"></div></footer>`;
 
   if (!preview) {
@@ -302,7 +302,7 @@ function updateModeButtons() {
 function updateChoiceStatus() {
   const design = DESIGNS.find((entry) => entry.id === shortlist);
   choiceStatus.innerHTML = design
-    ? `<strong>${escapeHTML(design.name)} is shortlisted.</strong> The V6 Graphite map and hybrid route rules stay the same when this direction is applied.`
+    ? `<strong>${escapeHTML(design.name)} is shortlisted.</strong> The V7 Graphite Atlas and 36 hybrid route rules stay the same when this direction is applied.`
     : '<strong>No design shortlisted.</strong> Preview any option, then save one direction.';
   document.querySelectorAll('[data-shortlist]').forEach((button) => {
     const selected = button.dataset.shortlist === shortlist;

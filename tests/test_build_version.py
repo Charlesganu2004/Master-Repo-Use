@@ -24,6 +24,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import build_public_site as builder  # noqa: E402
 
 INDEX = ROOT / "index.html"
+ATLAS_RUNTIME = ROOT / "atlas.js"
 
 
 def stage() -> dict:
@@ -79,13 +80,13 @@ class BuildVersionTests(unittest.TestCase):
 
     def test_page_compares_against_a_no_store_fetch(self):
         """A cached version.json would defeat the entire mechanism."""
-        page = INDEX.read_text(encoding="utf-8")
+        page = INDEX.read_text(encoding="utf-8") + ATLAS_RUNTIME.read_text(encoding="utf-8")
         self.assertIn("version.json", page)
         self.assertIn("cache:'no-store'", page.replace(" ", ""))
 
     def test_reload_uses_a_fresh_url(self):
         """A plain location.reload() can still be served from the disk cache."""
-        page = INDEX.read_text(encoding="utf-8")
+        page = INDEX.read_text(encoding="utf-8") + ATLAS_RUNTIME.read_text(encoding="utf-8")
         self.assertIn("location.replace", page)
 
     def test_no_duplicate_element_ids(self):
@@ -98,7 +99,9 @@ class BuildVersionTests(unittest.TestCase):
         """
         import collections
         import re
-        page = INDEX.read_text(encoding="utf-8")
+        page = "\n".join(path.read_text(encoding="utf-8") for path in (
+            INDEX, ROOT / "atlas.css", ATLAS_RUNTIME
+        ))
         ids = re.findall(r'\sid="([^"]+)"', page)
         dupes = [i for i, n in collections.Counter(ids).items() if n > 1]
         self.assertEqual([], dupes, f"duplicate element ids: {dupes}")
