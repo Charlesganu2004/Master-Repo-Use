@@ -18,8 +18,10 @@ ZongqianLi/Prompt-Compression-Survey   # static academic survey; lifecycle overr
 
 # --- Added 2026-08-28: the reducers Charles supplied, graded honestly
 rtk-ai/rtk                        # CLI proxy, filters command output before it reaches the model.
-                                  # 77.7k stars, Apache-2.0, pushed today. The strongest entry in this lane
-                                  # and already wired as a Claude Code hook on this machine.
+                                  # 77.7k stars, Apache-2.0, pushed today. Strongest entry in this lane.
+                                  # NOT INSTALLED on Charles's machine as of 2026-08-28, on Windows or in
+                                  # WSL, and settings.json had no hooks at all. RTK.md describes it as an
+                                  # active transparent hook; that was aspirational, not the state on disk.
 yttrium400/reducethemtokens       # 'rtt': compresses a repo to an imports/signatures/class skeleton for
                                   # orientation before retrieval. 11 stars, MIT, 77d. Small but the
                                   # technique is sound and the licence permits use.
