@@ -128,6 +128,29 @@ def load_overrides() -> dict:
         return {}
 
 
+def latest_release_age(repo: str) -> int | None:
+    """Days since the newest release, or None if there are none or the call fails.
+
+    Called only for repositories that age alone would flag, so the extra request
+    is paid for a handful of repos rather than the whole catalog.
+    """
+    req = urllib.request.Request(
+        f"https://api.github.com/repos/{repo}/releases?per_page=1",
+        headers={"Accept": "application/vnd.github+json", "User-Agent": "master-repo-guardian"},
+    )
+    if os.getenv("GITHUB_TOKEN"):
+        req.add_header("Authorization", f"Bearer {os.environ['GITHUB_TOKEN']}")
+    try:
+        with urllib.request.urlopen(req, timeout=25) as response:
+            data = json.load(response)
+    except Exception:  # noqa: BLE001 - a failed lookup must never change a verdict
+        return None
+    if not data:
+        return None
+    published = parse_time(data[0].get("published_at"))
+    return (now() - published).days if published else None
+
+
 def metadata(repo: str) -> dict | None:
     req = urllib.request.Request(
         f"https://api.github.com/repos/{repo}",
@@ -571,6 +594,17 @@ def main() -> int:
             args.remove_stale_after_days,
             args.archive_grace_days,
         )
+        # Age flagged it. Before trusting that, ask whether it has shipped a release
+        # recently. Archived repos are excluded: a sunset release is indistinguishable
+        # from a healthy one, which is exactly how Flowise nearly kept its place.
+        if result.status in {"STALE", "REVIEW", "REMOVE"} and not result.archived \
+                and not (overrides.get(repo) or {}).get("mode"):
+            rel_age = latest_release_age(repo)
+            if rel_age is not None and rel_age <= args.stale_after_days:
+                result.status = "HEALTHY"
+                result.note = (f"released {rel_age}d ago; a release is maintenance even when "
+                               f"the last push was {result.age_days}d ago")
+
         rotating = args.deep and idx % groups == args.batch_index % groups
         should_scan = repo in forced or (args.deep and (rotating or result.status in {"REVIEW", "REMOVE"}))
 
