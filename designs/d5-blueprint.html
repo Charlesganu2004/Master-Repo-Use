@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Blueprint | Master Repo Atlas</title>
+<link rel="stylesheet" href="themes.css">
 <style>
 :root{
   --bg:#0d1826; --panel:#112036; --line:#1e3552; --ink:#dbe7f5; --dim:#7a93b0;
@@ -270,6 +271,7 @@ svg.sky,svg.orbit,svg.sheet{height:min(66vh,720px) !important;min-height:360px}
 <body>
 
 <div id="setup"></div>
+<div id="themehost" style="padding:8px 18px;border-bottom:1px solid var(--line)"></div>
 <div class="tabs" id="tabs" role="tablist"></div>
 <div id="filters"></div>
 
@@ -278,6 +280,7 @@ svg.sky,svg.orbit,svg.sheet{height:min(66vh,720px) !important;min-height:360px}
   <aside class="side" id="side"></aside>
 </div>
 
+<script src="atlas-theme.js"></script>
 <script src="atlas-data.js"></script>
 <script src="atlas-core.js"></script>
 <script src="atlas-panes.js"></script>
@@ -463,6 +466,8 @@ function hud(){
     `<b>${c.routes}</b> hybrid routes<br>` +
     `<span style="opacity:.65">drag to pan · wheel to zoom</span>`;
 }
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
 
 P.mount({ renderMap, onSelect: () => wires() });
 A.on(() => wires());

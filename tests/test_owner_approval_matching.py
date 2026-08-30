@@ -11,7 +11,8 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
 from owner_approval import (  # noqa: E402
-    PASSCODE, evaluate_approval, is_owner_approval, is_passcode_approval,
+    PASSCODE, evaluate_approval, is_bare_approval, is_owner_approval,
+    is_passcode_approval,
 )
 
 SHA = "979994113ba75efb5e5693b6d503ba510a49b2fd"
@@ -115,6 +116,59 @@ class PasscodeApproval(unittest.TestCase):
         pr = {"head": {"sha": SHA}, "user": {"login": "Charlesganu2004"}, "draft": True}
         owner = [{"user": {"login": "Charlesganu2004"}, "body": f"I approve {PASSCODE}"}]
         self.assertFalse(evaluate_approval(pr, owner, []).approved)
+
+
+class BareApproval(unittest.TestCase):
+    """The plain phrase, requested after the SHA forms cost a round trip per push.
+
+    Like the passcode it approves the pull request rather than one revision, so
+    later commits inherit it. That is the accepted trade. What it must still do
+    is refuse anyone who is not Charles, refuse drafts, and refuse the phrase
+    quoted inside a sentence about it.
+    """
+
+    PR = {"head": {"sha": SHA}, "user": {"login": "Charlesganu2004"}, "draft": False}
+
+    @staticmethod
+    def comment(login, body):
+        return [{"user": {"login": login}, "body": body}]
+
+    def test_the_bare_phrase_is_recognised(self):
+        self.assertTrue(is_bare_approval("APPROVE OWNER PR"))
+
+    def test_casing_and_whitespace_are_tolerated(self):
+        self.assertTrue(is_bare_approval("  approve owner pr  "))
+
+    def test_the_phrase_must_be_the_whole_comment(self):
+        self.assertFalse(is_bare_approval("we should APPROVE OWNER PR soon"))
+        self.assertFalse(is_bare_approval("APPROVE OWNER PR when tests pass"))
+
+    def test_it_approves_an_owner_authored_pull_request(self):
+        self.assertTrue(evaluate_approval(
+            self.PR, self.comment("Charlesganu2004", "APPROVE OWNER PR"), []).approved)
+
+    def test_it_approves_a_pull_request_opened_by_someone_else(self):
+        pr = dict(self.PR, user={"login": "outside-contributor"})
+        self.assertTrue(evaluate_approval(
+            pr, self.comment("Charlesganu2004", "APPROVE OWNER PR"), []).approved)
+
+    def test_only_the_owner_account_can_use_it(self):
+        self.assertFalse(evaluate_approval(
+            self.PR, self.comment("someone-else", "APPROVE OWNER PR"), []).approved)
+
+    def test_drafts_are_still_never_approved(self):
+        draft = dict(self.PR, draft=True)
+        self.assertFalse(evaluate_approval(
+            draft, self.comment("Charlesganu2004", "APPROVE OWNER PR"), []).approved)
+
+    def test_the_other_two_forms_still_work(self):
+        for body in (f"I approve {PASSCODE}", f"APPROVE OWNER PR {SHA}"):
+            self.assertTrue(evaluate_approval(
+                self.PR, self.comment("Charlesganu2004", body), []).approved, body)
+
+    def test_the_catalog_maintenance_phrase_does_not_cross_over(self):
+        self.assertFalse(evaluate_approval(
+            self.PR, self.comment("Charlesganu2004", "APPROVE CATALOG MAINTENANCE"), []).approved)
 
 
 if __name__ == "__main__":

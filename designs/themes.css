@@ -1,0 +1,96 @@
+/* Palettes shared by every atlas design.
+ *
+ * Each design defines its own tokens on :root. These blocks override them with
+ * a higher specificity selector, so a design keeps its own layout and motion
+ * while the colour changes underneath. Adding a palette here adds it to all
+ * designs at once.
+ *
+ * The six token names every design uses:
+ *   --bg --panel --line --ink --dim --accent --accent2 --warn
+ * plus one colour per component kind:
+ *   --instruction --capability --knowledge --control --model --delivery
+ */
+
+/* Ember. Red on near-black, the default Charles asked for. Red is used for the
+   accent only, never for the "control" kind, so a warning still reads as a
+   warning rather than blending into the furniture. */
+:root[data-theme="ember"]{
+  --bg:#0b0708; --panel:#141011; --line:#2a1e20; --ink:#f2e9ea; --dim:#a08b8e;
+  --accent:#ff3b3b; --accent2:#ff8f5c; --warn:#ffd166;
+  --instruction:#ff5c5c; --capability:#ff9d5c; --knowledge:#7fb3ff;
+  --control:#ffd166; --model:#c77dff; --delivery:#5cd6a0;
+}
+
+/* Ash. The original graphite: neutral, quiet, nothing competing for attention. */
+:root[data-theme="ash"]{
+  --bg:#0e0f11; --panel:#16181c; --line:#262a31; --ink:#e9ecf1; --dim:#8d95a3;
+  --accent:#f97316; --accent2:#94a3b8; --warn:#fbbf24;
+  --instruction:#f97316; --capability:#94a3b8; --knowledge:#60a5fa;
+  --control:#f87171; --model:#fbbf24; --delivery:#4ade80;
+}
+
+/* Viper. Phosphor green on black: the terminal look the console started with. */
+:root[data-theme="viper"]{
+  --bg:#0b0c0b; --panel:#111311; --line:#1f241f; --ink:#d8e0d4; --dim:#7d8a78;
+  --accent:#9ae66e; --accent2:#e6c46e; --warn:#e6866e;
+  --instruction:#9ae66e; --capability:#e6c46e; --knowledge:#6ec9e6;
+  --control:#e6866e; --model:#c99ae6; --delivery:#6ee6a8;
+}
+
+/* Cobalt. Cold blue steel, the calmest of the dark palettes. */
+:root[data-theme="cobalt"]{
+  --bg:#080b12; --panel:#0f141f; --line:#1c2637; --ink:#e6edf7; --dim:#8296b0;
+  --accent:#3b82f6; --accent2:#22d3ee; --warn:#fbbf24;
+  --instruction:#3b82f6; --capability:#22d3ee; --knowledge:#a78bfa;
+  --control:#fb7185; --model:#fbbf24; --delivery:#34d399;
+}
+
+/* Plum. Magenta and violet, highest colour separation between kinds. */
+:root[data-theme="plum"]{
+  --bg:#0a0710; --panel:#140f1e; --line:#261c38; --ink:#efe9f7; --dim:#9b8db3;
+  --accent:#e879f9; --accent2:#a78bfa; --warn:#fbbf24;
+  --instruction:#e879f9; --capability:#a78bfa; --knowledge:#38bdf8;
+  --control:#fb923c; --model:#facc15; --delivery:#4ade80;
+}
+
+/* Sand. The one light palette. Included because every dark theme looks fine in a
+   dim room and unreadable next to a window. */
+:root[data-theme="sand"]{
+  --bg:#f6f3ee; --panel:#fffdfa; --line:#e0d9cd; --ink:#241f1a; --dim:#6f665a;
+  --accent:#b4451f; --accent2:#8a6d3b; --warn:#a8730a;
+  --instruction:#b4451f; --capability:#8a6d3b; --knowledge:#2f6f9f;
+  --control:#a33a3a; --model:#7a5cab; --delivery:#2f7d54;
+}
+
+/* The light palette needs a few inversions that a token swap cannot express,
+   because several designs hardcode dark-on-dark assumptions. */
+:root[data-theme="sand"] .cmd,
+:root[data-theme="sand"] #setup .scan,
+:root[data-theme="sand"] #setup .hwfield input,
+:root[data-theme="sand"] #filters .fsearch,
+:root[data-theme="sand"] input[type=text],
+:root[data-theme="sand"] textarea,
+:root[data-theme="sand"] select,
+:root[data-theme="sand"] .rows,
+:root[data-theme="sand"] .prompt{
+  background:#fffdfa !important;
+}
+:root[data-theme="sand"] body{
+  background-image:none !important;
+}
+:root[data-theme="sand"] .row:hover{background:#efe9df}
+:root[data-theme="sand"] .row.on{background:#f3e6de}
+:root[data-theme="sand"] .link{stroke:#cfc6b8}
+:root[data-theme="sand"] .laneBox{fill:#fffdfa}
+:root[data-theme="sand"] .cell rect{fill:#f6f3ee}
+
+/* ---- the switcher itself ---- */
+.themebar{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.themebar .tlabel{font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--dim)}
+.swatch{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);
+  cursor:pointer;padding:0;position:relative;transition:.14s}
+.swatch:hover{transform:translateY(-2px)}
+.swatch.on{outline:2px solid var(--accent);outline-offset:2px}
+.swatch i{position:absolute;inset:3px 3px 50% 3px;border-radius:3px 3px 0 0;
+  display:block}

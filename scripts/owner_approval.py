@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 """Evaluate and publish the Master Repo owner-approval status.
 
-Two secure paths are supported:
+Approval comes from Charles and nobody else. Two paths:
 
-* PR authored by someone other than Charlesganu2004:
-  a normal GitHub APPROVED review by Charles on the *current head SHA*.
-* PR authored by Charlesganu2004:
-  an exact PR conversation comment from Charles:
-      APPROVE OWNER PR <CURRENT_HEAD_SHA>
+* PR authored by someone else: a normal GitHub APPROVED review by Charles on the
+  current head SHA.
+* PR authored by Charles: a conversation comment from him, in any of three forms:
+
+      APPROVE OWNER PR                  approves the pull request
+      I approve 152004                  approves the pull request
+      APPROVE OWNER PR <HEAD_SHA>       approves one revision only
 
 The result is written as the commit status context ``owner-approval`` on the
-current PR head SHA.  Any new commit therefore invalidates the previous approval.
+current PR head SHA.
+
+Only the third form expires when new commits land. The first two approve the
+pull request itself, so code pushed afterwards inherits the approval. Charles
+chose that deliberately, after the per-revision form cost a round trip on every
+push. Use the SHA form when a branch is moving and a review must pin a revision.
 """
 from __future__ import annotations
 
@@ -93,6 +100,20 @@ def is_passcode_approval(body: str) -> bool:
     return bool(match) and match.group(1) == PASSCODE
 
 
+# The bare phrase, requested by Charles after the SHA forms kept costing him a
+# round trip. Like the passcode, it approves the pull request rather than one
+# revision, so commits pushed afterwards inherit the approval. That is the
+# accepted trade and is not re-litigated here.
+#
+# It must still be the entire comment: quoting the phrase mid-sentence while
+# discussing it should not approve anything.
+BARE_RE = re.compile(r"^\s*APPROVE\s+OWNER\s+PR\s*$", re.IGNORECASE)
+
+
+def is_bare_approval(body: str) -> bool:
+    return bool(BARE_RE.match(body or ""))
+
+
 def is_owner_approval(body: str, head_sha: str) -> bool:
     """True when this comment approves exactly this head SHA.
 
@@ -122,22 +143,30 @@ def evaluate_approval(pr: dict[str, Any], comments: list[dict[str, Any]], review
     if pr.get("draft"):
         return Decision(False, "draft", "draft PRs cannot be owner-approved")
     if same_login(author, owner):
-        command = exact_owner_command(head_sha)
         for comment in comments:
             login = str(((comment.get("user") or {}).get("login") or ""))
             body = str(comment.get("body") or "").strip()
-            if same_login(login, owner) and is_passcode_approval(body):
+            if not same_login(login, owner):
+                continue
+            if is_bare_approval(body):
+                return Decision(True, "owner-bare", "owner approved this pull request")
+            if is_passcode_approval(body):
                 return Decision(True, "owner-passcode", "owner approved with the standing passcode")
-            if same_login(login, owner) and is_owner_approval(body, head_sha):
+            if is_owner_approval(body, head_sha):
                 return Decision(True, "owner-comment", "owner approved this exact PR head SHA")
         return Decision(False, "owner-comment",
-                        f'comment "I approve {PASSCODE}" to approve, '
-                        f"or APPROVE OWNER PR {head_sha[:7]} to pin this revision only")
-    # Someone else opened it. The passcode works here too, so Charles has one
-    # phrase that approves anything rather than a different ritual per case.
+                        'comment "APPROVE OWNER PR" to approve, or '
+                        f"APPROVE OWNER PR {head_sha[:7]} to pin this revision only")
+    # Someone else opened it. The same phrases work here, so Charles has one way
+    # to approve anything rather than a different ritual per case.
     for comment in comments:
         login = str(((comment.get("user") or {}).get("login") or ""))
-        if same_login(login, owner) and is_passcode_approval(str(comment.get("body") or "").strip()):
+        body = str(comment.get("body") or "").strip()
+        if not same_login(login, owner):
+            continue
+        if is_bare_approval(body):
+            return Decision(True, "owner-bare", "owner approved this pull request")
+        if is_passcode_approval(body):
             return Decision(True, "owner-passcode", "owner approved with the standing passcode")
     decisive: list[tuple[str, int, str]] = []
     for review in reviews:

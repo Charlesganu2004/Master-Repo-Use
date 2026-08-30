@@ -1,4 +1,4 @@
-"""Five designs share one data layer. These tests stop them drifting apart.
+"""Six designs share one data layer and one palette layer. These stop them drifting.
 
 The data layer is generated from files that exist, so the most valuable checks
 are the ones that catch a lane pointing at something deleted, a component in a
@@ -14,8 +14,8 @@ from html.parser import HTMLParser
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / "atlas-data.json"
 DESIGNS = ROOT / "designs"
-INTERACTIVE = ["d2-constellation.html", "d3-console.html",
-               "d4-orbital.html", "d5-blueprint.html"]
+INTERACTIVE = ["d2-constellation.html", "d3-console.html", "d4-orbital.html",
+               "d5-blueprint.html", "d6-graphite.html", "d7-material.html"]
 
 # Charles asked for at least 120 lanes. Padding the count with invented names
 # would satisfy the number and defeat the point, so the generator grounds every
@@ -186,7 +186,8 @@ class TheOfflineFallback(unittest.TestCase):
 
 class TheDesigns(unittest.TestCase):
     def test_all_interactive_designs_exist(self):
-        for name in INTERACTIVE + ["index.html", "atlas-core.js", "atlas-panes.js"]:
+        for name in INTERACTIVE + ["index.html", "atlas-core.js", "atlas-panes.js",
+                                   "atlas-theme.js", "themes.css"]:
             self.assertTrue((DESIGNS / name).exists(), f"missing designs/{name}")
 
     def test_each_design_uses_the_shared_data_layer(self):
@@ -232,10 +233,19 @@ class TheDesigns(unittest.TestCase):
         self.assertEqual(len(titles), len(set(titles)), "designs share a title")
 
     def test_gallery_links_to_every_design(self):
+        # Graphite used to live at the repository root; it is now d6 alongside
+        # the others, rebuilt on the shared engine.
         gallery = (DESIGNS / "index.html").read_text(encoding="utf-8")
         for name in INTERACTIVE:
             self.assertIn(name, gallery, f"gallery does not link {name}")
-        self.assertIn("../index.html", gallery, "gallery does not link the Graphite design")
+
+    def test_the_two_designs_charles_picked_are_marked_as_such(self):
+        gallery = (DESIGNS / "index.html").read_text(encoding="utf-8")
+        self.assertIn("your pick", gallery)
+        for name in ("d6-graphite.html", "d3-console.html"):
+            index = gallery.index(name)
+            self.assertIn("pick: true", gallery[index:index + 400],
+                          f"{name} is not marked as a pick")
 
 
 class TheSharedCore(unittest.TestCase):
@@ -305,6 +315,71 @@ class TheSharedCore(unittest.TestCase):
         for forbidden in ("fetch(", "XMLHttpRequest", "sendBeacon"):
             self.assertNotIn(forbidden, self.panes,
                              f"panes must not transmit; found {forbidden}")
+
+
+class ThePalettes(unittest.TestCase):
+    """One palette layer for six designs, so a colour can be judged across them.
+
+    Each design keeps its own layout and defines its own tokens; themes.css
+    overrides those tokens at higher specificity. A design that stops loading it
+    silently drops out of the comparison, which these tests prevent.
+    """
+
+    PALETTES = ["ember", "ash", "viper", "cobalt", "plum", "sand"]
+    TOKENS = ["--bg", "--panel", "--line", "--ink", "--dim", "--accent",
+              "--instruction", "--capability", "--knowledge", "--control",
+              "--model", "--delivery"]
+
+    def setUp(self):
+        self.css = (DESIGNS / "themes.css").read_text(encoding="utf-8")
+        self.js = (DESIGNS / "atlas-theme.js").read_text(encoding="utf-8")
+
+    def test_every_palette_is_declared_in_css_and_js(self):
+        for palette in self.PALETTES:
+            self.assertIn(f'[data-theme="{palette}"]', self.css, f"{palette} missing from CSS")
+            self.assertIn(f"id: '{palette}'", self.js, f"{palette} missing from the switcher")
+
+    def test_every_palette_defines_every_token(self):
+        """A missing token silently falls back to the design's own colour."""
+        for palette in self.PALETTES:
+            start = self.css.index(f'[data-theme="{palette}"]')
+            block = self.css[start:self.css.index("}", start)]
+            for token in self.TOKENS:
+                self.assertIn(token, block, f"{palette} does not define {token}")
+
+    def test_red_and_black_is_the_default(self):
+        """Charles asked for red and black; ember is that palette."""
+        self.assertIn("'ember'", self.js)
+        for name in INTERACTIVE:
+            body = (DESIGNS / name).read_text(encoding="utf-8")
+            self.assertIn("AtlasTheme.mount", body, f"{name} has no palette switcher")
+            self.assertIn("'ember'", body, f"{name} does not default to ember")
+
+    def test_every_design_loads_the_palette_layer(self):
+        for name in INTERACTIVE + ["index.html"]:
+            body = (DESIGNS / name).read_text(encoding="utf-8")
+            self.assertIn("themes.css", body, f"{name} does not load themes.css")
+            self.assertIn("atlas-theme.js", body, f"{name} does not load the switcher")
+
+    def test_a_palette_can_travel_in_a_url(self):
+        self.assertIn("URLSearchParams", self.js)
+        self.assertIn("theme", self.js)
+
+    def test_there_is_a_light_palette(self):
+        """Every dark theme looks fine until you sit next to a window."""
+        self.assertIn('[data-theme="sand"]', self.css)
+
+    def test_the_gallery_links_every_design_in_every_palette(self):
+        gallery = (DESIGNS / "index.html").read_text(encoding="utf-8")
+        for name in INTERACTIVE:
+            self.assertIn(name, gallery, f"gallery does not link {name}")
+        self.assertIn("?theme=", gallery, "gallery links carry no palette")
+
+    def test_the_palette_class_does_not_collide_with_a_design_class(self):
+        """themes.css owns .swatch; the gallery preview once inherited its 22px."""
+        gallery = (DESIGNS / "index.html").read_text(encoding="utf-8")
+        self.assertNotIn(".swatch{height", gallery,
+                         "the gallery redefines .swatch, which themes.css owns")
 
 
 if __name__ == "__main__":
