@@ -43,6 +43,9 @@ PUBLIC_ATLAS_JS = SITE / "atlas.js"
 PRIVATE_PROFILES = ROOT / "docs" / "hardware-profiles.json"
 PUBLIC_PROFILES = SITE / "docs" / "hardware-profiles.json"
 PUBLIC_VERSION = SITE / "version.json"
+PRIVATE_DESIGNS = ROOT / "designs"
+PUBLIC_DESIGNS = SITE / "designs"
+PRIVATE_ATLAS_DATA = ROOT / "atlas-data.json"
 
 # Keys allowed to reach the public artifact. Anything else is dropped by construction.
 ALLOWED_TOP_LEVEL = {"updated", "policy", "counts", "public", "repos"}
@@ -229,6 +232,30 @@ def build_design_studio() -> list[str]:
     for source, destination in assets:
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+    return build_designs()
+
+
+def build_designs() -> list[str]:
+    """Publish the five-design gallery and the data layer they share.
+
+    atlas-data.json carries lane names and counts, never catalog slugs. verify()
+    checks that separately; a leak here would publish the catalog composition,
+    which is the one thing this build exists to prevent.
+    """
+    if not PRIVATE_DESIGNS.is_dir():
+        return ["designs/ is missing"]
+    if not PRIVATE_ATLAS_DATA.exists():
+        return ["atlas-data.json is missing; run scripts/build_atlas_data.py"]
+
+    PUBLIC_DESIGNS.mkdir(parents=True, exist_ok=True)
+    for source in sorted(PRIVATE_DESIGNS.iterdir()):
+        if source.suffix.lower() not in {".html", ".js", ".css", ".json"} or not source.is_file():
+            continue
+        (PUBLIC_DESIGNS / source.name).write_text(
+            source.read_text(encoding="utf-8"), encoding="utf-8")
+    # the designs fetch this relative to themselves
+    (PUBLIC_DESIGNS / "atlas-data.json").write_text(
+        PRIVATE_ATLAS_DATA.read_text(encoding="utf-8"), encoding="utf-8")
     return []
 
 
@@ -404,6 +431,16 @@ def verify(payload: dict) -> list[str]:
         for word in PRIVATE_WORDS + ("critical",):
             if word in svg.lower():
                 problems.append(f"public SVG mentions private detail: {word!r}")
+
+    if PUBLIC_DESIGNS.is_dir():
+        for published in sorted(PUBLIC_DESIGNS.iterdir()):
+            if not published.is_file():
+                continue
+            text = published.read_text(encoding="utf-8", errors="replace")
+            for name in sorted(catalog):
+                if name in text:
+                    problems.append(
+                        f"published design {published.name} names a catalogued repository: {name}")
 
     if PUBLIC_PROFILES.exists():
         published = PUBLIC_PROFILES.read_text(encoding="utf-8")

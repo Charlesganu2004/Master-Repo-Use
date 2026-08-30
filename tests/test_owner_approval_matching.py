@@ -10,7 +10,9 @@ import sys
 import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
-from owner_approval import is_owner_approval  # noqa: E402
+from owner_approval import (  # noqa: E402
+    PASSCODE, evaluate_approval, is_owner_approval, is_passcode_approval,
+)
 
 SHA = "979994113ba75efb5e5693b6d503ba510a49b2fd"
 
@@ -45,6 +47,56 @@ class OwnerApprovalMatching(unittest.TestCase):
     def test_approval_does_not_survive_a_new_commit(self):
         older = "1111111111111111111111111111111111111111"
         self.assertFalse(is_owner_approval(f"APPROVE OWNER PR {older}", SHA))
+
+
+class PasscodeApproval(unittest.TestCase):
+    """Charles asked for a standing passcode after re-approving on every push.
+
+    This form deliberately does NOT expire with new commits. That is the point
+    of it, and the per-SHA form is still there for when a revision must be
+    pinned. The passcode is a second factor on top of the owner account, never
+    the only gate.
+    """
+
+    def test_the_requested_phrase_is_accepted(self):
+        self.assertTrue(is_passcode_approval(f"I approve {PASSCODE}"))
+
+    def test_casing_and_whitespace_are_tolerated(self):
+        self.assertTrue(is_passcode_approval(f"  i APPROVE {PASSCODE}  "))
+
+    def test_longer_phrasings_are_accepted(self):
+        self.assertTrue(is_passcode_approval(f"I approve with passcode {PASSCODE}"))
+        self.assertTrue(is_passcode_approval(f"I approve with the passcode {PASSCODE}"))
+
+    def test_a_wrong_passcode_is_rejected(self):
+        self.assertFalse(is_passcode_approval("I approve 000000"))
+
+    def test_approval_without_a_passcode_is_rejected(self):
+        self.assertFalse(is_passcode_approval("I approve"))
+
+    def test_the_phrase_must_be_the_whole_comment(self):
+        self.assertFalse(is_passcode_approval(f"I approve {PASSCODE} and merge now"))
+        self.assertFalse(is_passcode_approval(f"Someone said I approve {PASSCODE}"))
+
+    def test_only_the_owner_account_can_use_it(self):
+        pr = {"head": {"sha": SHA}, "user": {"login": "Charlesganu2004"}, "draft": False}
+        stranger = [{"user": {"login": "someone-else"}, "body": f"I approve {PASSCODE}"}]
+        self.assertFalse(evaluate_approval(pr, stranger, []).approved)
+
+    def test_owner_passcode_approves_an_owner_authored_pr(self):
+        pr = {"head": {"sha": SHA}, "user": {"login": "Charlesganu2004"}, "draft": False}
+        owner = [{"user": {"login": "Charlesganu2004"}, "body": f"I approve {PASSCODE}"}]
+        self.assertTrue(evaluate_approval(pr, owner, []).approved)
+
+    def test_owner_passcode_also_approves_someone_elses_pr(self):
+        pr = {"head": {"sha": SHA}, "user": {"login": "outside-contributor"}, "draft": False}
+        owner = [{"user": {"login": "Charlesganu2004"}, "body": f"I approve {PASSCODE}"}]
+        self.assertTrue(evaluate_approval(pr, owner, []).approved)
+
+    def test_a_draft_is_still_never_approved(self):
+        pr = {"head": {"sha": SHA}, "user": {"login": "Charlesganu2004"}, "draft": True}
+        owner = [{"user": {"login": "Charlesganu2004"}, "body": f"I approve {PASSCODE}"}]
+        self.assertFalse(evaluate_approval(pr, owner, []).approved)
 
 
 if __name__ == "__main__":

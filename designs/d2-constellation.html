@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Constellation | Master Repo Atlas</title>
+<style>
+:root{
+  --bg:#07080c; --panel:#0d1017; --line:#1c2130; --ink:#e8ecf5; --dim:#8b95ab;
+  --accent:#5eead4; --accent2:#a78bfa; --warn:#fbbf24;
+  --instruction:#5eead4; --capability:#a78bfa; --knowledge:#60a5fa;
+  --control:#fb7185; --model:#fbbf24; --delivery:#34d399;
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Cascadia Code",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;
+  min-height:100vh;overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+
+/* ---- top bar: hardware first, because it gates everything below ---- */
+.hw{position:sticky;top:0;z-index:60;background:rgba(7,8,12,.94);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:10px 20px;
+  display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.hw h1{font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+.hw h1 span{color:var(--accent)}
+.hw-step{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--dim);
+  border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+.hw-step b{color:var(--warn);font-variant-numeric:tabular-nums}
+.hw-scan{font-family:var(--mono);font-size:11px;background:#000;border:1px solid var(--line);
+  border-radius:7px;padding:6px 10px;color:var(--accent);max-width:min(46vw,560px);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.hw-scan:hover{border-color:var(--accent)}
+.hw input{width:78px;background:#000;border:1px solid var(--line);border-radius:7px;
+  color:var(--ink);padding:5px 9px;font-family:var(--mono);font-size:12px}
+.tier{color:var(--accent);font-weight:600}
+
+/* ---- tabs ---- */
+.tabs{display:flex;gap:4px;padding:10px 20px 0;flex-wrap:wrap;
+  border-bottom:1px solid var(--line);position:sticky;top:53px;z-index:55;
+  background:rgba(7,8,12,.94);backdrop-filter:blur(14px)}
+.tab{padding:8px 14px;font-size:13px;color:var(--dim);border-radius:8px 8px 0 0;
+  border:1px solid transparent;border-bottom:none;transition:.15s;white-space:nowrap}
+.tab:hover{color:var(--ink);background:#11151f}
+.tab[aria-selected=true]{color:var(--ink);background:var(--panel);
+  border-color:var(--line);font-weight:600}
+
+.wrap{display:grid;grid-template-columns:1fr 372px;gap:0;min-height:calc(100vh - 96px)}
+@media(max-width:1080px){.wrap{grid-template-columns:1fr}}
+.stage{position:relative;min-width:0;overflow:hidden}
+.side{border-left:1px solid var(--line);background:var(--panel);padding:18px;
+  overflow-y:auto;max-height:calc(100vh - 96px);position:sticky;top:96px;min-width:0}
+@media(max-width:1080px){.side{position:static;max-height:none;border-left:none;
+  border-top:1px solid var(--line)}}
+
+/* ---- the constellation itself ---- */
+svg.sky{width:100%;height:calc(100vh - 96px);display:block;cursor:grab}
+svg.sky.dragging{cursor:grabbing}
+@media(max-width:1080px){svg.sky{height:62vh}}
+.link{stroke:#232a3a;stroke-width:1;transition:stroke .2s,stroke-width .2s}
+.link.lit{stroke:var(--accent);stroke-width:1.8}
+.node circle{cursor:pointer;transition:r .2s,filter .2s}
+.node:hover circle{filter:brightness(1.5)}
+.node text{font-size:9.5px;fill:var(--dim);pointer-events:none;
+  text-anchor:middle;opacity:0;transition:opacity .2s}
+.node.show text,.node:hover text{opacity:1;fill:var(--ink)}
+.node.sel circle{stroke:#fff;stroke-width:2.5}
+.node.faded{opacity:.13}
+
+/* pulse travelling along a lit route */
+.pulse{fill:var(--accent);filter:drop-shadow(0 0 6px var(--accent))}
+
+.legend{position:absolute;left:16px;bottom:16px;display:flex;gap:5px;flex-wrap:wrap;
+  max-width:60%}
+.chip{font-size:11px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);
+  background:rgba(13,16,23,.9);color:var(--dim);cursor:pointer;transition:.15s}
+.chip:hover{color:var(--ink)}
+.chip.on{color:#07080c;font-weight:600}
+.hud{position:absolute;right:16px;top:16px;font-family:var(--mono);font-size:11px;
+  color:var(--dim);text-align:right;line-height:1.7;background:rgba(13,16,23,.86);
+  border:1px solid var(--line);border-radius:9px;padding:9px 12px}
+.hud b{color:var(--accent);font-variant-numeric:tabular-nums}
+
+/* ---- detail panel ---- */
+.sec{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+  margin:18px 0 9px;font-weight:600}
+.sec:first-child{margin-top:0}
+.dname{font-size:20px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.dkind{display:inline-block;font-size:10.5px;padding:3px 9px;border-radius:999px;
+  margin-top:7px;font-weight:600}
+.ddesc{color:#c3cbdb;line-height:1.6;font-size:13.5px;margin-top:11px}
+.meta{font-size:12px;color:var(--dim);margin-top:9px;line-height:1.7}
+.meta code{font-family:var(--mono);color:var(--accent2);font-size:11.5px}
+.cmd{background:#000;border:1px solid var(--line);border-radius:9px;padding:11px 13px;
+  font-family:var(--mono);font-size:11.5px;color:var(--accent);
+  word-break:break-all;line-height:1.55;position:relative}
+.copy{position:absolute;right:7px;top:7px;font-size:10px;color:var(--dim);
+  border:1px solid var(--line);border-radius:5px;padding:2px 7px;background:var(--panel)}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+.conn{display:flex;flex-direction:column;gap:5px}
+.conn button{text-align:left;font-size:12.5px;padding:8px 11px;border-radius:8px;
+  border:1px solid var(--line);color:#c3cbdb;transition:.15s;width:100%}
+.conn button:hover{border-color:var(--accent);color:var(--ink);transform:translateX(3px)}
+.conn small{display:block;color:var(--dim);font-size:11px;margin-top:2px}
+.route{border:1px solid var(--line);border-radius:9px;padding:11px;margin-bottom:8px;
+  transition:.15s;cursor:pointer}
+.route:hover{border-color:var(--accent2)}
+.route b{font-size:13px;display:block}
+.route p{font-size:12px;color:var(--dim);margin-top:4px;line-height:1.5}
+.route .tag{font-size:10.5px;color:var(--accent2);margin-top:6px;display:inline-block}
+.route .no{color:var(--warn)}
+.empty{color:var(--dim);font-size:13px;line-height:1.6}
+
+/* ---- list panes for tabs ---- */
+.pane{padding:22px;max-height:calc(100vh - 96px);overflow-y:auto}
+.lane-card{border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:9px;
+  transition:.15s;cursor:pointer;background:var(--panel)}
+.lane-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.lane-card b{font-size:14px}
+.lane-card p{font-size:12.5px;color:var(--dim);margin-top:5px;line-height:1.55}
+.lane-card .src{font-family:var(--mono);font-size:11px;color:var(--accent2);margin-top:7px;
+  display:block;word-break:break-all}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--dim);margin:11px 0 5px}
+input[type=text],textarea,select{width:100%;background:#000;border:1px solid var(--line);
+  border-radius:8px;color:var(--ink);padding:9px 11px;font-family:inherit;font-size:13px}
+textarea{min-height:74px;resize:vertical}
+.btn{background:var(--accent);color:#04120f;font-weight:700;padding:10px 18px;
+  border-radius:9px;font-size:13px;margin-top:14px;transition:.15s}
+.btn:hover{filter:brightness(1.12)}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink);font-weight:500}
+.note{font-size:12px;color:var(--dim);line-height:1.6;margin-top:10px}
+h2{font-size:19px;letter-spacing:-.02em;margin-bottom:5px}
+.sub{color:var(--dim);font-size:13px;margin-bottom:18px;line-height:1.6}
+.err{color:var(--warn);font-size:12.5px;margin-top:9px}
+</style>
+</head>
+<body>
+
+<div class="hw">
+  <h1>Constellation <span>Atlas</span></h1>
+  <div class="hw-step">
+    <span>1. Scan this machine</span>
+    <button class="hw-scan" id="scan" title="Click to copy">loading…</button>
+  </div>
+  <div class="hw-step">
+    <span>2. RAM</span>
+    <input id="ram" type="number" min="1" max="512" placeholder="GB">
+    <span id="tier" class="tier">not set</span>
+  </div>
+</div>
+
+<div class="tabs" id="tabs" role="tablist"></div>
+
+<div class="wrap">
+  <div class="stage" id="stage">
+    <svg class="sky" id="sky"></svg>
+    <div class="legend" id="legend"></div>
+    <div class="hud" id="hud"></div>
+  </div>
+  <aside class="side" id="side"></aside>
+</div>
+
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes;
+const esc = P.esc;
+const NS = 'http://www.w3.org/2000/svg';
+const KINDS = ['instruction','capability','knowledge','control','model','delivery'];
+const colorOf = k => getComputedStyle(document.documentElement).getPropertyValue('--'+k).trim() || '#888';
+
+let sim = [], links = [], raf = null, drag = null;
+
+/* A damped spring model. Real force-directed layout, but it settles instead of
+   jittering forever, because a map that never stops moving is unusable. */
+function renderMap(stage){
+  stage.innerHTML = `<svg class="sky" id="sky"></svg>
+    <div class="legend" id="legend"></div><div class="hud" id="hud"></div>`;
+  build(); legendUI(); hud();
+}
+
+function build(){
+  const comps = A.visibleComponents();
+  const svg = document.getElementById('sky');
+  if (!svg) return;
+  const W = svg.clientWidth || 900, H = svg.clientHeight || 600;
+  const lanes = [...new Set(comps.map(c => c.lane))];
+  const laneAngle = new Map(lanes.map((l,i) => [l, (i/lanes.length)*Math.PI*2]));
+
+  sim = comps.map(c => {
+    const a = laneAngle.get(c.lane) + (Math.random()-.5)*.5;
+    const r = 90 + Math.random()*Math.min(W,H)*.34;
+    return { id:c.id, name:c.name, kind:c.kind, lane:c.lane,
+             x: W/2+Math.cos(a)*r, y: H/2+Math.sin(a)*r, vx:0, vy:0 };
+  });
+  const index = new Map(sim.map(n => [n.id, n]));
+  links = [];
+  comps.forEach(c => (c.connects||[]).forEach(o => {
+    if (index.has(o) && c.id < o) links.push({ a:index.get(c.id), b:index.get(o) });
+  }));
+  lanes.forEach(l => {
+    const m = sim.filter(n => n.lane === l);
+    for (let i=0;i<m.length-1;i++) links.push({ a:m[i], b:m[i+1], soft:true });
+  });
+  draw();
+  start();
+}
+
+function step(){
+  const svg = document.getElementById('sky');
+  if (!svg) return 0;
+  const W = svg.clientWidth||900, H = svg.clientHeight||600;
+  const REPEL=620, SPRING=.0016, SOFT=.006, DAMP=.86;
+  for (let i=0;i<sim.length;i++){
+    const n = sim[i];
+    if (n === drag) continue;
+    n.vx += (W/2-n.x)*.00045; n.vy += (H/2-n.y)*.00045;
+    for (let j=i+1;j<sim.length;j++){
+      const m = sim[j];
+      let dx=n.x-m.x, dy=n.y-m.y, d2=dx*dx+dy*dy;
+      if (d2 < 1){ d2=1; dx=Math.random()-.5; dy=Math.random()-.5; }
+      if (d2 > 46000) continue;
+      const d=Math.sqrt(d2), f=REPEL/d2;
+      n.vx+=dx/d*f; n.vy+=dy/d*f; m.vx-=dx/d*f; m.vy-=dy/d*f;
+    }
+  }
+  links.forEach(l => {
+    const k = l.soft?SOFT:SPRING, target = l.soft?62:128;
+    const dx=l.b.x-l.a.x, dy=l.b.y-l.a.y, d=Math.hypot(dx,dy)||1;
+    const f=(d-target)*k, fx=dx/d*f, fy=dy/d*f;
+    if (l.a!==drag){ l.a.vx+=fx; l.a.vy+=fy; }
+    if (l.b!==drag){ l.b.vx-=fx; l.b.vy-=fy; }
+  });
+  let motion = 0;
+  sim.forEach(n => {
+    if (n === drag) return;
+    n.vx*=DAMP; n.vy*=DAMP; n.x+=n.vx; n.y+=n.vy;
+    n.x=Math.max(24,Math.min(W-24,n.x)); n.y=Math.max(24,Math.min(H-24,n.y));
+    motion += Math.abs(n.vx)+Math.abs(n.vy);
+  });
+  paint();
+  return motion;
+}
+
+function start(){
+  if (raf) cancelAnimationFrame(raf);
+  const loop = () => { raf = step() > 0.4 ? requestAnimationFrame(loop) : null; };
+  raf = requestAnimationFrame(loop);
+}
+
+function draw(){
+  const svg = document.getElementById('sky');
+  if (!svg) return;
+  svg.innerHTML = '';
+  const gl = document.createElementNS(NS,'g'), gn = document.createElementNS(NS,'g');
+  svg.append(gl, gn);
+  links.forEach(l => {
+    const line = document.createElementNS(NS,'line');
+    line.setAttribute('class','link');
+    if (l.soft) line.setAttribute('stroke-dasharray','2 4');
+    gl.appendChild(line); l.el = line;
+  });
+  sim.forEach(n => {
+    const g = document.createElementNS(NS,'g');
+    g.setAttribute('class','node'); g.dataset.id = n.id;
+    const c = document.createElementNS(NS,'circle');
+    c.setAttribute('r',5.5); c.setAttribute('fill',colorOf(n.kind));
+    const t = document.createElementNS(NS,'text');
+    t.setAttribute('dy','-11'); t.textContent = n.name.slice(0,26);
+    g.append(c,t); gn.appendChild(g); n.el = g; n.circle = c;
+    g.addEventListener('click', e => { e.stopPropagation(); A.select(n.id); start(); });
+    g.addEventListener('pointerdown', e => { drag = n; g.setPointerCapture(e.pointerId); start(); });
+    g.addEventListener('pointermove', e => {
+      if (drag !== n) return;
+      const r = svg.getBoundingClientRect();
+      n.x = e.clientX-r.left; n.y = e.clientY-r.top; n.vx = n.vy = 0;
+    });
+    g.addEventListener('pointerup', () => { drag = null; start(); });
+  });
+  paint();
+}
+
+function paint(){
+  const sel = A.state.selected;
+  const lit = new Set();
+  if (sel){
+    lit.add(sel);
+    const d = A.detailFor(sel);
+    if (d) d.connections.forEach(c => lit.add(c.id));
+  }
+  links.forEach(l => {
+    if (!l.el) return;
+    l.el.setAttribute('x1',l.a.x); l.el.setAttribute('y1',l.a.y);
+    l.el.setAttribute('x2',l.b.x); l.el.setAttribute('y2',l.b.y);
+    l.el.classList.toggle('lit', !!sel && lit.has(l.a.id) && lit.has(l.b.id));
+  });
+  sim.forEach(n => {
+    if (!n.el) return;
+    n.el.setAttribute('transform',`translate(${n.x},${n.y})`);
+    n.el.classList.toggle('sel', n.id === sel);
+    n.el.classList.toggle('show', sel ? lit.has(n.id) : false);
+    n.el.classList.toggle('faded', !!sel && !lit.has(n.id));
+    n.circle.setAttribute('r', n.id === sel ? 9 : lit.has(n.id) ? 7 : 5.5);
+  });
+}
+
+function legendUI(){
+  const host = document.getElementById('legend');
+  if (!host) return;
+  host.innerHTML = '';
+  KINDS.forEach(k => {
+    const b = document.createElement('button');
+    const on = A.state.activeKinds.has(k);
+    b.className = 'chip' + (on ? ' on' : '');
+    b.textContent = k;
+    b.style.borderColor = colorOf(k);
+    if (on) b.style.background = colorOf(k);
+    b.onclick = () => { A.toggleKind(k); build(); legendUI(); hud(); };
+    host.appendChild(b);
+  });
+  const clear = document.createElement('button');
+  clear.className = 'chip'; clear.textContent = 'reset';
+  clear.onclick = () => { A.clearFilters(); build(); legendUI(); hud(); };
+  host.appendChild(clear);
+}
+
+function hud(){
+  const c = A.counts();
+  const el = document.getElementById('hud');
+  if (!el) return;
+  el.innerHTML =
+    `<b>${c.visibleLanes}</b> / ${c.lanes} lanes<br>` +
+    `<b>${c.visibleComponents}</b> / ${c.components} components<br>` +
+    `<b>${c.routes}</b> hybrid routes<br>` +
+    `<span style="opacity:.6">drag a star to pull the cloud</span>`;
+}
+
+P.mount({ renderMap, onSelect: () => start() });
+A.on(() => { paint(); if (P.tab === 'map') hud(); });
+window.addEventListener('resize', () => { if (P.tab === 'map') build(); });
+</script>
+</body>
+</html>

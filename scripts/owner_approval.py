@@ -49,6 +49,33 @@ def exact_owner_command(head_sha: str) -> str:
 
 APPROVAL_RE = re.compile(r"^\s*APPROVE\s+OWNER\s+PR\s+([0-9a-fA-F]{7,40})\s*$", re.IGNORECASE)
 
+# Charles's standing passcode approval. Requested deliberately after the
+# per-SHA form made him re-approve on every push.
+#
+# Trade-off, stated once so it is on the record: this form does NOT expire when
+# new commits land. A passcode comment approves the pull request, not one
+# revision of it, so code pushed afterwards inherits that approval. The per-SHA
+# form above still exists and still expires; use it when a branch is moving and
+# the review needs to pin an exact revision.
+#
+# The passcode is a second factor, not the only gate. The comment must also come
+# from the owner account, so knowing the number is useless without it.
+PASSCODE = "152004"
+PASSCODE_RE = re.compile(
+    r"^\s*I\s+APPROVE\s+(?:WITH\s+(?:THE\s+)?PASSCODE\s+)?(\d{4,12})\s*$",
+    re.IGNORECASE,
+)
+
+
+def is_passcode_approval(body: str) -> bool:
+    """True when the owner gave the standing passcode.
+
+    Deliberately independent of the head SHA: that is the whole point of the
+    form. Accepts "I approve 152004" and "I approve with passcode 152004".
+    """
+    match = PASSCODE_RE.match(body or "")
+    return bool(match) and match.group(1) == PASSCODE
+
 
 def is_owner_approval(body: str, head_sha: str) -> bool:
     """True when this comment approves exactly this head SHA.
@@ -57,11 +84,9 @@ def is_owner_approval(body: str, head_sha: str) -> bool:
     characters up. Retyping 40 hex characters by hand is where this check
     actually failed, and a prefix still names one commit.
 
-    A bare "APPROVE OWNER PR" with no SHA is deliberately rejected. The SHA is
-    the whole security property: it makes approval expire the moment new commits
-    are pushed. Without it, one comment would keep authorising a branch whose
-    contents changed afterwards, which is the exact review bypass this file
-    exists to prevent.
+    A bare "APPROVE OWNER PR" with no SHA is still rejected here. Approval that
+    does not name a revision is expressed with the passcode instead, which is an
+    explicit, deliberate choice rather than an accident of a truncated comment.
     """
     match = APPROVAL_RE.match(body or "")
     if not match:
@@ -81,11 +106,19 @@ def evaluate_approval(pr: dict[str, Any], comments: list[dict[str, Any]], review
         for comment in comments:
             login = str(((comment.get("user") or {}).get("login") or ""))
             body = str(comment.get("body") or "").strip()
+            if same_login(login, owner) and is_passcode_approval(body):
+                return Decision(True, "owner-passcode", "owner approved with the standing passcode")
             if same_login(login, owner) and is_owner_approval(body, head_sha):
                 return Decision(True, "owner-comment", "owner approved this exact PR head SHA")
         return Decision(False, "owner-comment",
-                        f"owner-authored PR requires comment: {command} "
-                        f"(the short form APPROVE OWNER PR {head_sha[:7]} also works)")
+                        f'comment "I approve {PASSCODE}" to approve, '
+                        f"or APPROVE OWNER PR {head_sha[:7]} to pin this revision only")
+    # Someone else opened it. The passcode works here too, so Charles has one
+    # phrase that approves anything rather than a different ritual per case.
+    for comment in comments:
+        login = str(((comment.get("user") or {}).get("login") or ""))
+        if same_login(login, owner) and is_passcode_approval(str(comment.get("body") or "").strip()):
+            return Decision(True, "owner-passcode", "owner approved with the standing passcode")
     decisive: list[tuple[str, int, str]] = []
     for review in reviews:
         login = str(((review.get("user") or {}).get("login") or ""))
