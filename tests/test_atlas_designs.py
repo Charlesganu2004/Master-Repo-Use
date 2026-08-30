@@ -382,5 +382,34 @@ class ThePalettes(unittest.TestCase):
                          "the gallery redefines .swatch, which themes.css owns")
 
 
+class TheGalleryCounts(unittest.TestCase):
+    """The gallery must not assert a number it cannot see.
+
+    The published copy is redacted and holds fewer components than the local one,
+    so a hardcoded figure is wrong in one place or the other. It went live saying
+    777 when the published data had 376.
+    """
+
+    def setUp(self):
+        self.gallery = (DESIGNS / "index.html").read_text(encoding="utf-8")
+
+    def test_counts_are_not_hardcoded(self):
+        self.assertIn('id="counts"', self.gallery)
+        self.assertIn("window.__ATLAS_DATA__", self.gallery,
+                      "the gallery does not read the data it describes")
+
+    def test_the_gallery_loads_the_data(self):
+        self.assertIn("atlas-data.js", self.gallery)
+
+    def test_a_redacted_copy_says_so(self):
+        self.assertIn("meta.redacted", self.gallery,
+                      "a redacted publish must explain its smaller counts")
+
+    def test_no_stale_component_figure_is_asserted(self):
+        # Any four-digit-ish literal next to "components" is a hardcoded claim.
+        stale = re.findall(r"<b>\d{3,}</b>\s*components", self.gallery)
+        self.assertFalse(stale, f"hardcoded component counts: {stale}")
+
+
 if __name__ == "__main__":
     unittest.main()

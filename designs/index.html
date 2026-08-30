@@ -115,8 +115,7 @@ h1 span{color:var(--accent)}
 <p class="lede">Six ways through the same system. They share one data layer and one engine, so a
 lane added anywhere appears in all of them and a click means the same thing everywhere. What
 differs is how the map is drawn and how you move through it.</p>
-<p class="counts">All six read <b>128</b> lanes · <b>777</b> components · <b>10</b> hybrid routes ·
-<b>17</b> families · <b>28</b> sub-categories, generated from files in this repository.</p>
+<p class="counts" id="counts">Reading the atlas data…</p>
 
 <div class="palettebar" id="pbar">
   <span class="lab">Palette</span>
@@ -151,6 +150,7 @@ rather than the paint. Each card also has direct links per palette. A palette tr
 
 </div>
 
+<script src="atlas-data.js"></script>
 <script src="atlas-theme.js"></script>
 <script>
 'use strict';
@@ -221,10 +221,33 @@ function bar(current){
   });
 }
 
+/* Counts come from the data, never from a number typed into this page.
+   The published copy is redacted, so it legitimately holds fewer components than
+   the local one; hardcoding either would make the other a lie. */
+function counts(){
+  const el = document.getElementById('counts');
+  const meta = (window.__ATLAS_DATA__ || {}).meta;
+  if (!meta){
+    el.textContent = 'Could not read atlas-data.js. Run scripts/build_atlas_data.py.';
+    return;
+  }
+  const subs = new Set((window.__ATLAS_DATA__.components || [])
+    .map(c => c.sub || 'Catalog')).size;
+  el.innerHTML =
+    `All six read <b>${meta.lanes}</b> lanes · <b>${meta.components}</b> components · ` +
+    `<b>${meta.routes}</b> hybrid routes · <b>${(window.__ATLAS_DATA__.families || []).length}</b> ` +
+    `families · <b>${subs}</b> sub-categories, generated from files in this repository.` +
+    (meta.redacted
+      ? ' <span style="opacity:.75">This published copy omits the catalog entries, which are private;' +
+        ' running the designs from the repository shows all of them.</span>'
+      : '');
+}
+
 const start = AtlasTheme.initial('ember');
 AtlasTheme.apply(start);
 bar(start);
 render(start);
+counts();
 </script>
 </body>
 </html>
