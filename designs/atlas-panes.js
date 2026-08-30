@@ -1,12 +1,12 @@
 /* Shared panes for every atlas design.
  *
- * The tabs, the detail panel and the hardware bar must say the same thing in all
- * five designs, so they are written once here. Each design supplies its own CSS
- * and its own map visualization; identical markup under different stylesheets
- * looks nothing alike, which is the point.
+ * The setup bar, the filters, the tabs and the detail panel must say the same
+ * thing in all five designs, so they are written once here. Each design supplies
+ * its own CSS and its own map visualization; identical markup under different
+ * stylesheets looks nothing alike, which is the point.
  *
  * A design provides:
- *   AtlasPanes.mount({ renderMap, onSelect })
+ *   AtlasPanes.mount({ renderMap, onSelect, onFilter })
  * where renderMap draws into #stage for the "map" tab.
  */
 'use strict';
@@ -20,22 +20,171 @@ const AtlasPanes = (() => {
     m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
   const val = id => (document.getElementById(id) || {}).value || '';
 
-  /* ------------------------------------------------------------ tabs */
+  /* ------------------------------------------------------- setup bar */
 
-  function tabsUI() {
-    const host = document.getElementById('tabs');
+  /* Order matters. The operating system is asked first because it decides which
+     scan command to show, and the scan is what fills in the hardware. Asking for
+     RAM before knowing the platform would mean guessing which command produces
+     it, and on Apple silicon it would mean asking for VRAM that does not exist. */
+
+  function setupUI() {
+    const host = document.getElementById('setup');
     if (!host) return;
-    host.innerHTML = '';
-    A.TABS.forEach(t => {
-      const b = document.createElement('button');
-      b.className = 'tab';
-      b.textContent = t.label;
-      b.title = t.hint;
-      b.setAttribute('role', 'tab');
-      b.setAttribute('aria-selected', String(t.id === tab));
-      b.onclick = () => { tab = t.id; draw(); };
-      host.appendChild(b);
+    const chosen = A.platform();
+
+    const osButtons = A.PLATFORMS.map(p =>
+      `<button class="os${A.state.platform === p.id ? ' on' : ''}" data-os="${p.id}"
+        title="${esc(p.note)}">${esc(p.label)}</button>`).join('');
+
+    const scan = A.scanCommand();
+    const tier = A.currentTier();
+    const mem = A.usableMemory();
+
+    host.innerHTML = `
+      <div class="step">
+        <span class="num">1</span>
+        <div class="stepbody">
+          <div class="steplabel">Your system</div>
+          <div class="osrow">${osButtons}</div>
+          ${chosen ? `<div class="osnote">${esc(chosen.note)}</div>` : ''}
+        </div>
+      </div>
+
+      <div class="step${chosen ? '' : ' locked'}">
+        <span class="num">2</span>
+        <div class="stepbody">
+          <div class="steplabel">Scan it</div>
+          ${chosen
+            ? `<button class="scan" id="scanbtn" title="Click to copy">${esc(scan)}</button>
+               <div class="osnote">Run this, then type the numbers below.</div>`
+            : '<div class="osnote">Pick your system first and the right scan command appears here.</div>'}
+        </div>
+      </div>
+
+      <div class="step${chosen ? '' : ' locked'}">
+        <span class="num">3</span>
+        <div class="stepbody">
+          <div class="steplabel">What it has</div>
+          <div class="hwrow">
+            ${A.HW_FIELDS.map(f => {
+              const hidden = f.id === 'vram' && A.state.platform === 'macos';
+              return `<label class="hwfield${hidden ? ' dim' : ''}" title="${esc(f.hint)}">
+                <span>${esc(f.label)}${f.unit ? ` <i>${esc(f.unit)}</i>` : ''}</span>
+                <input type="number" min="0" max="4096" data-hw="${f.id}"
+                  value="${A.state.hw[f.id] == null ? '' : A.state.hw[f.id]}"
+                  ${hidden ? 'disabled placeholder="unified"' : 'placeholder="?"'}>
+              </label>`;
+            }).join('')}
+          </div>
+          <div class="verdictline">
+            ${mem
+              ? `<b>${esc(tier.label)}</b> · ${esc(tier.verdict)}`
+              : 'Enter RAM to see what this machine can host.'}
+          </div>
+        </div>
+      </div>`;
+
+    host.querySelectorAll('[data-os]').forEach(b => {
+      b.onclick = () => { A.setPlatform(b.dataset.os); draw(); };
     });
+    const scanbtn = document.getElementById('scanbtn');
+    if (scanbtn) scanbtn.onclick = async () => {
+      const ok = await A.copy(scan);
+      scanbtn.textContent = ok ? 'copied, run it in your terminal' : 'select the text to copy';
+      setTimeout(() => { scanbtn.textContent = scan; }, 1700);
+    };
+    host.querySelectorAll('[data-hw]').forEach(input => {
+      input.oninput = () => {
+        A.setHardware(input.dataset.hw, input.value);
+        const line = host.querySelector('.verdictline');
+        const t = A.currentTier();
+        if (line) {
+          line.innerHTML = A.usableMemory()
+            ? `<b>${esc(t.label)}</b> · ${esc(t.verdict)}`
+            : 'Enter RAM to see what this machine can host.';
+        }
+      };
+    });
+  }
+
+  /* --------------------------------------------------------- filters */
+
+  /* Every filter row composes with every other. Nothing here replaces a previous
+     choice, so families, kinds and sub-categories can be mixed freely. */
+
+  function filtersUI() {
+    const host = document.getElementById('filters');
+    if (!host) return;
+    const c = A.counts();
+    const subs = A.subcategories();
+
+    host.innerHTML = `
+      <div class="frow">
+        <span class="flabel">Search</span>
+        <input class="fsearch" id="fq" type="text" placeholder="name, owner, lane or description"
+          value="${esc(A.state.query)}">
+        <span class="fcount">${c.visibleComponents} of ${c.components}</span>
+        ${c.filters ? `<button class="fclear" id="fclear">clear ${c.filters} filter(s)</button>` : ''}
+      </div>
+      <div class="frow">
+        <span class="flabel">Family</span>
+        <span class="chips">${A.state.data.families.map(f =>
+          `<button class="chip${A.state.activeFamilies.has(f.id) ? ' on' : ''}"
+            data-fam="${esc(f.id)}">${esc(f.name)}</button>`).join('')}</span>
+      </div>
+      <div class="frow">
+        <span class="flabel">Kind</span>
+        <span class="chips">${['instruction', 'capability', 'knowledge', 'control', 'model', 'delivery']
+          .map(k => `<button class="chip k-${k}${A.state.activeKinds.has(k) ? ' on' : ''}"
+            data-kind="${k}">${k}</button>`).join('')}</span>
+      </div>
+      <div class="frow">
+        <span class="flabel">Sub-category</span>
+        <span class="chips">${subs.map(s =>
+          `<button class="chip sub${A.state.activeSubs.has(s.id) ? ' on' : ''}"
+            data-sub="${esc(s.id)}">${esc(s.id)} <i>${s.count}</i></button>`).join('')
+          || '<span class="fcount">none in the current selection</span>'}</span>
+      </div>`;
+
+    const q = document.getElementById('fq');
+    if (q) {
+      q.oninput = () => { A.setQuery(q.value); refreshFilterCounts(); if (hooks.onFilter) hooks.onFilter(); };
+      q.onkeydown = e => { if (e.key === 'Escape') { q.value = ''; q.oninput(); } };
+    }
+    const clear = document.getElementById('fclear');
+    if (clear) clear.onclick = () => { A.clearFilters(); draw(); if (hooks.onFilter) hooks.onFilter(); };
+    host.querySelectorAll('[data-fam]').forEach(b =>
+      b.onclick = () => { A.toggleFamily(b.dataset.fam); filtersUI(); if (hooks.onFilter) hooks.onFilter(); });
+    host.querySelectorAll('[data-kind]').forEach(b =>
+      b.onclick = () => { A.toggleKind(b.dataset.kind); filtersUI(); if (hooks.onFilter) hooks.onFilter(); });
+    host.querySelectorAll('[data-sub]').forEach(b =>
+      b.onclick = () => { A.toggleSub(b.dataset.sub); filtersUI(); if (hooks.onFilter) hooks.onFilter(); });
+  }
+
+  function refreshFilterCounts() {
+    const c = A.counts();
+    const el = document.querySelector('#filters .fcount');
+    if (el) el.textContent = `${c.visibleComponents} of ${c.components}`;
+  }
+
+  /* Some designs carry their own kind chips on the map. Toggling one of those
+     must not leave the filter bar showing the opposite state, so the classes are
+     synced in place. Rebuilding the bar instead would steal focus from the search
+     box mid-keystroke, which is why this touches classes only. */
+  function syncFilterChips() {
+    const host = document.getElementById('filters');
+    if (!host) return;
+    host.querySelectorAll('[data-fam]').forEach(b =>
+      b.classList.toggle('on', A.state.activeFamilies.has(b.dataset.fam)));
+    host.querySelectorAll('[data-kind]').forEach(b =>
+      b.classList.toggle('on', A.state.activeKinds.has(b.dataset.kind)));
+    host.querySelectorAll('[data-sub]').forEach(b =>
+      b.classList.toggle('on', A.state.activeSubs.has(b.dataset.sub)));
+    const search = document.getElementById('fq');
+    if (search && document.activeElement !== search && search.value !== A.state.query) {
+      search.value = A.state.query;
+    }
+    refreshFilterCounts();
   }
 
   /* -------------------------------------------------- detail panel */
@@ -46,23 +195,31 @@ const AtlasPanes = (() => {
     const d = A.state.selected ? A.detailFor(A.state.selected) : null;
     if (!d) {
       side.innerHTML = `<div class="sec">Component detail</div>
-        <p class="empty">Select any component to see what it is, which lane it sits in,
-        what it connects to, its hybrid routes, and the exact command to use it.</p>`;
+        <p class="empty">Select any component to see what it is, which lane it sits in, what it
+        connects to, its hybrid routes, and the command to use it. Use <b>+</b> to add it to a
+        combination and get one script for everything you picked.</p>`;
       return;
     }
     const cmd = d.command;
     side.innerHTML = `
-      <div class="dname">${esc(d.name)}</div>
+      <div class="dhead">
+        <div>
+          <div class="dname">${esc(d.name)}</div>
+          ${d.owner ? `<div class="downer">${esc(d.owner)}</div>` : ''}
+        </div>
+        <button class="plus${d.inBasket ? ' in' : ''}" id="plus"
+          title="${d.inBasket ? 'Already in your combination' : 'Add to a combination'}">
+          ${d.inBasket ? '&#10003;' : '+'}</button>
+      </div>
       <span class="dkind" data-kind="${esc(d.kind)}">${esc(d.kind)}</span>
+      ${d.sub ? `<span class="dkind sub">${esc(d.sub)}</span>` : ''}
       <p class="ddesc">${esc(d.detail)}</p>
       <div class="meta">
         Lane: <b>${esc(d.lane)}</b><br>
         ${d.laneSource ? `Source: <code>${esc(d.laneSource)}</code><br>` : ''}
         ${d.siblings} sibling component${d.siblings === 1 ? '' : 's'} in this lane
       </div>
-      ${d.laneDescription ? `<p class="meta">${esc(d.laneDescription)}</p>` : ''}
-      ${cmd ? `<div class="sec">Command (${esc(A.state.platform)})</div>
-        <div class="cmd"><button class="copy" id="cp">copy</button>${esc(cmd)}</div>` : ''}
+      ${commandBlock(d)}
       <div class="sec">Connects to (${d.connections.length})</div>
       ${d.connections.length
         ? `<div class="conn">${d.connections.map(c =>
@@ -74,64 +231,141 @@ const AtlasPanes = (() => {
             <span class="tag">best for ${esc(r.bestFor)} · needs ${esc(r.requires)}</span></div>`).join('')
         : '<p class="empty">Not part of a hybrid route.</p>'}`;
 
-    const cp = document.getElementById('cp');
-    if (cp) cp.onclick = async () => {
-      cp.textContent = (await A.copy(cmd)) ? 'copied' : 'select it';
-      setTimeout(() => { cp.textContent = 'copy'; }, 1400);
+    wireCopy(side, cmd);
+    const plus = document.getElementById('plus');
+    if (plus) plus.onclick = () => {
+      d.inBasket ? A.removeFromBasket(d.id) : A.addToBasket(d.id);
+      detailUI();
+      tabsUI();
     };
     side.querySelectorAll('[data-go]').forEach(b => {
       b.onclick = () => { A.select(b.dataset.go); if (hooks.onSelect) hooks.onSelect(b.dataset.go); };
     });
   }
 
-  /* --------------------------------------------------------- panes */
+  function commandBlock(d) {
+    if (!A.state.platform) {
+      return `<div class="sec">Command</div>
+        <p class="empty">Choose your operating system in step 1 and the command for it appears here.</p>`;
+    }
+    if (!d.command) {
+      return `<div class="sec">Command</div>
+        <p class="empty">Nothing to run. This is a part of the system rather than something you install.</p>`;
+    }
+    return `<div class="sec">Command (${esc(A.platform().label)})</div>
+      <div class="cmd"><button class="copy" data-copy>copy</button>${esc(d.command)}</div>`;
+  }
+
+  function wireCopy(root, text) {
+    const btn = root.querySelector('[data-copy]');
+    if (!btn || !text) return;
+    btn.onclick = async () => {
+      btn.textContent = (await A.copy(text)) ? 'copied' : 'select it';
+      setTimeout(() => { btn.textContent = 'copy'; }, 1400);
+    };
+  }
+
+  /* --------------------------------------------------------- tabs */
+
+  function tabsUI() {
+    const host = document.getElementById('tabs');
+    if (!host) return;
+    const basket = A.state.basket.length;
+    host.innerHTML = '';
+    A.TABS.forEach(t => {
+      const b = document.createElement('button');
+      b.className = 'tab';
+      b.innerHTML = esc(t.label) + (t.id === 'basket' && basket ? ` <i class="badge">${basket}</i>` : '');
+      b.title = t.hint;
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', String(t.id === tab));
+      b.onclick = () => { tab = t.id; draw(); };
+      host.appendChild(b);
+    });
+  }
+
+  /* -------------------------------------------------------- panes */
 
   function lanesHTML(id) {
     const meta = A.TABS.find(t => t.id === id) || { label: id, hint: '' };
     const lanes = A.lanesForTab(id);
+    const laneIds = new Set(lanes.map(l => l.id));
+    const items = A.visibleComponents().filter(c => laneIds.has(c.lane));
     return `<h2>${esc(meta.label)}</h2>
-      <p class="sub">${esc(meta.hint)} ${lanes.length} lane${lanes.length === 1 ? '' : 's'}.</p>
-      <div class="grid">${lanes.map(l => `
-        <div class="lane-card" data-lane="${esc(l.id)}" data-kind="${esc(l.kind)}">
-          <b>${esc(l.name)}</b>
-          <p>${esc(l.description)}</p>
-          <span class="src">${esc(l.source)} · ${l.count} item${l.count === 1 ? '' : 's'}</span>
-        </div>`).join('') || '<p class="empty">No lanes in this tab yet.</p>'}</div>`;
+      <p class="sub">${esc(meta.hint)} ${lanes.length} lane${lanes.length === 1 ? '' : 's'},
+      ${items.length} entr${items.length === 1 ? 'y' : 'ies'} after filters.</p>
+      <div class="grid">${items.map(c => `
+        <div class="lane-card" data-comp="${esc(c.id)}" data-kind="${esc(c.kind)}">
+          <button class="plus mini${A.state.basket.includes(c.id) ? ' in' : ''}"
+            data-add="${esc(c.id)}" title="Add to a combination">
+            ${A.state.basket.includes(c.id) ? '&#10003;' : '+'}</button>
+          <b>${esc(c.name)}</b>
+          ${c.owner ? `<span class="owner">${esc(c.owner)}</span>` : ''}
+          <p>${esc(c.detail)}</p>
+          <span class="src">${esc(A.laneName(c.lane))}${c.sub ? ` · ${esc(c.sub)}` : ''}</span>
+        </div>`).join('') || '<p class="empty">Nothing matches the current filters.</p>'}</div>`;
   }
 
   function routesHTML() {
     const routes = A.routesForMachine();
     return `<h2>Hybrid routes</h2>
-      <p class="sub">How work is split across models. Verdicts use the RAM entered in the bar
-      above; without it, RAM-dependent routes say so rather than guessing.</p>
+      <p class="sub">How work is split across models. Verdicts use the hardware from step 3;
+      without it, memory-dependent routes say so rather than guessing.</p>
       ${routes.map(r => `<div class="route">
         <b>${esc(r.name)}</b><p>${esc(r.detail)}</p>
         <span class="tag${r.ok ? '' : ' no'}">${esc(r.verdict)} · best for ${esc(r.bestFor)}</span>
-        <p class="path">Path: ${r.members.map(m => esc(A.state.byId.has(m) ? A.state.byId.get(m).name : m)).join(' → ')}</p>
+        <p class="path">Path: ${r.members.map(m =>
+          esc(A.state.byId.has(m) ? A.state.byId.get(m).name : m)).join(' → ')}</p>
       </div>`).join('')}`;
   }
 
   function hardwareHTML() {
-    const ram = A.state.ram;
+    const mem = A.usableMemory();
+    const chosen = A.platform();
     return `<h2>What this machine can carry</h2>
-      <p class="sub">Run the scan command in the bar above first. It reports RAM, OS and GPU,
-      which is what decides whether a local model is realistic. Models are held in memory,
-      so RAM is the binding constraint, not disk.</p>
+      <p class="sub">${chosen
+        ? `Reading as ${esc(chosen.label)}. ${esc(chosen.note)}`
+        : 'Choose your operating system in step 1 for an accurate reading.'}</p>
       <div class="grid">${A.state.data.hardware.map(t => {
-        const active = ram && A.tierFor(ram).id === t.id;
+        const active = mem && A.tierFor(mem).id === t.id;
         return `<div class="lane-card${active ? ' active' : ''}">
           <b>${esc(t.label)}${active ? ' · this machine' : ''}</b>
           <p><b class="verdict">${esc(t.verdict)}</b><br>${esc(t.detail)}</p>
           ${t.models.length ? `<span class="src">${t.models.map(esc).join(' · ')}</span>` : ''}
         </div>`;
-      }).join('')}</div>`;
+      }).join('')}</div>
+      <div class="sec">How the numbers are read</div>
+      <p class="sub">${A.state.platform === 'macos'
+        ? 'Apple silicon shares one memory pool between CPU and GPU, so VRAM is not a separate budget and the field is disabled. Usable model size sits below the headline RAM.'
+        : 'With a discrete GPU the larger of RAM and VRAM decides what can be hosted, because a model runs in one or the other, not both.'}</p>`;
+  }
+
+  function basketHTML() {
+    const items = A.basketItems();
+    const combined = A.combinedCommand();
+    return `<h2>Build</h2>
+      <p class="sub">Components you combined with <b>+</b>, and one script that sets all of them
+      up in order for your system.</p>
+      ${items.length ? `<div class="grid">${items.map(c => `
+        <div class="lane-card">
+          <button class="plus mini in" data-drop="${esc(c.id)}" title="Remove">&times;</button>
+          <b>${esc(c.name)}</b>
+          ${c.owner ? `<span class="owner">${esc(c.owner)}</span>` : ''}
+          <p>${esc(c.detail)}</p>
+          <span class="src">${esc(A.laneName(c.lane))}</span>
+        </div>`).join('')}</div>` : '<p class="empty">Nothing added yet. Use + on any component.</p>'}
+      <div class="sec">Combined script</div>
+      ${combined.ok
+        ? `<div class="cmd wrap"><button class="copy" data-copy>copy</button>${esc(combined.text)}</div>
+           <button class="btn ghost" id="basket-clear">Clear all</button>`
+        : `<p class="empty">${esc(combined.text)}</p>`}`;
   }
 
   function customHTML() {
     const mine = A.state.customLanes;
     return `<h2>Custom lanes</h2>
-      <p class="sub">Add a lane of your own. It mixes with the generated lanes everywhere in
-      this design. Stored in this browser only; nothing is transmitted.</p>
+      <p class="sub">Add a lane of your own. It mixes with the generated lanes everywhere in this
+      design. Stored in this browser only; nothing is transmitted.</p>
       <div class="form">
         <label for="cl-name">Lane name</label>
         <input id="cl-name" type="text" placeholder="e.g. Robotics telemetry">
@@ -157,8 +391,8 @@ const AtlasPanes = (() => {
   function suggestHTML() {
     const list = A.state.suggestions;
     return `<h2>Suggest a lane or feed</h2>
-      <p class="sub">Propose something the catalog is missing. Saved in this browser, then copy
-      the list into an issue. Nothing is sent anywhere from this page.</p>
+      <p class="sub">Propose something the catalog is missing. Saved in this browser, then copy the
+      list into an issue. Nothing is sent anywhere from this page.</p>
       <div class="form">
         <label for="sg-name">Lane or feed</label>
         <input id="sg-name" type="text" placeholder="e.g. Embedded ML on microcontrollers">
@@ -171,17 +405,39 @@ const AtlasPanes = (() => {
       </div>
       <div class="sec">Saved (${list.length})</div>
       ${list.length
-        ? `<div class="cmd wrap"><button class="copy" id="sg-copy">copy all</button>${esc(A.exportSuggestions())}</div>`
+        ? `<div class="cmd wrap"><button class="copy" data-copy>copy</button>${esc(A.exportSuggestions())}</div>`
         : '<p class="empty">None yet.</p>'}`;
   }
 
   function wirePane() {
-    document.querySelectorAll('[data-lane]').forEach(card => {
-      card.onclick = () => {
-        const first = A.state.components.find(c => c.lane === card.dataset.lane);
-        if (first) { tab = 'map'; A.select(first.id); draw(); if (hooks.onSelect) hooks.onSelect(first.id); }
+    document.querySelectorAll('[data-comp]').forEach(card => {
+      card.onclick = e => {
+        if (e.target.closest('[data-add]')) return;
+        A.select(card.dataset.comp);
+        if (hooks.onSelect) hooks.onSelect(card.dataset.comp);
       };
     });
+    document.querySelectorAll('[data-add]').forEach(b => {
+      b.onclick = e => {
+        e.stopPropagation();
+        const id = b.dataset.add;
+        A.state.basket.includes(id) ? A.removeFromBasket(id) : A.addToBasket(id);
+        draw();
+      };
+    });
+    document.querySelectorAll('[data-drop]').forEach(b => {
+      b.onclick = () => { A.removeFromBasket(b.dataset.drop); draw(); };
+    });
+    const clearBasket = document.getElementById('basket-clear');
+    if (clearBasket) clearBasket.onclick = () => { A.clearBasket(); draw(); };
+
+    const pane = document.querySelector('.pane');
+    if (pane) {
+      const text = tab === 'basket' ? A.combinedCommand().text
+        : tab === 'suggest' ? A.exportSuggestions() : '';
+      wireCopy(pane, text);
+    }
+
     const add = document.getElementById('cl-add');
     if (add) add.onclick = () => {
       const r = A.addCustomLane({ name: val('cl-name'), family: val('cl-fam'),
@@ -198,58 +454,124 @@ const AtlasPanes = (() => {
       document.getElementById('sg-err').textContent = r.ok ? '' : r.error;
       if (r.ok) draw();
     };
-    const cp = document.getElementById('sg-copy');
-    if (cp) cp.onclick = async () => {
-      cp.textContent = (await A.copy(A.exportSuggestions())) ? 'copied' : 'select it';
-      setTimeout(() => { cp.textContent = 'copy all'; }, 1400);
-    };
   }
 
-  /* ---------------------------------------------------- hardware bar */
 
-  function hwUI() {
-    const scan = document.getElementById('scan');
-    if (scan) {
-      const cmd = A.scanCommand();
-      scan.textContent = cmd;
-      scan.onclick = async () => {
-        const ok = await A.copy(cmd);
-        scan.textContent = ok ? 'copied, run it in your terminal' : 'select the text to copy';
-        setTimeout(() => { scan.textContent = cmd; }, 1700);
-      };
-    }
-    const ram = document.getElementById('ram');
-    if (!ram) return;
-    if (A.state.ram) ram.value = A.state.ram;
-    const show = () => {
-      const t = A.state.ram ? A.tierFor(A.state.ram) : null;
-      const el = document.getElementById('tier');
-      if (el) el.textContent = t ? t.verdict : 'not set';
+  /* ------------------------------------------------------- map popover */
+
+  /* Clicking a node opens this where the click happened, rather than only
+     updating the side panel. It carries the same facts the panel does, plus the
+     plus button, so a combination can be built without leaving the map. */
+
+  function closePopover() {
+    const existing = document.getElementById('pop');
+    if (existing) existing.remove();
+  }
+
+  function popover(x, y, componentId) {
+    closePopover();
+    const d = A.detailFor(componentId);
+    if (!d) return;
+
+    const node = document.createElement('div');
+    node.id = 'pop';
+    node.className = 'pop';
+    node.innerHTML = `
+      <div class="pophead">
+        <div>
+          <div class="popname">${esc(d.name)}</div>
+          ${d.owner ? `<div class="downer">${esc(d.owner)}</div>` : ''}
+        </div>
+        <div class="popbtns">
+          <button class="plus${d.inBasket ? ' in' : ''}" data-pop-add
+            title="${d.inBasket ? 'Remove from the combination' : 'Add to a combination'}"
+            >${d.inBasket ? '&#10003;' : '+'}</button>
+          <button class="popclose" data-pop-close title="Close">&times;</button>
+        </div>
+      </div>
+      <div class="poprow">
+        <span class="dkind" data-kind="${esc(d.kind)}">${esc(d.kind)}</span>
+        ${d.sub ? `<span class="dkind sub">${esc(d.sub)}</span>` : ''}
+      </div>
+      <p class="popdesc">${esc(d.detail)}</p>
+      <div class="popmeta">${esc(d.lane)}${d.laneSource ? ` · <code>${esc(d.laneSource)}</code>` : ''}</div>
+      ${d.command
+        ? `<div class="cmd"><button class="copy" data-copy>copy</button>${esc(d.command)}</div>`
+        : A.state.platform
+          ? '<p class="popempty">Nothing to run; this is part of the system, not something you install.</p>'
+          : '<p class="popempty">Choose your operating system in step 1 to see the command.</p>'}
+      ${d.connections.length
+        ? `<div class="popsec">Connects to ${d.connections.length}</div>
+           <div class="popconn">${d.connections.slice(0, 6).map(c =>
+             `<button data-pop-go="${esc(c.id)}">${esc(c.name)}</button>`).join('')}</div>`
+        : ''}
+      ${A.state.basket.length
+        ? `<div class="popfoot">${A.state.basket.length} in your combination ·
+           <button data-pop-build>see the script</button></div>` : ''}`;
+
+    document.body.appendChild(node);
+
+    // Keep it on screen: flip rather than overflow the viewport.
+    const box = node.getBoundingClientRect();
+    const pad = 12;
+    let left = x + 14;
+    let top = y + 14;
+    if (left + box.width > window.innerWidth - pad) left = Math.max(pad, x - box.width - 14);
+    if (top + box.height > window.innerHeight - pad) top = Math.max(pad, window.innerHeight - box.height - pad);
+    node.style.left = `${left}px`;
+    node.style.top = `${top}px`;
+
+    wireCopy(node, d.command);
+    node.querySelector('[data-pop-close]').onclick = closePopover;
+    node.querySelector('[data-pop-add]').onclick = () => {
+      d.inBasket ? A.removeFromBasket(d.id) : A.addToBasket(d.id);
+      popover(x, y, componentId);
+      tabsUI();
+      detailUI();
     };
-    ram.oninput = () => { A.setRam(ram.value); show(); };
-    show();
+    node.querySelectorAll('[data-pop-go]').forEach(b => {
+      b.onclick = () => {
+        A.select(b.dataset.popGo);
+        popover(x, y, b.dataset.popGo);
+        if (hooks.onSelect) hooks.onSelect(b.dataset.popGo);
+      };
+    });
+    const build = node.querySelector('[data-pop-build]');
+    if (build) build.onclick = () => { closePopover(); tab = 'basket'; draw(); };
+  }
+
+  // One dismissal path for every design: click away, or press Escape.
+  if (typeof document !== 'undefined') {
+    document.addEventListener('pointerdown', e => {
+      if (!e.target.closest('#pop') && !e.target.closest('[data-node]')) closePopover();
+    }, true);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopover(); });
   }
 
   /* ------------------------------------------------------------ draw */
 
   function draw() {
+    setupUI();
     tabsUI();
+    filtersUI();
     const stage = document.getElementById('stage');
-    if (!stage) return;
-    if (tab === 'map') {
-      if (hooks.renderMap) hooks.renderMap(stage);
-    } else {
-      const pane = document.createElement('div');
-      pane.className = 'pane';
-      pane.innerHTML =
-        tab === 'routes' ? routesHTML() :
-        tab === 'hardware' ? hardwareHTML() :
-        tab === 'custom' ? customHTML() :
-        tab === 'suggest' ? suggestHTML() :
-        lanesHTML(tab);
-      stage.innerHTML = '';
-      stage.appendChild(pane);
-      wirePane();
+    if (stage) {
+      if (tab === 'map') {
+        if (hooks.renderMap) hooks.renderMap(stage);
+      } else {
+        const pane = document.createElement('div');
+        pane.className = 'pane';
+        pane.innerHTML =
+          tab === 'routes' ? routesHTML() :
+          tab === 'hardware' ? hardwareHTML() :
+          tab === 'basket' ? basketHTML() :
+          tab === 'custom' ? customHTML() :
+          tab === 'suggest' ? suggestHTML() :
+          lanesHTML(tab);
+        stage.innerHTML = '';
+        stage.appendChild(pane);
+        wirePane();
+      }
     }
     detailUI();
   }
@@ -259,19 +581,18 @@ const AtlasPanes = (() => {
     if (!stage) return;
     stage.innerHTML = `<div class="pane"><h2>Could not load the atlas data</h2>
       <p class="sub">${esc(err.message)}</p>
-      <p class="sub">This page fetches <code>atlas-data.json</code>, which browsers block over
-      <code>file://</code>. Serve the folder over HTTP instead:</p>
-      <div class="cmd">python -m http.server 8000</div></div>`;
+      <p class="sub">Re-run <code>python scripts/build_atlas_data.py</code> to regenerate
+      <code>atlas-data.js</code>, which is what this page reads.</p></div>`;
   }
 
   function mount(options) {
     hooks = options || {};
     A.init('atlas-data.json').then(() => {
-      hwUI();
       draw();
-      A.on(() => detailUI());
+      A.on(() => { detailUI(); syncFilterChips(); });
     }).catch(fail);
   }
 
-  return { mount, draw, esc, detailUI, get tab() { return tab; }, set tab(v) { tab = v; } };
+  return { mount, draw, esc, detailUI, filtersUI, syncFilterChips, popover, closePopover,
+           get tab() { return tab; }, set tab(v) { tab = v; } };
 })();

@@ -133,20 +133,137 @@ textarea{min-height:74px;resize:vertical}
 .btn.ghost{background:none;border:1px solid var(--line);color:var(--ink);font-weight:500;
   padding:6px 13px;margin-top:9px}
 .err{color:var(--warn);font-size:12.5px;margin-top:9px}
+
+/* ---- shared setup bar, filters and build controls -------------------
+   Written once and injected into every design. Every selector resolves through
+   each design's own custom properties, so the palette stays local. */
+#setup{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;
+  padding:11px 18px;border-bottom:1px solid var(--line)}
+#setup .step{display:flex;gap:9px;align-items:flex-start;min-width:0}
+#setup .step.locked{opacity:.45}
+#setup .num{flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--line);color:var(--dim);font-size:11px;display:grid;
+  place-items:center;margin-top:1px}
+#setup .stepbody{min-width:0}
+#setup .steplabel{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:5px}
+#setup .osrow{display:flex;gap:4px;flex-wrap:wrap}
+#setup .os{font-size:12px;padding:5px 11px;border:1px solid var(--line);
+  border-radius:7px;color:var(--dim);transition:.14s}
+#setup .os:hover{color:var(--ink);border-color:var(--accent)}
+#setup .os.on{color:var(--bg);background:var(--accent);border-color:var(--accent);
+  font-weight:700}
+#setup .osnote{font-size:11px;color:var(--dim);margin-top:5px;max-width:46ch;
+  line-height:1.5}
+#setup .scan{font-family:var(--mono,monospace);font-size:10.5px;text-align:left;
+  background:rgba(0,0,0,.55);border:1px solid var(--line);border-radius:6px;
+  padding:6px 9px;color:var(--accent);max-width:min(40vw,430px);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;cursor:pointer;display:block}
+#setup .scan:hover{border-color:var(--accent)}
+#setup .hwrow{display:flex;gap:7px;flex-wrap:wrap}
+#setup .hwfield{display:flex;flex-direction:column;gap:3px;font-size:10.5px;
+  color:var(--dim)}
+#setup .hwfield.dim{opacity:.45}
+#setup .hwfield i{font-style:normal;opacity:.65}
+#setup .hwfield input{width:74px;background:rgba(0,0,0,.55);border:1px solid var(--line);
+  border-radius:6px;color:var(--ink);padding:5px 8px;font-family:var(--mono,monospace);
+  font-size:11.5px}
+#setup .verdictline{font-size:11.5px;color:var(--dim);margin-top:6px}
+#setup .verdictline b{color:var(--accent)}
+
+#filters{padding:9px 18px;border-bottom:1px solid var(--line);
+  display:flex;flex-direction:column;gap:6px}
+#filters .frow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}
+#filters .flabel{font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--dim);flex:0 0 88px}
+#filters .fsearch{flex:1;min-width:180px;max-width:430px;background:rgba(0,0,0,.55);
+  border:1px solid var(--line);border-radius:7px;color:var(--ink);padding:6px 10px;
+  font-family:inherit;font-size:12.5px}
+#filters .fcount{font-size:11px;color:var(--dim);font-family:var(--mono,monospace)}
+#filters .fclear{font-size:11px;color:var(--accent);border:1px solid var(--line);
+  border-radius:999px;padding:3px 10px}
+#filters .fclear:hover{border-color:var(--accent)}
+#filters .chips{display:flex;gap:4px;flex-wrap:wrap;flex:1;min-width:0}
+#filters .chip{font-size:11px;padding:3px 9px;border:1px solid var(--line);
+  border-radius:999px;color:var(--dim);transition:.14s;white-space:nowrap}
+#filters .chip:hover{color:var(--ink);border-color:var(--accent)}
+#filters .chip.on{color:var(--bg);background:var(--accent);border-color:var(--accent);
+  font-weight:600}
+#filters .chip i{font-style:normal;opacity:.6;font-size:10px}
+#filters .chip.k-instruction.on{background:var(--instruction);border-color:var(--instruction)}
+#filters .chip.k-capability.on{background:var(--capability);border-color:var(--capability)}
+#filters .chip.k-knowledge.on{background:var(--knowledge);border-color:var(--knowledge)}
+#filters .chip.k-control.on{background:var(--control);border-color:var(--control)}
+#filters .chip.k-model.on{background:var(--model);border-color:var(--model)}
+#filters .chip.k-delivery.on{background:var(--delivery);border-color:var(--delivery)}
+
+.plus{flex:0 0 auto;width:26px;height:26px;border:1px solid var(--line);border-radius:7px;
+  color:var(--dim);font-size:15px;line-height:1;display:grid;place-items:center;
+  transition:.14s}
+.plus:hover{color:var(--accent);border-color:var(--accent)}
+.plus.in{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+.plus.mini{position:absolute;top:9px;right:9px;width:22px;height:22px;font-size:13px}
+.dhead{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.downer{font-size:11.5px;color:var(--dim);font-family:var(--mono,monospace);margin-top:2px}
+.owner{font-size:11px;color:var(--dim);font-family:var(--mono,monospace);
+  display:block;margin-top:2px}
+.dkind.sub{opacity:.75;margin-left:4px}
+.badge{font-style:normal;font-size:10px;padding:1px 6px;border-radius:999px;
+  background:var(--accent);color:var(--bg);margin-left:4px;font-weight:700}
+.lane-card{position:relative}
+.tab{display:inline-flex;align-items:center}
+
+/* ---- layout corrections after the setup and filter bars were added ----
+   The old fixed calc(100vh - Npx) heights assumed a short header. The chrome is
+   now variable, so the map is sized from the viewport and the page scrolls
+   normally instead of every design guessing its own header height. */
+.tabs{position:static !important;top:auto !important}
+#setup,#filters{position:static}
+#filters .chips{max-height:62px;overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;padding-right:2px}
+.wrap{min-height:auto !important}
+svg.sky,svg.orbit,svg.sheet{height:min(66vh,720px) !important;min-height:360px}
+.term{height:min(66vh,720px) !important;min-height:360px}
+.pane{max-height:none !important}
+.side{position:sticky;top:0;max-height:100vh !important;align-self:start}
+@media(max-width:1080px){.side{position:static;max-height:none !important}}
+
+/* ---- click popover on the map --------------------------------------
+   Positioned at the click, flipped if it would leave the viewport. Carries the
+   same facts as the side panel plus the plus button, so a combination can be
+   built without leaving the map. */
+.pop{position:fixed;z-index:200;width:min(340px,86vw);background:var(--panel);
+  border:1px solid var(--accent);border-radius:11px;padding:13px;
+  box-shadow:0 18px 44px rgba(0,0,0,.62);animation:popin .13s ease both}
+@keyframes popin{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:none}}
+.pophead{display:flex;gap:9px;align-items:flex-start;justify-content:space-between}
+.popname{font-size:15px;font-weight:700;line-height:1.25}
+.popbtns{display:flex;gap:5px;flex:0 0 auto}
+.popclose{width:26px;height:26px;border:1px solid var(--line);border-radius:7px;
+  color:var(--dim);font-size:16px;line-height:1;display:grid;place-items:center}
+.popclose:hover{color:var(--ink);border-color:var(--ink)}
+.poprow{margin-top:7px}
+.popdesc{font-size:12.5px;color:var(--dim);line-height:1.55;margin-top:9px}
+.popmeta{font-size:11px;color:var(--dim);margin-top:7px;font-family:var(--mono,monospace);
+  word-break:break-all;opacity:.85}
+.pop .cmd{margin-top:10px;font-size:11px}
+.popempty{font-size:11.5px;color:var(--dim);margin-top:10px;line-height:1.5;font-style:italic}
+.popsec{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+  margin:12px 0 6px}
+.popconn{display:flex;gap:4px;flex-wrap:wrap}
+.popconn button{font-size:11px;padding:3px 9px;border:1px solid var(--line);
+  border-radius:999px;color:var(--dim)}
+.popconn button:hover{color:var(--accent);border-color:var(--accent)}
+.popfoot{margin-top:11px;padding-top:9px;border-top:1px solid var(--line);
+  font-size:11px;color:var(--dim)}
+.popfoot button{color:var(--accent);text-decoration:underline}
 </style>
 </head>
 <body>
 
-<div class="hw">
-  <h1>Orbital <span>Atlas</span></h1>
-  <div class="hw-step"><span>1. Scan this machine</span>
-    <button class="hw-scan" id="scan">loading…</button></div>
-  <div class="hw-step"><span>2. RAM</span>
-    <input id="ram" type="number" min="1" max="512" placeholder="GB">
-    <span id="tier" class="tier">not set</span></div>
-</div>
-
+<div id="setup"></div>
 <div class="tabs" id="tabs" role="tablist"></div>
+<div id="filters"></div>
 
 <div class="wrap">
   <div id="stage"></div>
@@ -240,7 +357,8 @@ function build(){
       t.setAttribute('class','olabel'); t.setAttribute('dy','-10');
       t.textContent = c.name.slice(0,24);
       g.append(orb,t);
-      g.onclick = () => A.select(c.id);
+      g.dataset.node = '1';
+      g.onclick = e => { A.select(c.id); P.popover(e.clientX, e.clientY, c.id); };
       gOrbs.appendChild(g);
     });
   });

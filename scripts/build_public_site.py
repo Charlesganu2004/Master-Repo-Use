@@ -251,12 +251,52 @@ def build_designs() -> list[str]:
     for source in sorted(PRIVATE_DESIGNS.iterdir()):
         if source.suffix.lower() not in {".html", ".js", ".css", ".json"} or not source.is_file():
             continue
+        # The two data files are rebuilt from the redacted payload below, never copied.
+        if source.name in {"atlas-data.json", "atlas-data.js"}:
+            continue
         (PUBLIC_DESIGNS / source.name).write_text(
             source.read_text(encoding="utf-8"), encoding="utf-8")
-    # the designs fetch this relative to themselves
-    (PUBLIC_DESIGNS / "atlas-data.json").write_text(
-        PRIVATE_ATLAS_DATA.read_text(encoding="utf-8"), encoding="utf-8")
+
+    public_payload = redact_atlas_data(json.loads(
+        PRIVATE_ATLAS_DATA.read_text(encoding="utf-8")))
+    rendered = json.dumps(public_payload, indent=1)
+    (PUBLIC_DESIGNS / "atlas-data.json").write_text(rendered, encoding="utf-8")
+    banner = "/* Redacted for publication by build_public_site.py. */\n"
+    (PUBLIC_DESIGNS / "atlas-data.js").write_text(
+        banner + "window.__ATLAS_DATA__ = " + rendered + ";\n", encoding="utf-8")
     return []
+
+
+def redact_atlas_data(data: dict) -> dict:
+    """Drop every component that carries a private catalog slug.
+
+    Lanes stay, with their counts, because a lane name and a number reveal
+    shape rather than composition. The entries inside them are the catalog, and
+    the catalog is private. Routes that referenced a dropped component lose that
+    member rather than pointing at nothing.
+    """
+    kept = [c for c in data.get("components", []) if not c.get("private")]
+    keep_ids = {c["id"] for c in kept}
+
+    for component in kept:
+        for field in ("connects", "routes"):
+            if field == "connects" and component.get("connects"):
+                component["connects"] = [i for i in component["connects"] if i in keep_ids]
+
+    routes = []
+    for route in data.get("routes", []):
+        trimmed = dict(route)
+        trimmed["members"] = [m for m in route.get("members", []) if m in keep_ids]
+        routes.append(trimmed)
+
+    public = dict(data)
+    public["components"] = kept
+    public["routes"] = routes
+    public["meta"] = dict(data.get("meta", {}))
+    public["meta"]["components"] = len(kept)
+    public["meta"]["redacted"] = True
+    public["meta"]["note"] = "Catalog entries removed for publication."
+    return public
 
 
 def private_keys_present(raw: str, label: str) -> list[str]:

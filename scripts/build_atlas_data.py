@@ -12,8 +12,11 @@ on the next build, which is the behaviour you want from a map.
 Components inside a lane are its real contents: the slugs in a list, the CLI
 flags of a script, the classes in a test module, the headings of a document.
 
-Nothing private ships. Catalog slugs are never emitted, only counts, because this
-file is published and the catalog composition is not.
+Privacy. Catalog entries ARE emitted here, flagged ``private: true``, because the
+local designs are useless without them. They are stripped by build_public_site.py
+before anything is published, and verify() fails the build if one survives. The
+file written here is a private working artifact; the published one is not the
+same file.
 """
 from __future__ import annotations
 
@@ -163,24 +166,74 @@ def lane(lid, name, family, kind, source, description, count, catalog=False) -> 
 
 
 def catalog_lanes() -> tuple[list, list]:
+    """Catalog lanes and the entries inside them.
+
+    The entries carry real repository slugs, which are private: the catalog
+    composition is not published. Each is flagged private=True and the public
+    build strips them, so the local designs are useful and the published ones
+    stay clean. build_public_site.verify() fails loudly if one slips through.
+
+    Sub-categories come from the '# --- ' section headers the lists already use,
+    so they are the author's own groupings rather than something inferred.
+    """
     lanes, comps = [], []
     for path in sorted((ROOT / "repo-lists").glob("*.txt")):
         if path.stem in NOT_A_LANE:
             continue
-        slugs = []
+        lid = f"cat-{path.stem}"
+        family = pick(path.stem, FAMILY_HINTS, "domain")
+        kind = pick(path.stem, KIND_HINTS, "capability")
+        entries, section, sections = [], "", []
         for line in path.read_text(encoding="utf-8").splitlines():
             text = line.strip()
+            if text.startswith("# ---"):
+                section = text.lstrip("# -").strip().rstrip(".")
+                # keep sub-category labels short enough to be a filter chip
+                section = section.split(" (")[0].split(":")[0].strip()[:38]
+                if section and section not in sections:
+                    sections.append(section)
+                continue
             if not text or text.startswith("#"):
                 continue
             candidate = text.split("#")[0].strip()
-            if SLUG_RE.fullmatch(candidate):
-                slugs.append(candidate)
-        lid = f"cat-{path.stem}"
-        lanes.append(lane(lid, path.stem.replace("-", " ").title(),
-                          pick(path.stem, FAMILY_HINTS, "domain"),
-                          pick(path.stem, KIND_HINTS, "capability"),
-                          f"repo-lists/{path.name}",
-                          first_comment(path, ("#",)), len(slugs), catalog=True))
+            if not SLUG_RE.fullmatch(candidate):
+                continue
+            note = text.split("#", 1)[1].strip() if "#" in text else ""
+            # A list can name the same repository twice. Keep the first, since
+            # ids are lane-scoped and a repeat would collide with itself.
+            if any(existing == candidate for existing, _, _ in entries):
+                continue
+            entries.append((candidate, section, note))
+
+        entry = lane(lid, path.stem.replace("-", " ").title(), family, kind,
+                     f"repo-lists/{path.name}", first_comment(path, ("#",)),
+                     len(entries), catalog=True)
+        entry["subcategories"] = sections
+        lanes.append(entry)
+
+        for index, (slug, sub, note) in enumerate(entries):
+            owner, _, name = slug.partition("/")
+            comps.append({
+                # Lane-scoped: 94 repositories are cross-listed, and a bare
+                # slug id collided for every one of them.
+                "id": f"cat:{path.stem}:{slug}",
+                "slug": slug,
+                "name": name,
+                "owner": owner,
+                "lane": lid,
+                "family": family,
+                "kind": kind,
+                "sub": sub or "Catalog",
+                "detail": note or f"Catalogued in {path.name}.",
+                "order": index,
+                "private": True,          # stripped from the published artifact
+                "cmd": {
+                    "windows": f"git clone https://github.com/{slug}.git",
+                    "wsl": f"git clone https://github.com/{slug}.git",
+                    "macos": f"git clone https://github.com/{slug}.git",
+                    "linux": f"git clone https://github.com/{slug}.git",
+                },
+            })
     return lanes, comps
 
 
@@ -322,6 +375,21 @@ def build() -> dict:
 
     routes = [{"id": r[0], "name": r[1], "detail": r[2], "members": r[3],
                "bestFor": r[4], "requires": r[5]} for r in ROUTES]
+
+    # Cross-listed catalog entries: say so rather than looking like duplicates.
+    lane_of = {c["id"]: c["lane"] for c in comps}
+    homes: dict[str, list[str]] = {}
+    for component in comps:
+        slug = component.get("slug")
+        if slug:
+            homes.setdefault(slug, []).append(component["lane"])
+    for component in comps:
+        slug = component.get("slug")
+        if slug and len(homes[slug]) > 1:
+            others = [l for l in homes[slug] if l != component["lane"]]
+            component["alsoIn"] = others
+            component["detail"] = (component["detail"].rstrip(".")
+                                   + f". Also listed in {len(others)} other lane(s).")
 
     by_id = {c["id"]: c for c in comps}
     for route in routes:

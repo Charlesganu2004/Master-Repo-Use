@@ -91,13 +91,27 @@ class TheDataLayer(unittest.TestCase):
         for needed in ("4gb", "8gb", "16gb", "32gb", "apple", "gpu"):
             self.assertIn(needed, ids)
 
-    def test_no_private_catalog_slug_reaches_the_published_data(self):
-        """This file ships to a public site; catalog composition is private.
+    def test_the_private_file_does_carry_catalog_entries(self):
+        """Otherwise the redaction test below would pass vacuously.
 
-        Checked against the real catalog rather than by guessing what a slug
-        looks like. Prose such as "Finance/Trading" is slug-shaped and harmless;
-        an actual unallowlisted repository name is the thing that matters.
+        atlas-data.json at the repository root is a private working artifact. It
+        is meant to contain the catalog; the local designs are useless without it.
+        The published copy is a different file, built by redacting this one.
         """
+        entries = [c for c in self.d["components"] if c.get("private")]
+        self.assertGreater(len(entries), 300,
+                           "the private data layer lost its catalog entries")
+
+    def test_no_private_catalog_slug_survives_into_the_published_artifact(self):
+        """Checked on the built artifact, not the source, because they differ.
+
+        Verified against the real catalog rather than by guessing what a slug
+        looks like: prose such as "Finance/Trading" is slug-shaped and harmless,
+        while an actual unallowlisted repository name is the thing that matters.
+        """
+        published = ROOT / "_site" / "designs" / "atlas-data.json"
+        if not published.exists():
+            self.skipTest("run scripts/build_public_site.py first")
         allow, catalog = set(), set()
         for path in (ROOT / "repo-lists").glob("*.txt"):
             for line in path.read_text(encoding="utf-8").splitlines():
@@ -105,10 +119,19 @@ class TheDataLayer(unittest.TestCase):
                 if not re.fullmatch(r"[\w.-]+/[\w.-]+", candidate):
                     continue
                 (allow if path.stem == "public-allowlist" else catalog).add(candidate)
-        blob = json.dumps(self.d)
-        private = catalog - allow
-        leaked = sorted(slug for slug in private if slug in blob)
-        self.assertFalse(leaked, f"private catalog slugs in published data: {leaked}")
+        blob = published.read_text(encoding="utf-8")
+        leaked = sorted(slug for slug in (catalog - allow) if slug in blob)
+        self.assertFalse(leaked, f"private catalog slugs in published data: {leaked[:8]}")
+
+    def test_the_published_artifact_drops_every_private_component(self):
+        published = ROOT / "_site" / "designs" / "atlas-data.json"
+        if not published.exists():
+            self.skipTest("run scripts/build_public_site.py first")
+        data = json.loads(published.read_text(encoding="utf-8"))
+        self.assertTrue(data["meta"].get("redacted"), "published data is not marked redacted")
+        self.assertFalse([c for c in data["components"] if c.get("private")])
+        self.assertEqual(len(data["lanes"]), len(self.d["lanes"]),
+                         "lanes should survive redaction; only entries are private")
 
 
 class TheDataLayerCopies(unittest.TestCase):
@@ -222,12 +245,42 @@ class TheSharedCore(unittest.TestCase):
 
     def test_core_declares_every_tab_charles_asked_for(self):
         for tab in ("agents", "skills", "tools", "plugins", "mcp",
-                    "routes", "hardware", "custom", "suggest"):
+                    "routes", "hardware", "basket", "custom", "suggest"):
             self.assertIn(f"id: '{tab}'", self.core, f"missing the {tab} tab")
 
-    def test_scan_commands_exist_for_every_platform(self):
-        for platform in ("windows", "wsl", "linux", "macos"):
-            self.assertIn(platform, self.core)
+    def test_every_platform_is_selectable_and_has_a_scan(self):
+        for platform in ("windows", "wsl", "linux", "macos", "other"):
+            self.assertIn(f"id: '{platform}'", self.core, f"{platform} is not selectable")
+            self.assertIn(f"{platform}:", self.core, f"{platform} has no scan command")
+
+    def test_platform_is_chosen_not_sniffed(self):
+        """A user-agent guess hands someone the wrong shell, and WSL is invisible."""
+        self.assertNotIn("navigator.userAgent", self.core)
+        self.assertIn("setPlatform", self.core)
+
+    def test_no_command_is_offered_before_a_platform_is_chosen(self):
+        self.assertIn("if (!state.platform) return null;", self.core)
+
+    def test_all_four_hardware_fields_exist(self):
+        for field in ("ram", "vram", "storage", "cpu"):
+            self.assertIn(f"id: '{field}'", self.core, f"missing the {field} field")
+
+    def test_apple_unified_memory_is_handled_not_double_counted(self):
+        """On Apple silicon VRAM is the same pool as RAM, so it must not add."""
+        self.assertIn("usableMemory", self.core)
+        self.assertIn("if (state.platform === 'macos') return ram;", self.core)
+
+    def test_filters_compose_across_family_kind_sub_and_text(self):
+        for field in ("activeFamilies", "activeKinds", "activeSubs", "query"):
+            self.assertIn(field, self.core, f"{field} is not a filter dimension")
+
+    def test_the_build_basket_produces_one_script(self):
+        for fn in ("addToBasket", "removeFromBasket", "combinedCommand"):
+            self.assertIn(fn, self.core, f"missing {fn}")
+
+    def test_the_popover_carries_description_command_and_plus(self):
+        for marker in ("popname", "data-pop-add", "popdesc"):
+            self.assertIn(marker, self.panes, f"popover missing {marker}")
 
     def test_apple_unified_memory_is_called_out(self):
         """Charles asked specifically; unified memory is shared with the GPU."""
