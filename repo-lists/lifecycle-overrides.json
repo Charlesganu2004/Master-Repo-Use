@@ -3,6 +3,10 @@
     "mode": "reference",
     "note": "Widely used reranking wrapper (1.6k stars). Feature-complete."
   },
+  "Chalarangelo/30-seconds-of-css": {
+    "mode": "reference",
+    "note": "Archived 2023, CC-BY-4.0. A finished snippet reference rather than a maintained package; CSS techniques do not rot the way dependencies do. Reference only."
+  },
   "D-Ogi/WatermarkRemover-AI": {
     "mode": "reference",
     "note": "Authorized-media utility (1.9k stars). Feature-complete."
@@ -58,6 +62,10 @@
   "facebookresearch/vjepa2": {
     "mode": "reference",
     "note": "Meta research release. Finished artifact rather than a maintained runtime package."
+  },
+  "freshtechbro/claudedesignskills": {
+    "mode": "reference",
+    "note": "Design skill pack, MIT, 792 stars, quiet since 2025-11. Instruction files rather than a runtime dependency, so age is a weak signal here."
   },
   "greensock/GSAP": {
     "mode": "reference",

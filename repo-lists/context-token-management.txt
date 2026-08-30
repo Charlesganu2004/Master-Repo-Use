@@ -15,3 +15,17 @@ lucasrosati/claude-code-memory-setup  # Obsidian-backed memory pattern; vendor-n
 # --- Research / reference (do not treat as runtime dependencies)
 microsoft/LLMLingua               # prompt compression; last release quiet since 2026-04, still the reference impl
 ZongqianLi/Prompt-Compression-Survey   # static academic survey; lifecycle override keeps it reference-only
+
+# --- Added 2026-08-28: the reducers Charles supplied, graded honestly
+rtk-ai/rtk                        # CLI proxy, filters command output before it reaches the model.
+                                  # 77.7k stars, Apache-2.0, pushed today. Strongest entry in this lane.
+                                  # NOT INSTALLED on Charles's machine as of 2026-08-28, on Windows or in
+                                  # WSL, and settings.json had no hooks at all. RTK.md describes it as an
+                                  # active transparent hook; that was aspirational, not the state on disk.
+yttrium400/reducethemtokens       # 'rtt': compresses a repo to an imports/signatures/class skeleton for
+                                  # orientation before retrieval. 11 stars, MIT, 77d. Small but the
+                                  # technique is sound and the licence permits use.
+theosib/token-compact             # LINK ONLY. 2 stars, NO LICENCE (all rights reserved), quiet 150d.
+                                  # Its own quick-start spends paid Anthropic API calls per compression.
+                                  # The local caveman-compress / caveman-ultra-compact skills do the same
+                                  # job deterministically at zero API cost, so prefer those.

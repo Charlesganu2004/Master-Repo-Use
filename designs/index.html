@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas Designs | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+:root{
+  --bg:#0b0708; --panel:#141011; --line:#2a1e20; --ink:#f2e9ea; --dim:#a08b8e;
+  --accent:#ff3b3b; --accent2:#ff8f5c; --warn:#ffd166;
+  --instruction:#ff5c5c; --capability:#ff9d5c; --knowledge:#7fb3ff;
+  --control:#ffd166; --model:#c77dff; --delivery:#5cd6a0;
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;
+  line-height:1.6;padding:34px 20px 70px}
+button,a{font:inherit;color:inherit}
+.shell{max-width:1280px;margin:0 auto}
+h1{font-size:32px;letter-spacing:-.025em;margin-bottom:8px}
+h1 span{color:var(--accent)}
+.lede{color:var(--dim);max-width:74ch;margin-bottom:10px}
+.counts{font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:8px}
+.counts b{color:var(--accent)}
+
+.palettebar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;
+  border:1px solid var(--line);border-radius:12px;padding:12px 15px;margin:20px 0 8px;
+  background:var(--panel)}
+.palettebar .lab{font-size:11px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--dim)}
+.pchip{display:flex;align-items:center;gap:7px;border:1px solid var(--line);
+  border-radius:999px;padding:5px 12px 5px 6px;font-size:12.5px;color:var(--dim);
+  cursor:pointer;transition:.15s}
+.pchip:hover{color:var(--ink);border-color:var(--accent)}
+.pchip.on{color:var(--ink);border-color:var(--accent);background:rgba(255,59,59,.08)}
+.pdot{width:17px;height:17px;border-radius:50%;border:1px solid rgba(255,255,255,.16)}
+.hint{font-size:12px;color:var(--dim);margin-bottom:26px}
+.hint code{font-family:var(--mono);font-size:11.5px;color:var(--accent2)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(348px,1fr));gap:15px}
+.card{border:1px solid var(--line);border-radius:15px;overflow:hidden;
+  background:var(--panel);display:flex;flex-direction:column;transition:.18s}
+.card:hover{border-color:var(--accent);transform:translateY(-3px)}
+.card.pick{border-color:var(--accent)}
+.preview{height:118px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.body{padding:16px 17px 18px;display:flex;flex-direction:column;flex:1}
+.nameline{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.name{font-size:17.5px;font-weight:700;letter-spacing:-.015em}
+.picked{font-size:10px;background:var(--accent);color:var(--bg);border-radius:999px;
+  padding:2px 8px;font-weight:700}
+.tagline{font-size:11.5px;color:var(--accent);font-family:var(--mono);margin-top:3px}
+.what{font-size:13.5px;color:var(--dim);margin-top:9px;flex:1}
+.what b{color:var(--ink);font-weight:600}
+.from{font-size:11.5px;color:var(--dim);margin-top:9px;font-family:var(--mono);
+  border-top:1px solid var(--line);padding-top:9px}
+.from a{color:var(--accent2)}
+.links{display:flex;gap:6px;flex-wrap:wrap;margin-top:13px}
+.open{padding:9px 15px;border-radius:9px;background:var(--accent);color:var(--bg);
+  font-weight:700;font-size:13px;text-decoration:none}
+.open:hover{filter:brightness(1.1)}
+.tlink{padding:7px 10px;border-radius:9px;border:1px solid var(--line);
+  font-size:11.5px;color:var(--dim);text-decoration:none;display:flex;align-items:center;
+  gap:6px}
+.tlink:hover{color:var(--ink);border-color:var(--accent)}
+.tlink i{width:11px;height:11px;border-radius:50%;display:block}
+
+.note{margin-top:32px;border:1px solid var(--line);border-radius:13px;padding:19px;
+  background:var(--panel)}
+.note h2{font-size:16.5px;margin-bottom:9px}
+.note p{font-size:13.5px;color:var(--dim);margin-bottom:9px}
+.note code{font-family:var(--mono);font-size:12px;color:var(--accent);
+  background:rgba(0,0,0,.45);padding:2px 7px;border-radius:5px}
+.note ul{margin:9px 0 0 18px;font-size:13.5px;color:var(--dim)}
+.note li{margin-bottom:6px}
+
+/* Each swatch previews that design's actual layout, in the current palette. */
+.s-graphite{background:var(--panel)}
+.s-graphite::after{content:"";position:absolute;left:14px;right:14px;top:16px;height:15px;
+  border-radius:4px;background:var(--accent);
+  box-shadow:0 22px 0 var(--capability),0 44px 0 var(--knowledge),0 66px 0 var(--control)}
+.s-console{background:#000}
+.s-console::after{content:"› atlas --console";position:absolute;left:16px;top:46px;
+  font-family:var(--mono);font-size:13px;color:var(--accent)}
+.s-console::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.045) 0 1px,transparent 1px 4px)}
+.s-constellation{background:radial-gradient(circle at 44% 48%,var(--panel),var(--bg) 72%)}
+.s-constellation::after{content:"";position:absolute;inset:0;
+  background-image:radial-gradient(circle,var(--accent) 1.7px,transparent 1.7px),
+                   radial-gradient(circle,var(--capability) 1.4px,transparent 1.4px),
+                   radial-gradient(circle,var(--knowledge) 1.2px,transparent 1.2px);
+  background-size:46px 39px,34px 47px,59px 30px;opacity:.9}
+.s-orbital{background:radial-gradient(ellipse at 50% 50%,var(--panel),var(--bg) 70%)}
+.s-orbital::after{content:"";position:absolute;left:50%;top:50%;width:84px;height:84px;
+  transform:translate(-50%,-50%);border-radius:50%;border:1px solid var(--accent);
+  box-shadow:0 0 0 15px transparent,0 0 0 16px var(--capability),
+    0 0 0 31px transparent,0 0 0 32px var(--knowledge)}
+.s-blueprint{background:var(--bg);
+  background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);
+  background-size:22px 22px}
+.s-blueprint::after{content:"";position:absolute;left:26px;top:28px;width:84px;height:56px;
+  border:1.4px solid var(--accent);box-shadow:114px 14px 0 -1px var(--capability)}
+.s-tonal{background:var(--panel)}
+.s-tonal::after{content:"";position:absolute;left:18px;top:22px;width:96px;height:70px;
+  border-radius:16px;background:var(--accent);opacity:.85;
+  box-shadow:112px 8px 0 var(--capability),224px -6px 0 var(--knowledge)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<h1>Atlas <span>designs</span></h1>
+<p class="lede">Six ways through the same system. They share one data layer and one engine, so a
+lane added anywhere appears in all of them and a click means the same thing everywhere. What
+differs is how the map is drawn and how you move through it.</p>
+<p class="counts">All six read <b>128</b> lanes · <b>777</b> components · <b>10</b> hybrid routes ·
+<b>17</b> families · <b>28</b> sub-categories, generated from files in this repository.</p>
+
+<div class="palettebar" id="pbar">
+  <span class="lab">Palette</span>
+</div>
+<p class="hint">Switching here recolours this page and every link below, so you compare the design
+rather than the paint. Each card also has direct links per palette. A palette travels in the URL as
+<code>?theme=ember</code>, and every design has its own switcher.</p>
+
+<div class="grid" id="grid"></div>
+
+<div class="note">
+  <h2>What every design carries</h2>
+  <p>The differences are visual and navigational. These are identical in all six, by design:</p>
+  <ul>
+    <li><b>Your system first.</b> Windows, Ubuntu/WSL, macOS, Linux or Other. That choice decides
+      the scan command and every command shown afterwards. Nothing is guessed from the browser.</li>
+    <li><b>Then the numbers.</b> RAM, VRAM, free disk, cores. On macOS the VRAM field disables
+      itself, because unified memory is the same pool as RAM and adding them would overstate what
+      the machine can host.</li>
+    <li><b>Filters compose</b> across family, kind, sub-category and text. Nothing replaces
+      anything, so lanes intermix.</li>
+    <li><b>Click anything</b> for a popover with its description, lane and source file, the command
+      for your platform, its connections, and a <b>+</b> button.</li>
+    <li><b>Build.</b> Plus collects components; the Build tab emits one script that sets all of them
+      up in order, naming anything it skipped and why.</li>
+    <li><b>Custom lanes and suggestions</b> stay in your browser. These pages transmit nothing.</li>
+  </ul>
+  <p style="margin-top:12px">Open any file directly from disk. No server is needed: the data ships
+  as a script rather than a fetch, because browsers block <code>fetch()</code> over
+  <code>file://</code>.</p>
+</div>
+
+</div>
+
+<script src="atlas-theme.js"></script>
+<script>
+'use strict';
+
+/* Design cards. `from` credits the catalogued design system each one draws on,
+   so the influence is traceable rather than asserted. */
+const DESIGNS = [
+  { file: 'd6-graphite.html', name: 'Graphite', swatch: 's-graphite', pick: true,
+    tagline: 'stacked lanes · expand in place',
+    what: '<b>The one you picked, rebuilt.</b> Lanes stacked top to bottom the way Graphite always read, but each opens in place into Console-style rows rather than sending you elsewhere. Colour-coded rails, counts on every lane, expand and collapse all.',
+    from: 'Its own lane structure, with the Console row treatment folded in.' },
+
+  { file: 'd3-console.html', name: 'Console', swatch: 's-console', pick: true,
+    tagline: 'keyboard-first · type to filter',
+    what: '<b>The other one you picked.</b> No mouse required: one prompt over all 777 components, arrows to move, enter to open. Fastest of the six when you already know roughly what you want and need the command out of it.',
+    from: 'Terminal conventions. The prompt drives the shared filter, so counts never disagree.' },
+
+  { file: 'd7-material.html', name: 'Tonal', swatch: 's-tonal',
+    tagline: 'material 3 · rail and elevation',
+    what: '<b>Surfaces instead of lines.</b> Depth carries the grouping: tonal layers mixed from the palette, elevation on hover, a pointer-tracking ripple, a navigation rail rather than a tab strip, and a floating action button for the build.',
+    from: 'Material Design 3. The catalog carries a design-skill pack for it; see the Skills tab in any design.' },
+
+  { file: 'd2-constellation.html', name: 'Constellation', swatch: 's-constellation',
+    tagline: 'force-directed · drag to explore',
+    what: '<b>Physics, not layout.</b> Components repel, connections pull, and same-lane parts cluster on their own. Drag any star and the cloud reorganises. Selecting one lights its links and fades the rest.',
+    from: 'Force-directed graph drawing; damped so it settles rather than jitters.' },
+
+  { file: 'd4-orbital.html', name: 'Orbital', swatch: 's-orbital',
+    tagline: 'concentric rings · one per family',
+    what: '<b>Depth as distance.</b> Families are rings ordered outward by where they sit in the system. The field rotates slowly, dense families split across sub-rings so they never saturate into a band, and clicking draws spokes to everything a component touches.',
+    from: 'Radial layout. Sub-rings were added after one family turned a ring solid.' },
+
+  { file: 'd5-blueprint.html', name: 'Blueprint', swatch: 's-blueprint',
+    tagline: 'drafting sheet · pan and zoom',
+    what: '<b>A schematic you survey.</b> Every lane is a titled box packed onto a grid that stays roughly square. Drag to pan, wheel to zoom. Connections route as orthogonal traces with flow animation, the way a wiring diagram shows direction.',
+    from: 'Technical drawing conventions; column count is derived so the sheet stays legible.' },
+];
+
+function render(theme){
+  document.getElementById('grid').innerHTML = DESIGNS.map(d => `
+    <div class="card${d.pick ? ' pick' : ''}">
+      <div class="preview ${d.swatch}"></div>
+      <div class="body">
+        <div class="nameline">
+          <span class="name">${d.name}</span>
+          ${d.pick ? '<span class="picked">your pick</span>' : ''}
+        </div>
+        <div class="tagline">${d.tagline}</div>
+        <p class="what">${d.what}</p>
+        <p class="from">${d.from}</p>
+        <div class="links">
+          <a class="open" href="${d.file}?theme=${theme}">Open</a>
+          ${AtlasTheme.THEMES.map(t =>
+            `<a class="tlink" href="${d.file}?theme=${t.id}" title="${t.label}: ${t.note}"
+              ><i style="background:${t.accent}"></i>${t.label}</a>`).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function bar(current){
+  const host = document.getElementById('pbar');
+  host.innerHTML = '<span class="lab">Palette</span>' + AtlasTheme.THEMES.map(t =>
+    `<button class="pchip${t.id === current ? ' on' : ''}" data-p="${t.id}" title="${t.note}">
+      <span class="pdot" style="background:${t.accent}"></span>${t.label}</button>`).join('');
+  host.querySelectorAll('[data-p]').forEach(b => {
+    b.onclick = () => { AtlasTheme.apply(b.dataset.p); bar(b.dataset.p); render(b.dataset.p); };
+  });
+}
+
+const start = AtlasTheme.initial('ember');
+AtlasTheme.apply(start);
+bar(start);
+render(start);
+</script>
+</body>
+</html>

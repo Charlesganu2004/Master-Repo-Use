@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blueprint | Master Repo Atlas</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+:root{
+  --bg:#0d1826; --panel:#112036; --line:#1e3552; --ink:#dbe7f5; --dim:#7a93b0;
+  --accent:#7dd3fc; --accent2:#fcd34d; --warn:#fca5a5;
+  --instruction:#7dd3fc; --capability:#fcd34d; --knowledge:#a5b4fc;
+  --control:#fca5a5; --model:#6ee7b7; --delivery:#f0abfc;
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;
+  min-height:100vh;overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+
+.hw{position:sticky;top:0;z-index:60;background:rgba(13,24,38,.95);
+  border-bottom:1px solid var(--line);padding:10px 20px;display:flex;gap:16px;
+  align-items:center;flex-wrap:wrap}
+.hw h1{font-size:14px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;
+  white-space:nowrap;font-family:var(--mono)}
+.hw h1 span{color:var(--accent)}
+.hw-step{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--dim);
+  border:1px dashed var(--line);padding:5px 12px}
+.hw-scan{font-family:var(--mono);font-size:11px;background:#08111c;
+  border:1px solid var(--line);padding:6px 10px;color:var(--accent);
+  max-width:min(44vw,520px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  cursor:pointer}
+.hw-scan:hover{border-color:var(--accent)}
+.hw input{width:74px;background:#08111c;border:1px solid var(--line);color:var(--ink);
+  padding:5px 9px;font-family:var(--mono);font-size:12px}
+.tier{color:var(--accent2);font-weight:600}
+
+.tabs{display:flex;gap:0;padding:0 20px;flex-wrap:wrap;border-bottom:1px solid var(--line);
+  position:sticky;top:51px;z-index:55;background:rgba(13,24,38,.95)}
+.tab{padding:9px 14px;font-size:12px;color:var(--dim);font-family:var(--mono);
+  border:1px solid transparent;border-bottom:none;transition:.12s;white-space:nowrap;
+  text-transform:uppercase;letter-spacing:.05em}
+.tab:hover{color:var(--ink);background:#0f1c2e}
+.tab[aria-selected=true]{color:var(--accent);border-color:var(--line);background:var(--panel)}
+
+.wrap{display:grid;grid-template-columns:1fr 376px;min-height:calc(100vh - 92px)}
+@media(max-width:1080px){.wrap{grid-template-columns:1fr}}
+#stage{min-width:0;overflow:hidden;position:relative;
+  background-image:linear-gradient(rgba(125,211,252,.05) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(125,211,252,.05) 1px,transparent 1px);
+  background-size:26px 26px}
+.side{border-left:1px solid var(--line);background:var(--panel);padding:18px;
+  overflow-y:auto;max-height:calc(100vh - 92px);position:sticky;top:92px;min-width:0}
+@media(max-width:1080px){.side{position:static;max-height:none;border-left:none;
+  border-top:1px solid var(--line)}}
+
+/* ---- schematic canvas ---- */
+svg.sheet{width:100%;height:calc(100vh - 92px);display:block;cursor:grab}
+svg.sheet.pan{cursor:grabbing}
+@media(max-width:1080px){svg.sheet{height:66vh}}
+.laneBox{fill:rgba(17,32,54,.72);stroke:var(--line);stroke-width:1}
+.laneBox.hot{stroke:var(--accent);stroke-width:1.6}
+.laneTitle{font-family:var(--mono);font-size:10px;fill:var(--dim);letter-spacing:.07em;
+  text-transform:uppercase;pointer-events:none}
+.laneCount{font-family:var(--mono);font-size:9px;fill:var(--accent2);pointer-events:none}
+.cell{cursor:pointer;transition:.15s}
+.cell rect{fill:#0b1729;stroke:var(--line);stroke-width:1;transition:.15s}
+.cell:hover rect{stroke:var(--accent)}
+.cell.sel rect{stroke:var(--accent2);stroke-width:2;fill:#132743}
+.cell text{font-size:9px;fill:var(--dim);pointer-events:none}
+.cell.sel text,.cell:hover text{fill:var(--ink)}
+.cell.faded{opacity:.16}
+.wire{stroke:var(--accent);stroke-width:1.5;fill:none;opacity:0;
+  stroke-dasharray:5 4;transition:opacity .25s}
+.wire.on{opacity:.8;animation:flow 1.1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-18}}
+.rule{stroke:var(--line);stroke-width:.5;stroke-dasharray:2 5}
+.hud{position:absolute;left:18px;bottom:18px;font-family:var(--mono);font-size:10.5px;
+  color:var(--dim);line-height:1.8;background:rgba(17,32,54,.92);border:1px solid var(--line);
+  padding:10px 13px}
+.hud b{color:var(--accent);font-variant-numeric:tabular-nums}
+.zoom{position:absolute;right:18px;bottom:18px;display:flex;gap:5px}
+.zoom button{font-family:var(--mono);font-size:11px;border:1px solid var(--line);
+  padding:6px 11px;color:var(--dim);background:rgba(17,32,54,.92)}
+.zoom button:hover{color:var(--accent);border-color:var(--accent)}
+.stamp{position:absolute;right:18px;top:18px;font-family:var(--mono);font-size:9.5px;
+  color:var(--dim);text-align:right;border:1px solid var(--line);padding:8px 12px;
+  background:rgba(17,32,54,.92);line-height:1.7}
+
+/* ---- shared pane + detail ---- */
+.pane{padding:22px;max-height:calc(100vh - 92px);overflow-y:auto}
+h2{font-size:18px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;
+  margin-bottom:6px;color:var(--accent)}
+.sub{color:var(--dim);font-size:12.5px;margin-bottom:18px;line-height:1.6}
+.sec{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+  margin:18px 0 9px;font-family:var(--mono)}
+.sec:first-child{margin-top:0}
+.dname{font-size:19px;font-weight:700;font-family:var(--mono)}
+.dkind{display:inline-block;font-size:10px;padding:2px 9px;border:1px solid var(--line);
+  margin-top:7px;color:var(--dim);font-family:var(--mono);text-transform:uppercase}
+.ddesc{color:#bacbdd;line-height:1.62;font-size:13px;margin-top:11px}
+.meta{font-size:11.5px;color:var(--dim);margin-top:9px;line-height:1.75;font-family:var(--mono)}
+.meta code{color:var(--accent2)}
+.cmd{background:#08111c;border:1px solid var(--line);padding:11px 13px;
+  font-family:var(--mono);font-size:11.5px;color:var(--accent);word-break:break-all;
+  line-height:1.55;position:relative}
+.cmd.wrap{white-space:pre-wrap}
+.copy{position:absolute;right:6px;top:6px;font-size:9.5px;color:var(--dim);
+  border:1px solid var(--line);padding:2px 7px;background:var(--panel);font-family:var(--mono)}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+.conn{display:flex;flex-direction:column;gap:4px}
+.conn button{text-align:left;font-size:12px;padding:8px 11px;border:1px solid var(--line);
+  color:#bacbdd;width:100%;transition:.12s;font-family:var(--mono)}
+.conn button:hover{border-color:var(--accent);color:var(--accent)}
+.conn small{display:block;color:var(--dim);font-size:10.5px;margin-top:2px}
+.route{border:1px dashed var(--line);padding:11px;margin-bottom:8px}
+.route b{font-size:12.5px;display:block;font-family:var(--mono)}
+.route p{font-size:11.5px;color:var(--dim);margin-top:4px;line-height:1.55}
+.route .tag{font-size:10px;color:var(--accent2);margin-top:6px;display:inline-block;
+  font-family:var(--mono)}
+.route .tag.no{color:var(--warn)}
+.route .path{font-size:10.5px;margin-top:6px;color:var(--dim);font-family:var(--mono)}
+.empty{color:var(--dim);font-size:12.5px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(262px,1fr));gap:9px}
+.lane-card{border:1px solid var(--line);padding:13px;cursor:pointer;transition:.12s;
+  background:var(--panel)}
+.lane-card:hover{border-color:var(--accent)}
+.lane-card.active{border-color:var(--accent2)}
+.lane-card b{font-size:13px;font-family:var(--mono)}
+.lane-card p{font-size:12px;color:var(--dim);margin-top:5px;line-height:1.55}
+.lane-card .src{font-family:var(--mono);font-size:10.5px;color:var(--accent2);margin-top:7px;
+  display:block;word-break:break-all}
+.verdict{color:var(--accent)}
+.form{max-width:446px}
+label{display:block;font-size:11.5px;color:var(--dim);margin:11px 0 5px;font-family:var(--mono)}
+input[type=text],textarea,select{width:100%;background:#08111c;border:1px solid var(--line);
+  color:var(--ink);padding:9px 11px;font-family:inherit;font-size:13px}
+textarea{min-height:72px;resize:vertical}
+.btn{background:var(--accent);color:#0d1826;font-weight:700;padding:10px 18px;font-size:12.5px;
+  margin-top:14px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink);font-weight:400;
+  padding:6px 12px;margin-top:9px;text-transform:none;letter-spacing:0}
+.err{color:var(--warn);font-size:12px;margin-top:9px}
+
+/* ---- shared setup bar, filters and build controls -------------------
+   Written once and injected into every design. Every selector resolves through
+   each design's own custom properties, so the palette stays local. */
+#setup{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;
+  padding:11px 18px;border-bottom:1px solid var(--line)}
+#setup .step{display:flex;gap:9px;align-items:flex-start;min-width:0}
+#setup .step.locked{opacity:.45}
+#setup .num{flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--line);color:var(--dim);font-size:11px;display:grid;
+  place-items:center;margin-top:1px}
+#setup .stepbody{min-width:0}
+#setup .steplabel{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:5px}
+#setup .osrow{display:flex;gap:4px;flex-wrap:wrap}
+#setup .os{font-size:12px;padding:5px 11px;border:1px solid var(--line);
+  border-radius:7px;color:var(--dim);transition:.14s}
+#setup .os:hover{color:var(--ink);border-color:var(--accent)}
+#setup .os.on{color:var(--bg);background:var(--accent);border-color:var(--accent);
+  font-weight:700}
+#setup .osnote{font-size:11px;color:var(--dim);margin-top:5px;max-width:46ch;
+  line-height:1.5}
+#setup .scan{font-family:var(--mono,monospace);font-size:10.5px;text-align:left;
+  background:rgba(0,0,0,.55);border:1px solid var(--line);border-radius:6px;
+  padding:6px 9px;color:var(--accent);max-width:min(40vw,430px);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;cursor:pointer;display:block}
+#setup .scan:hover{border-color:var(--accent)}
+#setup .hwrow{display:flex;gap:7px;flex-wrap:wrap}
+#setup .hwfield{display:flex;flex-direction:column;gap:3px;font-size:10.5px;
+  color:var(--dim)}
+#setup .hwfield.dim{opacity:.45}
+#setup .hwfield i{font-style:normal;opacity:.65}
+#setup .hwfield input{width:74px;background:rgba(0,0,0,.55);border:1px solid var(--line);
+  border-radius:6px;color:var(--ink);padding:5px 8px;font-family:var(--mono,monospace);
+  font-size:11.5px}
+#setup .verdictline{font-size:11.5px;color:var(--dim);margin-top:6px}
+#setup .verdictline b{color:var(--accent)}
+
+#filters{padding:9px 18px;border-bottom:1px solid var(--line);
+  display:flex;flex-direction:column;gap:6px}
+#filters .frow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}
+#filters .flabel{font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--dim);flex:0 0 88px}
+#filters .fsearch{flex:1;min-width:180px;max-width:430px;background:rgba(0,0,0,.55);
+  border:1px solid var(--line);border-radius:7px;color:var(--ink);padding:6px 10px;
+  font-family:inherit;font-size:12.5px}
+#filters .fcount{font-size:11px;color:var(--dim);font-family:var(--mono,monospace)}
+#filters .fclear{font-size:11px;color:var(--accent);border:1px solid var(--line);
+  border-radius:999px;padding:3px 10px}
+#filters .fclear:hover{border-color:var(--accent)}
+#filters .chips{display:flex;gap:4px;flex-wrap:wrap;flex:1;min-width:0}
+#filters .chip{font-size:11px;padding:3px 9px;border:1px solid var(--line);
+  border-radius:999px;color:var(--dim);transition:.14s;white-space:nowrap}
+#filters .chip:hover{color:var(--ink);border-color:var(--accent)}
+#filters .chip.on{color:var(--bg);background:var(--accent);border-color:var(--accent);
+  font-weight:600}
+#filters .chip i{font-style:normal;opacity:.6;font-size:10px}
+#filters .chip.k-instruction.on{background:var(--instruction);border-color:var(--instruction)}
+#filters .chip.k-capability.on{background:var(--capability);border-color:var(--capability)}
+#filters .chip.k-knowledge.on{background:var(--knowledge);border-color:var(--knowledge)}
+#filters .chip.k-control.on{background:var(--control);border-color:var(--control)}
+#filters .chip.k-model.on{background:var(--model);border-color:var(--model)}
+#filters .chip.k-delivery.on{background:var(--delivery);border-color:var(--delivery)}
+
+.plus{flex:0 0 auto;width:26px;height:26px;border:1px solid var(--line);border-radius:7px;
+  color:var(--dim);font-size:15px;line-height:1;display:grid;place-items:center;
+  transition:.14s}
+.plus:hover{color:var(--accent);border-color:var(--accent)}
+.plus.in{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+.plus.mini{position:absolute;top:9px;right:9px;width:22px;height:22px;font-size:13px}
+.dhead{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.downer{font-size:11.5px;color:var(--dim);font-family:var(--mono,monospace);margin-top:2px}
+.owner{font-size:11px;color:var(--dim);font-family:var(--mono,monospace);
+  display:block;margin-top:2px}
+.dkind.sub{opacity:.75;margin-left:4px}
+.badge{font-style:normal;font-size:10px;padding:1px 6px;border-radius:999px;
+  background:var(--accent);color:var(--bg);margin-left:4px;font-weight:700}
+.lane-card{position:relative}
+.tab{display:inline-flex;align-items:center}
+
+/* ---- layout corrections after the setup and filter bars were added ----
+   The old fixed calc(100vh - Npx) heights assumed a short header. The chrome is
+   now variable, so the map is sized from the viewport and the page scrolls
+   normally instead of every design guessing its own header height. */
+.tabs{position:static !important;top:auto !important}
+#setup,#filters{position:static}
+#filters .chips{max-height:62px;overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;padding-right:2px}
+.wrap{min-height:auto !important}
+svg.sky,svg.orbit,svg.sheet{height:min(66vh,720px) !important;min-height:360px}
+.term{height:min(66vh,720px) !important;min-height:360px}
+.pane{max-height:none !important}
+.side{position:sticky;top:0;max-height:100vh !important;align-self:start}
+@media(max-width:1080px){.side{position:static;max-height:none !important}}
+
+/* ---- click popover on the map --------------------------------------
+   Positioned at the click, flipped if it would leave the viewport. Carries the
+   same facts as the side panel plus the plus button, so a combination can be
+   built without leaving the map. */
+.pop{position:fixed;z-index:200;width:min(340px,86vw);background:var(--panel);
+  border:1px solid var(--accent);border-radius:11px;padding:13px;
+  box-shadow:0 18px 44px rgba(0,0,0,.62);animation:popin .13s ease both}
+@keyframes popin{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:none}}
+.pophead{display:flex;gap:9px;align-items:flex-start;justify-content:space-between}
+.popname{font-size:15px;font-weight:700;line-height:1.25}
+.popbtns{display:flex;gap:5px;flex:0 0 auto}
+.popclose{width:26px;height:26px;border:1px solid var(--line);border-radius:7px;
+  color:var(--dim);font-size:16px;line-height:1;display:grid;place-items:center}
+.popclose:hover{color:var(--ink);border-color:var(--ink)}
+.poprow{margin-top:7px}
+.popdesc{font-size:12.5px;color:var(--dim);line-height:1.55;margin-top:9px}
+.popmeta{font-size:11px;color:var(--dim);margin-top:7px;font-family:var(--mono,monospace);
+  word-break:break-all;opacity:.85}
+.pop .cmd{margin-top:10px;font-size:11px}
+.popempty{font-size:11.5px;color:var(--dim);margin-top:10px;line-height:1.5;font-style:italic}
+.popsec{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+  margin:12px 0 6px}
+.popconn{display:flex;gap:4px;flex-wrap:wrap}
+.popconn button{font-size:11px;padding:3px 9px;border:1px solid var(--line);
+  border-radius:999px;color:var(--dim)}
+.popconn button:hover{color:var(--accent);border-color:var(--accent)}
+.popfoot{margin-top:11px;padding-top:9px;border-top:1px solid var(--line);
+  font-size:11px;color:var(--dim)}
+.popfoot button{color:var(--accent);text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div id="setup"></div>
+<div id="themehost" style="padding:8px 18px;border-bottom:1px solid var(--line)"></div>
+<div class="tabs" id="tabs" role="tablist"></div>
+<div id="filters"></div>
+
+<div class="wrap">
+  <div id="stage"></div>
+  <aside class="side" id="side"></aside>
+</div>
+
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes;
+const esc = P.esc;
+const NS = 'http://www.w3.org/2000/svg';
+
+/* A drafting sheet. Lanes are labelled boxes on a grid; you pan and zoom the
+   sheet rather than moving individual parts. Connections are drawn as routed
+   wires with flow animation, the way a schematic shows signal direction. */
+const view = { x: 0, y: 0, k: 1 };
+let panning = null;
+const LANE_W = 268, LANE_PAD = 22, CELL_H = 26;
+
+/* Column count is derived, not fixed. With 127 lanes a 4-column sheet is very
+   tall and narrow, so fit-to-view shrinks it to unreadable. Choosing COLS so the
+   sheet is roughly square keeps it legible at a sane zoom. */
+function columnsFor(laneCount, avgHeight){
+  const target = Math.sqrt(laneCount * avgHeight / (LANE_W + LANE_PAD));
+  return Math.max(3, Math.min(14, Math.round(target)));
+}
+
+function renderMap(stage){
+  stage.innerHTML = `<svg class="sheet" id="sheet"></svg>
+    <div class="hud" id="hud"></div>
+    <div class="stamp" id="stamp"></div>
+    <div class="zoom">
+      <button id="zin">+</button><button id="zout">−</button><button id="zfit">fit</button>
+    </div>`;
+  const svg = document.getElementById('sheet');
+  document.getElementById('zin').onclick = () => { view.k = Math.min(2.4, view.k * 1.25); apply(); };
+  document.getElementById('zout').onclick = () => { view.k = Math.max(0.25, view.k / 1.25); apply(); };
+  document.getElementById('zfit').onclick = fit;
+
+  svg.addEventListener('pointerdown', e => {
+    if (e.target.closest('.cell')) return;
+    panning = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+    svg.classList.add('pan'); svg.setPointerCapture(e.pointerId);
+  });
+  svg.addEventListener('pointermove', e => {
+    if (!panning) return;
+    view.x = panning.vx + (e.clientX - panning.x);
+    view.y = panning.vy + (e.clientY - panning.y);
+    apply();
+  });
+  svg.addEventListener('pointerup', () => { panning = null; svg.classList.remove('pan'); });
+  svg.addEventListener('wheel', e => {
+    e.preventDefault();
+    view.k = Math.max(0.25, Math.min(2.4, view.k * (e.deltaY < 0 ? 1.1 : 0.9)));
+    apply();
+  }, { passive: false });
+
+  build();
+  fit();
+}
+
+function build(){
+  const svg = document.getElementById('sheet');
+  if (!svg) return;
+  const lanes = A.visibleLanes();
+  const comps = A.visibleComponents();
+  svg.innerHTML = '';
+  const root = document.createElementNS(NS,'g'); root.id = 'root';
+  const gWires = document.createElementNS(NS,'g'); gWires.id = 'wires';
+  const gLanes = document.createElementNS(NS,'g');
+  root.append(gLanes, gWires);
+  svg.appendChild(root);
+
+  const avgH = 40 + (comps.length / Math.max(lanes.length,1)) * CELL_H + 12 + LANE_PAD;
+  const COLS = columnsFor(lanes.length, avgH);
+  let col = 0, colY = new Array(COLS).fill(30);
+  window.__pos = new Map();
+
+  lanes.forEach(lane => {
+    const members = comps.filter(c => c.lane === lane.id);
+    const h = 40 + Math.max(members.length, 1) * CELL_H + 12;
+    // shortest-column packing keeps the sheet dense instead of ragged
+    col = colY.indexOf(Math.min(...colY));
+    const x = 30 + col * (LANE_W + LANE_PAD);
+    const y = colY[col];
+    colY[col] += h + LANE_PAD;
+
+    const g = document.createElementNS(NS,'g');
+    const box = document.createElementNS(NS,'rect');
+    box.setAttribute('class','laneBox'); box.setAttribute('x',x); box.setAttribute('y',y);
+    box.setAttribute('width',LANE_W); box.setAttribute('height',h);
+    const title = document.createElementNS(NS,'text');
+    title.setAttribute('class','laneTitle'); title.setAttribute('x',x+12); title.setAttribute('y',y+20);
+    title.textContent = lane.name.slice(0,32);
+    const count = document.createElementNS(NS,'text');
+    count.setAttribute('class','laneCount'); count.setAttribute('x',x+LANE_W-12);
+    count.setAttribute('y',y+20); count.setAttribute('text-anchor','end');
+    count.textContent = lane.count;
+    const rule = document.createElementNS(NS,'line');
+    rule.setAttribute('class','rule'); rule.setAttribute('x1',x+8); rule.setAttribute('x2',x+LANE_W-8);
+    rule.setAttribute('y1',y+28); rule.setAttribute('y2',y+28);
+    g.append(box,title,count,rule);
+
+    members.forEach((c,i) => {
+      const cy = y + 40 + i * CELL_H;
+      const cell = document.createElementNS(NS,'g');
+      cell.setAttribute('class','cell'); cell.dataset.id = c.id;
+      const r = document.createElementNS(NS,'rect');
+      r.setAttribute('x',x+10); r.setAttribute('y',cy); r.setAttribute('width',LANE_W-20);
+      r.setAttribute('height',CELL_H-5);
+      const dot = document.createElementNS(NS,'rect');
+      dot.setAttribute('x',x+15); dot.setAttribute('y',cy+7); dot.setAttribute('width',6);
+      dot.setAttribute('height',6); dot.setAttribute('fill',`var(--${c.kind})`);
+      const t = document.createElementNS(NS,'text');
+      t.setAttribute('x',x+28); t.setAttribute('y',cy+14);
+      t.textContent = c.name.slice(0,30);
+      cell.append(r,dot,t);
+      cell.dataset.node = '1';
+      cell.onclick = e => { A.select(c.id); P.popover(e.clientX, e.clientY, c.id); };
+      g.appendChild(cell);
+      window.__pos.set(c.id, [x+10, cy + (CELL_H-5)/2, x+LANE_W-10]);
+    });
+    gLanes.appendChild(g);
+  });
+  wires();
+  hud();
+}
+
+function wires(){
+  const gw = document.getElementById('wires');
+  if (!gw) return;
+  gw.innerHTML = '';
+  const sel = A.state.selected;
+  const lit = new Set();
+  if (sel){
+    lit.add(sel);
+    const d = A.detailFor(sel);
+    if (d) d.connections.forEach(c => lit.add(c.id));
+  }
+  document.querySelectorAll('.cell').forEach(c => {
+    c.classList.toggle('sel', c.dataset.id === sel);
+    c.classList.toggle('faded', !!sel && !lit.has(c.dataset.id));
+  });
+  if (!sel || !window.__pos || !window.__pos.has(sel)) return;
+  const [sx, sy, sr] = window.__pos.get(sel);
+  lit.forEach(id => {
+    if (id === sel || !window.__pos.has(id)) return;
+    const [tx, ty, tr] = window.__pos.get(id);
+    // orthogonal routing, the way a schematic runs a trace
+    const midX = (sr + tx) / 2;
+    const path = document.createElementNS(NS,'path');
+    path.setAttribute('class','wire on');
+    path.setAttribute('d', `M ${sr} ${sy} H ${midX} V ${ty} H ${tx}`);
+    gw.appendChild(path);
+  });
+}
+
+function apply(){
+  const root = document.getElementById('root');
+  if (root) root.setAttribute('transform',`translate(${view.x},${view.y}) scale(${view.k})`);
+  const s = document.getElementById('stamp');
+  if (s) s.innerHTML = `SHEET 1 OF 1<br>SCALE ${view.k.toFixed(2)}×<br>MASTER REPO ATLAS`;
+}
+
+function fit(){
+  const svg = document.getElementById('sheet');
+  const root = document.getElementById('root');
+  if (!svg || !root) return;
+  const b = root.getBBox();
+  const W = svg.clientWidth || 900, H = svg.clientHeight || 620;
+  // Fit the WIDTH and allow vertical panning. Fitting height as well is what made
+  // a tall sheet unreadable; below 0.45 the labels stop being text.
+  view.k = Math.max(0.45, Math.min(1.4, W / (b.width + 60)));
+  view.x = Math.max(20, (W - b.width * view.k) / 2) - b.x * view.k;
+  view.y = 20 - b.y * view.k;
+  apply();
+}
+
+function hud(){
+  const c = A.counts();
+  const el = document.getElementById('hud');
+  if (!el) return;
+  el.innerHTML =
+    `<b>${c.visibleLanes}</b> / ${c.lanes} lanes<br>` +
+    `<b>${c.visibleComponents}</b> / ${c.components} components<br>` +
+    `<b>${c.routes}</b> hybrid routes<br>` +
+    `<span style="opacity:.65">drag to pan · wheel to zoom</span>`;
+}
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+
+P.mount({ renderMap, onSelect: () => wires() });
+A.on(() => wires());
+window.addEventListener('resize', () => { if (P.tab === 'map') fit(); });
+</script>
+</body>
+</html>

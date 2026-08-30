@@ -8,3 +8,6 @@ env/
 *.log
 .DS_Store
 _site/
+
+# Generated layout chooser. Temporary: delete once a layout is picked.
+layout-options.html

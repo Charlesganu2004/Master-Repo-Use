@@ -32,9 +32,20 @@ PRIVATE_INDEX = ROOT / "index.html"
 PUBLIC_STATE = SITE / "docs" / "catalog-status.json"
 PUBLIC_SVG = SITE / "docs" / "catalog-status.svg"
 PUBLIC_INDEX = SITE / "index.html"
+PRIVATE_DESIGN_STUDIO = ROOT / "design-options.html"
+PRIVATE_DESIGN_STUDIO_JS = ROOT / "design-options.js"
+PUBLIC_DESIGN_STUDIO = SITE / "design-options.html"
+PUBLIC_DESIGN_STUDIO_JS = SITE / "design-options.js"
+PRIVATE_ATLAS_CSS = ROOT / "atlas.css"
+PRIVATE_ATLAS_JS = ROOT / "atlas.js"
+PUBLIC_ATLAS_CSS = SITE / "atlas.css"
+PUBLIC_ATLAS_JS = SITE / "atlas.js"
 PRIVATE_PROFILES = ROOT / "docs" / "hardware-profiles.json"
 PUBLIC_PROFILES = SITE / "docs" / "hardware-profiles.json"
 PUBLIC_VERSION = SITE / "version.json"
+PRIVATE_DESIGNS = ROOT / "designs"
+PUBLIC_DESIGNS = SITE / "designs"
+PRIVATE_ATLAS_DATA = ROOT / "atlas-data.json"
 
 # Keys allowed to reach the public artifact. Anything else is dropped by construction.
 ALLOWED_TOP_LEVEL = {"updated", "policy", "counts", "public", "repos"}
@@ -206,6 +217,88 @@ def build_index() -> int:
     return stripper.removed
 
 
+def build_design_studio() -> list[str]:
+    """Publish every dependency-free user interface asset."""
+    assets = (
+        (PRIVATE_DESIGN_STUDIO, PUBLIC_DESIGN_STUDIO),
+        (PRIVATE_DESIGN_STUDIO_JS, PUBLIC_DESIGN_STUDIO_JS),
+        (PRIVATE_ATLAS_CSS, PUBLIC_ATLAS_CSS),
+        (PRIVATE_ATLAS_JS, PUBLIC_ATLAS_JS),
+    )
+    missing = [source.name for source, _ in assets if not source.exists()]
+    if missing:
+        return [f"UI design studio assets are missing: {', '.join(missing)}"]
+
+    for source, destination in assets:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+    return build_designs()
+
+
+def build_designs() -> list[str]:
+    """Publish the five-design gallery and the data layer they share.
+
+    atlas-data.json carries lane names and counts, never catalog slugs. verify()
+    checks that separately; a leak here would publish the catalog composition,
+    which is the one thing this build exists to prevent.
+    """
+    if not PRIVATE_DESIGNS.is_dir():
+        return ["designs/ is missing"]
+    if not PRIVATE_ATLAS_DATA.exists():
+        return ["atlas-data.json is missing; run scripts/build_atlas_data.py"]
+
+    PUBLIC_DESIGNS.mkdir(parents=True, exist_ok=True)
+    for source in sorted(PRIVATE_DESIGNS.iterdir()):
+        if source.suffix.lower() not in {".html", ".js", ".css", ".json"} or not source.is_file():
+            continue
+        # The two data files are rebuilt from the redacted payload below, never copied.
+        if source.name in {"atlas-data.json", "atlas-data.js"}:
+            continue
+        (PUBLIC_DESIGNS / source.name).write_text(
+            source.read_text(encoding="utf-8"), encoding="utf-8")
+
+    public_payload = redact_atlas_data(json.loads(
+        PRIVATE_ATLAS_DATA.read_text(encoding="utf-8")))
+    rendered = json.dumps(public_payload, indent=1)
+    (PUBLIC_DESIGNS / "atlas-data.json").write_text(rendered, encoding="utf-8")
+    banner = "/* Redacted for publication by build_public_site.py. */\n"
+    (PUBLIC_DESIGNS / "atlas-data.js").write_text(
+        banner + "window.__ATLAS_DATA__ = " + rendered + ";\n", encoding="utf-8")
+    return []
+
+
+def redact_atlas_data(data: dict) -> dict:
+    """Drop every component that carries a private catalog slug.
+
+    Lanes stay, with their counts, because a lane name and a number reveal
+    shape rather than composition. The entries inside them are the catalog, and
+    the catalog is private. Routes that referenced a dropped component lose that
+    member rather than pointing at nothing.
+    """
+    kept = [c for c in data.get("components", []) if not c.get("private")]
+    keep_ids = {c["id"] for c in kept}
+
+    for component in kept:
+        for field in ("connects", "routes"):
+            if field == "connects" and component.get("connects"):
+                component["connects"] = [i for i in component["connects"] if i in keep_ids]
+
+    routes = []
+    for route in data.get("routes", []):
+        trimmed = dict(route)
+        trimmed["members"] = [m for m in route.get("members", []) if m in keep_ids]
+        routes.append(trimmed)
+
+    public = dict(data)
+    public["components"] = kept
+    public["routes"] = routes
+    public["meta"] = dict(data.get("meta", {}))
+    public["meta"]["components"] = len(kept)
+    public["meta"]["redacted"] = True
+    public["meta"]["note"] = "Catalog entries removed for publication."
+    return public
+
+
 def private_keys_present(raw: str, label: str) -> list[str]:
     """Private lifecycle/security FIELDS appearing in a published payload.
 
@@ -297,7 +390,7 @@ def build_id() -> str:
 
 
 def build_version(identifier: str) -> None:
-    """Publish version.json and stamp the same id into the public index.html.
+    """Publish version.json and stamp the same id into both public HTML pages.
 
     The page compares the two at runtime. Without this, a browser holding a cached
     index.html has no way to discover that a newer one exists -- and an ordinary
@@ -311,13 +404,20 @@ def build_version(identifier: str) -> None:
         }, indent=2) + "\n",
         encoding="utf-8",
     )
-    page = PUBLIC_INDEX.read_text(encoding="utf-8")
-    stamped = page.replace('<meta name="build-id" content="dev">',
-                           f'<meta name="build-id" content="{identifier}">', 1)
-    if stamped == page:
-        print("::warning::index.html has no build-id placeholder; "
-              "stale-cache detection will not work")
-    PUBLIC_INDEX.write_text(stamped, encoding="utf-8")
+    for page_path, label in (
+        (PUBLIC_INDEX, "index.html"),
+        (PUBLIC_DESIGN_STUDIO, "design-options.html"),
+    ):
+        if not page_path.exists():
+            print(f"::warning::{label} is missing; it could not be build stamped")
+            continue
+        page = page_path.read_text(encoding="utf-8")
+        stamped = page.replace('<meta name="build-id" content="dev">',
+                               f'<meta name="build-id" content="{identifier}">', 1)
+        if stamped == page:
+            print(f"::warning::{label} has no build-id placeholder; "
+                  "stale-cache detection will not work")
+        page_path.write_text(stamped, encoding="utf-8")
 
 
 def build() -> dict:
@@ -372,23 +472,43 @@ def verify(payload: dict) -> list[str]:
             if word in svg.lower():
                 problems.append(f"public SVG mentions private detail: {word!r}")
 
+    if PUBLIC_DESIGNS.is_dir():
+        for published in sorted(PUBLIC_DESIGNS.iterdir()):
+            if not published.is_file():
+                continue
+            text = published.read_text(encoding="utf-8", errors="replace")
+            for name in sorted(catalog):
+                if name in text:
+                    problems.append(
+                        f"published design {published.name} names a catalogued repository: {name}")
+
     if PUBLIC_PROFILES.exists():
         published = PUBLIC_PROFILES.read_text(encoding="utf-8")
         problems.extend(profile_leaks(published, "public hardware-profiles.json"))
         problems.extend(private_keys_present(published, "public hardware-profiles.json"))
 
-    if PUBLIC_INDEX.exists():
-        page = PUBLIC_INDEX.read_text(encoding="utf-8")
+    public_ui_assets = (
+        (PUBLIC_INDEX, "public index.html"),
+        (PUBLIC_ATLAS_CSS, "public atlas.css"),
+        (PUBLIC_ATLAS_JS, "public atlas.js"),
+        (PUBLIC_DESIGN_STUDIO, "public design-options.html"),
+        (PUBLIC_DESIGN_STUDIO_JS, "public design-options.js"),
+    )
+    for page_path, label in public_ui_assets:
+        if not page_path.exists():
+            problems.append(f"{label} is missing")
+            continue
+        page = page_path.read_text(encoding="utf-8")
         if "data-private" in page:
-            problems.append("public index.html still contains data-private markup")
-        # The page links to its own repository on purpose; every other catalogued
-        # repository is private catalog content and must not appear.
+            problems.append(f"{label} still contains data-private markup")
+        # The index links to its own repository on purpose. Every other catalogued
+        # repository remains private catalog content and cannot reach any UI asset.
         for name in sorted(catalog - {OWN_REPO}):
             if name in page:
-                problems.append(f"public index.html names a catalogued repository: {name}")
+                problems.append(f"{label} names a catalogued repository: {name}")
         for note in sorted(private_notes()):
             if note in page:
-                problems.append(f"public index.html contains a private note: {note[:50]}...")
+                problems.append(f"{label} contains a private note: {note[:50]}...")
 
     return problems
 
@@ -419,14 +539,12 @@ def main() -> int:
                 print(f"PRIVACY FAILURE: {problem}", file=sys.stderr)
             return 1
         print("public hardware-profiles.json written (all slugs owner-allowlisted)")
-        # The palette picker is a plain page with no catalog content. Publishing it
-        # means design feedback needs a URL rather than a local server, which has
-        # been the recurring friction.
-        picker = ROOT / "design-options.html"
-        if picker.exists():
-            (SITE / "design-options.html").write_text(
-                picker.read_text(encoding="utf-8"), encoding="utf-8")
-            print("public design-options.html written")
+        studio_problems = build_design_studio()
+        if studio_problems:
+            for problem in studio_problems:
+                print(f"PRIVACY FAILURE: {problem}", file=sys.stderr)
+            return 1
+        print("public UI design studio written")
         identifier = build_id()
         build_version(identifier)
         print(f"version.json written (build {identifier})")

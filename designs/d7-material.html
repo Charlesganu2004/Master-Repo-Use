@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tonal | Master Repo Atlas</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* Tonal.
+ *
+ * Built against the Material Design 3 conventions: tonal surface layers instead
+ * of borders, elevation as the way depth is expressed, generous rounding, and a
+ * navigation rail rather than a tab strip. The catalog carries a design-skill
+ * pack for this system; it is referenced there, not named here, because this
+ * file is published and the catalog is not.
+ *
+ * Surfaces are derived from the palette rather than hardcoded, so every theme
+ * gets a consistent tonal ramp instead of one hand-tuned set of greys.
+ */
+:root{
+  --bg:#0b0708; --panel:#141011; --line:#2a1e20; --ink:#f2e9ea; --dim:#a08b8e;
+  --accent:#ff3b3b; --accent2:#ff8f5c; --warn:#ffd166;
+  --instruction:#ff5c5c; --capability:#ff9d5c; --knowledge:#7fb3ff;
+  --control:#ffd166; --model:#c77dff; --delivery:#5cd6a0;
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --r-sm:8px; --r-md:16px; --r-lg:26px; --r-full:999px;
+  --e1:0 1px 2px rgba(0,0,0,.3),0 1px 3px 1px rgba(0,0,0,.15);
+  --e2:0 1px 2px rgba(0,0,0,.3),0 2px 6px 2px rgba(0,0,0,.15);
+  --e3:0 4px 8px 3px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;
+  overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+
+/* tonal layers: each step mixes a little accent into the surface */
+.s1{background:color-mix(in srgb,var(--accent) 5%,var(--panel))}
+.s2{background:color-mix(in srgb,var(--accent) 8%,var(--panel))}
+.s3{background:color-mix(in srgb,var(--accent) 11%,var(--panel))}
+
+/* the rail replaces a tab strip */
+.shell{display:grid;grid-template-columns:82px 1fr 372px;min-height:100vh}
+@media(max-width:1180px){.shell{grid-template-columns:72px 1fr}}
+@media(max-width:820px){.shell{grid-template-columns:1fr}}
+.rail{background:color-mix(in srgb,var(--accent) 6%,var(--panel));
+  display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 6px;
+  position:sticky;top:0;height:100vh;overflow-y:auto}
+@media(max-width:820px){.rail{position:static;height:auto;flex-direction:row;
+  overflow-x:auto;justify-content:flex-start}}
+.railbtn{width:100%;padding:9px 2px;border-radius:var(--r-md);font-size:9.5px;
+  color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:5px;
+  transition:.18s cubic-bezier(.2,0,0,1);text-align:center;line-height:1.25}
+.railbtn .ico{width:44px;height:30px;border-radius:var(--r-full);display:grid;
+  place-items:center;font-size:14px;transition:.18s cubic-bezier(.2,0,0,1)}
+.railbtn:hover .ico{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.railbtn[aria-selected=true]{color:var(--ink);font-weight:600}
+.railbtn[aria-selected=true] .ico{background:color-mix(in srgb,var(--accent) 30%,transparent);
+  color:var(--accent)}
+.railbadge{position:absolute;transform:translate(14px,-9px);background:var(--accent);
+  color:var(--bg);font-size:9px;font-weight:700;border-radius:var(--r-full);
+  padding:1px 5px}
+
+.main{min-width:0;padding:0 0 30px}
+.side{background:color-mix(in srgb,var(--accent) 4%,var(--panel));padding:19px;
+  position:sticky;top:0;max-height:100vh;overflow-y:auto;align-self:start;min-width:0}
+@media(max-width:1180px){.side{position:static;max-height:none;
+  grid-column:1/-1;border-top:1px solid var(--line)}}
+
+/* map: tonal cards grouped by family */
+.mapwrap{padding:16px 20px}
+.famgroup{margin-bottom:20px}
+.famhead{display:flex;align-items:baseline;gap:11px;margin-bottom:10px}
+.famtitle{font-size:19px;font-weight:600;letter-spacing:-.015em}
+.famcount{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:11px}
+.card{border-radius:var(--r-md);padding:14px;cursor:pointer;position:relative;
+  transition:.2s cubic-bezier(.2,0,0,1);box-shadow:var(--e1);overflow:hidden}
+.card:hover{box-shadow:var(--e3);transform:translateY(-2px)}
+.card.on{box-shadow:var(--e3);outline:2px solid var(--accent);outline-offset:-2px}
+.card::before{content:"";position:absolute;inset:0;opacity:0;transition:opacity .2s;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%),
+    color-mix(in srgb,var(--accent) 22%,transparent),transparent 62%)}
+.card:hover::before{opacity:1}
+.card > *{position:relative}
+.cardtop{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}
+.cardname{font-size:14px;font-weight:600;line-height:1.3}
+.cardowner{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:2px}
+.carddesc{font-size:12px;color:var(--dim);margin-top:8px;line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cardfoot{display:flex;gap:6px;align-items:center;margin-top:11px;flex-wrap:wrap}
+.pill{font-size:9.5px;padding:3px 9px;border-radius:var(--r-full);
+  background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--ink)}
+.pill.kind{background:none;border:1px solid var(--line);color:var(--dim)}
+.fab{position:fixed;right:calc(372px + 22px);bottom:22px;z-index:90;
+  background:var(--accent);color:var(--bg);border-radius:var(--r-lg);
+  padding:15px 21px;font-weight:700;font-size:13.5px;box-shadow:var(--e3);
+  display:flex;gap:8px;align-items:center;transition:.2s cubic-bezier(.2,0,0,1)}
+.fab:hover{transform:translateY(-2px);box-shadow:0 8px 18px 5px rgba(0,0,0,.24)}
+@media(max-width:1180px){.fab{right:22px}}
+.topbar{padding:15px 20px 5px}
+.topbar h1{font-size:25px;font-weight:400;letter-spacing:-.02em}
+.topbar p{font-size:12.5px;color:var(--dim);margin-top:3px}
+
+/* ---- shared pane + detail ---- */
+.pane{padding:20px}
+h2{font-size:21px;font-weight:400;letter-spacing:-.02em;margin-bottom:5px}
+.sub{color:var(--dim);font-size:12.5px;margin-bottom:16px;line-height:1.6}
+.sec{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+  margin:17px 0 8px;font-weight:600}
+.sec:first-child{margin-top:0}
+.dname{font-size:19px;font-weight:600;letter-spacing:-.02em;line-height:1.25}
+.dkind{display:inline-block;font-size:10px;padding:3px 10px;border-radius:var(--r-full);
+  margin-top:7px;background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--ink)}
+.ddesc{color:#ddd0d1;line-height:1.6;font-size:13px;margin-top:10px}
+.meta{font-size:11.5px;color:var(--dim);margin-top:9px;line-height:1.7}
+.meta code{font-family:var(--mono);color:var(--accent2);font-size:11px}
+.cmd{background:color-mix(in srgb,var(--accent) 8%,var(--bg));border-radius:var(--r-sm);
+  padding:11px 13px;font-family:var(--mono);font-size:11.5px;color:var(--accent);
+  word-break:break-all;line-height:1.55;position:relative}
+.cmd.wrap{white-space:pre-wrap}
+.copy{position:absolute;right:6px;top:6px;font-size:9.5px;color:var(--dim);
+  border-radius:var(--r-full);padding:3px 10px;
+  background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.copy:hover{color:var(--accent)}
+.conn{display:flex;flex-direction:column;gap:5px}
+.conn button{text-align:left;font-size:12px;padding:9px 12px;border-radius:var(--r-full);
+  background:color-mix(in srgb,var(--accent) 7%,var(--panel));color:#ddd0d1;width:100%;
+  transition:.18s cubic-bezier(.2,0,0,1)}
+.conn button:hover{background:color-mix(in srgb,var(--accent) 16%,var(--panel))}
+.conn small{display:block;color:var(--dim);font-size:10.5px;margin-top:2px}
+.route{border-radius:var(--r-md);padding:12px;margin-bottom:8px;
+  background:color-mix(in srgb,var(--accent) 6%,var(--panel))}
+.route b{font-size:12.5px;display:block}
+.route p{font-size:11.5px;color:var(--dim);margin-top:4px;line-height:1.5}
+.route .tag{font-size:10px;color:var(--accent2);margin-top:6px;display:inline-block}
+.route .tag.no{color:var(--warn)}
+.route .path{font-size:10.5px;margin-top:6px;color:var(--dim)}
+.empty{color:var(--dim);font-size:12.5px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:10px}
+.lane-card{border-radius:var(--r-md);padding:14px;cursor:pointer;transition:.18s;
+  background:color-mix(in srgb,var(--accent) 6%,var(--panel));box-shadow:var(--e1)}
+.lane-card:hover{box-shadow:var(--e3);transform:translateY(-2px)}
+.lane-card.active{outline:2px solid var(--accent);outline-offset:-2px}
+.lane-card b{font-size:13.5px}
+.lane-card p{font-size:12px;color:var(--dim);margin-top:5px;line-height:1.55}
+.lane-card .src{font-family:var(--mono);font-size:10.5px;color:var(--accent2);
+  margin-top:7px;display:block;word-break:break-all}
+.verdict{color:var(--accent)}
+.form{max-width:440px}
+label{display:block;font-size:11.5px;color:var(--dim);margin:11px 0 5px}
+input[type=text],textarea,select{width:100%;border-radius:var(--r-sm);
+  background:color-mix(in srgb,var(--accent) 7%,var(--bg));border:none;color:var(--ink);
+  padding:11px 13px;font-family:inherit;font-size:13px}
+textarea{min-height:74px;resize:vertical}
+.btn{background:var(--accent);color:var(--bg);font-weight:700;padding:11px 22px;
+  border-radius:var(--r-full);font-size:13px;margin-top:14px;box-shadow:var(--e1)}
+.btn:hover{box-shadow:var(--e2)}
+.btn.ghost{background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--ink);
+  font-weight:500;padding:7px 15px;margin-top:9px;box-shadow:none}
+.err{color:var(--warn);font-size:11.5px;margin-top:9px}
+
+/* ---- shared setup bar, filters and build controls -------------------
+   Written once and injected into every design. Every selector resolves through
+   each design's own custom properties, so the palette stays local. */
+#setup{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;
+  padding:11px 18px;border-bottom:1px solid var(--line)}
+#setup .step{display:flex;gap:9px;align-items:flex-start;min-width:0}
+#setup .step.locked{opacity:.45}
+#setup .num{flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--line);color:var(--dim);font-size:11px;display:grid;
+  place-items:center;margin-top:1px}
+#setup .stepbody{min-width:0}
+#setup .steplabel{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:5px}
+#setup .osrow{display:flex;gap:4px;flex-wrap:wrap}
+#setup .os{font-size:12px;padding:5px 11px;border:1px solid var(--line);
+  border-radius:7px;color:var(--dim);transition:.14s}
+#setup .os:hover{color:var(--ink);border-color:var(--accent)}
+#setup .os.on{color:var(--bg);background:var(--accent);border-color:var(--accent);
+  font-weight:700}
+#setup .osnote{font-size:11px;color:var(--dim);margin-top:5px;max-width:46ch;
+  line-height:1.5}
+#setup .scan{font-family:var(--mono,monospace);font-size:10.5px;text-align:left;
+  background:rgba(0,0,0,.55);border:1px solid var(--line);border-radius:6px;
+  padding:6px 9px;color:var(--accent);max-width:min(40vw,430px);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;cursor:pointer;display:block}
+#setup .scan:hover{border-color:var(--accent)}
+#setup .hwrow{display:flex;gap:7px;flex-wrap:wrap}
+#setup .hwfield{display:flex;flex-direction:column;gap:3px;font-size:10.5px;
+  color:var(--dim)}
+#setup .hwfield.dim{opacity:.45}
+#setup .hwfield i{font-style:normal;opacity:.65}
+#setup .hwfield input{width:74px;background:rgba(0,0,0,.55);border:1px solid var(--line);
+  border-radius:6px;color:var(--ink);padding:5px 8px;font-family:var(--mono,monospace);
+  font-size:11.5px}
+#setup .verdictline{font-size:11.5px;color:var(--dim);margin-top:6px}
+#setup .verdictline b{color:var(--accent)}
+
+#filters{padding:9px 18px;border-bottom:1px solid var(--line);
+  display:flex;flex-direction:column;gap:6px}
+#filters .frow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}
+#filters .flabel{font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--dim);flex:0 0 88px}
+#filters .fsearch{flex:1;min-width:180px;max-width:430px;background:rgba(0,0,0,.55);
+  border:1px solid var(--line);border-radius:7px;color:var(--ink);padding:6px 10px;
+  font-family:inherit;font-size:12.5px}
+#filters .fcount{font-size:11px;color:var(--dim);font-family:var(--mono,monospace)}
+#filters .fclear{font-size:11px;color:var(--accent);border:1px solid var(--line);
+  border-radius:999px;padding:3px 10px}
+#filters .fclear:hover{border-color:var(--accent)}
+#filters .chips{display:flex;gap:4px;flex-wrap:wrap;flex:1;min-width:0}
+#filters .chip{font-size:11px;padding:3px 9px;border:1px solid var(--line);
+  border-radius:999px;color:var(--dim);transition:.14s;white-space:nowrap}
+#filters .chip:hover{color:var(--ink);border-color:var(--accent)}
+#filters .chip.on{color:var(--bg);background:var(--accent);border-color:var(--accent);
+  font-weight:600}
+#filters .chip i{font-style:normal;opacity:.6;font-size:10px}
+#filters .chip.k-instruction.on{background:var(--instruction);border-color:var(--instruction)}
+#filters .chip.k-capability.on{background:var(--capability);border-color:var(--capability)}
+#filters .chip.k-knowledge.on{background:var(--knowledge);border-color:var(--knowledge)}
+#filters .chip.k-control.on{background:var(--control);border-color:var(--control)}
+#filters .chip.k-model.on{background:var(--model);border-color:var(--model)}
+#filters .chip.k-delivery.on{background:var(--delivery);border-color:var(--delivery)}
+
+.plus{flex:0 0 auto;width:26px;height:26px;border:1px solid var(--line);border-radius:7px;
+  color:var(--dim);font-size:15px;line-height:1;display:grid;place-items:center;
+  transition:.14s}
+.plus:hover{color:var(--accent);border-color:var(--accent)}
+.plus.in{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+.plus.mini{position:absolute;top:9px;right:9px;width:22px;height:22px;font-size:13px}
+.dhead{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.downer{font-size:11.5px;color:var(--dim);font-family:var(--mono,monospace);margin-top:2px}
+.owner{font-size:11px;color:var(--dim);font-family:var(--mono,monospace);
+  display:block;margin-top:2px}
+.dkind.sub{opacity:.75;margin-left:4px}
+.badge{font-style:normal;font-size:10px;padding:1px 6px;border-radius:999px;
+  background:var(--accent);color:var(--bg);margin-left:4px;font-weight:700}
+.lane-card{position:relative}
+.tab{display:inline-flex;align-items:center}
+
+/* ---- click popover on the map --------------------------------------
+   Positioned at the click, flipped if it would leave the viewport. Carries the
+   same facts as the side panel plus the plus button, so a combination can be
+   built without leaving the map. */
+.pop{position:fixed;z-index:200;width:min(340px,86vw);background:var(--panel);
+  border:1px solid var(--accent);border-radius:11px;padding:13px;
+  box-shadow:0 18px 44px rgba(0,0,0,.62);animation:popin .13s ease both}
+@keyframes popin{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:none}}
+.pophead{display:flex;gap:9px;align-items:flex-start;justify-content:space-between}
+.popname{font-size:15px;font-weight:700;line-height:1.25}
+.popbtns{display:flex;gap:5px;flex:0 0 auto}
+.popclose{width:26px;height:26px;border:1px solid var(--line);border-radius:7px;
+  color:var(--dim);font-size:16px;line-height:1;display:grid;place-items:center}
+.popclose:hover{color:var(--ink);border-color:var(--ink)}
+.poprow{margin-top:7px}
+.popdesc{font-size:12.5px;color:var(--dim);line-height:1.55;margin-top:9px}
+.popmeta{font-size:11px;color:var(--dim);margin-top:7px;font-family:var(--mono,monospace);
+  word-break:break-all;opacity:.85}
+.pop .cmd{margin-top:10px;font-size:11px}
+.popempty{font-size:11.5px;color:var(--dim);margin-top:10px;line-height:1.5;font-style:italic}
+.popsec{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+  margin:12px 0 6px}
+.popconn{display:flex;gap:4px;flex-wrap:wrap}
+.popconn button{font-size:11px;padding:3px 9px;border:1px solid var(--line);
+  border-radius:999px;color:var(--dim)}
+.popconn button:hover{color:var(--accent);border-color:var(--accent)}
+.popfoot{margin-top:11px;padding-top:9px;border-top:1px solid var(--line);
+  font-size:11px;color:var(--dim)}
+.popfoot button{color:var(--accent);text-decoration:underline}
+
+/* ---- layout corrections after the setup and filter bars were added ----
+   The old fixed calc(100vh - Npx) heights assumed a short header. The chrome is
+   now variable, so the map is sized from the viewport and the page scrolls
+   normally instead of every design guessing its own header height. */
+.tabs{position:static !important;top:auto !important}
+#setup,#filters{position:static}
+#filters .chips{max-height:62px;overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;padding-right:2px}
+.wrap{min-height:auto !important}
+svg.sky,svg.orbit,svg.sheet{height:min(66vh,720px) !important;min-height:360px}
+.term{height:min(66vh,720px) !important;min-height:360px}
+.pane{max-height:none !important}
+.side{position:sticky;top:0;max-height:100vh !important;align-self:start}
+@media(max-width:1080px){.side{position:static;max-height:none !important}}
+.row .nm em{font-style:normal;color:var(--dim);font-size:11px;margin-left:5px}
+.rowadd{margin-left:8px;width:18px;height:18px;border:1px solid var(--line);border-radius:4px;
+  color:var(--dim);font-size:11px;line-height:1;display:inline-grid;place-items:center;
+  vertical-align:middle}
+.rowadd:hover{color:var(--accent);border-color:var(--accent)}
+.rowadd.in{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav class="rail" id="rail" role="tablist"></nav>
+  <div class="main">
+    <div class="topbar">
+      <h1>Tonal atlas</h1>
+      <p>Material 3 surfaces, elevation and a navigation rail.</p>
+    </div>
+    <div id="setup"></div>
+    <div id="themehost" style="padding:9px 20px"></div>
+    <div id="filters"></div>
+    <div id="stage"></div>
+  </div>
+  <aside class="side" id="side"></aside>
+</div>
+<button class="fab" id="fab" title="Open the combination you are building">+ Build <span id="fabn">0</span></button>
+
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes;
+const esc = P.esc;
+const PER_FAMILY = 18;   // a family can hold hundreds; the rest is a filter away
+
+const ICONS = { intake:'▸', surfaces:'▣', identity:'◎', instructions:'≡',
+  skills:'✦', tools:'⚒', mcp:'⇄', agents:'◈', plugins:'⊞',
+  knowledge:'▤', models:'✳', hybrid:'⨍', validation:'✓',
+  observability:'◔', automation:'↻', delivery:'↗', domain:'◌' };
+
+/* Cards grouped by family, because Material's structure is surfaces on surfaces
+   rather than lines between things. Depth carries the grouping. */
+function renderMap(stage){
+  const comps = A.visibleComponents();
+  const byFamily = new Map();
+  comps.forEach(c => {
+    if (!byFamily.has(c.family)) byFamily.set(c.family, []);
+    byFamily.get(c.family).push(c);
+  });
+  const families = A.state.data.families.filter(f => byFamily.has(f.id));
+
+  stage.innerHTML = `<div class="mapwrap">${families.map(f => {
+    const items = byFamily.get(f.id);
+    const shown = items.slice(0, PER_FAMILY);
+    return `<section class="famgroup">
+      <div class="famhead">
+        <span class="famtitle">${esc(f.name)}</span>
+        <span class="famcount">${items.length} component${items.length === 1 ? '' : 's'}${
+          items.length > PER_FAMILY ? `, showing ${PER_FAMILY}` : ''}</span>
+      </div>
+      <div class="cards">${shown.map(c => `
+        <article class="card s${(c.kind.length % 3) + 1}${A.state.selected === c.id ? ' on' : ''}"
+          data-comp="${esc(c.id)}" data-node="1">
+          <div class="cardtop">
+            <div>
+              <div class="cardname">${esc(c.name)}</div>
+              ${c.owner ? `<div class="cardowner">${esc(c.owner)}</div>` : ''}
+            </div>
+            <button class="plus mini${A.state.basket.includes(c.id) ? ' in' : ''}"
+              data-add="${esc(c.id)}" title="Add to a combination"
+              >${A.state.basket.includes(c.id) ? '&#10003;' : '+'}</button>
+          </div>
+          <p class="carddesc">${esc(c.detail)}</p>
+          <div class="cardfoot">
+            <span class="pill">${esc(A.laneName(c.lane))}</span>
+            <span class="pill kind">${esc(c.kind)}</span>
+          </div>
+        </article>`).join('')}</div>
+    </section>`;
+  }).join('') || '<p class="empty">Nothing matches the current filters.</p>'}</div>`;
+
+  stage.querySelectorAll('.card').forEach(card => {
+    // the ripple origin follows the pointer, which is what makes it feel Material
+    card.onpointermove = e => {
+      const b = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${e.clientX - b.left}px`);
+      card.style.setProperty('--my', `${e.clientY - b.top}px`);
+    };
+    card.onclick = e => {
+      if (e.target.closest('[data-add]')) return;
+      A.select(card.dataset.comp);
+      P.popover(e.clientX, e.clientY, card.dataset.comp);
+      stage.querySelectorAll('.card.on').forEach(c => c.classList.remove('on'));
+      card.classList.add('on');
+    };
+  });
+  stage.querySelectorAll('[data-add]').forEach(b => {
+    b.onclick = e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      A.state.basket.includes(id) ? A.removeFromBasket(id) : A.addToBasket(id);
+      P.draw(); fab();
+    };
+  });
+  fab();
+}
+
+/* The rail is the tab strip. Same tabs, different affordance. */
+function railUI(){
+  const host = document.getElementById('rail');
+  if (!host) return;
+  host.innerHTML = '';
+  A.TABS.forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'railbtn';
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', String(t.id === P.tab));
+    b.title = t.hint;
+    const badge = t.id === 'basket' && A.state.basket.length
+      ? `<span class="railbadge">${A.state.basket.length}</span>` : '';
+    b.innerHTML = `<span class="ico">${ICONS[t.id] || '●'}${badge}</span>${esc(t.label)}`;
+    b.onclick = () => { P.tab = t.id; P.draw(); railUI(); };
+    host.appendChild(b);
+  });
+}
+
+function fab(){
+  const n = A.state.basket.length;
+  document.getElementById('fabn').textContent = n;
+  document.getElementById('fab').style.display = n ? 'flex' : 'none';
+}
+
+document.getElementById('fab').onclick = () => { P.tab = 'basket'; P.draw(); railUI(); };
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+
+P.mount({
+  renderMap,
+  onFilter: () => { const s = document.getElementById('stage'); if (s && P.tab === 'map') renderMap(s); },
+});
+
+// The rail owns tab rendering. Wrapping draw keeps it in step without the panes
+// needing to know this design replaced their tab strip.
+const paneDraw = P.draw;
+P.draw = function(){ paneDraw(); railUI(); fab(); };
+railUI();
+A.on(() => { railUI(); fab(); });
+</script>
+</body>
+</html>

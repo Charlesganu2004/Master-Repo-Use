@@ -1,0 +1,30 @@
+# Merge Conflict Tooling - verified 2026-08-29
+#
+# Every slug below was resolved against the GitHub API on 2026-08-29. Star counts,
+# licences and push ages are as measured, not as advertised.
+#
+# LICENCE NOTE: entries marked NO-LICENCE are all-rights-reserved. Link to them
+# and learn from them; do not copy their contents into this repository.
+
+# --- Usable
+microsoft/mcp                 # 3.6k stars, MIT, pushed yesterday. Carries the
+                              # resolve-asset-conflict script under
+                              # eng/common/testproxy/scripts/. The strongest entry here
+                              # and the only one that is both maintained and licensed.
+mattpocock/skills             # 241k stars, MIT. Already catalogued in design-agent-skills.
+                              # Its skills/engineering/resolving-merge-conflicts/SKILL.md is
+                              # the practical agent-facing procedure for this lane.
+
+# --- Link only, do not build on
+paolino/mcp-merge-guard       # 0 stars, NO LICENCE, 31d. An MCP server that gates merges.
+                              # The idea is sound and directly relevant, but 0 stars plus no
+                              # licence is exactly the profile that has been delisted twice
+                              # from this catalog. Read it for the approach, take nothing.
+r33drichards/merge-conflict   # 3 stars, NO LICENCE, 342d. Eighteen days from the stale
+                              # threshold with no releases. Reference only.
+
+# NOT ADDED, and why:
+#   mergeconflict.fm/529 -- a podcast episode. Worth listening to; nothing to catalogue.
+#   docs.gitlab.com/user/project/repository -- vendor documentation, not a repository.
+#     GitLab's conflict-resolution docs are useful reading and belong in a bookmark,
+#     not in a repo catalog that tracks push ages and licences.

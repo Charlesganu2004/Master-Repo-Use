@@ -1,7 +1,6 @@
 # Day Trading / Broker SDKs / Backtesting / Paper Trading
 HKUDS/Vibe-Trading
 TradingAgents-AI/TradingAgents
-alpacahq/alpaca-py
 alpacahq/alpaca-py  # replaces alpacahq/alpaca-trade-api-python (unmaintained)
 alpacahq/alpaca-mcp-server
 Lumiwealth/lumibot

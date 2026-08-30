@@ -15,7 +15,12 @@ class OtherAuthorApprovalTests(unittest.TestCase):
 class CharlesAuthorApprovalTests(unittest.TestCase):
     def test_no_comment_fails(self): self.assertFalse(approval.evaluate_approval(pr(OWNER),[],[]).approved)
     def test_other_commenter_fails(self): self.assertFalse(approval.evaluate_approval(pr(OWNER),[comment("other-user",approval.exact_owner_command(HEAD_A))],[]).approved)
-    def test_wrong_command_fails(self): self.assertFalse(approval.evaluate_approval(pr(OWNER),[comment(OWNER,"APPROVE OWNER PR")],[]).approved)
+    def test_bare_phrase_now_approves(self):
+        # Policy change requested by Charles: the bare phrase approves the pull
+        # request. It no longer expires with new commits; the SHA form below is
+        # what still pins a revision. This test previously asserted the opposite.
+        self.assertTrue(approval.evaluate_approval(pr(OWNER),[comment(OWNER,"APPROVE OWNER PR")],[]).approved)
+    def test_unrelated_comment_still_fails(self): self.assertFalse(approval.evaluate_approval(pr(OWNER),[comment(OWNER,"looks good to me")],[]).approved)
     def test_wrong_sha_fails(self): self.assertFalse(approval.evaluate_approval(pr(OWNER),[comment(OWNER,approval.exact_owner_command(HEAD_B))],[]).approved)
     def test_exact_current_sha_passes(self): self.assertTrue(approval.evaluate_approval(pr(OWNER),[comment(OWNER,approval.exact_owner_command(HEAD_A))],[]).approved)
     def test_new_commit_invalidates_old_comment(self):

@@ -128,6 +128,29 @@ def load_overrides() -> dict:
         return {}
 
 
+def latest_release_age(repo: str) -> int | None:
+    """Days since the newest release, or None if there are none or the call fails.
+
+    Called only for repositories that age alone would flag, so the extra request
+    is paid for a handful of repos rather than the whole catalog.
+    """
+    req = urllib.request.Request(
+        f"https://api.github.com/repos/{repo}/releases?per_page=1",
+        headers={"Accept": "application/vnd.github+json", "User-Agent": "master-repo-guardian"},
+    )
+    if os.getenv("GITHUB_TOKEN"):
+        req.add_header("Authorization", f"Bearer {os.environ['GITHUB_TOKEN']}")
+    try:
+        with urllib.request.urlopen(req, timeout=25) as response:
+            data = json.load(response)
+    except Exception:  # noqa: BLE001 - a failed lookup must never change a verdict
+        return None
+    if not data:
+        return None
+    published = parse_time(data[0].get("published_at"))
+    return (now() - published).days if published else None
+
+
 def metadata(repo: str) -> dict | None:
     req = urllib.request.Request(
         f"https://api.github.com/repos/{repo}",
@@ -280,6 +303,10 @@ def run_gitleaks(clone: pathlib.Path) -> list[str]:
     return findings
 
 
+# Only these can justify a CRITICAL. Everything else is a heuristic hint.
+EXTERNAL_SCANNERS = ("clamav", "gitleaks", "osv", "semgrep", "snyk", "trivy")
+
+
 def deep_scan(repo: str) -> tuple[list[str], bool]:
     """Return (findings, critical). Scanner failures never set critical."""
     findings: list[str] = []
@@ -337,7 +364,14 @@ def deep_scan(repo: str) -> tuple[list[str], bool]:
             findings += run_external(["snyk", "test", "--all-projects", "--severity-threshold=high"], clone, "snyk")
     # Redact defensively: nothing leaves this function without passing the masker.
     findings = [redact(item, 500) for item in findings]
-    critical = any(item.startswith("CRITICAL") for item in findings)
+    # CRITICAL removes a repository from the catalog, so only a real scanner may
+    # raise it. The built-in heuristics match on text and cannot tell an exploit
+    # from a paragraph explaining one, which is how issue #14 came to recommend
+    # deleting anthropics/skills.
+    critical = any(
+        item.startswith("CRITICAL") and any(tool in item for tool in EXTERNAL_SCANNERS)
+        for item in findings
+    )
     return findings, critical
 
 
@@ -560,6 +594,17 @@ def main() -> int:
             args.remove_stale_after_days,
             args.archive_grace_days,
         )
+        # Age flagged it. Before trusting that, ask whether it has shipped a release
+        # recently. Archived repos are excluded: a sunset release is indistinguishable
+        # from a healthy one, which is exactly how Flowise nearly kept its place.
+        if result.status in {"STALE", "REVIEW", "REMOVE"} and not result.archived \
+                and not (overrides.get(repo) or {}).get("mode"):
+            rel_age = latest_release_age(repo)
+            if rel_age is not None and rel_age <= args.stale_after_days:
+                result.status = "HEALTHY"
+                result.note = (f"released {rel_age}d ago; a release is maintenance even when "
+                               f"the last push was {result.age_days}d ago")
+
         rotating = args.deep and idx % groups == args.batch_index % groups
         should_scan = repo in forced or (args.deep and (rotating or result.status in {"REVIEW", "REMOVE"}))
 

@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graphite | Master Repo Atlas</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* Graphite, rebuilt on the shared engine.
+ *
+ * Charles picked Console and Graphite, so this keeps Graphite's identity, which
+ * is horizontal lanes read top to bottom, and adopts what makes the Console
+ * fast: the same setup sequence, the same filters, dense rows, and keyboard
+ * reach. The lanes are the map; the rows inside them are the components.
+ */
+:root{
+  --bg:#0b0708; --panel:#141011; --line:#2a1e20; --ink:#f2e9ea; --dim:#a08b8e;
+  --accent:#ff3b3b; --accent2:#ff8f5c; --warn:#ffd166;
+  --instruction:#ff5c5c; --capability:#ff9d5c; --knowledge:#7fb3ff;
+  --control:#ffd166; --model:#c77dff; --delivery:#5cd6a0;
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Cascadia Code",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;
+  overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+
+.tabs{display:flex;gap:2px;padding:0 18px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tab{padding:9px 14px;font-size:12.5px;color:var(--dim);border-bottom:2px solid transparent;
+  transition:.13s;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+.wrap{display:grid;grid-template-columns:1fr 380px}
+@media(max-width:1080px){.wrap{grid-template-columns:1fr}}
+#stage{min-width:0;overflow:hidden}
+.side{border-left:1px solid var(--line);background:var(--panel);padding:17px;
+  overflow-y:auto;position:sticky;top:0;max-height:100vh;align-self:start;min-width:0}
+@media(max-width:1080px){.side{position:static;max-height:none;border-left:none;
+  border-top:1px solid var(--line)}}
+
+/* ---- the lane map ---- */
+.lanes{padding:14px 18px 30px;overflow-y:auto;max-height:min(72vh,860px)}
+.lane{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;
+  background:var(--panel);overflow:hidden;transition:border-color .14s}
+.lane:hover{border-color:#3a2a2c}
+.lane.open{border-color:var(--accent)}
+.lanehead{display:grid;grid-template-columns:9px 1fr auto auto;gap:11px;align-items:center;
+  padding:9px 13px;cursor:pointer;width:100%;text-align:left}
+.lanehead:hover{background:rgba(255,255,255,.025)}
+.railcol{width:9px;height:26px;border-radius:3px}
+.lanename{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.lanesrc{font-family:var(--mono);font-size:10.5px;color:var(--dim);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34ch}
+.lanenum{font-family:var(--mono);font-size:11px;color:var(--accent2);
+  min-width:34px;text-align:right}
+.lanecaret{color:var(--dim);font-size:11px;width:14px;text-align:center;
+  transition:transform .16s}
+.lane.open .lanecaret{transform:rotate(90deg);color:var(--accent)}
+
+/* rows inside a lane, borrowed from the console because they read fast */
+.rows{border-top:1px solid var(--line);max-height:330px;overflow-y:auto}
+.row{display:grid;grid-template-columns:7px 1fr auto;gap:10px;align-items:center;
+  padding:6px 13px 6px 15px;cursor:pointer;font-size:12.5px;
+  border-bottom:1px solid rgba(255,255,255,.035)}
+.row:last-child{border-bottom:none}
+.row:hover{background:rgba(255,255,255,.03)}
+.row.on{background:rgba(255,59,59,.09);box-shadow:inset 2px 0 0 var(--accent)}
+.row .dot{width:7px;height:7px;border-radius:50%}
+.row .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .nm em{font-style:normal;color:var(--dim);font-size:11px;margin-left:6px;
+  font-family:var(--mono)}
+.row .rt{display:flex;gap:7px;align-items:center;color:var(--dim);font-size:10.5px;
+  white-space:nowrap}
+.rowadd{width:19px;height:19px;border:1px solid var(--line);border-radius:5px;
+  color:var(--dim);font-size:11px;line-height:1;display:grid;place-items:center}
+.rowadd:hover{color:var(--accent);border-color:var(--accent)}
+.rowadd.in{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.lanemore{padding:7px 15px;font-size:11px;color:var(--dim);font-family:var(--mono)}
+
+.mapbar{display:flex;gap:14px;align-items:center;padding:9px 18px;
+  border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;
+  color:var(--dim);flex-wrap:wrap}
+.mapbar b{color:var(--accent)}
+.mapbar button{font-size:11px;border:1px solid var(--line);border-radius:999px;
+  padding:3px 11px;color:var(--dim)}
+.mapbar button:hover{color:var(--accent);border-color:var(--accent)}
+
+/* ---- shared pane + detail styling ---- */
+.pane{padding:20px}
+h2{font-size:18px;letter-spacing:-.02em;margin-bottom:5px}
+.sub{color:var(--dim);font-size:12.5px;margin-bottom:16px;line-height:1.6}
+.sec{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+  margin:17px 0 8px;font-weight:600}
+.sec:first-child{margin-top:0}
+.dname{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.dkind{display:inline-block;font-size:10px;padding:2px 9px;border-radius:999px;
+  margin-top:6px;border:1px solid var(--line);color:var(--dim)}
+.ddesc{color:#ddd0d1;line-height:1.6;font-size:13px;margin-top:10px}
+.meta{font-size:11.5px;color:var(--dim);margin-top:9px;line-height:1.7}
+.meta code{font-family:var(--mono);color:var(--accent2);font-size:11px}
+.cmd{background:rgba(0,0,0,.55);border:1px solid var(--line);border-radius:8px;
+  padding:10px 12px;font-family:var(--mono);font-size:11.5px;color:var(--accent);
+  word-break:break-all;line-height:1.55;position:relative}
+.cmd.wrap{white-space:pre-wrap}
+.copy{position:absolute;right:6px;top:6px;font-size:9.5px;color:var(--dim);
+  border:1px solid var(--line);border-radius:5px;padding:2px 7px;background:var(--panel)}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+.conn{display:flex;flex-direction:column;gap:4px}
+.conn button{text-align:left;font-size:12px;padding:7px 10px;border-radius:7px;
+  border:1px solid var(--line);color:#ddd0d1;width:100%;transition:.13s}
+.conn button:hover{border-color:var(--accent);transform:translateX(3px)}
+.conn small{display:block;color:var(--dim);font-size:10.5px;margin-top:2px}
+.route{border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:7px}
+.route b{font-size:12.5px;display:block}
+.route p{font-size:11.5px;color:var(--dim);margin-top:4px;line-height:1.5}
+.route .tag{font-size:10px;color:var(--accent2);margin-top:6px;display:inline-block}
+.route .tag.no{color:var(--warn)}
+.route .path{font-size:10.5px;margin-top:6px;color:var(--dim)}
+.empty{color:var(--dim);font-size:12.5px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:9px}
+.lane-card{border:1px solid var(--line);border-radius:9px;padding:12px;cursor:pointer;
+  transition:.13s;background:var(--panel)}
+.lane-card:hover{border-color:var(--accent)}
+.lane-card.active{border-color:var(--accent2)}
+.lane-card b{font-size:13px}
+.lane-card p{font-size:11.5px;color:var(--dim);margin-top:5px;line-height:1.55}
+.lane-card .src{font-family:var(--mono);font-size:10.5px;color:var(--accent2);
+  margin-top:6px;display:block;word-break:break-all}
+.verdict{color:var(--accent)}
+.form{max-width:440px}
+label{display:block;font-size:11.5px;color:var(--dim);margin:10px 0 4px}
+input[type=text],textarea,select{width:100%;background:rgba(0,0,0,.5);
+  border:1px solid var(--line);border-radius:7px;color:var(--ink);padding:8px 10px;
+  font-family:inherit;font-size:12.5px}
+textarea{min-height:70px;resize:vertical}
+.btn{background:var(--accent);color:var(--bg);font-weight:700;padding:9px 16px;
+  border-radius:7px;font-size:12.5px;margin-top:12px}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink);font-weight:400;
+  padding:5px 11px;margin-top:8px}
+.err{color:var(--warn);font-size:11.5px;margin-top:8px}
+
+/* ---- shared setup bar, filters and build controls -------------------
+   Written once and injected into every design. Every selector resolves through
+   each design's own custom properties, so the palette stays local. */
+#setup{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;
+  padding:11px 18px;border-bottom:1px solid var(--line)}
+#setup .step{display:flex;gap:9px;align-items:flex-start;min-width:0}
+#setup .step.locked{opacity:.45}
+#setup .num{flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--line);color:var(--dim);font-size:11px;display:grid;
+  place-items:center;margin-top:1px}
+#setup .stepbody{min-width:0}
+#setup .steplabel{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:5px}
+#setup .osrow{display:flex;gap:4px;flex-wrap:wrap}
+#setup .os{font-size:12px;padding:5px 11px;border:1px solid var(--line);
+  border-radius:7px;color:var(--dim);transition:.14s}
+#setup .os:hover{color:var(--ink);border-color:var(--accent)}
+#setup .os.on{color:var(--bg);background:var(--accent);border-color:var(--accent);
+  font-weight:700}
+#setup .osnote{font-size:11px;color:var(--dim);margin-top:5px;max-width:46ch;
+  line-height:1.5}
+#setup .scan{font-family:var(--mono,monospace);font-size:10.5px;text-align:left;
+  background:rgba(0,0,0,.55);border:1px solid var(--line);border-radius:6px;
+  padding:6px 9px;color:var(--accent);max-width:min(40vw,430px);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;cursor:pointer;display:block}
+#setup .scan:hover{border-color:var(--accent)}
+#setup .hwrow{display:flex;gap:7px;flex-wrap:wrap}
+#setup .hwfield{display:flex;flex-direction:column;gap:3px;font-size:10.5px;
+  color:var(--dim)}
+#setup .hwfield.dim{opacity:.45}
+#setup .hwfield i{font-style:normal;opacity:.65}
+#setup .hwfield input{width:74px;background:rgba(0,0,0,.55);border:1px solid var(--line);
+  border-radius:6px;color:var(--ink);padding:5px 8px;font-family:var(--mono,monospace);
+  font-size:11.5px}
+#setup .verdictline{font-size:11.5px;color:var(--dim);margin-top:6px}
+#setup .verdictline b{color:var(--accent)}
+
+#filters{padding:9px 18px;border-bottom:1px solid var(--line);
+  display:flex;flex-direction:column;gap:6px}
+#filters .frow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}
+#filters .flabel{font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--dim);flex:0 0 88px}
+#filters .fsearch{flex:1;min-width:180px;max-width:430px;background:rgba(0,0,0,.55);
+  border:1px solid var(--line);border-radius:7px;color:var(--ink);padding:6px 10px;
+  font-family:inherit;font-size:12.5px}
+#filters .fcount{font-size:11px;color:var(--dim);font-family:var(--mono,monospace)}
+#filters .fclear{font-size:11px;color:var(--accent);border:1px solid var(--line);
+  border-radius:999px;padding:3px 10px}
+#filters .fclear:hover{border-color:var(--accent)}
+#filters .chips{display:flex;gap:4px;flex-wrap:wrap;flex:1;min-width:0}
+#filters .chip{font-size:11px;padding:3px 9px;border:1px solid var(--line);
+  border-radius:999px;color:var(--dim);transition:.14s;white-space:nowrap}
+#filters .chip:hover{color:var(--ink);border-color:var(--accent)}
+#filters .chip.on{color:var(--bg);background:var(--accent);border-color:var(--accent);
+  font-weight:600}
+#filters .chip i{font-style:normal;opacity:.6;font-size:10px}
+#filters .chip.k-instruction.on{background:var(--instruction);border-color:var(--instruction)}
+#filters .chip.k-capability.on{background:var(--capability);border-color:var(--capability)}
+#filters .chip.k-knowledge.on{background:var(--knowledge);border-color:var(--knowledge)}
+#filters .chip.k-control.on{background:var(--control);border-color:var(--control)}
+#filters .chip.k-model.on{background:var(--model);border-color:var(--model)}
+#filters .chip.k-delivery.on{background:var(--delivery);border-color:var(--delivery)}
+
+.plus{flex:0 0 auto;width:26px;height:26px;border:1px solid var(--line);border-radius:7px;
+  color:var(--dim);font-size:15px;line-height:1;display:grid;place-items:center;
+  transition:.14s}
+.plus:hover{color:var(--accent);border-color:var(--accent)}
+.plus.in{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+.plus.mini{position:absolute;top:9px;right:9px;width:22px;height:22px;font-size:13px}
+.dhead{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.downer{font-size:11.5px;color:var(--dim);font-family:var(--mono,monospace);margin-top:2px}
+.owner{font-size:11px;color:var(--dim);font-family:var(--mono,monospace);
+  display:block;margin-top:2px}
+.dkind.sub{opacity:.75;margin-left:4px}
+.badge{font-style:normal;font-size:10px;padding:1px 6px;border-radius:999px;
+  background:var(--accent);color:var(--bg);margin-left:4px;font-weight:700}
+.lane-card{position:relative}
+.tab{display:inline-flex;align-items:center}
+
+/* ---- click popover on the map --------------------------------------
+   Positioned at the click, flipped if it would leave the viewport. Carries the
+   same facts as the side panel plus the plus button, so a combination can be
+   built without leaving the map. */
+.pop{position:fixed;z-index:200;width:min(340px,86vw);background:var(--panel);
+  border:1px solid var(--accent);border-radius:11px;padding:13px;
+  box-shadow:0 18px 44px rgba(0,0,0,.62);animation:popin .13s ease both}
+@keyframes popin{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:none}}
+.pophead{display:flex;gap:9px;align-items:flex-start;justify-content:space-between}
+.popname{font-size:15px;font-weight:700;line-height:1.25}
+.popbtns{display:flex;gap:5px;flex:0 0 auto}
+.popclose{width:26px;height:26px;border:1px solid var(--line);border-radius:7px;
+  color:var(--dim);font-size:16px;line-height:1;display:grid;place-items:center}
+.popclose:hover{color:var(--ink);border-color:var(--ink)}
+.poprow{margin-top:7px}
+.popdesc{font-size:12.5px;color:var(--dim);line-height:1.55;margin-top:9px}
+.popmeta{font-size:11px;color:var(--dim);margin-top:7px;font-family:var(--mono,monospace);
+  word-break:break-all;opacity:.85}
+.pop .cmd{margin-top:10px;font-size:11px}
+.popempty{font-size:11.5px;color:var(--dim);margin-top:10px;line-height:1.5;font-style:italic}
+.popsec{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+  margin:12px 0 6px}
+.popconn{display:flex;gap:4px;flex-wrap:wrap}
+.popconn button{font-size:11px;padding:3px 9px;border:1px solid var(--line);
+  border-radius:999px;color:var(--dim)}
+.popconn button:hover{color:var(--accent);border-color:var(--accent)}
+.popfoot{margin-top:11px;padding-top:9px;border-top:1px solid var(--line);
+  font-size:11px;color:var(--dim)}
+.popfoot button{color:var(--accent);text-decoration:underline}
+
+/* ---- layout corrections after the setup and filter bars were added ----
+   The old fixed calc(100vh - Npx) heights assumed a short header. The chrome is
+   now variable, so the map is sized from the viewport and the page scrolls
+   normally instead of every design guessing its own header height. */
+.tabs{position:static !important;top:auto !important}
+#setup,#filters{position:static}
+#filters .chips{max-height:62px;overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;padding-right:2px}
+.wrap{min-height:auto !important}
+svg.sky,svg.orbit,svg.sheet{height:min(66vh,720px) !important;min-height:360px}
+.term{height:min(66vh,720px) !important;min-height:360px}
+.pane{max-height:none !important}
+.side{position:sticky;top:0;max-height:100vh !important;align-self:start}
+@media(max-width:1080px){.side{position:static;max-height:none !important}}
+.row .nm em{font-style:normal;color:var(--dim);font-size:11px;margin-left:5px}
+.rowadd{margin-left:8px;width:18px;height:18px;border:1px solid var(--line);border-radius:4px;
+  color:var(--dim);font-size:11px;line-height:1;display:inline-grid;place-items:center;
+  vertical-align:middle}
+.rowadd:hover{color:var(--accent);border-color:var(--accent)}
+.rowadd.in{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div id="setup"></div>
+<div id="themehost" style="padding:8px 18px;border-bottom:1px solid var(--line)"></div>
+<div class="tabs" id="tabs" role="tablist"></div>
+<div id="filters"></div>
+
+<div class="wrap">
+  <div id="stage"></div>
+  <aside class="side" id="side"></aside>
+</div>
+
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes;
+const esc = P.esc;
+const ROWS_PER_LANE = 60;      // a lane can hold 300 entries; the rest is one click away
+let open = new Set(JSON.parse(localStorage.getItem('atlas.openLanes') || '[]'));
+
+function persist(){
+  try { localStorage.setItem('atlas.openLanes', JSON.stringify([...open])); } catch (_) {}
+}
+
+/* Lanes stacked vertically, each expanding into console-style rows. Reading order
+   runs top to bottom the way the original Graphite did, but a lane now opens in
+   place instead of sending you somewhere else. */
+function renderMap(stage){
+  const lanes = A.visibleLanes();
+  const comps = A.visibleComponents();
+  const byLane = new Map();
+  comps.forEach(c => {
+    if (!byLane.has(c.lane)) byLane.set(c.lane, []);
+    byLane.get(c.lane).push(c);
+  });
+  // With a filter on, only lanes that still have something in them are worth showing.
+  const shown = A.activeFilterCount() ? lanes.filter(l => byLane.has(l.id)) : lanes;
+
+  stage.innerHTML = `
+    <div class="mapbar">
+      <span><b>${shown.length}</b> lanes</span>
+      <span><b>${comps.length}</b> components</span>
+      <span><b>${A.state.data.routes.length}</b> hybrid routes</span>
+      <button id="expand">expand all</button>
+      <button id="collapse">collapse all</button>
+      <span style="opacity:.65">click a lane to open it</span>
+    </div>
+    <div class="lanes" id="lanes">
+      ${shown.map(l => laneHTML(l, byLane.get(l.id) || [])).join('')
+        || '<p class="empty" style="padding:14px">Nothing matches the current filters.</p>'}
+    </div>`;
+
+  document.getElementById('expand').onclick = () => {
+    shown.forEach(l => open.add(l.id)); persist(); renderMap(stage);
+  };
+  document.getElementById('collapse').onclick = () => {
+    open.clear(); persist(); renderMap(stage);
+  };
+  wire(stage);
+}
+
+function laneHTML(lane, items){
+  const isOpen = open.has(lane.id);
+  const rows = items.slice(0, ROWS_PER_LANE);
+  return `
+    <div class="lane${isOpen ? ' open' : ''}" data-lane="${esc(lane.id)}">
+      <button class="lanehead" data-toggle="${esc(lane.id)}">
+        <span class="railcol" style="background:var(--${esc(lane.kind)})"></span>
+        <span>
+          <span class="lanename">${esc(lane.name)}</span>
+          <span class="lanesrc">${esc(lane.source)}</span>
+        </span>
+        <span class="lanenum">${items.length || lane.count}</span>
+        <span class="lanecaret">&#9654;</span>
+      </button>
+      ${isOpen ? `<div class="rows">
+        ${rows.map(c => `
+          <div class="row${A.state.selected === c.id ? ' on' : ''}" data-comp="${esc(c.id)}">
+            <span class="dot" style="background:var(--${esc(c.kind)})"></span>
+            <span class="nm">${esc(c.name)}${c.owner ? ` <em>${esc(c.owner)}</em>` : ''}</span>
+            <span class="rt">
+              ${c.sub && c.sub !== 'Catalog' ? esc(c.sub) : ''}
+              <button class="rowadd${A.state.basket.includes(c.id) ? ' in' : ''}"
+                data-add="${esc(c.id)}" title="Add to a combination"
+                >${A.state.basket.includes(c.id) ? '&#10003;' : '+'}</button>
+            </span>
+          </div>`).join('')
+          || '<div class="lanemore">nothing here matches the filters</div>'}
+        ${items.length > ROWS_PER_LANE
+          ? `<div class="lanemore">+ ${items.length - ROWS_PER_LANE} more; narrow the filters to see them</div>`
+          : ''}
+      </div>` : ''}
+    </div>`;
+}
+
+function wire(stage){
+  stage.querySelectorAll('[data-toggle]').forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.toggle;
+      open.has(id) ? open.delete(id) : open.add(id);
+      persist();
+      renderMap(stage);
+    };
+  });
+  stage.querySelectorAll('[data-comp]').forEach(row => {
+    row.onclick = e => {
+      if (e.target.closest('[data-add]')) return;
+      A.select(row.dataset.comp);
+      const box = row.getBoundingClientRect();
+      P.popover(box.right - 40, box.top, row.dataset.comp);
+      stage.querySelectorAll('.row.on').forEach(r => r.classList.remove('on'));
+      row.classList.add('on');
+    };
+  });
+  stage.querySelectorAll('[data-add]').forEach(b => {
+    b.onclick = e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      A.state.basket.includes(id) ? A.removeFromBasket(id) : A.addToBasket(id);
+      P.draw();
+    };
+  });
+}
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+
+P.mount({
+  renderMap,
+  onFilter: () => { const s = document.getElementById('stage'); if (s && P.tab === 'map') renderMap(s); },
+  onSelect: id => {
+    // opening a lane so the selection is actually visible
+    const c = A.state.byId.get(id);
+    if (c && !open.has(c.lane)){
+      open.add(c.lane); persist();
+      const s = document.getElementById('stage');
+      if (s && P.tab === 'map') renderMap(s);
+    }
+  },
+});
+</script>
+</body>
+</html>

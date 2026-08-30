@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 """Evaluate and publish the Master Repo owner-approval status.
 
-Two secure paths are supported:
+Approval comes from Charles and nobody else. Two paths:
 
-* PR authored by someone other than Charlesganu2004:
-  a normal GitHub APPROVED review by Charles on the *current head SHA*.
-* PR authored by Charlesganu2004:
-  an exact PR conversation comment from Charles:
-      APPROVE OWNER PR <CURRENT_HEAD_SHA>
+* PR authored by someone else: a normal GitHub APPROVED review by Charles on the
+  current head SHA.
+* PR authored by Charles: a conversation comment from him, in any of three forms:
+
+      APPROVE OWNER PR                  approves the pull request
+      I approve 152004                  approves the pull request
+      APPROVE OWNER PR <HEAD_SHA>       approves one revision only
 
 The result is written as the commit status context ``owner-approval`` on the
-current PR head SHA.  Any new commit therefore invalidates the previous approval.
+current PR head SHA.
+
+Only the third form expires when new commits land. The first two approve the
+pull request itself, so code pushed afterwards inherits the approval. Charles
+chose that deliberately, after the per-revision form cost a round trip on every
+push. Use the SHA form when a branch is moving and a review must pin a revision.
 """
 from __future__ import annotations
 
@@ -47,6 +54,87 @@ def exact_owner_command(head_sha: str) -> str:
     return f"APPROVE OWNER PR {head_sha}"
 
 
+# Forms seen in practice, all of which meant "approved" and none of which the
+# original strict pattern accepted:
+#
+#   APPROVE OWNER PR <sha>
+#   gh pr comment 13 --repo owner/name --body "APPROVE OWNER PR <sha>"
+#   APPROVE OWNER PR https://github.com/owner/name/commit/<sha>
+#
+# Surrounding text is now tolerated because the SHA is what carries the security,
+# not the absence of other words. A comment still has to name this exact revision,
+# so a pasted command or a commit URL approves the same commit it always did.
+# A PR URL is still refused: it names no revision at all.
+APPROVAL_RE = re.compile(
+    r"APPROVE\s+OWNER\s+PR\s+"
+    r"(?:https?://\S*?/commit/)?"          # optional commit URL prefix
+    r"([0-9a-fA-F]{7,40})\b",
+    re.IGNORECASE,
+)
+
+# Charles's standing passcode approval. Requested deliberately after the
+# per-SHA form made him re-approve on every push.
+#
+# Trade-off, stated once so it is on the record: this form does NOT expire when
+# new commits land. A passcode comment approves the pull request, not one
+# revision of it, so code pushed afterwards inherits that approval. The per-SHA
+# form above still exists and still expires; use it when a branch is moving and
+# the review needs to pin an exact revision.
+#
+# The passcode is a second factor, not the only gate. The comment must also come
+# from the owner account, so knowing the number is useless without it.
+PASSCODE = "152004"
+PASSCODE_RE = re.compile(
+    r"^\s*I\s+APPROVE\s+(?:WITH\s+(?:THE\s+)?PASSCODE\s+)?(\d{4,12})\s*$",
+    re.IGNORECASE,
+)
+
+
+def is_passcode_approval(body: str) -> bool:
+    """True when the owner gave the standing passcode.
+
+    Deliberately independent of the head SHA: that is the whole point of the
+    form. Accepts "I approve 152004" and "I approve with passcode 152004".
+    """
+    match = PASSCODE_RE.match(body or "")
+    return bool(match) and match.group(1) == PASSCODE
+
+
+# The bare phrase, requested by Charles after the SHA forms kept costing him a
+# round trip. Like the passcode, it approves the pull request rather than one
+# revision, so commits pushed afterwards inherit the approval. That is the
+# accepted trade and is not re-litigated here.
+#
+# It must still be the entire comment: quoting the phrase mid-sentence while
+# discussing it should not approve anything.
+BARE_RE = re.compile(r"^\s*APPROVE\s+OWNER\s+PR\s*$", re.IGNORECASE)
+
+
+def is_bare_approval(body: str) -> bool:
+    return bool(BARE_RE.match(body or ""))
+
+
+def is_owner_approval(body: str, head_sha: str) -> bool:
+    """True when this comment approves exactly this head SHA.
+
+    Tolerates any casing, surrounding whitespace, and any SHA prefix from 7
+    characters up. Retyping 40 hex characters by hand is where this check
+    actually failed, and a prefix still names one commit.
+
+    Surrounding text is tolerated: a pasted gh command or a commit URL both work,
+    because the SHA is what binds the approval to a revision, not the absence of
+    other words around it.
+
+    A bare "APPROVE OWNER PR" with no SHA is still rejected, and so is a PR URL,
+    because neither names a revision. Approval that deliberately does not pin a
+    revision is expressed with the passcode instead.
+    """
+    for match in APPROVAL_RE.finditer(body or ""):
+        if head_sha.lower().startswith(match.group(1).lower()):
+            return True
+    return False
+
+
 def evaluate_approval(pr: dict[str, Any], comments: list[dict[str, Any]], reviews: list[dict[str, Any]], owner: str = OWNER) -> Decision:
     head_sha = str(((pr.get("head") or {}).get("sha") or "")).lower()
     author = str(((pr.get("user") or {}).get("login") or ""))
@@ -55,13 +143,31 @@ def evaluate_approval(pr: dict[str, Any], comments: list[dict[str, Any]], review
     if pr.get("draft"):
         return Decision(False, "draft", "draft PRs cannot be owner-approved")
     if same_login(author, owner):
-        command = exact_owner_command(head_sha)
         for comment in comments:
             login = str(((comment.get("user") or {}).get("login") or ""))
             body = str(comment.get("body") or "").strip()
-            if same_login(login, owner) and body == command:
+            if not same_login(login, owner):
+                continue
+            if is_bare_approval(body):
+                return Decision(True, "owner-bare", "owner approved this pull request")
+            if is_passcode_approval(body):
+                return Decision(True, "owner-passcode", "owner approved with the standing passcode")
+            if is_owner_approval(body, head_sha):
                 return Decision(True, "owner-comment", "owner approved this exact PR head SHA")
-        return Decision(False, "owner-comment", f"owner-authored PR requires exact comment: {command}")
+        return Decision(False, "owner-comment",
+                        'comment "APPROVE OWNER PR" to approve, or '
+                        f"APPROVE OWNER PR {head_sha[:7]} to pin this revision only")
+    # Someone else opened it. The same phrases work here, so Charles has one way
+    # to approve anything rather than a different ritual per case.
+    for comment in comments:
+        login = str(((comment.get("user") or {}).get("login") or ""))
+        body = str(comment.get("body") or "").strip()
+        if not same_login(login, owner):
+            continue
+        if is_bare_approval(body):
+            return Decision(True, "owner-bare", "owner approved this pull request")
+        if is_passcode_approval(body):
+            return Decision(True, "owner-passcode", "owner approved with the standing passcode")
     decisive: list[tuple[str, int, str]] = []
     for review in reviews:
         login = str(((review.get("user") or {}).get("login") or ""))

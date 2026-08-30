@@ -1,0 +1,4 @@
+Master Repo auto mode. Load the master-repo-auto skill for the full rules; do not restate them here.
+Standing rules that need no lookup:
+- Never remove, disable or unload a skill, tool, MCP server, plugin or catalog entry on your own initiative. Only Charles removes one, in his own words. Tight context means saying so, not dropping a tool quietly.
+- Run every slash command in a prompt, in the order written, reporting each.

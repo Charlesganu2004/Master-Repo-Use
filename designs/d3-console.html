@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Console | Master Repo Atlas</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+:root{
+  --bg:#0b0c0b; --panel:#111311; --line:#1f241f; --ink:#d8e0d4; --dim:#7d8a78;
+  --accent:#9ae66e; --accent2:#e6c46e; --warn:#e6866e;
+  --instruction:#9ae66e; --capability:#e6c46e; --knowledge:#6ec9e6;
+  --control:#e6866e; --model:#c99ae6; --delivery:#6ee6a8;
+  --mono:"JetBrains Mono",ui-monospace,"Cascadia Code","SF Mono",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13.5px;
+  min-height:100vh;overflow-x:hidden;
+  background-image:repeating-linear-gradient(0deg,rgba(154,230,110,.022) 0 1px,transparent 1px 3px)}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+
+.hw{position:sticky;top:0;z-index:60;background:rgba(11,12,11,.96);
+  border-bottom:1px solid var(--line);padding:9px 16px;display:flex;gap:14px;
+  align-items:center;flex-wrap:wrap}
+.hw h1{font-size:13.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+.hw h1::before{content:"$ ";color:var(--dim)}
+.hw-step{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--dim)}
+.hw-scan{font-size:11px;background:#000;border:1px solid var(--line);border-radius:3px;
+  padding:5px 9px;color:var(--accent);max-width:min(44vw,520px);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;cursor:pointer;text-align:left}
+.hw-scan:hover{border-color:var(--accent)}
+.hw input{width:70px;background:#000;border:1px solid var(--line);border-radius:3px;
+  color:var(--ink);padding:5px 8px;font-family:inherit;font-size:11.5px}
+.tier{color:var(--accent2)}
+
+.tabs{display:flex;gap:0;padding:0 16px;flex-wrap:wrap;border-bottom:1px solid var(--line);
+  position:sticky;top:47px;z-index:55;background:rgba(11,12,11,.96)}
+.tab{padding:8px 13px;font-size:12px;color:var(--dim);border-bottom:2px solid transparent;
+  transition:.12s;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+
+.wrap{display:grid;grid-template-columns:1fr 380px;min-height:calc(100vh - 84px)}
+@media(max-width:1080px){.wrap{grid-template-columns:1fr}}
+#stage{min-width:0;overflow:hidden}
+.side{border-left:1px solid var(--line);background:var(--panel);padding:16px;
+  overflow-y:auto;max-height:calc(100vh - 84px);position:sticky;top:84px;min-width:0}
+@media(max-width:1080px){.side{position:static;max-height:none;border-left:none;
+  border-top:1px solid var(--line)}}
+
+/* ---- the console ---- */
+.term{padding:16px;height:calc(100vh - 84px);display:flex;flex-direction:column;min-width:0}
+@media(max-width:1080px){.term{height:auto;min-height:64vh}}
+.prompt{display:flex;align-items:center;gap:9px;border:1px solid var(--line);
+  background:#000;border-radius:4px;padding:10px 13px;margin-bottom:12px}
+.prompt::before{content:"›";color:var(--accent);font-weight:700;font-size:16px}
+.prompt input{flex:1;background:none;border:none;color:var(--ink);font-family:inherit;
+  font-size:14px;outline:none;min-width:0}
+.prompt input::placeholder{color:var(--dim)}
+.hint{font-size:10.5px;color:var(--dim);white-space:nowrap}
+.rows{flex:1;overflow-y:auto;border:1px solid var(--line);border-radius:4px;background:#000;
+  min-height:0}
+.row{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;
+  padding:7px 13px;border-bottom:1px solid #141814;cursor:pointer;font-size:12.5px;
+  animation:in .16s ease both}
+@keyframes in{from{opacity:0;transform:translateX(-7px)}to{opacity:1;transform:none}}
+.row:hover{background:#0f120f}
+.row.on{background:#131a12;box-shadow:inset 2px 0 0 var(--accent)}
+.row .dot{width:7px;height:7px;border-radius:50%}
+.row .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .ln{color:var(--dim);font-size:11px;white-space:nowrap}
+.row .cmdflag{color:var(--accent);font-size:10px}
+.stat{display:flex;gap:16px;padding:9px 2px 0;font-size:11px;color:var(--dim);flex-wrap:wrap}
+.stat b{color:var(--accent2)}
+.caret{display:inline-block;width:8px;height:15px;background:var(--accent);
+  animation:blink 1.05s step-end infinite;vertical-align:-2px}
+@keyframes blink{50%{opacity:0}}
+
+/* ---- shared pane + detail styling ---- */
+.pane{padding:18px;max-height:calc(100vh - 84px);overflow-y:auto}
+h2{font-size:17px;color:var(--accent);margin-bottom:5px;font-weight:700}
+.sub{color:var(--dim);font-size:12px;margin-bottom:16px;line-height:1.65}
+.sec{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);
+  margin:16px 0 8px}
+.sec:first-child{margin-top:0}
+.dname{font-size:17px;font-weight:700;color:var(--accent)}
+.dkind{display:inline-block;font-size:10px;padding:2px 8px;border:1px solid var(--line);
+  border-radius:3px;margin-top:6px;color:var(--dim)}
+.ddesc{color:#b8c4b2;line-height:1.65;font-size:12.5px;margin-top:10px}
+.meta{font-size:11.5px;color:var(--dim);margin-top:9px;line-height:1.75}
+.meta code{color:var(--accent2)}
+.cmd{background:#000;border:1px solid var(--line);border-radius:4px;padding:10px 12px;
+  font-size:11.5px;color:var(--accent);word-break:break-all;line-height:1.6;position:relative}
+.cmd.wrap{white-space:pre-wrap}
+.copy{position:absolute;right:6px;top:6px;font-size:9.5px;color:var(--dim);
+  border:1px solid var(--line);border-radius:3px;padding:2px 6px;background:var(--panel)}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+.conn{display:flex;flex-direction:column;gap:4px}
+.conn button{text-align:left;font-size:12px;padding:7px 10px;border:1px solid var(--line);
+  border-radius:3px;color:#b8c4b2;width:100%;transition:.12s}
+.conn button:hover{border-color:var(--accent);color:var(--accent)}
+.conn small{display:block;color:var(--dim);font-size:10.5px;margin-top:2px}
+.route{border:1px solid var(--line);border-radius:4px;padding:10px;margin-bottom:7px}
+.route b{font-size:12.5px;color:var(--accent2);display:block}
+.route p{font-size:11.5px;color:var(--dim);margin-top:4px;line-height:1.55}
+.route .tag{font-size:10px;color:var(--accent);margin-top:6px;display:inline-block}
+.route .tag.no{color:var(--warn)}
+.route .path{font-size:10.5px;margin-top:6px}
+.empty{color:var(--dim);font-size:12px;line-height:1.65}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:8px}
+.lane-card{border:1px solid var(--line);border-radius:4px;padding:12px;cursor:pointer;
+  transition:.12s;background:var(--panel)}
+.lane-card:hover{border-color:var(--accent)}
+.lane-card.active{border-color:var(--accent2)}
+.lane-card b{font-size:12.5px}
+.lane-card p{font-size:11.5px;color:var(--dim);margin-top:5px;line-height:1.55}
+.lane-card .src{font-size:10.5px;color:var(--accent2);margin-top:6px;display:block;
+  word-break:break-all}
+.verdict{color:var(--accent)}
+.form{max-width:440px}
+label{display:block;font-size:11px;color:var(--dim);margin:10px 0 4px}
+input[type=text],textarea,select{width:100%;background:#000;border:1px solid var(--line);
+  border-radius:3px;color:var(--ink);padding:8px 10px;font-family:inherit;font-size:12.5px}
+textarea{min-height:70px;resize:vertical}
+.btn{background:var(--accent);color:#0b0c0b;font-weight:700;padding:9px 16px;border-radius:3px;
+  font-size:12px;margin-top:12px}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink);font-weight:400;
+  padding:5px 11px;margin-top:8px}
+.err{color:var(--warn);font-size:11.5px;margin-top:8px}
+
+/* ---- shared setup bar, filters and build controls -------------------
+   Written once and injected into every design. Every selector resolves through
+   each design's own custom properties, so the palette stays local. */
+#setup{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;
+  padding:11px 18px;border-bottom:1px solid var(--line)}
+#setup .step{display:flex;gap:9px;align-items:flex-start;min-width:0}
+#setup .step.locked{opacity:.45}
+#setup .num{flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--line);color:var(--dim);font-size:11px;display:grid;
+  place-items:center;margin-top:1px}
+#setup .stepbody{min-width:0}
+#setup .steplabel{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:5px}
+#setup .osrow{display:flex;gap:4px;flex-wrap:wrap}
+#setup .os{font-size:12px;padding:5px 11px;border:1px solid var(--line);
+  border-radius:7px;color:var(--dim);transition:.14s}
+#setup .os:hover{color:var(--ink);border-color:var(--accent)}
+#setup .os.on{color:var(--bg);background:var(--accent);border-color:var(--accent);
+  font-weight:700}
+#setup .osnote{font-size:11px;color:var(--dim);margin-top:5px;max-width:46ch;
+  line-height:1.5}
+#setup .scan{font-family:var(--mono,monospace);font-size:10.5px;text-align:left;
+  background:rgba(0,0,0,.55);border:1px solid var(--line);border-radius:6px;
+  padding:6px 9px;color:var(--accent);max-width:min(40vw,430px);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;cursor:pointer;display:block}
+#setup .scan:hover{border-color:var(--accent)}
+#setup .hwrow{display:flex;gap:7px;flex-wrap:wrap}
+#setup .hwfield{display:flex;flex-direction:column;gap:3px;font-size:10.5px;
+  color:var(--dim)}
+#setup .hwfield.dim{opacity:.45}
+#setup .hwfield i{font-style:normal;opacity:.65}
+#setup .hwfield input{width:74px;background:rgba(0,0,0,.55);border:1px solid var(--line);
+  border-radius:6px;color:var(--ink);padding:5px 8px;font-family:var(--mono,monospace);
+  font-size:11.5px}
+#setup .verdictline{font-size:11.5px;color:var(--dim);margin-top:6px}
+#setup .verdictline b{color:var(--accent)}
+
+#filters{padding:9px 18px;border-bottom:1px solid var(--line);
+  display:flex;flex-direction:column;gap:6px}
+#filters .frow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}
+#filters .flabel{font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--dim);flex:0 0 88px}
+#filters .fsearch{flex:1;min-width:180px;max-width:430px;background:rgba(0,0,0,.55);
+  border:1px solid var(--line);border-radius:7px;color:var(--ink);padding:6px 10px;
+  font-family:inherit;font-size:12.5px}
+#filters .fcount{font-size:11px;color:var(--dim);font-family:var(--mono,monospace)}
+#filters .fclear{font-size:11px;color:var(--accent);border:1px solid var(--line);
+  border-radius:999px;padding:3px 10px}
+#filters .fclear:hover{border-color:var(--accent)}
+#filters .chips{display:flex;gap:4px;flex-wrap:wrap;flex:1;min-width:0}
+#filters .chip{font-size:11px;padding:3px 9px;border:1px solid var(--line);
+  border-radius:999px;color:var(--dim);transition:.14s;white-space:nowrap}
+#filters .chip:hover{color:var(--ink);border-color:var(--accent)}
+#filters .chip.on{color:var(--bg);background:var(--accent);border-color:var(--accent);
+  font-weight:600}
+#filters .chip i{font-style:normal;opacity:.6;font-size:10px}
+#filters .chip.k-instruction.on{background:var(--instruction);border-color:var(--instruction)}
+#filters .chip.k-capability.on{background:var(--capability);border-color:var(--capability)}
+#filters .chip.k-knowledge.on{background:var(--knowledge);border-color:var(--knowledge)}
+#filters .chip.k-control.on{background:var(--control);border-color:var(--control)}
+#filters .chip.k-model.on{background:var(--model);border-color:var(--model)}
+#filters .chip.k-delivery.on{background:var(--delivery);border-color:var(--delivery)}
+
+.plus{flex:0 0 auto;width:26px;height:26px;border:1px solid var(--line);border-radius:7px;
+  color:var(--dim);font-size:15px;line-height:1;display:grid;place-items:center;
+  transition:.14s}
+.plus:hover{color:var(--accent);border-color:var(--accent)}
+.plus.in{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+.plus.mini{position:absolute;top:9px;right:9px;width:22px;height:22px;font-size:13px}
+.dhead{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.downer{font-size:11.5px;color:var(--dim);font-family:var(--mono,monospace);margin-top:2px}
+.owner{font-size:11px;color:var(--dim);font-family:var(--mono,monospace);
+  display:block;margin-top:2px}
+.dkind.sub{opacity:.75;margin-left:4px}
+.badge{font-style:normal;font-size:10px;padding:1px 6px;border-radius:999px;
+  background:var(--accent);color:var(--bg);margin-left:4px;font-weight:700}
+.lane-card{position:relative}
+.tab{display:inline-flex;align-items:center}
+
+/* ---- layout corrections after the setup and filter bars were added ----
+   The old fixed calc(100vh - Npx) heights assumed a short header. The chrome is
+   now variable, so the map is sized from the viewport and the page scrolls
+   normally instead of every design guessing its own header height. */
+.tabs{position:static !important;top:auto !important}
+#setup,#filters{position:static}
+#filters .chips{max-height:62px;overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;padding-right:2px}
+.wrap{min-height:auto !important}
+svg.sky,svg.orbit,svg.sheet{height:min(66vh,720px) !important;min-height:360px}
+.term{height:min(66vh,720px) !important;min-height:360px}
+.pane{max-height:none !important}
+.side{position:sticky;top:0;max-height:100vh !important;align-self:start}
+@media(max-width:1080px){.side{position:static;max-height:none !important}}
+.row .nm em{font-style:normal;color:var(--dim);font-size:11px;margin-left:5px}
+.rowadd{margin-left:8px;width:18px;height:18px;border:1px solid var(--line);border-radius:4px;
+  color:var(--dim);font-size:11px;line-height:1;display:inline-grid;place-items:center;
+  vertical-align:middle}
+.rowadd:hover{color:var(--accent);border-color:var(--accent)}
+.rowadd.in{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+
+/* ---- click popover on the map --------------------------------------
+   Positioned at the click, flipped if it would leave the viewport. Carries the
+   same facts as the side panel plus the plus button, so a combination can be
+   built without leaving the map. */
+.pop{position:fixed;z-index:200;width:min(340px,86vw);background:var(--panel);
+  border:1px solid var(--accent);border-radius:11px;padding:13px;
+  box-shadow:0 18px 44px rgba(0,0,0,.62);animation:popin .13s ease both}
+@keyframes popin{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:none}}
+.pophead{display:flex;gap:9px;align-items:flex-start;justify-content:space-between}
+.popname{font-size:15px;font-weight:700;line-height:1.25}
+.popbtns{display:flex;gap:5px;flex:0 0 auto}
+.popclose{width:26px;height:26px;border:1px solid var(--line);border-radius:7px;
+  color:var(--dim);font-size:16px;line-height:1;display:grid;place-items:center}
+.popclose:hover{color:var(--ink);border-color:var(--ink)}
+.poprow{margin-top:7px}
+.popdesc{font-size:12.5px;color:var(--dim);line-height:1.55;margin-top:9px}
+.popmeta{font-size:11px;color:var(--dim);margin-top:7px;font-family:var(--mono,monospace);
+  word-break:break-all;opacity:.85}
+.pop .cmd{margin-top:10px;font-size:11px}
+.popempty{font-size:11.5px;color:var(--dim);margin-top:10px;line-height:1.5;font-style:italic}
+.popsec{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+  margin:12px 0 6px}
+.popconn{display:flex;gap:4px;flex-wrap:wrap}
+.popconn button{font-size:11px;padding:3px 9px;border:1px solid var(--line);
+  border-radius:999px;color:var(--dim)}
+.popconn button:hover{color:var(--accent);border-color:var(--accent)}
+.popfoot{margin-top:11px;padding-top:9px;border-top:1px solid var(--line);
+  font-size:11px;color:var(--dim)}
+.popfoot button{color:var(--accent);text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div id="setup"></div>
+<div id="themehost" style="padding:8px 18px;border-bottom:1px solid var(--line)"></div>
+<div class="tabs" id="tabs" role="tablist"></div>
+<div id="filters"></div>
+
+<div class="wrap">
+  <div id="stage"></div>
+  <aside class="side" id="side"></aside>
+</div>
+
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes;
+const esc = P.esc;
+let cursor = 0, rows = [];
+
+/* Keyboard-first: the whole map is a filter box and a result list. Everything is
+   reachable without a mouse, which is the interaction this design is for. */
+function renderMap(stage){
+  // One search, not two. This prompt drives the shared query, so typing here and
+  // typing in the filter bar are the same action and the counts always agree.
+  stage.innerHTML = `
+    <div class="term">
+      <div class="prompt">
+        <input id="q" type="text" placeholder="type to filter, arrows to move, enter to open"
+               autocomplete="off" spellcheck="false" value="${esc(A.state.query)}">
+        <span class="hint">↑↓ move · ⏎ open · esc clear</span>
+      </div>
+      <div class="rows" id="rows"></div>
+      <div class="stat" id="stat"></div>
+    </div>`;
+  const q = document.getElementById('q');
+  q.oninput = () => { A.setQuery(q.value); cursor = 0; list(); P.filtersUI(); };
+  q.onkeydown = e => {
+    if (e.key === 'ArrowDown'){ e.preventDefault(); move(1); }
+    else if (e.key === 'ArrowUp'){ e.preventDefault(); move(-1); }
+    else if (e.key === 'Enter'){ e.preventDefault(); open(); }
+    else if (e.key === 'Escape'){ q.value = ''; A.setQuery(''); cursor = 0; list(); P.filtersUI(); }
+  };
+  list();
+  q.focus();
+}
+
+function list(){
+  rows = A.visibleComponents();
+  const host = document.getElementById('rows');
+  if (!host) return;
+  // cap the DOM, not the count: 368 rows is fine, but a stray filter could grow
+  const shown = rows.slice(0, 300);
+  host.innerHTML = shown.map((c,i) => `
+    <div class="row${i === cursor ? ' on' : ''}" data-i="${i}">
+      <span class="dot" style="background:var(--${esc(c.kind)})"></span>
+      <span class="nm">${esc(c.name)}${c.owner ? ` <em>${esc(c.owner)}</em>` : ''}</span>
+      <span class="ln">${esc(A.laneName(c.lane))}${c.cmd ? ' <span class="cmdflag">⌘</span>' : ''}
+        <button class="rowadd${A.state.basket.includes(c.id) ? ' in' : ''}"
+          data-add="${esc(c.id)}" title="Add to a combination">${A.state.basket.includes(c.id) ? '✓' : '+'}</button></span>
+    </div>`).join('') || '<div class="row"><span></span><span class="nm">no match</span><span></span></div>';
+  host.querySelectorAll('[data-i]').forEach(r => {
+    r.onclick = e => { if (e.target.closest('[data-add]')) return;
+                       cursor = Number(r.dataset.i); open(); };
+  });
+  host.querySelectorAll('[data-add]').forEach(b => {
+    b.onclick = e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      A.state.basket.includes(id) ? A.removeFromBasket(id) : A.addToBasket(id);
+      list(); P.draw();
+    };
+  });
+  const c = A.counts();
+  document.getElementById('stat').innerHTML =
+    `<span><b>${rows.length}</b> matched</span>
+     <span><b>${c.components}</b> components</span>
+     <span><b>${c.lanes}</b> lanes</span>
+     <span><b>${c.routes}</b> hybrid routes</span>
+     ${shown.length < rows.length ? `<span>showing first ${shown.length}</span>` : ''}
+     <span class="caret"></span>`;
+}
+
+function move(step){
+  if (!rows.length) return;
+  cursor = Math.max(0, Math.min(rows.length - 1, cursor + step));
+  list();
+  const el = document.querySelector('.row.on');
+  if (el) el.scrollIntoView({ block: 'nearest' });
+  open(true);
+}
+
+function open(quiet){
+  const c = rows[cursor];
+  if (!c) return;
+  A.select(c.id);
+  if (!quiet){
+    const row = document.querySelector('.row.on');
+    if (row){
+      const box = row.getBoundingClientRect();
+      P.popover(box.right - 40, box.top, c.id);
+    }
+  }
+  if (!quiet){
+    const el = document.querySelector('.row.on');
+    if (el) el.scrollIntoView({ block: 'nearest' });
+  }
+}
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+
+P.mount({
+  renderMap,
+  onFilter: () => { cursor = 0; list(); },
+  onSelect: id => {
+    const i = rows.findIndex(r => r.id === id);
+    if (i >= 0){ cursor = i; list(); }
+  },
+});
+</script>
+</body>
+</html>

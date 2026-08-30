@@ -7,7 +7,11 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'atlas.css'
+      - 'atlas.js'
       - 'design-options.html'
+      - 'design-options.js'
+      - 'design-options.ts'
       - 'docs/catalog-status.json'
       - 'docs/catalog-status.svg'
       - 'docs/hardware-profiles.json'

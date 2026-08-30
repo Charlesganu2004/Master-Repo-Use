@@ -24,6 +24,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import build_public_site as builder  # noqa: E402
 
 INDEX = ROOT / "index.html"
+ATLAS_RUNTIME = ROOT / "atlas.js"
 
 
 def stage() -> dict:
@@ -33,6 +34,7 @@ def stage() -> dict:
     payload = builder.build()
     builder.PUBLIC_STATE.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     builder.build_index()
+    assert not builder.build_design_studio()
     builder.build_version(builder.build_id())
     return payload
 
@@ -55,10 +57,14 @@ class BuildVersionTests(unittest.TestCase):
     def test_published_html_is_stamped_with_the_same_id(self):
         stage()
         published = builder.PUBLIC_INDEX.read_text(encoding="utf-8")
+        studio = builder.PUBLIC_DESIGN_STUDIO.read_text(encoding="utf-8")
         identifier = json.loads(builder.PUBLIC_VERSION.read_text(encoding="utf-8"))["build_id"]
         self.assertIn(f'<meta name="build-id" content="{identifier}">', published)
+        self.assertIn(f'<meta name="build-id" content="{identifier}">', studio)
         self.assertNotIn('content="dev"', published,
                          "the placeholder must be replaced, or every page looks local")
+        self.assertNotIn('content="dev"', studio,
+                         "the design studio placeholder must be replaced")
 
     def test_build_id_prefers_the_commit_sha(self):
         import os
@@ -74,13 +80,13 @@ class BuildVersionTests(unittest.TestCase):
 
     def test_page_compares_against_a_no_store_fetch(self):
         """A cached version.json would defeat the entire mechanism."""
-        page = INDEX.read_text(encoding="utf-8")
+        page = INDEX.read_text(encoding="utf-8") + ATLAS_RUNTIME.read_text(encoding="utf-8")
         self.assertIn("version.json", page)
         self.assertIn("cache:'no-store'", page.replace(" ", ""))
 
     def test_reload_uses_a_fresh_url(self):
         """A plain location.reload() can still be served from the disk cache."""
-        page = INDEX.read_text(encoding="utf-8")
+        page = INDEX.read_text(encoding="utf-8") + ATLAS_RUNTIME.read_text(encoding="utf-8")
         self.assertIn("location.replace", page)
 
     def test_no_duplicate_element_ids(self):
@@ -93,7 +99,9 @@ class BuildVersionTests(unittest.TestCase):
         """
         import collections
         import re
-        page = INDEX.read_text(encoding="utf-8")
+        page = "\n".join(path.read_text(encoding="utf-8") for path in (
+            INDEX, ROOT / "atlas.css", ATLAS_RUNTIME
+        ))
         ids = re.findall(r'\sid="([^"]+)"', page)
         dupes = [i for i, n in collections.Counter(ids).items() if n > 1]
         self.assertEqual([], dupes, f"duplicate element ids: {dupes}")
