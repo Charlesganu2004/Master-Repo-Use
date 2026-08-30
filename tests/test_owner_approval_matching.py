@@ -37,9 +37,27 @@ class OwnerApprovalMatching(unittest.TestCase):
     def test_prefix_shorter_than_seven_is_rejected(self):
         self.assertFalse(is_owner_approval(f"APPROVE OWNER PR {SHA[:6]}", SHA))
 
-    def test_phrase_must_be_the_whole_comment(self):
-        self.assertFalse(is_owner_approval(f"please APPROVE OWNER PR {SHA}", SHA))
-        self.assertFalse(is_owner_approval(f"APPROVE OWNER PR {SHA} and merge", SHA))
+    def test_surrounding_text_is_tolerated(self):
+        """Charles pasted a whole gh command as the comment. It meant approved.
+
+        The SHA is what binds approval to a revision; other words around it do
+        not weaken that, so the phrase no longer has to be the whole comment.
+        """
+        self.assertTrue(is_owner_approval(f"please APPROVE OWNER PR {SHA}", SHA))
+        self.assertTrue(is_owner_approval(
+            f'gh pr comment 13 --repo o/n --body "APPROVE OWNER PR {SHA}"', SHA))
+
+    def test_a_commit_url_is_accepted(self):
+        self.assertTrue(is_owner_approval(
+            f"APPROVE OWNER PR https://github.com/o/n/commit/{SHA}", SHA))
+
+    def test_a_pull_request_url_is_refused(self):
+        """A PR URL names no revision, so it cannot pin one."""
+        self.assertFalse(is_owner_approval(
+            "APPROVE OWNER PR https://github.com/o/n/pull/13", SHA))
+
+    def test_an_unrelated_pasted_command_is_refused(self):
+        self.assertFalse(is_owner_approval("cd designs && python -m http.server 8000", SHA))
 
     def test_catalog_maintenance_phrase_does_not_cross_over(self):
         self.assertFalse(is_owner_approval("APPROVE CATALOG MAINTENANCE", SHA))

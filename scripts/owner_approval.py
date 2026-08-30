@@ -47,7 +47,23 @@ def exact_owner_command(head_sha: str) -> str:
     return f"APPROVE OWNER PR {head_sha}"
 
 
-APPROVAL_RE = re.compile(r"^\s*APPROVE\s+OWNER\s+PR\s+([0-9a-fA-F]{7,40})\s*$", re.IGNORECASE)
+# Forms seen in practice, all of which meant "approved" and none of which the
+# original strict pattern accepted:
+#
+#   APPROVE OWNER PR <sha>
+#   gh pr comment 13 --repo owner/name --body "APPROVE OWNER PR <sha>"
+#   APPROVE OWNER PR https://github.com/owner/name/commit/<sha>
+#
+# Surrounding text is now tolerated because the SHA is what carries the security,
+# not the absence of other words. A comment still has to name this exact revision,
+# so a pasted command or a commit URL approves the same commit it always did.
+# A PR URL is still refused: it names no revision at all.
+APPROVAL_RE = re.compile(
+    r"APPROVE\s+OWNER\s+PR\s+"
+    r"(?:https?://\S*?/commit/)?"          # optional commit URL prefix
+    r"([0-9a-fA-F]{7,40})\b",
+    re.IGNORECASE,
+)
 
 # Charles's standing passcode approval. Requested deliberately after the
 # per-SHA form made him re-approve on every push.
@@ -84,14 +100,18 @@ def is_owner_approval(body: str, head_sha: str) -> bool:
     characters up. Retyping 40 hex characters by hand is where this check
     actually failed, and a prefix still names one commit.
 
-    A bare "APPROVE OWNER PR" with no SHA is still rejected here. Approval that
-    does not name a revision is expressed with the passcode instead, which is an
-    explicit, deliberate choice rather than an accident of a truncated comment.
+    Surrounding text is tolerated: a pasted gh command or a commit URL both work,
+    because the SHA is what binds the approval to a revision, not the absence of
+    other words around it.
+
+    A bare "APPROVE OWNER PR" with no SHA is still rejected, and so is a PR URL,
+    because neither names a revision. Approval that deliberately does not pin a
+    revision is expressed with the passcode instead.
     """
-    match = APPROVAL_RE.match(body or "")
-    if not match:
-        return False
-    return head_sha.lower().startswith(match.group(1).lower())
+    for match in APPROVAL_RE.finditer(body or ""):
+        if head_sha.lower().startswith(match.group(1).lower()):
+            return True
+    return False
 
 
 def evaluate_approval(pr: dict[str, Any], comments: list[dict[str, Any]], reviews: list[dict[str, Any]], owner: str = OWNER) -> Decision:

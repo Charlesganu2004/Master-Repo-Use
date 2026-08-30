@@ -50,9 +50,15 @@ const AtlasCore = (() => {
   }
 
   async function init(url = 'atlas-data.json') {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`could not load ${url}: ${response.status}`);
-    state.data = await response.json();
+    // Embedded first. atlas-data.js is a <script src> tag, which works over
+    // file:// where fetch is blocked outright, so the page opens by double-click.
+    if (typeof window !== 'undefined' && window.__ATLAS_DATA__) {
+      state.data = window.__ATLAS_DATA__;
+    } else {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`could not load ${url}: ${response.status}`);
+      state.data = await response.json();
+    }
     state.lanes = state.data.lanes.concat(state.customLanes);
     state.components = state.data.components;
     state.components.forEach(c => state.byId.set(c.id, c));

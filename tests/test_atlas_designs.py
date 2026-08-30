@@ -126,6 +126,41 @@ class TheDataLayerCopies(unittest.TestCase):
                          "atlas-data.json copies differ; re-run scripts/build_atlas_data.py")
 
 
+class TheOfflineFallback(unittest.TestCase):
+    """The designs must open by double-click, with no server.
+
+    Charles clicked a design and got an error page. Browsers block fetch() over
+    file://, so the data is also emitted as a script tag, which is not blocked.
+    """
+
+    def test_data_is_also_emitted_as_a_script(self):
+        self.assertTrue((DESIGNS / "atlas-data.js").exists(),
+                        "run scripts/build_atlas_data.py")
+
+    def test_the_script_assigns_the_global_the_core_reads(self):
+        body = (DESIGNS / "atlas-data.js").read_text(encoding="utf-8")
+        self.assertIn("window.__ATLAS_DATA__ =", body)
+
+    def test_the_script_holds_the_same_data_as_the_json(self):
+        body = (DESIGNS / "atlas-data.js").read_text(encoding="utf-8")
+        start = body.index("window.__ATLAS_DATA__ =") + len("window.__ATLAS_DATA__ =")
+        embedded = json.loads(body[start:].rstrip().rstrip(";"))
+        self.assertEqual(embedded, json.loads((DESIGNS / "atlas-data.json").read_text(encoding="utf-8")))
+
+    def test_every_design_loads_the_script_before_the_core(self):
+        for name in INTERACTIVE:
+            body = (DESIGNS / name).read_text(encoding="utf-8")
+            self.assertIn("atlas-data.js", body, f"{name} has no offline fallback")
+            self.assertLess(body.index("atlas-data.js"), body.index("atlas-core.js"),
+                            f"{name} loads the data after the core")
+
+    def test_the_core_prefers_the_embedded_data(self):
+        core = (DESIGNS / "atlas-core.js").read_text(encoding="utf-8")
+        self.assertIn("window.__ATLAS_DATA__", core)
+        self.assertLess(core.index("window.__ATLAS_DATA__"), core.index("await fetch("),
+                        "the core must check the embedded data before fetching")
+
+
 class TheDesigns(unittest.TestCase):
     def test_all_interactive_designs_exist(self):
         for name in INTERACTIVE + ["index.html", "atlas-core.js", "atlas-panes.js"]:
