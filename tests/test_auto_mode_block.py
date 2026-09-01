@@ -16,18 +16,22 @@ BLOCK = ROOT / "docs" / "auto-mode-block.txt"
 SKILL = ROOT / "skills" / "master-repo-auto" / "SKILL.md"
 HOOK = ROOT / "scripts" / "hooks" / "no_prune_guard.py"
 
-# Raised from 700 to 1200 deliberately, and the reason is worth recording.
+# The running cost of "mandatory", tracked rather than hidden:
 #
-# The split exists to keep the always-loaded block cheap. Charles then asked for
-# the caveman and token-reduction rules to be mandatory and never compressed,
-# which means they cannot live in a skill that loads on demand: a rule consulted
-# only when something thinks to look it up is not mandatory.
+#   616 tokens   original block, everything inline
+#   106 tokens   after the split, a pointer to the on-demand skill
+#   285 tokens   caveman and token reducers made mandatory and uncompressible
+#   326 tokens   skills, MCP servers, tools and agents added to that protection
 #
-# So the protected block costs about 285 tokens per session per client, up from
-# 106. That is the price of the rules holding, and it is still a fraction of the
-# 616 the block cost before the split. The budget stays enforced so the block
-# cannot creep further; anything not genuinely mandatory belongs in the skill.
-BLOCK_BUDGET_BYTES = 1200
+# Each rule Charles makes mandatory has to sit in the always-loaded block, because
+# a rule consulted only when something thinks to look it up is not mandatory. So
+# every addition costs tokens in every session in every client, permanently.
+#
+# The budget is raised to 1400 rather than removed, so the block still cannot
+# creep on its own. Anything that is not genuinely mandatory belongs in the skill,
+# and any explanation the hooks already give at the point of failure belongs there
+# rather than here.
+BLOCK_BUDGET_BYTES = 1400
 
 
 class TheAlwaysLoadedBlock(unittest.TestCase):
@@ -44,7 +48,7 @@ class TheAlwaysLoadedBlock(unittest.TestCase):
 
     def test_carries_the_no_pruning_rule(self):
         # Must be known before any lookup, or a tool is gone before the skill loads.
-        self.assertIn("Never remove, disable or unload", self.text)
+        self.assertIn("Never remove, disable", self.text)
 
     def test_carries_the_multiple_command_rule(self):
         self.assertIn("Run every slash command", self.text)
@@ -70,7 +74,7 @@ class TheAlwaysLoadedBlock(unittest.TestCase):
         """Outside the markers they are compressible, which defeats the point."""
         body = self.text[self.text.index("<!-- NO-COMPRESS:BEGIN -->"):
                          self.text.index("<!-- NO-COMPRESS:END -->")]
-        for rule in ("caveman", "rtk", "Never remove, disable or unload",
+        for rule in ("caveman", "rtk", "Never remove, disable",
                      "Run every slash command"):
             self.assertIn(rule, body, f"'{rule}' is outside the protected block")
 

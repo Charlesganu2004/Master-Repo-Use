@@ -47,6 +47,31 @@ HEREDOC_START = re.compile(r"<<-?\s*(?P<quote>['\"]?)(?P<tag>\w+)(?P=quote)")
 SINGLE_QUOTED = re.compile(r"'[^']*'")
 
 
+# Capability definitions. A skill, MCP server, tool or agent that has been
+# summarised is a capability that quietly stopped working: the description a
+# client matches against is gone, or the parameters it needs are. These are
+# protected by path rather than by a marker, because they are not files anyone
+# thinks to annotate, and because a compressed SKILL.md fails silently.
+CAPABILITY_PATTERNS = (
+    "SKILL.md",           # skills, wherever they live
+    ".mcp.json", "mcp.json", "mcp_servers.json",
+    "settings.json", "settings.local.json",
+    "AGENTS.md", "CLAUDE.md", "GEMINI.md",
+    "copilot-instructions.md",
+    "installed_plugins.json", "known_marketplaces.json",
+)
+CAPABILITY_DIRS = (".claude/skills", ".claude/agents", ".claude/commands",
+                   ".claude/plugins", "skills/", "agents/")
+
+
+def is_capability_path(text: str) -> list[str]:
+    """Names in a command that point at a capability definition."""
+    normalised = text.replace("\\", "/")
+    hits = [name for name in CAPABILITY_PATTERNS if name in normalised]
+    hits += [d for d in CAPABILITY_DIRS if d in normalised]
+    return sorted(set(hits))
+
+
 def protected_files(root: pathlib.Path) -> list[pathlib.Path]:
     """Every tracked text file that actually carries the markers."""
     found = []
@@ -103,6 +128,24 @@ def main() -> int:
     if not (compressing or truncating):
         return 0
 
+    verb = "compress" if compressing else "truncate"
+
+    # Capability definitions first: they are protected by path, so this catches
+    # a SKILL.md or an MCP config even in a repository that has no marked block.
+    capability_hits = is_capability_path(scanned)
+    if capability_hits:
+        sys.stderr.write(
+            "Blocked by the Master Repo no-compress guard.\n\n"
+            f"This command would {verb} a capability definition: {', '.join(capability_hits)}\n\n"
+            "Skills, MCP servers, tools and agents are never compressed. A summarised\n"
+            "SKILL.md or MCP config fails silently: the description a client matches\n"
+            "against is gone, or the parameters it needs are, and the capability simply\n"
+            "stops being selected. Nothing errors, so nobody notices.\n\n"
+            "Compress prose instead, or edit the definition in a way that keeps it whole.\n"
+            "If Charles asked for it explicitly, re-run with '# APPROVED RECOMPRESS'.\n"
+        )
+        return 2
+
     root = pathlib.Path(event.get("cwd") or ".")
     names = {p.name for p in protected_files(root)}
     if not names:
@@ -113,7 +156,6 @@ def main() -> int:
     if not hits:
         return 0
 
-    verb = "compress" if compressing else "truncate"
     sys.stderr.write(
         "Blocked by the Master Repo no-compress guard.\n\n"
         f"This command would {verb} a file carrying a NO-COMPRESS block: {', '.join(hits)}\n\n"

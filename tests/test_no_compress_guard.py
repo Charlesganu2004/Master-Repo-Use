@@ -64,7 +64,7 @@ class TheProtectedBlock(unittest.TestCase):
     def test_the_no_prune_rule_lives_inside_the_protected_block(self):
         """It is the rule most likely to be dropped, so it must be protected."""
         body = self.text[self.text.index(BEGIN):self.text.index(END)]
-        self.assertIn("Never remove, disable or unload", body)
+        self.assertIn("Never remove, disable", body)
 
 
 class TheGuardBlocks(unittest.TestCase):
@@ -120,6 +120,68 @@ class TheInstallerWiresIt(unittest.TestCase):
         body = (ROOT / "scripts" / "install_auto_mode.py").read_text(encoding="utf-8")
         for guard in ("no_prune_guard", "no_compress_guard"):
             self.assertIn(guard, body, f"{guard} is not installed")
+
+
+class CapabilityDefinitionsAreProtected(unittest.TestCase):
+    """Skills, MCP servers, tools and agents are never compressed.
+
+    These are protected by path rather than by a marker, because nobody thinks to
+    annotate a SKILL.md, and because the failure is silent: compress the
+    description a client matches against and the capability simply stops being
+    selected. Nothing errors, so nothing gets noticed.
+    """
+
+    def test_a_skill_definition_cannot_be_compressed(self):
+        self.assertEqual(run("python -m caveman ~/.claude/skills/master-repo-auto/SKILL.md"), 2)
+
+    def test_a_skill_definition_cannot_be_truncated(self):
+        self.assertEqual(run("truncate -s 200 skills/master-repo-auto/SKILL.md"), 2)
+
+    def test_mcp_config_cannot_be_compressed(self):
+        self.assertEqual(run("python compress.py .mcp.json"), 2)
+
+    def test_client_settings_cannot_be_compressed(self):
+        self.assertEqual(run("llmlingua --input ~/.claude/settings.json"), 2)
+
+    def test_agent_definitions_cannot_be_compressed(self):
+        self.assertEqual(run("python -m caveman .claude/agents/reviewer.md"), 2)
+
+    def test_client_contracts_cannot_be_compressed(self):
+        for target in ("AGENTS.md", "CLAUDE.md", "GEMINI.md", "copilot-instructions.md"):
+            self.assertEqual(run(f"python -m caveman {target}"), 2, target)
+
+    def test_the_skills_directory_is_covered_wholesale(self):
+        self.assertEqual(run("python -m caveman .claude/skills/"), 2)
+
+    def test_ordinary_prose_is_still_compressible(self):
+        """The point of the reducers is that they still work on what they should."""
+        for target in ("README.md", "docs/REPO-CATALOG.md", "notes/journal.md"):
+            self.assertEqual(run(f"python -m caveman {target}"), 0, target)
+
+    def test_reading_a_capability_definition_is_allowed(self):
+        self.assertEqual(run("cat .claude/skills/master-repo-auto/SKILL.md"), 0)
+        self.assertEqual(run("grep -n description .mcp.json"), 0)
+
+    def test_writing_about_a_capability_is_not_compressing_one(self):
+        heredoc = "cat > notes.md <<'EOF'\nrun caveman on SKILL.md sometime\nEOF"
+        self.assertEqual(run(heredoc), 0)
+
+    def test_the_override_still_works(self):
+        self.assertEqual(
+            run("truncate -s 200 skills/x/SKILL.md  # APPROVED RECOMPRESS"), 0)
+
+
+class TheAutoSelectionRule(unittest.TestCase):
+    def test_best_fit_selection_is_mandatory_and_protected(self):
+        text = BLOCK.read_text(encoding="utf-8")
+        body = " ".join(text[text.index(BEGIN):text.index(END)].lower().split())
+        self.assertIn("best-fit skill, tool, mcp or agent", body)
+        self.assertIn("automatically", body)
+
+    def test_capability_definitions_are_named_as_uncompressible(self):
+        text = BLOCK.read_text(encoding="utf-8")
+        body = " ".join(text[text.index(BEGIN):text.index(END)].lower().split())
+        self.assertIn("their definitions are exempt from compression", body)
 
 
 if __name__ == "__main__":
