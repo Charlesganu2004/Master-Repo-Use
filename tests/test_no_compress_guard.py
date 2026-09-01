@@ -184,5 +184,40 @@ class TheAutoSelectionRule(unittest.TestCase):
         self.assertIn("their definitions are exempt from compression", body)
 
 
+class RedirectsOnlyGuardTheirTarget(unittest.TestCase):
+    """A '>' only truncates what it points at.
+
+    The first version matched any redirect in a command that also mentioned a
+    protected filename, so the audit tool was blocked from writing its own row:
+    the filename was an argument and the redirect went to /dev/null. A guard that
+    stops the logging is worse than no guard.
+    """
+
+    def test_redirecting_onto_a_protected_file_is_blocked(self):
+        self.assertEqual(run("echo x > docs/SECURITY-TRAIL.md"), 2)
+        self.assertEqual(run("echo x > docs/auto-mode-block.txt"), 2)
+
+    def test_redirecting_onto_a_capability_is_blocked(self):
+        self.assertEqual(run("echo x > skills/a/SKILL.md"), 2)
+
+    def test_a_protected_name_as_an_argument_is_not_a_write(self):
+        self.assertEqual(
+            run('python scripts/security_trail.py --scope "docs/SECURITY-TRAIL.md" >/dev/null'), 0)
+
+    def test_copying_a_protected_file_out_is_allowed(self):
+        self.assertEqual(run("cat docs/SECURITY-TRAIL.md > /tmp/backup.md"), 0)
+
+    def test_grep_output_elsewhere_is_allowed(self):
+        self.assertEqual(run("grep SKILL.md notes.txt > results.txt"), 0)
+
+    def test_staging_a_protected_file_is_allowed(self):
+        self.assertEqual(run("git add docs/SECURITY-TRAIL.md"), 0)
+
+    def test_compressor_verbs_still_scan_the_whole_command(self):
+        """Compressors take the file as an argument, so argument position counts."""
+        self.assertEqual(run("python -m caveman docs/auto-mode-block.txt"), 2)
+        self.assertEqual(run("truncate -s 10 docs/SECURITY-TRAIL.md"), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

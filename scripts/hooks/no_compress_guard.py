@@ -41,7 +41,19 @@ COMPRESSORS = re.compile(
 
 # Truncating writes. A plain '>' is included here, unlike the no-prune guard,
 # because rewriting a protected file wholesale is precisely the risk.
-TRUNCATING = re.compile(r"(?:^|[|;&]|\s)(?:truncate\b|Clear-Content\b|>\s*\S)", re.IGNORECASE)
+TRUNCATING = re.compile(r"(?:^|[|;&]|\s)(?:truncate\b|Clear-Content\b)", re.IGNORECASE)
+
+# A redirect only truncates what it points AT. The first version matched any '>'
+# anywhere in a command that also happened to mention a protected filename, so
+# `python security_trail.py --scope "...SECURITY-TRAIL.md..." >/dev/null` was
+# refused: the redirect went to /dev/null and the filename was an argument.
+# Blocking a tool from writing its own audit row is the opposite of the point.
+REDIRECT_TARGET = re.compile(r">>?\s*([^\s|;&>]+)")
+
+
+def redirect_targets(command: str) -> list[str]:
+    """Only the paths a redirect actually writes to."""
+    return [m.group(1).replace("\\", "/") for m in REDIRECT_TARGET.finditer(command)]
 
 HEREDOC_START = re.compile(r"<<-?\s*(?P<quote>['\"]?)(?P<tag>\w+)(?P=quote)")
 SINGLE_QUOTED = re.compile(r"'[^']*'")
@@ -125,14 +137,28 @@ def main() -> int:
     scanned = executable_part(command)
     compressing = COMPRESSORS.search(scanned)
     truncating = TRUNCATING.search(scanned)
-    if not (compressing or truncating):
+    targets = redirect_targets(scanned)
+
+    if not (compressing or truncating or targets):
         return 0
 
     verb = "compress" if compressing else "truncate"
 
+    # What gets matched depends on what fired, or the guard blocks a filename
+    # merely being an argument.
+    #
+    #   compressor or truncate verb -> the whole command, because those tools take
+    #                                  the file as an argument
+    #   a redirect alone            -> only what the redirect points at
+    #
+    # Without this split, `security_trail.py --scope "...SECURITY-TRAIL.md..."
+    # >/dev/null` was refused, which blocked the audit tool from writing its own
+    # row. A guard that stops the logging is worse than no guard.
+    suspect = scanned if (compressing or truncating) else " ".join(targets)
+
     # Capability definitions first: they are protected by path, so this catches
     # a SKILL.md or an MCP config even in a repository that has no marked block.
-    capability_hits = is_capability_path(scanned)
+    capability_hits = is_capability_path(suspect)
     if capability_hits:
         sys.stderr.write(
             "Blocked by the Master Repo no-compress guard.\n\n"
@@ -151,7 +177,7 @@ def main() -> int:
     if not names:
         return 0
 
-    normalised = scanned.replace("\\", "/")
+    normalised = suspect.replace("\\", "/")
     hits = sorted(n for n in names if n in normalised)
     if not hits:
         return 0
