@@ -122,11 +122,14 @@ const AtlasCore = (() => {
   /** Setup is stricter than an ordinary action: exact shell, reviewed recipe,
       and no unresolved placeholders. A URL or clone-only catalog record never
       becomes setup-ready by accident. */
-  function setupCommandFor(component) {
-    if (!component || !state.platform) return null;
+  /* The platform is a parameter, not a read of global state, so the Build tab can
+     render a script for every system at once. A combination you assemble on
+     Windows is worth handing to someone on WSL or a Mac unchanged. */
+  function setupCommandFor(component, platformId = state.platform) {
+    if (!component || !platformId) return null;
     const recipe = setupRecipeFor(component);
     if (!recipe || recipe.kind !== 'setup' || recipe.state !== 'ready') return null;
-    const command = recipe.commands && recipe.commands[state.platform];
+    const command = recipe.commands && recipe.commands[platformId];
     if (typeof command !== 'string' || !command.trim()) return null;
     if (/REVIEWED_VERSION|<[^>]+>/.test(command)) return null;
     const executable = command.split(/\r?\n/).some(line => {
@@ -338,8 +341,9 @@ const AtlasCore = (() => {
   }
 
   /** One script for everything in the basket, in the order it was added. */
-  function combinedCommand() {
-    const chosen = platform();
+  /** The script for one platform. Pass an id to build for a system you are not on. */
+  function combinedCommandFor(platformId) {
+    const chosen = PLATFORMS.find(p => p.id === platformId);
     if (!chosen) return { ok: false, text: 'Choose your operating system first.' };
     const items = basketItems();
     if (!items.length) return { ok: false, text: 'Nothing added yet. Use + on a component.' };
@@ -349,39 +353,55 @@ const AtlasCore = (() => {
     const commands = [];
     const seenRecipes = new Set();
     items.forEach(item => {
-      const command = setupCommandFor(item);
+      const command = setupCommandFor(item, platformId);
       if (!command) {
-        blocked.push(`${item.name} (${laneName(item.lane)}): ${setupStateFor(item).label}`);
+        const reason = setupRecipeFor(item)
+          ? `no ${chosen.label} command in its recipe`
+          : setupStateFor(item).label;
+        blocked.push(`${item.name} (${laneName(item.lane)}): ${reason}`);
         return;
       }
       ready.push(item);
       const recipe = setupRecipeFor(item);
       const key = recipe ? recipe.id : command;
-      if (seenRecipes.has(key)) return;
+      if (seenRecipes.has(key)) return;   // one recipe shared by several entries
       seenRecipes.add(key);
       commands.push(command);
     });
+
     if (!ready.length) {
       return {
-        ok: false,
-        text: 'This selection has no complete setup commands for the chosen operating system.',
-        count: items.length,
-        ready,
-        runnable: ready,
-        blocked,
-        skipped: blocked,
+        ok: false, platform: chosen,
+        text: `No component in this selection has a reviewed setup recipe for ${chosen.label}.`,
+        count: items.length, ready, runnable: ready, blocked, skipped: blocked,
       };
     }
+    /* text is commands only, deliberately. It is meant to be pasted into a shell,
+       and a banner of comment lines is noise at the point of paste. The platform,
+       the counts and the skipped list are returned as fields so the interface can
+       show them around the block instead of inside it. */
     return {
-      ok: true,
+      ok: true, platform: chosen,
       text: commands.join('\n'),
-      count: items.length,
-      commandCount: commands.length,
-      ready,
-      runnable: ready,
-      blocked,
-      skipped: blocked,
+      count: items.length, commandCount: commands.length,
+      ready, runnable: ready, blocked, skipped: blocked,
     };
+  }
+
+  /** Backwards-compatible: the script for whatever platform is selected. */
+  function combinedCommand() {
+    return combinedCommandFor(state.platform);
+  }
+
+  /** Every platform at once, so the Build tab can show them all.
+      Ordered with the selected system first, since that is the one being run now. */
+  function combinedCommandAll() {
+    const ids = PLATFORMS.map(p => p.id);
+    if (state.platform) {
+      ids.splice(ids.indexOf(state.platform), 1);
+      ids.unshift(state.platform);
+    }
+    return ids.map(id => ({ ...combinedCommandFor(id), id, current: id === state.platform }));
   }
 
   /* --------------------------------------------------- custom lanes */
@@ -496,7 +516,8 @@ const AtlasCore = (() => {
     visibleLanes, visibleComponents, subcategories, lanesForTab,
     toggleFamily, toggleKind, toggleSub, setQuery, clearFilters, activeFilterCount,
     detailFor, select, laneName,
-    addToBasket, removeFromBasket, clearBasket, basketItems, combinedCommand,
+    addToBasket, removeFromBasket, clearBasket, basketItems,
+    combinedCommand, combinedCommandFor, combinedCommandAll,
     addCustomLane, removeCustomLane, addSuggestion, exportSuggestions,
   };
 })();

@@ -362,15 +362,36 @@ const AtlasPanes = (() => {
           <p>${esc(c.detail)}</p>
           <span class="src">${esc(A.laneName(c.lane))} · ${esc(A.setupStateFor(c).label)}</span>
         </div>`).join('')}</div>` : '<p class="empty">Nothing added yet. Use + on a setup-ready component.</p>'}
-      <div class="sec">Setup commands</div>
-      ${combined.ok
-        ? `<div class="cmd wrap"><button class="copy" data-copy>copy</button>${esc(combined.text)}</div>
-           <button class="btn ghost" id="basket-clear">Clear all</button>`
-        : `<p class="empty">${esc(combined.text)}</p>
-           ${items.length ? '<button class="btn ghost" id="basket-clear">Clear all</button>' : ''}`}
-      ${blocked.length ? `<div class="sec">Not included in copied commands</div>
-        <p class="empty">These older saved choices do not have a complete setup recipe:</p>
+      <div class="sec">Setup commands, every system</div>
+      <p class="sub">A combination assembled on one machine is worth handing to someone on
+      another, so the script is built for all five. Yours is first; each has its own copy
+      button. A component with no recipe for a given system is listed under that script
+      rather than silently dropped.</p>
+      ${items.length ? A.combinedCommandAll().map(scriptBlock).join('') : ''}
+      ${items.length ? '<button class="btn ghost" id="basket-clear">Clear all</button>' : ''}
+      ${blocked.length ? `<div class="sec">Not setup-ready on your system</div>
+        <p class="empty">These have no complete setup recipe for ${esc((A.platform() || {}).label || 'the chosen system')}:</p>
         <div class="conn">${blocked.map(item => `<span class="route">${esc(item)}</span>`).join('')}</div>` : ''}`;
+  }
+
+  /** One platform's script, with its own copy button and its own skip list. */
+  function scriptBlock(entry) {
+    const label = entry.platform ? entry.platform.label : entry.id;
+    const shell = entry.platform ? entry.platform.shell : '';
+    return `<div class="scriptblock${entry.current ? ' current' : ''}">
+      <div class="scripthead">
+        <b>${esc(label)}</b>
+        <span class="scriptshell">${esc(shell)}</span>
+        ${entry.current ? '<span class="scripttag">your system</span>' : ''}
+        <span class="scriptcount">${entry.ok ? `${entry.commandCount} command(s)` : 'nothing runnable'}</span>
+      </div>
+      ${entry.ok
+        ? `<div class="cmd wrap"><button class="copy" data-copy-script="${esc(entry.id)}">copy</button>${esc(entry.text)}</div>`
+        : `<p class="empty">${esc(entry.text)}</p>`}
+      ${(entry.blocked || []).length
+        ? `<p class="scriptskip">Not in this script: ${entry.blocked.map(esc).join('; ')}</p>`
+        : ''}
+    </div>`;
   }
 
   function customHTML() {
@@ -439,6 +460,14 @@ const AtlasPanes = (() => {
     });
     document.querySelectorAll('[data-drop]').forEach(b => {
       b.onclick = () => { A.removeFromBasket(b.dataset.drop); draw(); };
+    });
+    document.querySelectorAll('[data-copy-script]').forEach(btn => {
+      btn.onclick = async () => {
+        const entry = A.combinedCommandAll().find(e => e.id === btn.dataset.copyScript);
+        if (!entry || !entry.ok) return;
+        btn.textContent = (await A.copy(entry.text)) ? 'copied' : 'select it';
+        setTimeout(() => { btn.textContent = 'copy'; }, 1400);
+      };
     });
     const clearBasket = document.getElementById('basket-clear');
     if (clearBasket) clearBasket.onclick = () => { A.clearBasket(); draw(); };

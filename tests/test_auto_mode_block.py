@@ -16,9 +16,24 @@ BLOCK = ROOT / "docs" / "auto-mode-block.txt"
 SKILL = ROOT / "skills" / "master-repo-auto" / "SKILL.md"
 HOOK = ROOT / "scripts" / "hooks" / "no_prune_guard.py"
 
-# The whole point of the split. Generous enough for a rewording, tight enough
-# that pasting the rules back in fails loudly.
-BLOCK_BUDGET_BYTES = 700
+# The running cost of "mandatory", tracked rather than hidden:
+#
+#   616 tokens   original block, everything inline
+#   106 tokens   after the split, a pointer to the on-demand skill
+#   285 tokens   caveman and token reducers made mandatory and uncompressible
+#   326 tokens   skills, MCP servers, tools and agents added to that protection
+#   355 tokens   inheritance for new capabilities, and every build/command/lane
+#
+# This number only moves when a rule is added, never on its own. Each rule has to
+# sit in the always-loaded block because a rule consulted only when something
+# thinks to look it up is not mandatory, and because ChatGPT and Copilot have no
+# hook mechanism: for them the written rule is the only mechanism there is.
+#
+# Redundancy has been squeezed out three times to make room. What is left is one
+# line per rule. The next addition will cost roughly 30 tokens per session per
+# client, permanently, and the honest lever is deciding a rule is not mandatory
+# rather than trying to word it shorter.
+BLOCK_BUDGET_BYTES = 1500
 
 
 class TheAlwaysLoadedBlock(unittest.TestCase):
@@ -35,16 +50,35 @@ class TheAlwaysLoadedBlock(unittest.TestCase):
 
     def test_carries_the_no_pruning_rule(self):
         # Must be known before any lookup, or a tool is gone before the skill loads.
-        self.assertIn("Never remove, disable or unload", self.text)
+        self.assertIn("Never remove, disable", self.text)
 
     def test_carries_the_multiple_command_rule(self):
         self.assertIn("Run every slash command", self.text)
         self.assertIn("in the order written", self.text)
 
-    def test_does_not_restate_the_detail_that_lives_in_the_skill(self):
-        for moved in ("byte-for-byte", "15 percent", "speculative scanning"):
+    def test_does_not_restate_the_procedure_that_lives_in_the_skill(self):
+        """One-line rules may be here; the how-to may not.
+
+        "Under 15 percent saved is a failed pass" is a rule and is mandatory, so
+        it is in the protected block. The paragraphs explaining what to do about
+        it, and the retrieval procedure, stay in the skill.
+        """
+        for moved in ("speculative scanning", "Loop-until-dry", "Restore the original and say"):
             self.assertNotIn(moved, self.text,
-                             f"'{moved}' belongs in the skill, not in every session")
+                             f"'{moved}' is procedure and belongs in the skill")
+
+    def test_the_protected_block_is_marked_and_self_describing(self):
+        self.assertIn("<!-- NO-COMPRESS:BEGIN -->", self.text)
+        self.assertIn("<!-- NO-COMPRESS:END -->", self.text)
+        self.assertIn("Exempt from every compression pass", self.text)
+
+    def test_mandatory_rules_sit_inside_the_protected_markers(self):
+        """Outside the markers they are compressible, which defeats the point."""
+        body = self.text[self.text.index("<!-- NO-COMPRESS:BEGIN -->"):
+                         self.text.index("<!-- NO-COMPRESS:END -->")]
+        for rule in ("caveman", "rtk", "Never remove, disable",
+                     "Run every slash command"):
+            self.assertIn(rule, body, f"'{rule}' is outside the protected block")
 
     def test_no_em_or_en_dashes(self):
         self.assertNotIn("—", self.text)

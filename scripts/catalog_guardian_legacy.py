@@ -186,13 +186,18 @@ def scan_text(path: pathlib.Path, text: str) -> list[str]:
         out.append(f"HIGH invisible/bidi controls {','.join(controls)} in {path}")
     for name, pattern in SUSPICIOUS:
         if pattern.search(text):
-            out.append(f"{'CRITICAL' if name == 'credential-exfil' else 'HIGH'} {name} pattern in {path}")
+            # Every pattern here is a heuristic, credential-exfil included: it once
+            # fired on documentation telling people NOT to log their key.
+            out.append(f"HIGH {name} pattern in {path}")
     if any(pattern.search(text) for pattern in PROMPT_INJECTION):
         out.append(f"HIGH possible prompt/instruction injection text in {path}")
     if any(pattern.search(text) for pattern in SQL):
         out.append(f"HIGH possible SQL injection construction in {path}")
     if any(pattern.search(text) for pattern in SECRETS):
-        out.append(f"CRITICAL secret/private-key material in {path}")
+        # Built-in heuristic, so it caps at HIGH. Only an external scanner may
+        # justify a CRITICAL; printing CRITICAL here is what made 107
+        # findings read as 107 removal candidates.
+        out.append(f"HIGH secret/private-key material in {path}")
     return out
 
 
@@ -265,6 +270,40 @@ def clamav_database_ready() -> bool:
     return False
 
 
+# Paths whose whole job is to hold data that looks like a secret.
+#
+# This is the third time this class of false positive has removed a healthy
+# repository. First it was prose: documentation about attacks read as attacks.
+# Now it is fixtures: ollama/ollama drew twenty CRITICALs from
+# convert/testdata/*.json, which are model tokenizer files whose long base64
+# runs gitleaks reads as generic-api-key. A fake credential in a test is not a
+# leaked credential, and deleting a 126k-star dependency over one is a far worse
+# outcome than the finding it is reacting to.
+#
+# These still report, at HIGH: worth a human look, never worth a removal.
+FIXTURE_MARKERS = (
+    "testdata/", "test-data/", "/test/", "/tests/", "tests/", "__tests__/",
+    "__mocks__/", "fixtures/", "fixture/", "/spec/", "specs/",
+    ".test.", ".spec.", "_test.", "-test.",
+    "example", "sample", "mock", "dummy", "placeholder",
+    ".env.example", ".env.sample", ".env.template",
+    "secret_scanning", "gitleaks.toml", ".gitleaksignore",
+    "/docs/", "/doc/", "readme",
+)
+
+# Matched against the start of a path as well, since "docs/CLI.md" has no
+# leading slash and was slipping through.
+FIXTURE_PREFIXES = (
+    "docs/", "doc/", "test/", "tests/", "example/", "examples/", "sample/",
+)
+
+def is_fixture_path(path: str) -> bool:
+    """True when a secret-shaped string here is expected rather than alarming."""
+    lowered = path.replace("\\", "/").lower()
+    return (any(marker in lowered for marker in FIXTURE_MARKERS)
+            or lowered.startswith(FIXTURE_PREFIXES))
+
+
 def run_gitleaks(clone: pathlib.Path) -> list[str]:
     """Gitleaks with --redact, reporting rule/file/line only — never the secret value."""
     if shutil.which("gitleaks") is None:
@@ -297,7 +336,13 @@ def run_gitleaks(clone: pathlib.Path) -> list[str]:
         location = str(entry.get("File") or "unknown-file")[:160]
         line = entry.get("StartLine")
         where = f"{location}:{line}" if line else location
-        findings.append(f"CRITICAL gitleaks secret candidate rule={rule} at {where} (value withheld)")
+        if is_fixture_path(location):
+            findings.append(
+                f"HIGH gitleaks secret candidate rule={rule} at {where} "
+                f"(value withheld; fixture path, capped below CRITICAL)")
+        else:
+            findings.append(
+                f"CRITICAL gitleaks secret candidate rule={rule} at {where} (value withheld)")
     if len(entries) > 20:
         findings.append(f"INFO gitleaks reported {len(entries) - 20} further secret candidates (values withheld)")
     return findings
@@ -452,11 +497,24 @@ def restore_scan_state(result: Result, old: dict) -> None:
     result.critical = bool(old.get("critical"))
     result.adoption_candidate = bool(old.get("adoption_candidate"))
     if result.critical:
-        result.status = "REMOVE"
-        result.note = "previous CRITICAL security finding pending owner-approved rescan"
+        # This is the path that marked ggml-org/llama.cpp REMOVE for a finding
+        # nobody could find: a cached critical flag restored during a cheap
+        # metadata pass, with a generic note and no evidence carried alongside it.
+        # A remembered verdict has to remember its reason too.
+        evidence = next(
+            (str(item) for item in result.findings if str(item).startswith("CRITICAL")), None)
+        if evidence:
+            result.status = "REMOVE"
+            result.note = (f"previous CRITICAL pending owner-approved rescan: {evidence[:200]}")
+        else:
+            result.critical = False
+            result.status = "REVIEW"
+            result.note = ("cached critical flag with no CRITICAL finding retained; "
+                           "unsubstantiated, so held for rescan rather than removal")
     elif any(str(item).startswith("HIGH") for item in result.findings) and result.status == "HEALTHY":
+        first_high = next(str(i) for i in result.findings if str(i).startswith("HIGH"))
         result.status = "REVIEW"
-        result.note = "previous HIGH security finding pending owner-approved rescan"
+        result.note = f"previous HIGH pending owner-approved rescan: {first_high[:200]}"
     elif has_scanner_error(result.findings):
         result.deep_scanned = False
         if result.status == "HEALTHY":
@@ -612,9 +670,25 @@ def main() -> int:
             result.findings, result.critical = deep_scan(repo)
             result.deep_scanned = True
             if result.critical:
-                result.status, result.note = "REMOVE", "CRITICAL security finding"
+                # A verdict must carry its evidence. ggml-org/llama.cpp was marked
+                # REMOVE for a "CRITICAL security finding" that appeared nowhere in
+                # the findings report, which is indistinguishable from an invented
+                # one. If the flag is set but no CRITICAL line exists to quote, the
+                # verdict is unsubstantiated and must not remove anything.
+                evidence = next(
+                    (item for item in result.findings if item.startswith("CRITICAL")), None)
+                if evidence:
+                    result.status = "REMOVE"
+                    result.note = f"CRITICAL security finding: {evidence[:200]}"
+                else:
+                    result.critical = False
+                    result.status = "REVIEW"
+                    result.note = ("critical flag set with no CRITICAL finding recorded; "
+                                   "unsubstantiated, so held for review rather than removal")
             elif any(item.startswith("HIGH") for item in result.findings):
-                result.status, result.note = "REVIEW", "HIGH security finding requires owner review"
+                first_high = next(item for item in result.findings if item.startswith("HIGH"))
+                result.status = "REVIEW"
+                result.note = f"HIGH security finding requires owner review: {first_high[:200]}"
             elif has_scanner_error(result.findings):
                 # The scanner did not complete. That is a tooling problem, so ask for a
                 # rescan instead of implying the repository contains malware or secrets.

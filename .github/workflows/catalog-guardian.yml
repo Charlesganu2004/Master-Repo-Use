@@ -225,7 +225,22 @@ jobs:
         with:
           go-version: stable
 
+      - name: Check the Actions budget before spending 45 minutes
+        id: budget
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # A skipped scan is recoverable; an overrun is a bill. The rotation is
+          # the largest single cost in this repository, so it checks first.
+          if python scripts/actions_budget.py --gate --reserve 600 --report; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Deep scan skipped: Actions headroom is below the 600 minute reserve."
+          fi
+
       - name: Restore accumulated scan state
+        if: steps.budget.outputs.ok == 'true'
         uses: actions/cache@v4
         with:
           path: docs/catalog-status.json
@@ -234,6 +249,7 @@ jobs:
             catalog-scan-state-
 
       - name: Install scanners
+        if: steps.budget.outputs.ok == 'true'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         shell: bash
@@ -257,6 +273,7 @@ jobs:
           fi
 
       - name: Pick this week's rotation slice
+        if: steps.budget.outputs.ok == 'true'
         id: slice
         shell: bash
         run: |
@@ -268,6 +285,7 @@ jobs:
           echo "Rotation batch index: $week"
 
       - name: Rotating deep scan (read-only, no removals)
+        if: steps.budget.outputs.ok == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -278,10 +296,60 @@ jobs:
             --batch-index '${{ steps.slice.outputs.index }}'
 
       - name: Report security findings
+        if: steps.budget.outputs.ok == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: python scripts/security_report.py
+
+      - name: Write the security trail and say what was done
+        if: always() && steps.budget.outputs.ok == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Runs even when the scan failed, because "the scan did not finish" is
+          # exactly the kind of thing the trail exists to record.
+          BUDGET=$(python scripts/actions_budget.py --repo "$GITHUB_REPOSITORY" | grep -m1 used | tr -s " " | cut -d" " -f3-6)
+          python scripts/security_trail.py             --action "deep-scan-rotation"             --scope "rotating slice of the catalog, read-only"             --outcome "job status ${{ job.status }}; see the linked run for findings"             --approval "scheduled rotation; read-only, so no owner phrase required"             --budget "${BUDGET:-unknown}"
+
+
+  # Separate job on purpose. deep-scan-rotation clones third-party repositories,
+  # so it stays contents: read. This one clones nothing but this repository, which
+  # is why it is the only place a write token appears.
+  record-trail:
+    needs: deep-scan-rotation
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Append the row
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BUDGET=$(python scripts/actions_budget.py --repo "$GITHUB_REPOSITORY" | grep -m1 used | tr -s " " | cut -d" " -f3-6)
+          python scripts/security_trail.py             --action "deep-scan-rotation"             --scope "rotating slice of the catalog, read-only"             --outcome "scan job finished with status ${{ needs.deep-scan-rotation.result }}"             --approval "scheduled rotation; read-only, so no owner phrase required"             --budget "${BUDGET:-unknown}"
+
+      - name: Commit to the automation branch, never to main
+        run: |
+          if git diff --quiet -- docs/SECURITY-TRAIL.md; then
+            echo "nothing to record"
+            exit 0
+          fi
+          git config user.name "Charles Ganu"
+          git config user.email "charlesganu2004@gmail.com"
+          git add docs/SECURITY-TRAIL.md
+          git commit -m "trail: deep-scan rotation ${{ github.run_id }}"
+          git push origin "HEAD:automation/security-trail" --force-with-lease
 
   approved-maintenance:
     if: >-
