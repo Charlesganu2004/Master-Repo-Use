@@ -1,4 +1,18 @@
-Master Repo auto mode. Load the master-repo-auto skill for the full rules; do not restate them here.
-Standing rules that need no lookup:
-- Never remove, disable or unload a skill, tool, MCP server, plugin or catalog entry on your own initiative. Only Charles removes one, in his own words. Tight context means saying so, not dropping a tool quietly.
+Master Repo auto mode. Load the master-repo-auto skill for the rest; do not restate it here.
+
+<!-- NO-COMPRESS:BEGIN -->
+PROTECTED. Exempt from every compression pass: caveman, token-compact, LLMLingua,
+Headroom, any summariser, and context compaction. Do not shorten, paraphrase or
+replace this with a pointer. A pass that reaches it must skip it and say so.
+
+Mandatory, automatic, every conversation, for Claude, Codex, Gemini, Copilot,
+ChatGPT and any other model reading this:
+- Compress repeatedly-loaded prose with the caveman skills. Default action, not a
+  suggestion. Route commands through rtk and repo orientation through rtt when present.
+- Never paste a whole catalog, file tree or log. Retrieve matching entries only.
+- Compression preserves byte-for-byte: code, URLs, paths, commands, env vars,
+  headings, versions, dates, error strings. Under 15 percent saved is a failed pass.
+- Never remove, disable or unload a skill, tool, MCP server, plugin or catalog entry
+  on your own initiative. Only Charles removes one, in his own words.
 - Run every slash command in a prompt, in the order written, reporting each.
+<!-- NO-COMPRESS:END -->

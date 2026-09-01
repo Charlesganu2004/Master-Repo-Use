@@ -76,12 +76,21 @@ def install_skill(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
     return "installed"
 
 
+GUARDS = ("no_prune_guard", "no_compress_guard")
+
+
 def register_hook(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
-    """Add the no-prune PreToolUse hook without disturbing existing settings."""
+    """Register both PreToolUse guards without disturbing existing settings.
+
+    no_prune_guard keeps chosen tools from being deleted. no_compress_guard keeps
+    the NO-COMPRESS block from being summarised away. Both exist because a rule
+    that only holds while a model is paying attention is not a rule.
+    """
     settings = home / ".claude" / "settings.json"
-    hook_path = repo / "scripts" / "hooks" / "no_prune_guard.py"
-    if not hook_path.exists():
-        return "skipped, hook missing"
+    available = [(name, repo / "scripts" / "hooks" / f"{name}.py") for name in GUARDS]
+    available = [(name, path) for name, path in available if path.exists()]
+    if not available:
+        return "skipped, hooks missing"
 
     data: dict = {}
     if settings.exists():
@@ -93,24 +102,35 @@ def register_hook(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
         if not dry:  # never touch the file without a copy beside it
             settings.with_suffix(".json.bak").write_text(raw, encoding="utf-8")
 
-    command = f'{json.dumps(sys.executable)} {json.dumps(str(hook_path))}'
     hooks = data.setdefault("hooks", {})
     pre = hooks.setdefault("PreToolUse", [])
+    added, refreshed = [], []
 
-    for entry in pre:
-        for hook in entry.get("hooks", []):
-            if "no_prune_guard" in str(hook.get("command", "")):
-                hook["command"] = command  # refresh the path, do not duplicate
-                if not dry:
-                    settings.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-                return "would refresh" if dry else "refreshed"
+    for name, path in available:
+        command = f'{json.dumps(sys.executable)} {json.dumps(str(path))}'
+        existing = None
+        for entry in pre:
+            for hook in entry.get("hooks", []):
+                if name in str(hook.get("command", "")):
+                    existing = hook
+        if existing is not None:
+            existing["command"] = command      # refresh the path, do not duplicate
+            refreshed.append(name)
+        else:
+            pre.append({"matcher": "Bash",
+                        "hooks": [{"type": "command", "command": command}]})
+            added.append(name)
 
-    pre.append({"matcher": "Bash",
-                "hooks": [{"type": "command", "command": command}]})
     if not dry:
         settings.parent.mkdir(parents=True, exist_ok=True)
         settings.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-    return "would register" if dry else "registered"
+
+    parts = []
+    if added:
+        parts.append(("would register " if dry else "registered ") + ", ".join(added))
+    if refreshed:
+        parts.append(("would refresh " if dry else "refreshed ") + ", ".join(refreshed))
+    return "; ".join(parts) or "nothing to do"
 
 
 def main() -> int:

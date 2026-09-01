@@ -16,9 +16,18 @@ BLOCK = ROOT / "docs" / "auto-mode-block.txt"
 SKILL = ROOT / "skills" / "master-repo-auto" / "SKILL.md"
 HOOK = ROOT / "scripts" / "hooks" / "no_prune_guard.py"
 
-# The whole point of the split. Generous enough for a rewording, tight enough
-# that pasting the rules back in fails loudly.
-BLOCK_BUDGET_BYTES = 700
+# Raised from 700 to 1200 deliberately, and the reason is worth recording.
+#
+# The split exists to keep the always-loaded block cheap. Charles then asked for
+# the caveman and token-reduction rules to be mandatory and never compressed,
+# which means they cannot live in a skill that loads on demand: a rule consulted
+# only when something thinks to look it up is not mandatory.
+#
+# So the protected block costs about 285 tokens per session per client, up from
+# 106. That is the price of the rules holding, and it is still a fraction of the
+# 616 the block cost before the split. The budget stays enforced so the block
+# cannot creep further; anything not genuinely mandatory belongs in the skill.
+BLOCK_BUDGET_BYTES = 1200
 
 
 class TheAlwaysLoadedBlock(unittest.TestCase):
@@ -41,10 +50,29 @@ class TheAlwaysLoadedBlock(unittest.TestCase):
         self.assertIn("Run every slash command", self.text)
         self.assertIn("in the order written", self.text)
 
-    def test_does_not_restate_the_detail_that_lives_in_the_skill(self):
-        for moved in ("byte-for-byte", "15 percent", "speculative scanning"):
+    def test_does_not_restate_the_procedure_that_lives_in_the_skill(self):
+        """One-line rules may be here; the how-to may not.
+
+        "Under 15 percent saved is a failed pass" is a rule and is mandatory, so
+        it is in the protected block. The paragraphs explaining what to do about
+        it, and the retrieval procedure, stay in the skill.
+        """
+        for moved in ("speculative scanning", "Loop-until-dry", "Restore the original and say"):
             self.assertNotIn(moved, self.text,
-                             f"'{moved}' belongs in the skill, not in every session")
+                             f"'{moved}' is procedure and belongs in the skill")
+
+    def test_the_protected_block_is_marked_and_self_describing(self):
+        self.assertIn("<!-- NO-COMPRESS:BEGIN -->", self.text)
+        self.assertIn("<!-- NO-COMPRESS:END -->", self.text)
+        self.assertIn("Exempt from every compression pass", self.text)
+
+    def test_mandatory_rules_sit_inside_the_protected_markers(self):
+        """Outside the markers they are compressible, which defeats the point."""
+        body = self.text[self.text.index("<!-- NO-COMPRESS:BEGIN -->"):
+                         self.text.index("<!-- NO-COMPRESS:END -->")]
+        for rule in ("caveman", "rtk", "Never remove, disable or unload",
+                     "Run every slash command"):
+            self.assertIn(rule, body, f"'{rule}' is outside the protected block")
 
     def test_no_em_or_en_dashes(self):
         self.assertNotIn("—", self.text)
