@@ -111,8 +111,41 @@ const AtlasCore = (() => {
   function commandFor(component) {
     if (!component || !component.cmd) return null;
     if (!state.platform) return null;
-    return component.cmd[state.platform] || component.cmd.linux || component.cmd.wsl || null;
+    return component.cmd[state.platform] || null;
   }
+
+  function setupRecipeFor(component) {
+    if (!component || !component.setupRecipe || !state.data) return null;
+    return (state.data.setupRecipes || []).find(recipe => recipe.id === component.setupRecipe) || null;
+  }
+
+  /** Setup is stricter than an ordinary action: exact shell, reviewed recipe,
+      and no unresolved placeholders. A URL or clone-only catalog record never
+      becomes setup-ready by accident. */
+  function setupCommandFor(component) {
+    if (!component || !state.platform) return null;
+    const recipe = setupRecipeFor(component);
+    if (!recipe || recipe.kind !== 'setup' || recipe.state !== 'ready') return null;
+    const command = recipe.commands && recipe.commands[state.platform];
+    if (typeof command !== 'string' || !command.trim()) return null;
+    if (/REVIEWED_VERSION|<[^>]+>/.test(command)) return null;
+    const executable = command.split(/\r?\n/).some(line => {
+      const text = line.trim();
+      return text && !text.startsWith('#');
+    });
+    return executable ? command.trim() : null;
+  }
+
+  function setupStateFor(component) {
+    if (!state.platform) return { id: 'choose-platform', label: 'Choose OS first' };
+    if (setupCommandFor(component)) return { id: 'ready', label: 'Setup ready' };
+    if (component && component.setupState === 'review-required') {
+      return { id: 'review-required', label: 'Setup recipe needs security review' };
+    }
+    return { id: 'unavailable', label: 'No complete setup recipe yet' };
+  }
+
+  function canBuild(component) { return Boolean(setupCommandFor(component)); }
 
   /* -------------------------------------------------------- hardware api */
 
@@ -256,6 +289,10 @@ const AtlasCore = (() => {
       laneDescription: lane ? lane.description : '',
       command: commandFor(component),
       allCommands: component.cmd || null,
+      setupCommand: setupCommandFor(component),
+      setupRecipe: setupRecipeFor(component),
+      setupState: setupStateFor(component),
+      sourceUrl: component.sourceUrl || '',
       routes,
       connections,
       inBasket: state.basket.includes(component.id),
@@ -276,7 +313,8 @@ const AtlasCore = (() => {
      them up in order, written for the chosen platform. */
 
   function addToBasket(id) {
-    if (!state.byId.has(id) || state.basket.includes(id)) return false;
+    const component = state.byId.get(id);
+    if (!component || !canBuild(component) || state.basket.includes(id)) return false;
     state.basket.push(id);
     save('atlas.basket', state.basket);
     emit();
@@ -306,26 +344,44 @@ const AtlasCore = (() => {
     const items = basketItems();
     if (!items.length) return { ok: false, text: 'Nothing added yet. Use + on a component.' };
 
-    const comment = chosen.id === 'windows' ? '#' : '#';
-    const lines = [
-      `${comment} Master Repo Atlas combination`,
-      `${comment} ${items.length} component(s), written for ${chosen.label} (${chosen.shell})`,
-      '',
-    ];
-    const skipped = [];
+    const blocked = [];
+    const ready = [];
+    const commands = [];
+    const seenRecipes = new Set();
     items.forEach(item => {
-      const cmd = commandFor(item);
-      const lane = laneName(item.lane);
-      if (!cmd) { skipped.push(`${item.name} (${lane})`); return; }
-      lines.push(`${comment} ${item.name} - ${lane}`);
-      lines.push(cmd);
-      lines.push('');
+      const command = setupCommandFor(item);
+      if (!command) {
+        blocked.push(`${item.name} (${laneName(item.lane)}): ${setupStateFor(item).label}`);
+        return;
+      }
+      ready.push(item);
+      const recipe = setupRecipeFor(item);
+      const key = recipe ? recipe.id : command;
+      if (seenRecipes.has(key)) return;
+      seenRecipes.add(key);
+      commands.push(command);
     });
-    if (skipped.length) {
-      lines.push(`${comment} No command recorded for: ${skipped.join(', ')}.`);
-      lines.push(`${comment} These are parts of the system rather than things you install.`);
+    if (!ready.length) {
+      return {
+        ok: false,
+        text: 'This selection has no complete setup commands for the chosen operating system.',
+        count: items.length,
+        ready,
+        runnable: ready,
+        blocked,
+        skipped: blocked,
+      };
     }
-    return { ok: true, text: lines.join('\n').trim(), count: items.length, skipped };
+    return {
+      ok: true,
+      text: commands.join('\n'),
+      count: items.length,
+      commandCount: commands.length,
+      ready,
+      runnable: ready,
+      blocked,
+      skipped: blocked,
+    };
   }
 
   /* --------------------------------------------------- custom lanes */
@@ -435,6 +491,7 @@ const AtlasCore = (() => {
     state, init, on, emit, counts, copy,
     PLATFORMS, HW_FIELDS, TABS,
     setPlatform, platform, scanCommand, commandFor,
+    setupRecipeFor, setupCommandFor, setupStateFor, canBuild,
     setHardware, usableMemory, tierFor, currentTier, routesForMachine,
     visibleLanes, visibleComponents, subcategories, lanesForTab,
     toggleFamily, toggleKind, toggleSub, setQuery, clearFilters, activeFilterCount,

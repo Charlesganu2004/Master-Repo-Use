@@ -1,0 +1,49 @@
+# C++ Toolchain, Analysis and Local Inference - verified 2026-09-01
+#
+# Every slug resolved against the GitHub API on 2026-09-01. Star counts, licences
+# and push ages are as measured, not as advertised.
+#
+# LICENCE NOTE: GitHub reports NOASSERTION when it cannot auto-detect a licence.
+# That is not the same as "no licence". Where it appears below, the real licence
+# is named from the repository's own LICENSE file.
+
+# --- Local inference in C++ (the reason this lane exists alongside local-models)
+ggml-org/llama.cpp        # 126k stars, MIT, pushed today. The reference C++ runtime for
+                          # local LLM inference. Ollama is built on this lineage; use
+                          # llama.cpp directly when you need control Ollama does not expose.
+ggml-org/whisper.cpp      # 53k stars, MIT, 1d. Same author, speech-to-text. CPU-viable,
+                          # which matters on the 8 GB tier where GPU work is not.
+
+# --- Static analysis and correctness
+facebook/infer            # 15.7k stars, MIT, 5d. Interprocedural static analysis for
+                          # C/C++/Java/Objective-C. Finds null-deref and leak classes that
+                          # compiler warnings do not.
+cppcheck-opensource/cppcheck  # 6.7k stars, GPL-3.0, 1d. NOTE: catalogued under this name.
+                          # The widely-cited danmar/cppcheck now redirects here, so recording
+                          # the old slug would pin a stale name.
+                          # GPL-3.0 is copyleft: run it as a tool, do not vendor its source.
+
+# --- Language server and editor integration
+clangd/clangd             # 2.3k stars, Apache-2.0, 50d. The language server itself. Note the
+                          # implementation lives in llvm/llvm-project; this repo is releases
+                          # and issue tracking.
+clangd/vscode-clangd      # 822 stars, MIT, pushed today. The VS Code client for clangd.
+                          # Conflicts with the Microsoft extension's IntelliSense: run one or
+                          # the other, not both.
+microsoft/vscode-cpptools # 6.2k stars, pushed today. NOASSERTION on GitHub: the source is
+                          # MIT but the shipped binary extension carries a proprietary
+                          # Microsoft licence. Read both before redistributing anything.
+llvm/llvm-project         # 40k stars, pushed today. NOASSERTION on GitHub: the real licence is
+                          # Apache-2.0 WITH LLVM-exception. The monorepo behind clang, clangd,
+                          # clang-tidy, clang-format and the sanitizers.
+
+# --- Data interchange
+nlohmann/json             # 50.5k stars, MIT, pushed today. Header-only JSON for modern C++.
+                          # The default choice unless parse speed is the binding constraint.
+msgpack/msgpack-c         # 3.3k stars, 7d. NOASSERTION on GitHub: actually Boost Software
+                          # License 1.0, which is permissive. Binary serialisation for when
+                          # JSON is too slow or too large on the wire.
+
+# NOT ADDED, and why:
+#   danmar/cppcheck -- a redirect to cppcheck-opensource/cppcheck, already listed above.
+#     Cataloguing a redirect pins a name that can stop resolving.

@@ -18,3 +18,19 @@ AThevon/genjutsu
 # --- Design systems & component sources (added 2026-08-25)
 zanwei/design-dna                 # reference UI -> quantified design-token JSON, then generate matching UI
 creativetimofficial/ui            # open-source components/blocks exposed via Registry + MCP
+
+# --- Added 2026-09-01: motion libraries and UI directories Charles supplied
+motiondivision/motion             # 33.4k stars, MIT, pushed today. Formerly Framer Motion.
+                                  # Hybrid engine: JS plus hardware-accelerated browser APIs.
+                                  # The strongest entry in this lane and a real alternative to
+                                  # GSAP, which is already listed above.
+themeselection/Awesome-JavaScript-Libraries
+                                  # 77 stars, MIT, but 995 days since the last push. That is
+                                  # past this repo's 365-day removal threshold, so it is kept
+                                  # as a REFERENCE index only. Treat every link in it as
+                                  # unverified until checked; a 2.7-year-old directory of
+                                  # JavaScript libraries will contain dead entries.
+itsjwill/motion-primitives-website
+                                  # 20 stars, NO LICENCE, 64d. All rights reserved, so nothing
+                                  # here may be copied. LINK ONLY: read it for the component
+                                  # ideas, take none of the code.

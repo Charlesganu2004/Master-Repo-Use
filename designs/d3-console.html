@@ -318,9 +318,10 @@ function list(){
     <div class="row${i === cursor ? ' on' : ''}" data-i="${i}">
       <span class="dot" style="background:var(--${esc(c.kind)})"></span>
       <span class="nm">${esc(c.name)}${c.owner ? ` <em>${esc(c.owner)}</em>` : ''}</span>
-      <span class="ln">${esc(A.laneName(c.lane))}${c.cmd ? ' <span class="cmdflag">⌘</span>' : ''}
-        <button class="rowadd${A.state.basket.includes(c.id) ? ' in' : ''}"
-          data-add="${esc(c.id)}" title="Add to a combination">${A.state.basket.includes(c.id) ? '✓' : '+'}</button></span>
+      <span class="ln">${esc(A.laneName(c.lane))}${A.canBuild(c) ? ' <span class="cmdflag">setup</span>' : ''}
+        ${A.canBuild(c) ? `<button class="rowadd${A.state.basket.includes(c.id) ? ' in' : ''}"
+          data-add="${esc(c.id)}" title="Add setup to combination">${A.state.basket.includes(c.id) ? '✓' : '+'}</button>`
+          : `<span class="cmdflag">${esc(A.setupStateFor(c).label)}</span>`}</span>
     </div>`).join('') || '<div class="row"><span></span><span class="nm">no match</span><span></span></div>';
   host.querySelectorAll('[data-i]').forEach(r => {
     r.onclick = e => { if (e.target.closest('[data-add]')) return;

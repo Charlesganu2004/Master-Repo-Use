@@ -236,7 +236,7 @@ def build_design_studio() -> list[str]:
 
 
 def build_designs() -> list[str]:
-    """Publish the five-design gallery and the data layer they share.
+    """Publish the Atlas gallery, authored sources, and shared data layer.
 
     atlas-data.json carries lane names and counts, never catalog slugs. verify()
     checks that separately; a leak here would publish the catalog composition,
@@ -248,8 +248,18 @@ def build_designs() -> list[str]:
         return ["atlas-data.json is missing; run scripts/build_atlas_data.py"]
 
     PUBLIC_DESIGNS.mkdir(parents=True, exist_ok=True)
+    # This directory is generated output. Clear its top-level files before copying
+    # so a design removed from the source tree cannot survive a later publication.
+    # Nested directories are deliberately left alone because this builder owns only
+    # the flat gallery assets below.
+    for published in PUBLIC_DESIGNS.iterdir():
+        if published.is_file() or published.is_symlink():
+            published.unlink()
+
     for source in sorted(PRIVATE_DESIGNS.iterdir()):
-        if source.suffix.lower() not in {".html", ".js", ".css", ".json"} or not source.is_file():
+        if source.suffix.lower() not in {
+            ".html", ".js", ".css", ".json", ".ts", ".jsx", ".tsx"
+        } or not source.is_file():
             continue
         # The two data files are rebuilt from the redacted payload below, never copied.
         if source.name in {"atlas-data.json", "atlas-data.js"}:
