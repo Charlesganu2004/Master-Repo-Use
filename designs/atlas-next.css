@@ -253,3 +253,16 @@ body.atlas-next ::-webkit-scrollbar-thumb:hover{background:var(--ink)}
 @media (prefers-reduced-motion:reduce){
   .atlas-next *, .atlas-next *::before, .atlas-next *::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important;transition-duration:.01ms !important}
 }
+
+
+/* ---- other-system scripts, closed by default -----------------------
+   You pick your system in step 1, so Build answers with that one. The rest sit
+   behind this disclosure rather than being deleted, because handing a teammate
+   the macOS script is useful and regenerating it by hand is not. */
+.otheros{margin-top:12px;border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.otheros summary{cursor:pointer;font-size:12.5px;color:var(--dim);list-style:none}
+.otheros summary::-webkit-details-marker{display:none}
+.otheros summary::before{content:"+ ";color:var(--accent);font-weight:700}
+.otheros[open] summary::before{content:"- "}
+.otheros summary:hover{color:var(--ink)}
+.otheros[open] summary{margin-bottom:9px}
