@@ -186,13 +186,18 @@ def scan_text(path: pathlib.Path, text: str) -> list[str]:
         out.append(f"HIGH invisible/bidi controls {','.join(controls)} in {path}")
     for name, pattern in SUSPICIOUS:
         if pattern.search(text):
-            out.append(f"{'CRITICAL' if name == 'credential-exfil' else 'HIGH'} {name} pattern in {path}")
+            # Every pattern here is a heuristic, credential-exfil included: it once
+            # fired on documentation telling people NOT to log their key.
+            out.append(f"HIGH {name} pattern in {path}")
     if any(pattern.search(text) for pattern in PROMPT_INJECTION):
         out.append(f"HIGH possible prompt/instruction injection text in {path}")
     if any(pattern.search(text) for pattern in SQL):
         out.append(f"HIGH possible SQL injection construction in {path}")
     if any(pattern.search(text) for pattern in SECRETS):
-        out.append(f"CRITICAL secret/private-key material in {path}")
+        # Built-in heuristic, so it caps at HIGH. Only an external scanner may
+        # justify a CRITICAL; printing CRITICAL here is what made 107
+        # findings read as 107 removal candidates.
+        out.append(f"HIGH secret/private-key material in {path}")
     return out
 
 
@@ -265,6 +270,40 @@ def clamav_database_ready() -> bool:
     return False
 
 
+# Paths whose whole job is to hold data that looks like a secret.
+#
+# This is the third time this class of false positive has removed a healthy
+# repository. First it was prose: documentation about attacks read as attacks.
+# Now it is fixtures: ollama/ollama drew twenty CRITICALs from
+# convert/testdata/*.json, which are model tokenizer files whose long base64
+# runs gitleaks reads as generic-api-key. A fake credential in a test is not a
+# leaked credential, and deleting a 126k-star dependency over one is a far worse
+# outcome than the finding it is reacting to.
+#
+# These still report, at HIGH: worth a human look, never worth a removal.
+FIXTURE_MARKERS = (
+    "testdata/", "test-data/", "/test/", "/tests/", "tests/", "__tests__/",
+    "__mocks__/", "fixtures/", "fixture/", "/spec/", "specs/",
+    ".test.", ".spec.", "_test.", "-test.",
+    "example", "sample", "mock", "dummy", "placeholder",
+    ".env.example", ".env.sample", ".env.template",
+    "secret_scanning", "gitleaks.toml", ".gitleaksignore",
+    "/docs/", "/doc/", "readme",
+)
+
+# Matched against the start of a path as well, since "docs/CLI.md" has no
+# leading slash and was slipping through.
+FIXTURE_PREFIXES = (
+    "docs/", "doc/", "test/", "tests/", "example/", "examples/", "sample/",
+)
+
+def is_fixture_path(path: str) -> bool:
+    """True when a secret-shaped string here is expected rather than alarming."""
+    lowered = path.replace("\\", "/").lower()
+    return (any(marker in lowered for marker in FIXTURE_MARKERS)
+            or lowered.startswith(FIXTURE_PREFIXES))
+
+
 def run_gitleaks(clone: pathlib.Path) -> list[str]:
     """Gitleaks with --redact, reporting rule/file/line only — never the secret value."""
     if shutil.which("gitleaks") is None:
@@ -297,7 +336,13 @@ def run_gitleaks(clone: pathlib.Path) -> list[str]:
         location = str(entry.get("File") or "unknown-file")[:160]
         line = entry.get("StartLine")
         where = f"{location}:{line}" if line else location
-        findings.append(f"CRITICAL gitleaks secret candidate rule={rule} at {where} (value withheld)")
+        if is_fixture_path(location):
+            findings.append(
+                f"HIGH gitleaks secret candidate rule={rule} at {where} "
+                f"(value withheld; fixture path, capped below CRITICAL)")
+        else:
+            findings.append(
+                f"CRITICAL gitleaks secret candidate rule={rule} at {where} (value withheld)")
     if len(entries) > 20:
         findings.append(f"INFO gitleaks reported {len(entries) - 20} further secret candidates (values withheld)")
     return findings

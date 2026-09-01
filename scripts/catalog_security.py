@@ -116,6 +116,32 @@ REDACTIONS = [
 ]
 
 
+
+# Paths whose whole job is to hold data that looks like a secret. Shared logic
+# with catalog_guardian_legacy; see the note there for why this exists.
+FIXTURE_MARKERS = (
+    "testdata/", "test-data/", "/test/", "/tests/", "tests/", "__tests__/",
+    "__mocks__/", "fixtures/", "fixture/", "/spec/", "specs/",
+    ".test.", ".spec.", "_test.", "-test.",
+    "example", "sample", "mock", "dummy", "placeholder",
+    ".env.example", ".env.sample", ".env.template",
+    "secret_scanning", "gitleaks.toml", ".gitleaksignore",
+    "/docs/", "/doc/", "readme",
+)
+
+# Matched against the start of a path as well, since "docs/CLI.md" has no
+# leading slash and was slipping through.
+FIXTURE_PREFIXES = (
+    "docs/", "doc/", "test/", "tests/", "example/", "examples/", "sample/",
+)
+
+def is_fixture_path(path: str) -> bool:
+    """True when a secret-shaped string here is expected rather than alarming."""
+    lowered = str(path).replace("\\", "/").lower()
+    return (any(marker in lowered for marker in FIXTURE_MARKERS)
+            or lowered.startswith(FIXTURE_PREFIXES))
+
+
 def redact(text: str, limit: int = 400) -> str:
     """Best-effort masking for exception/diagnostic strings.
 
@@ -165,7 +191,10 @@ def scan_text(path: pathlib.Path, text: str) -> list[str]:
     if any(pattern.search(text) for pattern in COMMAND):
         out.append(f"HIGH possible command injection construction in {path}")
     if any(pattern.search(text) for pattern in SECRETS):
-        out.append(f"CRITICAL secret/private-key material in {path}")
+        # Built-in heuristic, so it caps at HIGH. Only an external scanner may
+        # justify a CRITICAL; printing CRITICAL here is what made 107
+        # findings read as 107 removal candidates.
+        out.append(f"HIGH secret/private-key material in {path}")
     return out
 
 
@@ -245,7 +274,13 @@ def run_gitleaks(clone: pathlib.Path) -> list[str]:
         location = str(entry.get("File") or "unknown-file")[:160]
         line = entry.get("StartLine")
         where = f"{location}:{line}" if line else location
-        findings.append(f"CRITICAL gitleaks secret candidate rule={rule} at {where} (value withheld)")
+        if is_fixture_path(location):
+            findings.append(
+                f"HIGH gitleaks secret candidate rule={rule} at {where} "
+                f"(value withheld; fixture path, capped below CRITICAL)")
+        else:
+            findings.append(
+                f"CRITICAL gitleaks secret candidate rule={rule} at {where} (value withheld)")
     if not findings:
         return [
             "SCANNER-ERROR gitleaks report contained no safely usable finding metadata; "

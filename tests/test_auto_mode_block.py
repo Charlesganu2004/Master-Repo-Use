@@ -22,16 +22,18 @@ HOOK = ROOT / "scripts" / "hooks" / "no_prune_guard.py"
 #   106 tokens   after the split, a pointer to the on-demand skill
 #   285 tokens   caveman and token reducers made mandatory and uncompressible
 #   326 tokens   skills, MCP servers, tools and agents added to that protection
+#   355 tokens   inheritance for new capabilities, and every build/command/lane
 #
-# Each rule Charles makes mandatory has to sit in the always-loaded block, because
-# a rule consulted only when something thinks to look it up is not mandatory. So
-# every addition costs tokens in every session in every client, permanently.
+# This number only moves when a rule is added, never on its own. Each rule has to
+# sit in the always-loaded block because a rule consulted only when something
+# thinks to look it up is not mandatory, and because ChatGPT and Copilot have no
+# hook mechanism: for them the written rule is the only mechanism there is.
 #
-# The budget is raised to 1400 rather than removed, so the block still cannot
-# creep on its own. Anything that is not genuinely mandatory belongs in the skill,
-# and any explanation the hooks already give at the point of failure belongs there
-# rather than here.
-BLOCK_BUDGET_BYTES = 1400
+# Redundancy has been squeezed out three times to make room. What is left is one
+# line per rule. The next addition will cost roughly 30 tokens per session per
+# client, permanently, and the honest lever is deciding a rule is not mandatory
+# rather than trying to word it shorter.
+BLOCK_BUDGET_BYTES = 1500
 
 
 class TheAlwaysLoadedBlock(unittest.TestCase):
