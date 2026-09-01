@@ -7,7 +7,6 @@
 # widely used, vendor-backed, or explicitly marked reference-only.
 
 # --- Active tooling
-headroomlabs-ai/headroom          # context compression + cross-agent memory
 thedotmack/claude-mem             # persistent observation/search memory for Claude Code
 ooples/token-optimizer-mcp        # measures token savings per agent; MCP context optimizer
 lucasrosati/claude-code-memory-setup  # Obsidian-backed memory pattern; vendor-neutral technique

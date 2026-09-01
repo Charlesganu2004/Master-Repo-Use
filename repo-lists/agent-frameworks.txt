@@ -1,5 +1,4 @@
 # Agent Frameworks
-bradygaster/squad
 bradygaster/Squad-IRL
 bradygaster/MultiAgent
 microsoft/agents

@@ -5,7 +5,6 @@ tauricresearch/tradingagents
 HKUDS/AI-Trader
 MingyuJ666/Stockagent
 ai4finance-foundation/finrobot
-AI4Finance-Foundation/FinGPT
 AI4Finance-Foundation/FinRL
 OpenBB-finance/OpenBB
 quantconnect/Lean

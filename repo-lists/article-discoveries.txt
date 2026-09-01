@@ -13,7 +13,6 @@ microsoft/autogen  # superseded 2026-08-25 by microsoft/agent-framework (AutoGen
 microsoft/ai-agents-for-beginners
 mem0ai/mem0
 crewAIInc/crewAI
-mudler/LocalAI
 CherryHQ/cherry-studio
 agno-agi/agno
 mindsdb/mindsdb

@@ -2,9 +2,7 @@
 # Vetted 2026-08-05 - see docs/VETTING-REPORT.md for scan results
 AnswerDotAI/rerankers
 confident-ai/deepeval
-getzep/graphiti
 infiniflow/ragflow
-langchain-ai/open_deep_research
 lightonai/pylate
 onyx-dot-app/onyx  # license needs manual read
 paradedb/paradedb  # copyleft: AGPL-3.0

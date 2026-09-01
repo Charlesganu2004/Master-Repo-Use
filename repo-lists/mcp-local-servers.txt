@@ -22,7 +22,6 @@ microsoft/playwright-mcp
 ahujasid/blender-mcp
 
 # --- Knowledge, memory and code context
-getzep/graphiti                   # temporally-aware knowledge graph
 topoteretes/cognee                # memory layer for agents
 mindsdb/mindshub                  # federated query engine over local data
 

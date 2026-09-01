@@ -6,7 +6,6 @@ github/github-mcp-server
 github/docs
 
 # Cross-client tools that can be adapted to Copilot through MCP, CLI, API, or instructions
-headroomlabs-ai/headroom
 modelcontextprotocol/servers
 microsoft/playwright-mcp
 upstash/context7

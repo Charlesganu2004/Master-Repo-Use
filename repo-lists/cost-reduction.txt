@@ -2,7 +2,6 @@
 microsoft/LLMLingua
 ooples/token-optimizer-mcp
 yvgude/lean-ctx
-headroomlabs-ai/headroom
 infracost/infracost
 infracost/agent-skills
 opencost/opencost

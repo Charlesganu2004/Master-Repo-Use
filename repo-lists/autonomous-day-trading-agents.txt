@@ -4,7 +4,6 @@ HKUDS/AI-Trader
 tauricresearch/tradingagents
 TradingAgents-AI/TradingAgents
 ai4finance-foundation/finrobot
-AI4Finance-Foundation/FinGPT
 AI4Finance-Foundation/FinRL
 MingyuJ666/Stockagent
 qmyhd/LLM-portfolio-project

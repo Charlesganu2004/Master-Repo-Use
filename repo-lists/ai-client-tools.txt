@@ -1,11 +1,9 @@
 # Cross-client AI tooling
 getomnico/omni
 thedotmack/claude-mem
-headroomlabs-ai/headroom
 hoangsonww/Claude-Code-Agent-Monitor
 centminmod/my-claude-code-setup
 anthropics/claude-plugins-official
-openai/codex
 github/copilot-cli
 github/copilot-sdk
 github/awesome-copilot

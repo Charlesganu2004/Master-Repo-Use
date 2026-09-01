@@ -43,7 +43,6 @@ microsoft/semantic-kernel
 openai/openai-agents-python
 
 # Clients the public setup page installs by name
-openai/codex
 
 # Skill libraries the public page links and installs by name. All three are
 # large, well-known upstreams; naming them reveals nothing about the private
@@ -53,5 +52,4 @@ wshobson/agents
 VoltAgent/awesome-claude-design
 
 # Design/motion libraries the site itself is built against
-mrdoob/three.js
 greensock/GSAP

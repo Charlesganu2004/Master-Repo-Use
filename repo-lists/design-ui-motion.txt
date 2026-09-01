@@ -7,7 +7,6 @@
 # Skill packs are small, young and community-run; read before adopting.
 
 # --- Upstream libraries (load-bearing)
-mrdoob/three.js
 greensock/GSAP
 
 # --- Agent design-skill packs (advisory only; review before use)

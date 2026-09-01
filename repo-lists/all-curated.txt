@@ -1,5 +1,4 @@
 # User-provided core repos
-bradygaster/squad
 bradygaster/Squad-IRL
 bradygaster/MultiAgent
 microsoft/agents
@@ -57,7 +56,6 @@ tauricresearch/tradingagents
 HKUDS/AI-Trader
 MingyuJ666/Stockagent
 ai4finance-foundation/finrobot
-AI4Finance-Foundation/FinGPT
 AI4Finance-Foundation/FinRL
 OpenBB-finance/OpenBB
 quantconnect/Lean
@@ -89,7 +87,6 @@ DhruvaBansal00/robin_stocks_v2
 ib-api-reloaded/ib_async
 tylerebowers/Schwabdev  # replaces stale alexgolec/schwab-py
 thammo4/uvatradier
-passiv/snaptrade-sdks
 passiv/snaptrade-cli
 passiv/snaptrade-react
 tastytrade/tastytrade-api-js
@@ -121,7 +118,6 @@ microsoft/lets-learn-mcp-python
 # Cost reduction / FinOps / token reduction
 ooples/token-optimizer-mcp
 yvgude/lean-ctx
-headroomlabs-ai/headroom
 infracost/infracost
 infracost/agent-skills
 opencost/opencost
@@ -150,7 +146,6 @@ microsoft/autogen  # superseded 2026-08-25 by microsoft/agent-framework (AutoGen
 microsoft/ai-agents-for-beginners
 mem0ai/mem0
 crewAIInc/crewAI
-mudler/LocalAI
 CherryHQ/cherry-studio
 agno-agi/agno
 mindsdb/mindsdb
@@ -180,8 +175,6 @@ wentaoyuan/RoboPoint
 # Live / Streaming / Incremental RAG (added 2026-08-05, vetted)
 AnswerDotAI/rerankers
 confident-ai/deepeval
-getzep/graphiti
-langchain-ai/open_deep_research
 lightonai/pylate
 onyx-dot-app/onyx
 paradedb/paradedb
@@ -246,7 +239,6 @@ simple10/agents-observe
 centminmod/my-claude-code-setup
 anthropics/claude-plugins-official
 rebelytics/one-skill-to-rule-them-all
-openai/codex
 RoggeOhta/awesome-codex-cli
 VoltAgent/awesome-agent-skills
 addyosmani/agent-skills
@@ -276,7 +268,6 @@ microsoft/agent-framework
 microsoft/foundry-local
 microsoft/onnxruntime-genai
 microsoft/semantic-kernel
-mrdoob/three.js
 naplesblue/apple-design-skill
 ollama/ollama
 ollama/ollama-js
