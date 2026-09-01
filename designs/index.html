@@ -85,12 +85,6 @@ h1 span{color:var(--accent)}
   font-family:var(--mono);font-size:13px;color:var(--accent)}
 .s-console::before{content:"";position:absolute;inset:0;
   background:repeating-linear-gradient(0deg,rgba(255,255,255,.045) 0 1px,transparent 1px 4px)}
-.s-constellation{background:radial-gradient(circle at 44% 48%,var(--panel),var(--bg) 72%)}
-.s-constellation::after{content:"";position:absolute;inset:0;
-  background-image:radial-gradient(circle,var(--accent) 1.7px,transparent 1.7px),
-                   radial-gradient(circle,var(--capability) 1.4px,transparent 1.4px),
-                   radial-gradient(circle,var(--knowledge) 1.2px,transparent 1.2px);
-  background-size:46px 39px,34px 47px,59px 30px;opacity:.9}
 .s-orbital{background:radial-gradient(ellipse at 50% 50%,var(--panel),var(--bg) 70%)}
 .s-orbital::after{content:"";position:absolute;left:50%;top:50%;width:84px;height:84px;
   transform:translate(-50%,-50%);border-radius:50%;border:1px solid var(--accent);
@@ -106,13 +100,43 @@ h1 span{color:var(--accent)}
 .s-tonal::after{content:"";position:absolute;left:18px;top:22px;width:96px;height:70px;
   border-radius:16px;background:var(--accent);opacity:.85;
   box-shadow:112px 8px 0 var(--capability),224px -6px 0 var(--knowledge)}
+.s-metro{background:var(--panel)}
+.s-metro::before{content:"";position:absolute;left:20px;top:16px;bottom:16px;width:4px;border-radius:9px;background:var(--accent);box-shadow:67px 0 0 var(--capability),134px 0 0 var(--knowledge),201px 0 0 var(--control)}
+.s-metro::after{content:"";position:absolute;inset:23px 10px 14px 13px;background:radial-gradient(circle,var(--panel) 3px,var(--accent) 4px 6px,transparent 7px),radial-gradient(circle,var(--panel) 3px,var(--capability) 4px 6px,transparent 7px),radial-gradient(circle,var(--panel) 3px,var(--knowledge) 4px 6px,transparent 7px);background-size:67px 25px,67px 25px,67px 25px;background-position:0 0,0 25px,0 50px;background-repeat:repeat-x}
+.s-workbench{background:#08090b}
+.s-workbench::before{content:"";position:absolute;left:15px;top:13px;bottom:13px;width:48px;border-right:1px solid var(--line);background:repeating-linear-gradient(0deg,transparent 0 16px,rgba(255,255,255,.08) 16px 17px)}
+.s-workbench::after{content:"01  task-intake()\A 02  lane-match()\A 03  build();";white-space:pre;position:absolute;left:82px;top:26px;color:var(--accent);font:12px/1.9 var(--mono)}
+.s-journal{background:color-mix(in srgb,var(--panel) 88%,var(--accent2)}
+.s-journal::before{content:"";position:absolute;left:25px;top:13px;bottom:13px;width:1px;background:var(--accent)}
+.s-journal::after{content:"CHAPTER 01\A Roadmap notes";white-space:pre;position:absolute;left:42px;top:32px;color:var(--ink);font:700 14px/1.8 Georgia,serif}
+.s-command{background:radial-gradient(circle at 60% 35%,rgba(255,255,255,.12),transparent 40%),var(--panel)}
+.s-command::after{content:"";position:absolute;inset:18px;background:linear-gradient(90deg,var(--accent) 0 28%,transparent 28% 34%,var(--capability) 34% 62%,transparent 62% 68%,var(--knowledge) 68%);opacity:.8;clip-path:polygon(0 0,100% 0,100% 30%,83% 30%,83% 100%,57% 100%,57% 56%,0 56%)}
+.s-index{background:var(--bg)}
+.s-index::after{content:"";position:absolute;left:27px;top:15px;width:78px;height:80px;border:1px solid var(--line);background:repeating-linear-gradient(0deg,transparent 0 16px,rgba(255,255,255,.1) 16px 17px);box-shadow:105px 8px 0 -1px var(--panel),210px -5px 0 -1px var(--panel)}
+.s-tree{background:radial-gradient(circle at 50% 20%,rgba(255,255,255,.12),transparent 45%),var(--panel)}
+.s-tree::before{content:"";position:absolute;left:50%;top:20px;width:2px;height:76px;background:var(--accent)}
+.s-tree::after{content:"";position:absolute;left:32px;right:32px;top:28px;height:70px;background:radial-gradient(circle,var(--accent) 0 7px,transparent 8px),radial-gradient(circle,var(--capability) 0 7px,transparent 8px),radial-gradient(circle,var(--knowledge) 0 7px,transparent 8px);background-size:78px 55px;background-position:0 0,39px 38px,78px 0}
+.s-river{background:linear-gradient(180deg,var(--panel),var(--bg))}
+.s-river::after{content:"";position:absolute;left:15px;right:15px;top:17px;height:83px;border-radius:55% 10% 50% 14%;background:linear-gradient(180deg,transparent 0 18%,var(--accent) 19% 28%,transparent 29% 48%,var(--capability) 49% 58%,transparent 59% 78%,var(--knowledge) 79% 88%,transparent 89%);opacity:.85}
+.s-city{background:var(--bg);background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);background-size:18px 18px}
+.s-city::after{content:"";position:absolute;inset:18px;background:linear-gradient(90deg,var(--accent) 0 19%,transparent 19% 25%,var(--capability) 25% 58%,transparent 58% 64%,var(--knowledge) 64%);clip-path:polygon(0 0,100% 0,100% 47%,77% 47%,77% 100%,36% 100%,36% 65%,0 65%)}
+.s-patch{background:#08090a;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 4px)}
+.s-patch::after{content:"IN   MODULE     OUT\A ○  atlas core  ○\A ○  build       ○";white-space:pre;position:absolute;left:23px;top:20px;color:var(--accent2);font:11px/2 var(--mono)}
+.s-campaign{background:radial-gradient(circle at 13% 50%,var(--accent) 0 6px,transparent 7px),radial-gradient(circle at 38% 30%,var(--capability) 0 6px,transparent 7px),radial-gradient(circle at 64% 67%,var(--knowledge) 0 6px,transparent 7px),radial-gradient(circle at 88% 36%,var(--delivery) 0 6px,transparent 7px),var(--panel)}
+.s-campaign::after{content:"";position:absolute;left:31px;right:31px;top:57px;height:3px;background:linear-gradient(90deg,var(--accent),var(--capability),var(--knowledge),var(--delivery));transform:rotate(-8deg);opacity:.8}
+.s-forge{background:#08090a;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 19px)}
+.s-forge::after{content:"HTML   JS   TS   JSX   TSX   REPOS   SKILLS";position:absolute;inset:15px 10px;display:flex;align-items:flex-end;padding:0 8px 12px;background:repeating-linear-gradient(90deg,var(--accent) 0 22px,transparent 22px 38px);clip-path:polygon(0 0,100% 0,100% 76%,0 100%);color:var(--ink);font:800 8px/1 var(--mono);letter-spacing:.05em}
+.s-cinema{background:#050505}
+.s-cinema::before,.s-cinema::after{content:"";position:absolute;left:8px;right:8px;height:8px;background:repeating-linear-gradient(90deg,#eee8da 0 12px,transparent 12px 23px)}.s-cinema::before{top:8px}.s-cinema::after{bottom:8px}.s-cinema{background-image:linear-gradient(90deg,transparent 0 7%,#eee8da 7% 31%,transparent 31% 36%,#eee8da 36% 64%,transparent 64% 69%,#eee8da 69% 93%,transparent 93%)}
+.s-bridge{background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 22%,var(--panel)) 0 30%,var(--bg) 30% 35%,color-mix(in srgb,var(--knowledge) 22%,var(--panel)) 35% 65%,var(--bg) 65% 70%,color-mix(in srgb,var(--delivery) 22%,var(--panel)) 70%)}
+.s-bridge::after{content:"REPOS  →  RUNTIME  →  SKILLS";position:absolute;left:16px;right:16px;top:43px;color:var(--ink);font:900 10px/1 var(--mono);text-align:center;letter-spacing:.05em}
 </style>
 </head>
 <body>
 <div class="shell">
 
 <h1>Atlas <span>designs</span></h1>
-<p class="lede">Six ways through the same system. They share one data layer and one engine, so a
+<p class="lede">Eighteen ways through the same system. They share one data layer and one engine, so a
 lane added anywhere appears in all of them and a click means the same thing everywhere. What
 differs is how the map is drawn and how you move through it.</p>
 <p class="counts" id="counts">Reading the atlas data…</p>
@@ -128,7 +152,7 @@ rather than the paint. Each card also has direct links per palette. A palette tr
 
 <div class="note">
   <h2>What every design carries</h2>
-  <p>The differences are visual and navigational. These are identical in all six, by design:</p>
+  <p>The differences are visual and navigational. These are identical in all eighteen, by design:</p>
   <ul>
     <li><b>Your system first.</b> Windows, Ubuntu/WSL, macOS, Linux or Other. That choice decides
       the scan command and every command shown afterwards. Nothing is guessed from the browser.</li>
@@ -165,18 +189,13 @@ const DESIGNS = [
 
   { file: 'd3-console.html', name: 'Console', swatch: 's-console', pick: true,
     tagline: 'keyboard-first · type to filter',
-    what: '<b>The other one you picked.</b> No mouse required: one prompt over all 777 components, arrows to move, enter to open. Fastest of the six when you already know roughly what you want and need the command out of it.',
+    what: '<b>The other one you picked.</b> No mouse required: one prompt over all 777 components, arrows to move, enter to open. A fast option when you already know roughly what you want and need the command out of it.',
     from: 'Terminal conventions. The prompt drives the shared filter, so counts never disagree.' },
 
   { file: 'd7-material.html', name: 'Tonal', swatch: 's-tonal',
     tagline: 'material 3 · rail and elevation',
     what: '<b>Surfaces instead of lines.</b> Depth carries the grouping: tonal layers mixed from the palette, elevation on hover, a pointer-tracking ripple, a navigation rail rather than a tab strip, and a floating action button for the build.',
     from: 'Material Design 3. The catalog carries a design-skill pack for it; see the Skills tab in any design.' },
-
-  { file: 'd2-constellation.html', name: 'Constellation', swatch: 's-constellation',
-    tagline: 'force-directed · drag to explore',
-    what: '<b>Physics, not layout.</b> Components repel, connections pull, and same-lane parts cluster on their own. Drag any star and the cloud reorganises. Selecting one lights its links and fades the rest.',
-    from: 'Force-directed graph drawing; damped so it settles rather than jitters.' },
 
   { file: 'd4-orbital.html', name: 'Orbital', swatch: 's-orbital',
     tagline: 'concentric rings · one per family',
@@ -187,6 +206,71 @@ const DESIGNS = [
     tagline: 'drafting sheet · pan and zoom',
     what: '<b>A schematic you survey.</b> Every lane is a titled box packed onto a grid that stays roughly square. Drag to pan, wheel to zoom. Connections route as orthogonal traces with flow animation, the way a wiring diagram shows direction.',
     from: 'Technical drawing conventions; column count is derived so the sheet stays legible.' },
+
+  { file: 'd8-metro.html', name: 'Metro', swatch: 's-metro',
+    tagline: 'station map · family lines',
+    what: '<b>Move through a route.</b> Families become colored lines; component cards become stations with command-ready or plan-only status. It makes a large roadmap feel sequential without hiding the inspector or Build.',
+    from: 'Transit maps and wayfinding systems.' },
+
+  { file: 'd9-workbench.html', name: 'Workbench', swatch: 's-workbench',
+    tagline: 'desktop IDE · source-line roadmap',
+    what: '<b>Build from a familiar workspace.</b> Navigation becomes an activity bar, filters become a file explorer, and roadmap components become selectable source lines in a live editor.',
+    from: 'Developer tooling conventions and readable code editors.' },
+
+  { file: 'd10-journal.html', name: 'Journal', swatch: 's-journal',
+    tagline: 'editorial chapters · large type',
+    what: '<b>Read the roadmap like a field guide.</b> A paper-like chapter spine and generous type prioritize comprehension at 100% zoom while preserving the shared filters, scan, and Build controls.',
+    from: 'Editorial reading layouts and field notebooks.' },
+
+  { file: 'd11-command.html', name: 'Command', swatch: 's-command',
+    tagline: 'ops wall · tactical cells',
+    what: '<b>Run the system like a control room.</b> A status header, live counts, compact filters, and tactical roadmap cells favor rapid comparison and an always-visible component inspector.',
+    from: 'Operations dashboards and mission control interfaces.' },
+
+  { file: 'd12-index.html', name: 'Index', swatch: 's-index',
+    tagline: 'study cards · planning wall',
+    what: '<b>Sort the system by hand.</b> Lined index cards make every component feel like a concrete piece of a plan. Plan-only cards are visibly distinct from command-ready Build additions.',
+    from: 'Card catalogs, paper planners, and learning decks.' },
+
+  { file: 'd13-skill-tree.html', name: 'Skill Tree', swatch: 's-tree',
+    tagline: 'unlock paths · loadout panel',
+    what: '<b>Turn the roadmap into progression.</b> Branches and level nodes create a game-like learning path while the left loadout keeps the system scan and Build context close.',
+    from: 'Accessible game progression trees.' },
+
+  { file: 'd14-river.html', name: 'River', swatch: 's-river',
+    tagline: 'flow channels · reshaping filters',
+    what: '<b>Follow the work downstream.</b> Related families run as calm channels whose live contents shift with the filters. It is a flow model rather than a graph, grid, or terminal.',
+    from: 'Flow diagrams and natural channel maps.' },
+
+  { file: 'd15-city.html', name: 'City', swatch: 's-city',
+    tagline: 'district map · construction queue',
+    what: '<b>Navigate neighborhoods.</b> Dense but readable city blocks turn components into districts, with the scan framed as a power-grid check and Build framed as construction.',
+    from: 'Urban planning maps and block layouts.' },
+
+  { file: 'd16-patchbay.html', name: 'Patchbay', swatch: 's-patch',
+    tagline: 'modular rack · signal path',
+    what: '<b>Assemble the stack like hardware.</b> Racks organize modules by kind, with calibration on the left and a practical inspector on the right. It is tactile without adding fake controls.',
+    from: 'Modular synth racks and studio hardware.' },
+
+  { file: 'd17-campaign.html', name: 'Campaign', swatch: 's-campaign',
+    tagline: 'quest board · gear checklist',
+    what: '<b>Make the next move obvious.</b> A board-game route breaks the catalog into clear waypoints; system scan becomes gear check and Build becomes the pack list.',
+    from: 'Board-game routes and campaign maps.' },
+
+  { file: 'd18-stack-forge.html', name: 'Stack Forge', swatch: 's-forge',
+    tagline: 'seven-stage line · implementation stack',
+    what: '<b>See how the system is made.</b> Seven columns read from HTML through JavaScript, TypeScript, JSX, TSX, Repos, and Skills. The roadmap stays live while the structure becomes a production line.',
+    from: 'Industrial process boards, authored in TypeScript and shipped as dependency-free JavaScript.' },
+
+  { file: 'd19-code-cinema.html', name: 'Code Cinema', swatch: 's-cinema',
+    tagline: 'storyboard scenes · guided sequence',
+    what: '<b>Follow the system scene by scene.</b> Large horizontal family boards use film frames, scroll snapping, and a director rail to make Scan → choose → Build easy to follow at 100% zoom.',
+    from: 'Film storyboards, authored in JSX with a tiny local element factory and no React dependency.' },
+
+  { file: 'd20-repo-bridge.html', name: 'Repo Bridge', swatch: 's-bridge',
+    tagline: 'sources → runtime → skills',
+    what: '<b>Separate discovery from safe setup.</b> Repositories, runtime parts, and reusable skills occupy three connected zones, keeping reviewed setup recipes distinct from catalog links.',
+    from: 'System architecture bridges, authored in typed TSX and compiled to offline JavaScript.' },
 ];
 
 function render(theme){
@@ -234,7 +318,7 @@ function counts(){
   const subs = new Set((window.__ATLAS_DATA__.components || [])
     .map(c => c.sub || 'Catalog')).size;
   el.innerHTML =
-    `All six read <b>${meta.lanes}</b> lanes · <b>${meta.components}</b> components · ` +
+    `All eighteen read <b>${meta.lanes}</b> lanes · <b>${meta.components}</b> components · ` +
     `<b>${meta.routes}</b> hybrid routes · <b>${(window.__ATLAS_DATA__.families || []).length}</b> ` +
     `families · <b>${subs}</b> sub-categories, generated from files in this repository.` +
     (meta.redacted

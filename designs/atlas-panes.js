@@ -196,20 +196,21 @@ const AtlasPanes = (() => {
     if (!d) {
       side.innerHTML = `<div class="sec">Component detail</div>
         <p class="empty">Select any component to see what it is, which lane it sits in, what it
-        connects to, its hybrid routes, and the command to use it. Use <b>+</b> to add it to a
-        combination and get one script for everything you picked.</p>`;
+        connects to, its hybrid routes, and whether it has a complete setup recipe. Use <b>+</b>
+        to combine setup-ready components into one commands-only script.</p>`;
       return;
     }
-    const cmd = d.command;
+    const setup = d.setupCommand;
     side.innerHTML = `
       <div class="dhead">
         <div>
           <div class="dname">${esc(d.name)}</div>
           ${d.owner ? `<div class="downer">${esc(d.owner)}</div>` : ''}
         </div>
-        <button class="plus${d.inBasket ? ' in' : ''}" id="plus"
-          title="${d.inBasket ? 'Already in your combination' : 'Add to a combination'}">
-          ${d.inBasket ? '&#10003;' : '+'}</button>
+        ${setup ? `<button class="plus${d.inBasket ? ' in' : ''}" id="plus"
+          title="${d.inBasket ? 'Remove this setup from the combination' : 'Add this setup to Build'}">
+          ${d.inBasket ? '&#10003;' : '+'}</button>`
+          : `<span class="dkind sub">${esc(d.setupState.label)}</span>`}
       </div>
       <span class="dkind" data-kind="${esc(d.kind)}">${esc(d.kind)}</span>
       ${d.sub ? `<span class="dkind sub">${esc(d.sub)}</span>` : ''}
@@ -231,7 +232,7 @@ const AtlasPanes = (() => {
             <span class="tag">best for ${esc(r.bestFor)} · needs ${esc(r.requires)}</span></div>`).join('')
         : '<p class="empty">Not part of a hybrid route.</p>'}`;
 
-    wireCopy(side, cmd);
+    wireCopy(side, setup);
     const plus = document.getElementById('plus');
     if (plus) plus.onclick = () => {
       d.inBasket ? A.removeFromBasket(d.id) : A.addToBasket(d.id);
@@ -248,12 +249,13 @@ const AtlasPanes = (() => {
       return `<div class="sec">Command</div>
         <p class="empty">Choose your operating system in step 1 and the command for it appears here.</p>`;
     }
-    if (!d.command) {
-      return `<div class="sec">Command</div>
-        <p class="empty">Nothing to run. This is a part of the system rather than something you install.</p>`;
+    if (!d.setupCommand) {
+      return `<div class="sec">Computer setup</div>
+        <p class="empty"><b>${esc(d.setupState.label)}.</b> A GitHub source, test, workflow, or run
+        command is not treated as installation. Only a complete reviewed recipe can enter Build.</p>`;
     }
-    return `<div class="sec">Command (${esc(A.platform().label)})</div>
-      <div class="cmd"><button class="copy" data-copy>copy</button>${esc(d.command)}</div>`;
+    return `<div class="sec">Setup for ${esc(A.platform().label)}</div>
+      <div class="cmd"><button class="copy" data-copy>copy</button>${esc(d.setupCommand)}</div>`;
   }
 
   function wireCopy(root, text) {
@@ -294,16 +296,19 @@ const AtlasPanes = (() => {
     return `<h2>${esc(meta.label)}</h2>
       <p class="sub">${esc(meta.hint)} ${lanes.length} lane${lanes.length === 1 ? '' : 's'},
       ${items.length} entr${items.length === 1 ? 'y' : 'ies'} after filters.</p>
-      <div class="grid">${items.map(c => `
-        <div class="lane-card" data-comp="${esc(c.id)}" data-kind="${esc(c.kind)}">
-          <button class="plus mini${A.state.basket.includes(c.id) ? ' in' : ''}"
-            data-add="${esc(c.id)}" title="Add to a combination">
-            ${A.state.basket.includes(c.id) ? '&#10003;' : '+'}</button>
+      <div class="grid">${items.map(c => {
+        const ready = A.canBuild(c);
+        return `<div class="lane-card" data-comp="${esc(c.id)}" data-kind="${esc(c.kind)}">
+          ${ready ? `<button class="plus mini${A.state.basket.includes(c.id) ? ' in' : ''}"
+            data-add="${esc(c.id)}" title="Add setup to combination">
+            ${A.state.basket.includes(c.id) ? '&#10003;' : '+'}</button>`
+            : `<span class="src">${esc(A.setupStateFor(c).label)}</span>`}
           <b>${esc(c.name)}</b>
           ${c.owner ? `<span class="owner">${esc(c.owner)}</span>` : ''}
           <p>${esc(c.detail)}</p>
           <span class="src">${esc(A.laneName(c.lane))}${c.sub ? ` · ${esc(c.sub)}` : ''}</span>
-        </div>`).join('') || '<p class="empty">Nothing matches the current filters.</p>'}</div>`;
+        </div>`;
+      }).join('') || '<p class="empty">Nothing matches the current filters.</p>'}</div>`;
   }
 
   function routesHTML() {
@@ -343,22 +348,29 @@ const AtlasPanes = (() => {
   function basketHTML() {
     const items = A.basketItems();
     const combined = A.combinedCommand();
+    const ready = combined.ready || [];
+    const blocked = combined.blocked || [];
     return `<h2>Build</h2>
-      <p class="sub">Components you combined with <b>+</b>, and one script that sets all of them
-      up in order for your system.</p>
+      <p class="sub">${ready.length} setup-ready component${ready.length === 1 ? '' : 's'} produce
+      ${combined.commandCount || 0} deduplicated command line${combined.commandCount === 1 ? '' : 's'}.
+      The copy block contains commands only.</p>
       ${items.length ? `<div class="grid">${items.map(c => `
         <div class="lane-card">
           <button class="plus mini in" data-drop="${esc(c.id)}" title="Remove">&times;</button>
           <b>${esc(c.name)}</b>
           ${c.owner ? `<span class="owner">${esc(c.owner)}</span>` : ''}
           <p>${esc(c.detail)}</p>
-          <span class="src">${esc(A.laneName(c.lane))}</span>
-        </div>`).join('')}</div>` : '<p class="empty">Nothing added yet. Use + on any component.</p>'}
-      <div class="sec">Combined script</div>
+          <span class="src">${esc(A.laneName(c.lane))} · ${esc(A.setupStateFor(c).label)}</span>
+        </div>`).join('')}</div>` : '<p class="empty">Nothing added yet. Use + on a setup-ready component.</p>'}
+      <div class="sec">Setup commands</div>
       ${combined.ok
         ? `<div class="cmd wrap"><button class="copy" data-copy>copy</button>${esc(combined.text)}</div>
            <button class="btn ghost" id="basket-clear">Clear all</button>`
-        : `<p class="empty">${esc(combined.text)}</p>`}`;
+        : `<p class="empty">${esc(combined.text)}</p>
+           ${items.length ? '<button class="btn ghost" id="basket-clear">Clear all</button>' : ''}`}
+      ${blocked.length ? `<div class="sec">Not included in copied commands</div>
+        <p class="empty">These older saved choices do not have a complete setup recipe:</p>
+        <div class="conn">${blocked.map(item => `<span class="route">${esc(item)}</span>`).join('')}</div>` : ''}`;
   }
 
   function customHTML() {
@@ -483,9 +495,10 @@ const AtlasPanes = (() => {
           ${d.owner ? `<div class="downer">${esc(d.owner)}</div>` : ''}
         </div>
         <div class="popbtns">
-          <button class="plus${d.inBasket ? ' in' : ''}" data-pop-add
-            title="${d.inBasket ? 'Remove from the combination' : 'Add to a combination'}"
-            >${d.inBasket ? '&#10003;' : '+'}</button>
+          ${d.setupCommand ? `<button class="plus${d.inBasket ? ' in' : ''}" data-pop-add
+            title="${d.inBasket ? 'Remove setup from the combination' : 'Add setup to Build'}"
+            >${d.inBasket ? '&#10003;' : '+'}</button>`
+            : `<span class="dkind sub">${esc(d.setupState.label)}</span>`}
           <button class="popclose" data-pop-close title="Close">&times;</button>
         </div>
       </div>
@@ -495,11 +508,11 @@ const AtlasPanes = (() => {
       </div>
       <p class="popdesc">${esc(d.detail)}</p>
       <div class="popmeta">${esc(d.lane)}${d.laneSource ? ` · <code>${esc(d.laneSource)}</code>` : ''}</div>
-      ${d.command
-        ? `<div class="cmd"><button class="copy" data-copy>copy</button>${esc(d.command)}</div>`
+      ${d.setupCommand
+        ? `<div class="cmd"><button class="copy" data-copy>copy</button>${esc(d.setupCommand)}</div>`
         : A.state.platform
-          ? '<p class="popempty">Nothing to run; this is part of the system, not something you install.</p>'
-          : '<p class="popempty">Choose your operating system in step 1 to see the command.</p>'}
+          ? `<p class="popempty">${esc(d.setupState.label)}. Source and action metadata stay outside Build.</p>`
+          : '<p class="popempty">Choose your operating system in step 1 to see setup availability.</p>'}
       ${d.connections.length
         ? `<div class="popsec">Connects to ${d.connections.length}</div>
            <div class="popconn">${d.connections.slice(0, 6).map(c =>
@@ -521,14 +534,15 @@ const AtlasPanes = (() => {
     node.style.left = `${left}px`;
     node.style.top = `${top}px`;
 
-    wireCopy(node, d.command);
+    wireCopy(node, d.setupCommand);
     node.querySelector('[data-pop-close]').onclick = closePopover;
-    node.querySelector('[data-pop-add]').onclick = () => {
-      d.inBasket ? A.removeFromBasket(d.id) : A.addToBasket(d.id);
-      popover(x, y, componentId);
-      tabsUI();
-      detailUI();
-    };
+    const add = node.querySelector('[data-pop-add]');
+    if (add) add.onclick = () => {
+        d.inBasket ? A.removeFromBasket(d.id) : A.addToBasket(d.id);
+        popover(x, y, componentId);
+        tabsUI();
+        detailUI();
+      };
     node.querySelectorAll('[data-pop-go]').forEach(b => {
       b.onclick = () => {
         A.select(b.dataset.popGo);

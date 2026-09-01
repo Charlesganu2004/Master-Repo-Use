@@ -358,9 +358,10 @@ function laneHTML(lane, items){
             <span class="nm">${esc(c.name)}${c.owner ? ` <em>${esc(c.owner)}</em>` : ''}</span>
             <span class="rt">
               ${c.sub && c.sub !== 'Catalog' ? esc(c.sub) : ''}
-              <button class="rowadd${A.state.basket.includes(c.id) ? ' in' : ''}"
+              ${A.canBuild(c) ? `<button class="rowadd${A.state.basket.includes(c.id) ? ' in' : ''}"
                 data-add="${esc(c.id)}" title="Add to a combination"
-                >${A.state.basket.includes(c.id) ? '&#10003;' : '+'}</button>
+                >${A.state.basket.includes(c.id) ? '&#10003;' : '+'}</button>`
+                : `<span class="lanesrc">${esc(A.setupStateFor(c).label)}</span>`}
             </span>
           </div>`).join('')
           || '<div class="lanemore">nothing here matches the filters</div>'}

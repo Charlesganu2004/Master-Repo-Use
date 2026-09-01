@@ -1,4 +1,4 @@
-"""Six designs share one data layer and one palette layer. These stop them drifting.
+"""Eighteen designs share one data layer and palette layer. These stop them drifting.
 
 The data layer is generated from files that exist, so the most valuable checks
 are the ones that catch a lane pointing at something deleted, a component in a
@@ -6,16 +6,31 @@ lane that is gone, a route naming a component that never existed, and a private
 catalog slug reaching a file that gets published.
 """
 import json
+import importlib.util
 import pathlib
 import re
+import shutil
+import subprocess
+import tempfile
 import unittest
 from html.parser import HTMLParser
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / "atlas-data.json"
 DESIGNS = ROOT / "designs"
-INTERACTIVE = ["d2-constellation.html", "d3-console.html", "d4-orbital.html",
-               "d5-blueprint.html", "d6-graphite.html", "d7-material.html"]
+INTERACTIVE = ["d3-console.html", "d4-orbital.html", "d5-blueprint.html",
+               "d6-graphite.html", "d7-material.html",
+               "d8-metro.html", "d9-workbench.html", "d10-journal.html",
+               "d11-command.html", "d12-index.html", "d13-skill-tree.html",
+               "d14-river.html", "d15-city.html", "d16-patchbay.html",
+               "d17-campaign.html", "d18-stack-forge.html",
+               "d19-code-cinema.html", "d20-repo-bridge.html"]
+
+AUTHORED_SOURCE_PAIRS = [
+    ("d18-stack-forge.html", "d18-stack-forge.ts", "d18-stack-forge.js"),
+    ("d19-code-cinema.html", "d19-code-cinema.jsx", "d19-code-cinema.js"),
+    ("d20-repo-bridge.html", "d20-repo-bridge.tsx", "d20-repo-bridge.js"),
+]
 
 # Charles asked for at least 120 lanes. Padding the count with invented names
 # would satisfy the number and defeat the point, so the generator grounds every
@@ -133,6 +148,30 @@ class TheDataLayer(unittest.TestCase):
         self.assertEqual(len(data["lanes"]), len(self.d["lanes"]),
                          "lanes should survive redaction; only entries are private")
 
+    def test_setup_recipes_are_explicit_and_catalog_clones_are_not_setup(self):
+        recipes = {recipe["id"]: recipe for recipe in self.d.get("setupRecipes", [])}
+        self.assertIn("master-repo-global", recipes)
+        for component in self.d["components"]:
+            recipe_id = component.get("setupRecipe")
+            if recipe_id:
+                self.assertIn(recipe_id, recipes, component["id"])
+            if component.get("slug"):
+                self.assertNotIn("setupRecipe", component,
+                                 "catalogued is not the same thing as reviewed for setup")
+                self.assertNotIn("cmd", component,
+                                 "a bare repository clone must not masquerade as setup")
+                self.assertEqual(component.get("setupState"), "review-required")
+
+    def test_master_repo_setup_is_real_for_every_platform(self):
+        recipe = next(r for r in self.d["setupRecipes"] if r["id"] == "master-repo-global")
+        for platform in ("windows", "wsl", "macos", "linux", "other"):
+            command = recipe["commands"].get(platform, "")
+            self.assertIn("setup-global-ai", command)
+            self.assertNotRegex(command, r"REVIEWED_VERSION|<[^>]+>")
+        by_id = {component["id"]: component for component in self.d["components"]}
+        self.assertEqual(by_id["task-intake"].get("setupRecipe"), "master-repo-global")
+        self.assertEqual(by_id["scope-resolver"].get("setupRecipe"), "master-repo-global")
+
 
 class TheDataLayerCopies(unittest.TestCase):
     """The designs fetch the data relative to themselves, so there are two copies.
@@ -147,6 +186,43 @@ class TheDataLayerCopies(unittest.TestCase):
         beside = (DESIGNS / "atlas-data.json").read_text(encoding="utf-8")
         self.assertEqual(root, beside,
                          "atlas-data.json copies differ; re-run scripts/build_atlas_data.py")
+
+
+class ThePublicDesignBuilder(unittest.TestCase):
+    """Publication keeps authored sources and cannot retain a removed design."""
+
+    def test_sources_are_copied_and_stale_top_level_files_are_cleared(self):
+        script = ROOT / "scripts" / "build_public_site.py"
+        spec = importlib.util.spec_from_file_location("atlas_public_builder_test", script)
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        builder = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(builder)
+
+        with tempfile.TemporaryDirectory() as scratch:
+            scratch_path = pathlib.Path(scratch)
+            private = scratch_path / "private-designs"
+            public = scratch_path / "public-designs"
+            private.mkdir()
+            public.mkdir()
+            private_data = scratch_path / "atlas-data.json"
+            private_data.write_text("{}", encoding="utf-8")
+
+            for name in ("page.html", "runtime.js", "source.ts", "source.jsx", "source.tsx"):
+                (private / name).write_text(f"/* {name} */", encoding="utf-8")
+            (private / "ignored.exe").write_text("not published", encoding="utf-8")
+            stale = public / "d2-constellation.html"
+            stale.write_text("obsolete", encoding="utf-8")
+
+            builder.PRIVATE_DESIGNS = private
+            builder.PUBLIC_DESIGNS = public
+            builder.PRIVATE_ATLAS_DATA = private_data
+            self.assertEqual(builder.build_designs(), [])
+
+            self.assertFalse(stale.exists(), "a removed design survived publication")
+            for name in ("page.html", "runtime.js", "source.ts", "source.jsx", "source.tsx"):
+                self.assertTrue((public / name).exists(), f"publication omitted {name}")
+            self.assertFalse((public / "ignored.exe").exists())
 
 
 class TheOfflineFallback(unittest.TestCase):
@@ -239,6 +315,24 @@ class TheDesigns(unittest.TestCase):
         for name in INTERACTIVE:
             self.assertIn(name, gallery, f"gallery does not link {name}")
 
+    def test_constellation_is_removed_from_source_and_gallery(self):
+        gallery = (DESIGNS / "index.html").read_text(encoding="utf-8")
+        self.assertFalse((DESIGNS / "d2-constellation.html").exists())
+        self.assertNotIn("d2-constellation.html", gallery)
+        self.assertNotIn("Constellation", gallery)
+
+    def test_new_designs_keep_authored_source_beside_browser_runtime(self):
+        for page_name, source_name, runtime_name in AUTHORED_SOURCE_PAIRS:
+            source = DESIGNS / source_name
+            runtime = DESIGNS / runtime_name
+            self.assertTrue(source.is_file(), f"missing authored source designs/{source_name}")
+            self.assertTrue(runtime.is_file(), f"missing browser runtime designs/{runtime_name}")
+            page = (DESIGNS / page_name).read_text(encoding="utf-8")
+            self.assertIn(runtime_name, page,
+                          f"{page_name} does not load its compiled browser runtime")
+            self.assertIn("AtlasNext.boot", runtime.read_text(encoding="utf-8"),
+                          f"{runtime_name} does not start an Atlas design")
+
     def test_the_two_designs_charles_picked_are_marked_as_such(self):
         gallery = (DESIGNS / "index.html").read_text(encoding="utf-8")
         self.assertIn("your pick", gallery)
@@ -288,6 +382,57 @@ class TheSharedCore(unittest.TestCase):
         for fn in ("addToBasket", "removeFromBasket", "combinedCommand"):
             self.assertIn(fn, self.core, f"missing {fn}")
 
+    def test_build_uses_setup_recipes_not_action_commands(self):
+        for marker in ("setupRecipeFor", "setupCommandFor", "canBuild", "commands.join('\\n')"):
+            self.assertIn(marker, self.core)
+        self.assertIn("The copy block contains commands only", self.panes)
+        self.assertNotIn("Master Repo Atlas combination", self.core)
+
+    def test_every_plus_surface_checks_setup_readiness(self):
+        for name in ("atlas-panes.js", "atlas-next.js", "d3-console.html",
+                     "d6-graphite.html", "d7-material.html"):
+            body = (DESIGNS / name).read_text(encoding="utf-8")
+            self.assertIn("canBuild", body, f"{name} still offers + without a setup recipe")
+
+    def test_combined_setup_is_commands_only_deduped_and_exact_platform(self):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node is not installed")
+        core_path = json.dumps(str(DESIGNS / "atlas-core.js"))
+        script = f"""
+const A = require({core_path});
+A.state.data = {{
+  setupRecipes: [
+    {{id:'same', kind:'setup', state:'ready', commands:{{windows:'winget install Example.Tool',linux:'sudo apt install example'}}}},
+    {{id:'linux-only', kind:'setup', state:'ready', commands:{{linux:'sudo apt install linux-only'}}}},
+    {{id:'placeholder', kind:'setup', state:'ready', commands:{{windows:'winget install <PACKAGE>'}}}}
+  ], routes: [], hardware: []
+}};
+const components = [
+  {{id:'one', name:'One', lane:'lane', setupRecipe:'same'}},
+  {{id:'two', name:'Two', lane:'lane', setupRecipe:'same'}},
+  {{id:'source', name:'Source only', lane:'lane', sourceUrl:'https://github.com/example/source'}},
+  {{id:'linux', name:'Linux only', lane:'lane', setupRecipe:'linux-only'}},
+  {{id:'placeholder', name:'Placeholder', lane:'lane', setupRecipe:'placeholder'}}
+];
+A.state.components = components;
+A.state.byId.clear(); components.forEach(c => A.state.byId.set(c.id, c));
+A.state.lanesById.clear(); A.state.lanesById.set('lane', {{id:'lane', name:'Lane'}});
+A.setPlatform('windows');
+const added = [A.addToBasket('one'), A.addToBasket('two')];
+const rejected = [A.addToBasket('source'), A.addToBasket('linux'), A.addToBasket('placeholder')];
+console.log(JSON.stringify({{added, rejected, result:A.combinedCommand(), linuxFallback:A.setupCommandFor(components[3])}}));
+"""
+        proc = subprocess.run([node, "-e", script], capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        result = json.loads(proc.stdout)
+        self.assertEqual(result["added"], [True, True])
+        self.assertEqual(result["rejected"], [False, False, False])
+        self.assertIsNone(result["linuxFallback"])
+        self.assertEqual(result["result"]["text"], "winget install Example.Tool")
+        self.assertEqual(result["result"]["commandCount"], 1)
+        self.assertNotIn("#", result["result"]["text"])
+
     def test_the_popover_carries_description_command_and_plus(self):
         for marker in ("popname", "data-pop-add", "popdesc"):
             self.assertIn(marker, self.panes, f"popover missing {marker}")
@@ -318,7 +463,7 @@ class TheSharedCore(unittest.TestCase):
 
 
 class ThePalettes(unittest.TestCase):
-    """One palette layer for six designs, so a colour can be judged across them.
+    """One palette layer for eighteen designs, so colours can be judged together.
 
     Each design keeps its own layout and defines its own tokens; themes.css
     overrides those tokens at higher specificity. A design that stops loading it

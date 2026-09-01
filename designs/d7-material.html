@@ -352,9 +352,10 @@ function renderMap(stage){
               <div class="cardname">${esc(c.name)}</div>
               ${c.owner ? `<div class="cardowner">${esc(c.owner)}</div>` : ''}
             </div>
-            <button class="plus mini${A.state.basket.includes(c.id) ? ' in' : ''}"
+            ${A.canBuild(c) ? `<button class="plus mini${A.state.basket.includes(c.id) ? ' in' : ''}"
               data-add="${esc(c.id)}" title="Add to a combination"
-              >${A.state.basket.includes(c.id) ? '&#10003;' : '+'}</button>
+              >${A.state.basket.includes(c.id) ? '&#10003;' : '+'}</button>`
+              : `<span class="pill kind">${esc(A.setupStateFor(c).label)}</span>`}
           </div>
           <p class="carddesc">${esc(c.detail)}</p>
           <div class="cardfoot">

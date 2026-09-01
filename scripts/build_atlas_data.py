@@ -38,6 +38,36 @@ SLUG_RE = re.compile(r"[\w.-]+/[\w.-]+")
 # Not lanes: one is the union of every other list, one is a publish control file.
 NOT_A_LANE = {"all-curated", "public-allowlist"}
 
+# Build combinations consume reviewed setup recipes, not the older ``cmd``
+# field. ``cmd`` describes how to use/run a component after it exists and may
+# legitimately be a test, workflow dispatch, slash command or template. Keeping
+# setup separate prevents a bare GitHub clone from being presented as a complete
+# computer setup.
+MASTER_SETUP_RECIPE = {
+    "id": "master-repo-global",
+    "name": "Master Repo global AI setup",
+    "kind": "setup",
+    "state": "ready",
+    "trust": "owner-repository",
+    "detail": "Clones or refreshes Master-Repo-Use and installs its global client pointers.",
+    "commands": {
+        "windows": "$p=Join-Path $HOME 'Master-Repo-Use'; if (Test-Path (Join-Path $p '.git')) { git -C $p pull --ff-only } else { git clone https://github.com/Charlesganu2004/Master-Repo-Use.git $p }; & (Join-Path $p 'scripts/setup-global-ai.ps1') -RepoPath $p",
+        "wsl": "p=\"$HOME/Master-Repo-Use\"; if [ -d \"$p/.git\" ]; then git -C \"$p\" pull --ff-only; else git clone https://github.com/Charlesganu2004/Master-Repo-Use.git \"$p\"; fi && bash \"$p/scripts/setup-global-ai.sh\" \"$p\"",
+        "macos": "p=\"$HOME/Master-Repo-Use\"; if [ -d \"$p/.git\" ]; then git -C \"$p\" pull --ff-only; else git clone https://github.com/Charlesganu2004/Master-Repo-Use.git \"$p\"; fi && bash \"$p/scripts/setup-global-ai.sh\" \"$p\"",
+        "linux": "p=\"$HOME/Master-Repo-Use\"; if [ -d \"$p/.git\" ]; then git -C \"$p\" pull --ff-only; else git clone https://github.com/Charlesganu2004/Master-Repo-Use.git \"$p\"; fi && bash \"$p/scripts/setup-global-ai.sh\" \"$p\"",
+        "other": "p=\"$HOME/Master-Repo-Use\"; if [ -d \"$p/.git\" ]; then git -C \"$p\" pull --ff-only; else git clone https://github.com/Charlesganu2004/Master-Repo-Use.git \"$p\"; fi && sh \"$p/scripts/setup-global-ai.sh\" \"$p\"",
+    },
+}
+
+# These runtime nodes are implemented by the owner repository itself. Other
+# runtime nodes name third-party CLIs or services and remain setup-unavailable
+# until they receive a separately reviewed, pinned recipe.
+MASTER_SETUP_STAGE_IDS = {
+    "task-intake", "scope-resolver", "lane-match", "budget-check", "hardware-gate",
+    "owner-approval-stage", "workspace-trust", "secret-scope", "master-repo-auto",
+    "plugin-registry", "no-prune-hook", "branch-pr",
+}
+
 FAMILIES = [
     ("intake", "Intake and routing", "instruction"),
     ("surfaces", "Client surfaces", "capability"),
@@ -227,12 +257,14 @@ def catalog_lanes() -> tuple[list, list]:
                 "detail": note or f"Catalogued in {path.name}.",
                 "order": index,
                 "private": True,          # stripped from the published artifact
-                "cmd": {
+                "sourceUrl": f"https://github.com/{slug}",
+                "clone": {
                     "windows": f"git clone https://github.com/{slug}.git",
                     "wsl": f"git clone https://github.com/{slug}.git",
                     "macos": f"git clone https://github.com/{slug}.git",
                     "linux": f"git clone https://github.com/{slug}.git",
                 },
+                "setupState": "review-required",
             })
     return lanes, comps
 
@@ -373,6 +405,24 @@ def build() -> dict:
         lanes.extend(l)
         comps.extend(c)
 
+    # Every locally generated lane is part of Master-Repo-Use and shares one
+    # idempotent setup recipe. Catalog repositories and named third-party
+    # runtime surfaces fail closed until a vetted recipe is recorded.
+    for component in comps:
+        if component.get("slug"):
+            component["action"] = {"kind": "reference", "state": "review-required"}
+            continue
+        is_runtime_stage = component.get("lane", "").startswith("sys-")
+        if not is_runtime_stage or component["id"] in MASTER_SETUP_STAGE_IDS:
+            component["setupRecipe"] = MASTER_SETUP_RECIPE["id"]
+            component["setupState"] = "ready"
+        else:
+            component["setupState"] = "unavailable"
+        component["action"] = {
+            "kind": "operation" if component.get("cmd") else "roadmap",
+            "state": "ready" if component.get("cmd") else "reference",
+        }
+
     routes = [{"id": r[0], "name": r[1], "detail": r[2], "members": r[3],
                "bestFor": r[4], "requires": r[5]} for r in ROUTES]
 
@@ -415,6 +465,7 @@ def build() -> dict:
         "families": [{"id": f, "name": n, "kind": k} for f, n, k in FAMILIES],
         "lanes": lanes,
         "components": comps,
+        "setupRecipes": [MASTER_SETUP_RECIPE],
         "routes": routes,
         "hardware": [{"id": i, "label": l, "verdict": v, "gb": g, "detail": d, "models": m}
                      for i, l, v, g, d, m in HARDWARE],
