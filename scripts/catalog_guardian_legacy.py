@@ -497,11 +497,24 @@ def restore_scan_state(result: Result, old: dict) -> None:
     result.critical = bool(old.get("critical"))
     result.adoption_candidate = bool(old.get("adoption_candidate"))
     if result.critical:
-        result.status = "REMOVE"
-        result.note = "previous CRITICAL security finding pending owner-approved rescan"
+        # This is the path that marked ggml-org/llama.cpp REMOVE for a finding
+        # nobody could find: a cached critical flag restored during a cheap
+        # metadata pass, with a generic note and no evidence carried alongside it.
+        # A remembered verdict has to remember its reason too.
+        evidence = next(
+            (str(item) for item in result.findings if str(item).startswith("CRITICAL")), None)
+        if evidence:
+            result.status = "REMOVE"
+            result.note = (f"previous CRITICAL pending owner-approved rescan: {evidence[:200]}")
+        else:
+            result.critical = False
+            result.status = "REVIEW"
+            result.note = ("cached critical flag with no CRITICAL finding retained; "
+                           "unsubstantiated, so held for rescan rather than removal")
     elif any(str(item).startswith("HIGH") for item in result.findings) and result.status == "HEALTHY":
+        first_high = next(str(i) for i in result.findings if str(i).startswith("HIGH"))
         result.status = "REVIEW"
-        result.note = "previous HIGH security finding pending owner-approved rescan"
+        result.note = f"previous HIGH pending owner-approved rescan: {first_high[:200]}"
     elif has_scanner_error(result.findings):
         result.deep_scanned = False
         if result.status == "HEALTHY":
@@ -657,9 +670,25 @@ def main() -> int:
             result.findings, result.critical = deep_scan(repo)
             result.deep_scanned = True
             if result.critical:
-                result.status, result.note = "REMOVE", "CRITICAL security finding"
+                # A verdict must carry its evidence. ggml-org/llama.cpp was marked
+                # REMOVE for a "CRITICAL security finding" that appeared nowhere in
+                # the findings report, which is indistinguishable from an invented
+                # one. If the flag is set but no CRITICAL line exists to quote, the
+                # verdict is unsubstantiated and must not remove anything.
+                evidence = next(
+                    (item for item in result.findings if item.startswith("CRITICAL")), None)
+                if evidence:
+                    result.status = "REMOVE"
+                    result.note = f"CRITICAL security finding: {evidence[:200]}"
+                else:
+                    result.critical = False
+                    result.status = "REVIEW"
+                    result.note = ("critical flag set with no CRITICAL finding recorded; "
+                                   "unsubstantiated, so held for review rather than removal")
             elif any(item.startswith("HIGH") for item in result.findings):
-                result.status, result.note = "REVIEW", "HIGH security finding requires owner review"
+                first_high = next(item for item in result.findings if item.startswith("HIGH"))
+                result.status = "REVIEW"
+                result.note = f"HIGH security finding requires owner review: {first_high[:200]}"
             elif has_scanner_error(result.findings):
                 # The scanner did not complete. That is a tooling problem, so ask for a
                 # rescan instead of implying the repository contains malware or secrets.

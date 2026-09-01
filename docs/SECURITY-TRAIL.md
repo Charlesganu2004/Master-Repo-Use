@@ -25,3 +25,4 @@ Three rules the automation follows, and this file is how you check it kept them:
 |---|---|---|---|---|---|---|
 | 2026-09-01 13:08 | local | metadata-audit | 304 catalogued repositories | healthy 298, stale 2, review 3, remove 1 (removals held, see issue 16) | scheduled weekly run, no approval required for a read-onl... | 292 of 3000 min |
 | 2026-09-01 13:08 | local | fixture-exemption-fix | gitleaks severity mapping in catalog_guardian_legacy and catalog_se... | 56 fixture CRITICALs recategorised to HIGH; no repository removed | owner instruction, this session | 292 of 3000 min |
+| 2026-09-01 13:15 | local | verdict-substantiation-fix | both REMOVE paths in catalog_guardian_legacy | a verdict with no quotable finding now becomes REVIEW, not REMOVE; llama.cpp case repro... | owner instruction, this session | 292 of 3000 min |
