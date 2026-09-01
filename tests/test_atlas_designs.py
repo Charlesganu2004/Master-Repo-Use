@@ -556,5 +556,47 @@ class TheGalleryCounts(unittest.TestCase):
         self.assertFalse(stale, f"hardcoded component counts: {stale}")
 
 
+class BuildShowsOneSystem(unittest.TestCase):
+    """Build answers with the system you selected, not a menu of five.
+
+    This showed all five platforms at once. Charles pointed out the obvious
+    problem: you choose your system in step 1, so making you find yours among
+    four you cannot run is the wrong answer to a question you already answered.
+    """
+
+    def setUp(self):
+        self.panes = (DESIGNS / "atlas-panes.js").read_text(encoding="utf-8")
+
+    def test_the_heading_names_the_selected_system(self):
+        self.assertIn("Setup commands for ${esc(chosen.label)}", self.panes)
+
+    def test_only_the_current_platform_renders_outside_the_disclosure(self):
+        self.assertIn("all.find(entry => entry.current)", self.panes)
+        self.assertIn("all.filter(entry => !entry.current)", self.panes)
+
+    def test_the_other_systems_are_behind_a_closed_disclosure(self):
+        section = self.panes[self.panes.index("function setupCommandsSection"):]
+        section = section[:section.index("function scriptBlock")]
+        self.assertIn("<details class=\"otheros\">", section)
+        self.assertNotIn("<details open", section, "the disclosure must start closed")
+
+    def test_choosing_no_platform_prompts_rather_than_guessing(self):
+        self.assertIn("Choose your operating system in step 1", self.panes)
+
+    def test_the_other_platforms_are_kept_not_deleted(self):
+        """Handing a teammate the macOS script is worth one collapsed section."""
+        self.assertIn("combinedCommandAll", self.panes)
+        self.assertIn("does not run", self.panes)
+
+    def test_every_design_styles_the_disclosure(self):
+        """Either inline, or via the shared sheet the newer designs load."""
+        shared = (DESIGNS / "atlas-next.css").read_text(encoding="utf-8")
+        for name in INTERACTIVE:
+            body = (DESIGNS / name).read_text(encoding="utf-8")
+            styled = ".otheros{" in body or (
+                "atlas-next.css" in body and ".otheros{" in shared)
+            self.assertTrue(styled, f"{name} does not style the disclosure")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -362,16 +362,42 @@ const AtlasPanes = (() => {
           <p>${esc(c.detail)}</p>
           <span class="src">${esc(A.laneName(c.lane))} · ${esc(A.setupStateFor(c).label)}</span>
         </div>`).join('')}</div>` : '<p class="empty">Nothing added yet. Use + on a setup-ready component.</p>'}
-      <div class="sec">Setup commands, every system</div>
-      <p class="sub">A combination assembled on one machine is worth handing to someone on
-      another, so the script is built for all five. Yours is first; each has its own copy
-      button. A component with no recipe for a given system is listed under that script
-      rather than silently dropped.</p>
-      ${items.length ? A.combinedCommandAll().map(scriptBlock).join('') : ''}
+      ${setupCommandsSection(items)}
       ${items.length ? '<button class="btn ghost" id="basket-clear">Clear all</button>' : ''}
       ${blocked.length ? `<div class="sec">Not setup-ready on your system</div>
         <p class="empty">These have no complete setup recipe for ${esc((A.platform() || {}).label || 'the chosen system')}:</p>
         <div class="conn">${blocked.map(item => `<span class="route">${esc(item)}</span>`).join('')}</div>` : ''}`;
+  }
+
+  /* The script for the system you picked, and only that one.
+   *
+   * This showed all five platforms at once, which was the wrong call: you choose
+   * your system in step 1, so Build answering with five scripts makes you find
+   * yours among four you cannot run. The others stay reachable behind a closed
+   * disclosure, because handing a teammate the macOS version is genuinely useful,
+   * but nothing about another system is on screen unless you ask for it. */
+  function setupCommandsSection(items) {
+    if (!items.length) return '';
+    const chosen = A.platform();
+    if (!chosen) {
+      return `<div class="sec">Setup commands</div>
+        <p class="empty">Choose your operating system in step 1 and the script for it
+        appears here.</p>`;
+    }
+    const all = A.combinedCommandAll();
+    const mine = all.find(entry => entry.current);
+    const others = all.filter(entry => !entry.current);
+
+    return `<div class="sec">Setup commands for ${esc(chosen.label)}</div>
+      <p class="sub">Written for ${esc(chosen.label)} (${esc(chosen.shell)}), because that is
+      what you selected. Commands only, so it pastes straight into a shell.</p>
+      ${mine ? scriptBlock(mine) : ''}
+      ${others.length ? `<details class="otheros">
+        <summary>Need it for a different system?</summary>
+        <p class="sub">Same components, written for the other platforms. Useful when handing
+        the combination to someone who does not run ${esc(chosen.label)}.</p>
+        ${others.map(scriptBlock).join('')}
+      </details>` : ''}`;
   }
 
   /** One platform's script, with its own copy button and its own skip list. */
