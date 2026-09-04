@@ -98,6 +98,13 @@ body.atlas-next ::-webkit-scrollbar-thumb:hover{background:var(--ink)}
 .atlas-next #filters .chip.k-model.on{background:var(--model);border-color:var(--model)}
 .atlas-next #filters .chip.k-delivery.on{background:var(--delivery);border-color:var(--delivery)}
 .atlas-next #filters .chip i{font-style:normal;opacity:.72}
+/* Sub-category notes. A chip label has to fit a row, which leaves several of
+   them reading as self-explanatory when they are not, so selecting one prints
+   what the list author said it holds. */
+.atlas-next #filters .subnote-row{align-items:flex-start}
+.atlas-next #filters .subnotes{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.atlas-next #filters .subnote{color:var(--dim);font-size:13px;line-height:1.5;max-width:74ch}
+.atlas-next #filters .subnote b{color:var(--ink);font-weight:700}
 
 .atlas-next #tabs{display:flex;gap:6px;min-width:0}
 .atlas-next .tab{min-height:42px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--dim);padding:8px 11px;font-size:14px;line-height:1.1;transition:color 140ms var(--next-ease),background 140ms var(--next-ease),border-color 140ms var(--next-ease)}

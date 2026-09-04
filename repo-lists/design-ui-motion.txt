@@ -6,7 +6,7 @@
 #   * Agent "skills" — prompt/instruction packs. Treat as advice, not code.
 # Skill packs are small, young and community-run; read before adopting.
 
-# --- Upstream libraries (load-bearing)
+# --- Upstream libraries (the real dependencies a build actually links against, not wrappers around them)
 mrdoob/three.js
 greensock/GSAP
 
@@ -15,11 +15,11 @@ LottieFiles/motion-design-skill
 naplesblue/apple-design-skill
 AThevon/genjutsu
 
-# --- Design systems & component sources (added 2026-08-25)
+# --- Design systems & component sources (token sets and component libraries; added 2026-08-25)
 zanwei/design-dna                 # reference UI -> quantified design-token JSON, then generate matching UI
 creativetimofficial/ui            # open-source components/blocks exposed via Registry + MCP
 
-# --- Added 2026-09-01: motion libraries and UI directories Charles supplied
+# --- Added 2026-09-01: motion libraries and UI directories Charles supplied (graded on the usual scale, not accepted on suggestion)
 motiondivision/motion             # 33.4k stars, MIT, pushed today. Formerly Framer Motion.
                                   # Hybrid engine: JS plus hardware-accelerated browser APIs.
                                   # The strongest entry in this lane and a real alternative to

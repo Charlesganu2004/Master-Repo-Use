@@ -5,20 +5,20 @@
 #   * multi-model DATABASE  — one engine serving documents + graphs + key-value
 #   * multi-model AI        — one interface driving several LLM providers
 #
-# --- Multi-model databases
+# --- Multi-model databases (one engine serving document, graph and key-value access patterns)
 arangodb/arangodb                 # documents + graphs + key-value in one engine
 skytable/skytable                 # NoSQL with BlueQL  # AGPL-3.0
 
-# --- Multi-model / multi-provider AI interfaces
+# --- Multi-model / multi-provider AI interfaces (one interface across several model providers; a different sense of multi-model from the row above)
 enricoros/big-AGI                 # multi-model chat, image, voice, code exec (MIT)
 SkyworkAI/DeepResearchAgent       # hierarchical multi-agent research system (MIT)
 
-# --- Graph tooling from the supplied links
+# --- Graph tooling from the supplied links (graph stores and visualisation supplied as links, graded on the same scale as the rest)
 exogee-technology/graphweaver     # the real project behind docs.graphweaver.com and the npm package
 nevil-mathew/GraphWeave           # MIT, active, but 0 stars -- reference only, do not depend on it
 CartographAI/mcp-server-codegraph # code-graph MCP server ("cartographer"); MIT, quiet since 2025-10
 
-# --- Research reference
+# --- Research reference (read for the ideas; not proposed as a dependency)
 kk7nc/RMDL                        # Random Multimodel Deep Learning  # GPL-3.0: copying is viral
 
 # NOT ADDED, and why:

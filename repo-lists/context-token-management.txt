@@ -6,7 +6,7 @@
 # adoption or a real paper behind them belong here. Everything below is either
 # widely used, vendor-backed, or explicitly marked reference-only.
 
-# --- Active tooling
+# --- Active tooling (reducers and context managers currently in use, not merely catalogued)
 headroomlabs-ai/headroom          # context compression + cross-agent memory
 thedotmack/claude-mem             # persistent observation/search memory for Claude Code
 ooples/token-optimizer-mcp        # measures token savings per agent; MCP context optimizer
@@ -16,7 +16,7 @@ lucasrosati/claude-code-memory-setup  # Obsidian-backed memory pattern; vendor-n
 microsoft/LLMLingua               # prompt compression; last release quiet since 2026-04, still the reference impl
 ZongqianLi/Prompt-Compression-Survey   # static academic survey; lifecycle override keeps it reference-only
 
-# --- Added 2026-08-28: the reducers Charles supplied, graded honestly
+# --- Added 2026-08-28 (the reducers Charles supplied, kept as their own group so the grading stays traceable to who proposed them)
 rtk-ai/rtk                        # CLI proxy, filters command output before it reaches the model.
                                   # 77.7k stars, Apache-2.0, pushed today. Strongest entry in this lane.
                                   # NOT INSTALLED on Charles's machine as of 2026-08-28, on Windows or in

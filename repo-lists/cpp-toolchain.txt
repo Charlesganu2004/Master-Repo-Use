@@ -14,7 +14,7 @@ ggml-org/llama.cpp        # 126k stars, MIT, pushed today. The reference C++ run
 ggml-org/whisper.cpp      # 53k stars, MIT, 1d. Same author, speech-to-text. CPU-viable,
                           # which matters on the 8 GB tier where GPU work is not.
 
-# --- Static analysis and correctness
+# --- Static analysis and correctness (finds defect classes the compiler will not; run before review, not after)
 facebook/infer            # 15.7k stars, MIT, 5d. Interprocedural static analysis for
                           # C/C++/Java/Objective-C. Finds null-deref and leak classes that
                           # compiler warnings do not.
@@ -23,7 +23,7 @@ cppcheck-opensource/cppcheck  # 6.7k stars, GPL-3.0, 1d. NOTE: catalogued under 
                           # the old slug would pin a stale name.
                           # GPL-3.0 is copyleft: run it as a tool, do not vendor its source.
 
-# --- Language server and editor integration
+# --- Language server and editor integration (what makes an editor understand C++ rather than colour it)
 clangd/clangd             # 2.3k stars, Apache-2.0, 50d. The language server itself. Note the
                           # implementation lives in llvm/llvm-project; this repo is releases
                           # and issue tracking.
@@ -37,7 +37,7 @@ llvm/llvm-project         # 40k stars, pushed today. NOASSERTION on GitHub: the 
                           # Apache-2.0 WITH LLVM-exception. The monorepo behind clang, clangd,
                           # clang-tidy, clang-format and the sanitizers.
 
-# --- Data interchange
+# --- Data interchange (serialisation libraries; pick by parse speed against header-only convenience)
 nlohmann/json             # 50.5k stars, MIT, pushed today. Header-only JSON for modern C++.
                           # The default choice unless parse speed is the binding constraint.
 msgpack/msgpack-c         # 3.3k stars, 7d. NOASSERTION on GitHub: actually Boost Software

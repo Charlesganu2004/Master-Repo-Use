@@ -378,16 +378,33 @@ def catalog_lanes() -> tuple[list, list]:
         family = pick(path.stem, FAMILY_HINTS, "domain")
         kind = pick(path.stem, KIND_HINTS, "capability")
         entries, section, sections = [], "", []
+        # Clicking a sub-category should say what it is. The text comes from what
+        # the author already wrote and is otherwise thrown away: the parenthetical
+        # or colon clause in the header, plus any comment lines between the header
+        # and its first entry. Nothing is synthesised - a sub-category with no
+        # prose behind it gets no description rather than an invented one.
+        blurbs: dict[str, list[str]] = {}
+        awaiting_blurb = ""
         for line in path.read_text(encoding="utf-8").splitlines():
             text = line.strip()
             if text.startswith("# ---"):
-                section = text.lstrip("# -").strip().rstrip(".")
+                full = text.lstrip("# -").strip().rstrip(".")
                 # keep sub-category labels short enough to be a filter chip
-                section = section.split(" (")[0].split(":")[0].strip()[:38]
+                section = full.split(" (")[0].split(":")[0].strip()[:38]
+                tail = full[len(full.split(" (")[0].split(":")[0]):].strip(" (:)").strip()
                 if section and section not in sections:
                     sections.append(section)
+                    blurbs[section] = [tail] if tail else []
+                awaiting_blurb = section
                 continue
-            if not text or text.startswith("#"):
+            if not text:
+                awaiting_blurb = ""
+                continue
+            if text.startswith("#"):
+                # A comment directly under a header describes that header. One
+                # further down is describing the entry above it instead.
+                if awaiting_blurb:
+                    blurbs.setdefault(awaiting_blurb, []).append(text.lstrip("# ").strip())
                 continue
             candidate = text.split("#")[0].strip()
             if not SLUG_RE.fullmatch(candidate):
@@ -398,11 +415,20 @@ def catalog_lanes() -> tuple[list, list]:
             if any(existing == candidate for existing, _, _ in entries):
                 continue
             entries.append((candidate, section, note))
+            awaiting_blurb = ""
 
         entry = lane(lid, path.stem.replace("-", " ").title(), family, kind,
                      f"repo-lists/{path.name}", first_comment(path, ("#",)),
                      len(entries), catalog=True)
         entry["subcategories"] = sections
+        counts: dict[str, int] = {}
+        for _slug, sub, _note in entries:
+            counts[sub or "Catalog"] = counts.get(sub or "Catalog", 0) + 1
+        entry["subcategoryInfo"] = [{
+            "name": name,
+            "description": " ".join(" ".join(blurbs.get(name, [])).split()),
+            "count": counts.get(name, 0),
+        } for name in sections]
         lanes.append(entry)
 
         for index, (slug, sub, note) in enumerate(entries):

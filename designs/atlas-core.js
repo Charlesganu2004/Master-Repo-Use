@@ -232,6 +232,32 @@ const AtlasCore = (() => {
     });
   }
 
+  /** What a sub-category means, in the author's words.
+
+      The text comes from the parenthetical or colon clause on the list's own
+      '# ---' header, so it is written once beside the entries it describes and
+      cannot drift from them. A sub-category appearing in several lanes can carry
+      a different description in each; the descriptions are joined rather than
+      one silently winning. */
+  function subDescription(id) {
+    if (!state.data) return '';
+    // Not a section anyone wrote: it is where entries land when their list has
+    // no '# ---' headers, or when they sit above the first one. Saying so is a
+    // fact about the data rather than an invented editorial line.
+    if (id === 'Catalog') {
+      return 'entries from lists with no section headers, plus any entry sitting above the first header';
+    }
+    const seen = [];
+    (state.data.lanes || []).forEach(lane => {
+      (lane.subcategoryInfo || []).forEach(info => {
+        if (info.name === id && info.description && !seen.includes(info.description)) {
+          seen.push(info.description);
+        }
+      });
+    });
+    return seen.join(' | ');
+  }
+
   /** Sub-categories present in whatever is currently visible by family and kind. */
   function subcategories() {
     const laneIds = new Set(visibleLanes().map(l => l.id));
@@ -242,7 +268,7 @@ const AtlasCore = (() => {
       counts.set(key, (counts.get(key) || 0) + 1);
     });
     return [...counts.entries()]
-      .map(([id, count]) => ({ id, count }))
+      .map(([id, count]) => ({ id, count, description: subDescription(id) }))
       .sort((a, b) => b.count - a.count || a.id.localeCompare(b.id));
   }
 
@@ -513,7 +539,7 @@ const AtlasCore = (() => {
     setPlatform, platform, scanCommand, commandFor,
     setupRecipeFor, setupCommandFor, setupStateFor, canBuild,
     setHardware, usableMemory, tierFor, currentTier, routesForMachine,
-    visibleLanes, visibleComponents, subcategories, lanesForTab,
+    visibleLanes, visibleComponents, subcategories, subDescription, lanesForTab,
     toggleFamily, toggleKind, toggleSub, setQuery, clearFilters, activeFilterCount,
     detailFor, select, laneName,
     addToBasket, removeFromBasket, clearBasket, basketItems,

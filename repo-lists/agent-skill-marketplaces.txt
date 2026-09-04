@@ -7,7 +7,7 @@
 # not permission. An unlicensed repository is all-rights-reserved: read it, learn
 # from it, link to it, copy nothing.
 
-# --- Skill registries and ecosystems
+# --- Skill registries and ecosystems (places that index skills rather than ship one; start here when looking for something specific)
 vercel-labs/skills            # 30.4k stars, MIT, 17d. Vercel's skill collection, including
                               # skills/find-skills for discovery. MIT, so usable.
 vercel-labs/agent-skills      # 30.8k stars, NO LICENCE, 7d. Popular and active, and still
@@ -17,7 +17,7 @@ mattpocock/skills             # already catalogued in design-agent-skills
 sedarged/Agent-skills-ecosystem   # 0 stars, NO LICENCE, 151d. An index of the ecosystem.
                               # LINK ONLY, and treat its entries as unverified.
 
-# --- Individual skills that do a specific job
+# --- Individual skills that do a specific job (single-purpose skills, each solving one named problem)
 mvanhorn/last30days-skill     # 61.2k stars, MIT, 2d. Summarises the last thirty days of work.
                               # Directly relevant to the chat/code monitor lane.
 BehiSecc/VibeSec-Skill        # 1.3k stars, Apache-2.0, 199d. Security review skill. Quiet but
@@ -34,7 +34,7 @@ mprknowledgerepo-dev/taste-skill-frontend
                               # 0 stars, MIT, 79d. Frontend companion to the above. Licensed,
                               # but unproven; read before adopting.
 
-# --- Vercel Labs tooling
+# --- Vercel Labs tooling (Vercel's agent-adjacent tools, grouped because they share a licence posture and release cadence)
 vercel-labs/agent-browser     # 41.9k stars, Apache-2.0, pushed today. Browser control for agents.
 vercel-labs/json-render       # 16.1k stars, Apache-2.0, 5d. Renders JSON as UI.
 vercel-labs/portless          # 12.1k stars, Apache-2.0, 6d. Local tunnelling without port juggling.

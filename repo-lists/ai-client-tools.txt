@@ -21,7 +21,7 @@ rebelytics/one-skill-to-rule-them-all
 # Media tool — authorized media only
 D-Ogi/WatermarkRemover-AI
 
-# --- Added 2026-08-28
+# --- Added 2026-08-28 (provenance grouping, not a category; these arrived together on that date)
 anomalyco/opencode   # multi-provider agent client (Claude, GPT, Gemini). 202k stars, MIT, active.
                      # NOTE: catalogued under anomalyco/. The widely-posted slug sst/opencode is a
                      # redirect to this, and opencode-ai/opencode is the ARCHIVED original (345d).

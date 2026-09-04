@@ -112,6 +112,21 @@ const AtlasPanes = (() => {
   /* Every filter row composes with every other. Nothing here replaces a previous
      choice, so families, kinds and sub-categories can be mixed freely. */
 
+  /* Clicking a sub-category says what it is, not only what it filters to.
+     A chip label has to stay short enough to fit a row, which leaves "Data
+     interchange" and "Multi-model databases" looking self-explanatory when they
+     are not. The note appears for whatever is currently selected, so it answers
+     the question at the moment it gets asked. */
+  function subNotes(subs) {
+    const chosen = subs.filter(s => A.state.activeSubs.has(s.id) && s.description);
+    if (!chosen.length) return '';
+    return `<div class="frow subnote-row">
+      <span class="flabel"></span>
+      <span class="subnotes">${chosen.map(s =>
+        `<span class="subnote"><b>${esc(s.id)}</b> ${esc(s.description)}</span>`).join('')}</span>
+    </div>`;
+  }
+
   function filtersUI() {
     const host = document.getElementById('filters');
     if (!host) return;
@@ -142,9 +157,11 @@ const AtlasPanes = (() => {
         <span class="flabel">Sub-category</span>
         <span class="chips">${subs.map(s =>
           `<button class="chip sub${A.state.activeSubs.has(s.id) ? ' on' : ''}"
-            data-sub="${esc(s.id)}">${esc(s.id)} <i>${s.count}</i></button>`).join('')
+            data-sub="${esc(s.id)}"${s.description ? ` title="${esc(s.description)}"` : ''}
+            >${esc(s.id)} <i>${s.count}</i></button>`).join('')
           || '<span class="fcount">none in the current selection</span>'}</span>
-      </div>`;
+      </div>
+      ${subNotes(subs)}`;
 
     const q = document.getElementById('fq');
     if (q) {
