@@ -437,6 +437,77 @@ const AtlasPanes = (() => {
     </div>`;
   }
 
+  /* --------------------------------------------------- easy setup */
+
+  /* Four answers to "new machine, what do I run?".
+   *
+   * Build already assembles a script, but only once you know which nodes to pick
+   * and in what order. A profile is that knowledge written down: an ordered list
+   * of the same reviewed recipes, nothing extra, nothing the Build tab could not
+   * produce by hand. The client picker and the RAM in step 3 fill in the two
+   * steps whose right answer is not the same for everyone. */
+
+  function easyHTML() {
+    const profiles = A.profiles();
+    const clients = A.profileClients();
+    const client = A.state.profileClient || 'all';
+    const chosen = A.platform();
+    const tier = A.currentTier();
+
+    if (!profiles.length) {
+      return `<h2>Easy setup</h2>
+        <p class="empty">This data file carries no profiles.</p>`;
+    }
+
+    return `<h2>Easy setup</h2>
+      <p class="sub">Pick a profile and the client that should receive the rules. The script
+      is the same reviewed recipes the Build tab uses, ordered so each step has what the
+      next one needs.</p>
+
+      <div class="sec">Which assistant gets the rules?</div>
+      <div class="easyclients">${clients.map(c =>
+        `<button class="chip${c.id === client ? ' on' : ''}" data-client="${esc(c.id)}"
+          title="${esc(c.detail)}">${esc(c.name)}</button>`).join('')}</div>
+      <p class="sub">${esc((clients.find(c => c.id === client) || {}).detail || '')}</p>
+
+      ${chosen ? '' : `<p class="empty">Choose your operating system in step 1 first. Every
+        profile writes a different script for each system, so there is nothing to show until
+        you pick one.</p>`}
+      ${tier ? `<p class="sub">Model steps resolve to the ${esc(tier.label)} tier:
+        ${esc((tier.models || []).join(', ') || 'no tags at this size')}.</p>`
+        : `<p class="sub">No RAM entered in step 3, so the model steps stay empty rather than
+        guessing a tag this machine may not be able to hold.</p>`}
+
+      ${profiles.map(profile => easyProfile(profile, Boolean(chosen))).join('')}`;
+  }
+
+  function easyProfile(profile, hasPlatform) {
+    const result = hasPlatform ? A.profileScriptFor(profile.id) : null;
+    const steps = (result && result.steps) || A.resolveProfile(profile).recipes;
+    const notes = (result && result.notes) || A.resolveProfile(profile).notes;
+    const open = profile.id === 'software-developer' ? ' open' : '';
+    return `<details class="easy"${open}>
+      <summary><b>${esc(profile.name)}</b> <span class="src">${esc(profile.summary)}</span></summary>
+      <p>${esc(profile.detail)}</p>
+      <p class="sub">Best for: ${esc(profile.bestFor)}</p>
+      <ol class="easysteps">${steps.map(recipe =>
+        `<li><b>${esc(recipe.name)}</b> <span class="src">${esc(recipe.detail)}</span></li>`).join('')
+        || '<li class="empty">No step in this profile resolved.</li>'}</ol>
+      ${notes.length ? `<p class="scriptskip">${notes.map(esc).join(' ')}</p>` : ''}
+      ${result
+        ? (result.ok
+          ? `<div class="cmd wrap"><button class="copy" data-copy-profile="${esc(profile.id)}"
+              >copy</button>${esc(result.text)}</div>
+            <p class="sub">${result.commandCount} command line(s) for
+            ${esc(result.platform.label)} (${esc(result.platform.shell)}).</p>`
+          : `<p class="empty">${esc(result.text)}</p>`)
+        : ''}
+      ${result && (result.blocked || []).length
+        ? `<p class="scriptskip">Not in this script: ${result.blocked.map(esc).join('; ')}</p>`
+        : ''}
+    </details>`;
+  }
+
   function customHTML() {
     const mine = A.state.customLanes;
     return `<h2>Custom lanes</h2>
@@ -503,6 +574,17 @@ const AtlasPanes = (() => {
     });
     document.querySelectorAll('[data-drop]').forEach(b => {
       b.onclick = () => { A.removeFromBasket(b.dataset.drop); draw(); };
+    });
+    document.querySelectorAll('[data-client]').forEach(btn => {
+      btn.onclick = () => { A.setProfileClient(btn.dataset.client); draw(); };
+    });
+    document.querySelectorAll('[data-copy-profile]').forEach(btn => {
+      btn.onclick = async () => {
+        const result = A.profileScriptFor(btn.dataset.copyProfile);
+        if (!result.ok) return;
+        btn.textContent = (await A.copy(result.text)) ? 'copied' : 'select it';
+        setTimeout(() => { btn.textContent = 'copy'; }, 1400);
+      };
     });
     document.querySelectorAll('[data-copy-script]').forEach(btn => {
       btn.onclick = async () => {
@@ -636,7 +718,53 @@ const AtlasPanes = (() => {
 
   /* ------------------------------------------------------------ draw */
 
+  /* Base styling for elements this module invents.
+   *
+   * Every design carries its own CSS, which is the point: they are meant to look
+   * different. But a design written before a control existed cannot style it, so
+   * a new control arrives unstyled wherever nobody has been back - the client
+   * picker rendered as one run-on line of text in six designs.
+   *
+   * Specificity was the whole difficulty. :where() was the first attempt, at zero
+   * specificity so any design rule wins; it lost to the plain `button {}` reset
+   * several designs carry, and the chips stayed unstyled. So these are ordinary
+   * two-class selectors: high enough to beat an element reset, low enough that a
+   * design overrides them by naming the same classes. Colours come from the
+   * variables every design already defines, with a fallback for any that do not,
+   * so this inherits each theme instead of fighting it.
+   */
+  const BASE_STYLE_ID = 'atlas-panes-base';
+  const BASE_STYLE = `
+    .easyclients{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 6px}
+    .easyclients .chip{min-height:30px;padding:5px 12px;font-size:13px;line-height:1.3;
+      border:1px solid var(--line,#3a3a3a);border-radius:999px;background:transparent;
+      color:var(--dim,#999);white-space:nowrap;cursor:pointer}
+    .easyclients .chip:hover{border-color:var(--accent,#c33);color:var(--ink,#eee)}
+    .easyclients .chip.on{background:var(--accent,#c33);border-color:var(--accent,#c33);
+      color:var(--bg,#111);font-weight:800}
+    .pane .easy{border:1px solid var(--line,#3a3a3a);border-radius:10px;
+      padding:10px 14px;margin:10px 0}
+    .pane .easy>summary{cursor:pointer;display:flex;gap:10px;align-items:baseline;
+      flex-wrap:wrap}
+    .pane .easysteps{margin:10px 0;padding-left:22px;display:flex;flex-direction:column;
+      gap:6px}
+    .frow .subnotes{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+    .frow .subnote{color:var(--dim,#999);line-height:1.5;max-width:74ch}
+    .frow .subnote b{color:var(--ink,#eee)}
+  `;
+
+  function injectBaseStyle() {
+    if (document.getElementById(BASE_STYLE_ID)) return;
+    const style = document.createElement('style');
+    style.id = BASE_STYLE_ID;
+    style.textContent = BASE_STYLE;
+    // First child of head, so a design's own stylesheet comes after it and wins
+    // on equal specificity as well as on higher.
+    document.head.insertBefore(style, document.head.firstChild);
+  }
+
   function draw() {
+    injectBaseStyle();
     setupUI();
     tabsUI();
     filtersUI();
@@ -651,6 +779,7 @@ const AtlasPanes = (() => {
           tab === 'routes' ? routesHTML() :
           tab === 'hardware' ? hardwareHTML() :
           tab === 'basket' ? basketHTML() :
+          tab === 'easy' ? easyHTML() :
           tab === 'custom' ? customHTML() :
           tab === 'suggest' ? suggestHTML() :
           lanesHTML(tab);

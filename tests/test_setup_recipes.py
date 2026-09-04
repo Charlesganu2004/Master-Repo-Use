@@ -67,22 +67,49 @@ class TheModelsHaveSetupCommands(unittest.TestCase):
         order = [c["id"] for c in sorted(components_in(self.LANE), key=lambda c: c["order"])]
         self.assertEqual(order[0], "ollama-runtime")
 
-    def test_every_hardware_tier_has_at_least_one_tag(self):
-        names = {c["name"] for c in components_in(self.LANE)}
-        for tier_tag in ("gemma2:2b", "phi3:mini", "phi3:medium", "gemma2:9b", "gemma2:27b"):
-            self.assertIn(tier_tag, names, f"{tier_tag} has no setup command")
+    def test_every_tier_that_can_host_anything_names_something(self):
+        """4 GB, Apple and GPU list nothing on purpose; the RAM tiers must not."""
+        for tier in DATA["hardware"]:
+            if tier["id"] in {"8gb", "16gb", "32gb"}:
+                self.assertTrue(tier["models"], f"{tier['id']} offers no model at all")
+
+    def test_every_vetted_ollama_model_can_be_installed(self):
+        """The lane is derived from the hardware document, so none may go missing."""
+        vetted = {model["tag"] for model in json.loads(
+            (ROOT / "docs" / "hardware-profiles.json").read_text(encoding="utf-8"))["models"]
+            if model.get("runtime") == "ollama"}
+        offered = {c["name"] for c in components_in(self.LANE)}
+        self.assertEqual(vetted - offered, set(), "vetted models with no setup command")
 
     def test_every_model_component_is_setup_ready(self):
         for component in components_in(self.LANE):
             self.assertEqual(component["setupState"], "ready", component["id"])
             self.assertIn(component["setupRecipe"], RECIPES, component["id"])
 
-    def test_the_pull_commands_name_an_exact_tag(self):
-        """'ollama pull gemma2' would fetch whatever latest happens to be today."""
+    def test_every_pull_names_a_tag_that_was_actually_vetted(self):
+        """The tag must be one docs/hardware-profiles.json already records.
+
+        A colon check was the first version of this, on the theory that a bare
+        name means a floating :latest. It is a real concern, but ten of the
+        thirty-six vetted tags are deliberately bare - phi4, mistral, phi3.5 -
+        because the vendor's default tag is the intended one. So the rule that
+        matters is not punctuation. It is that the atlas cannot offer to pull
+        something the hardware document never vetted.
+        """
+        vetted = {model["tag"] for model in json.loads(
+            (ROOT / "docs" / "hardware-profiles.json").read_text(encoding="utf-8"))["models"]}
         for component in components_in(self.LANE):
             command = component["cmd"]["linux"]
             if command.startswith("ollama pull"):
-                self.assertIn(":", command.split()[-1], component["id"])
+                self.assertIn(command.split()[-1], vetted, component["id"])
+
+    def test_a_tier_tag_and_its_recipe_name_agree_exactly(self):
+        """Easy Setup resolves a tier's tag to a recipe by name, so drift breaks it."""
+        by_name = {c["name"]: c for c in components_in(self.LANE)}
+        for tier in DATA["hardware"]:
+            for tag in tier["models"]:
+                self.assertIn(tag, by_name, f"{tier['id']} names {tag} with no recipe")
+                self.assertEqual(by_name[tag]["cmd"]["linux"], f"ollama pull {tag}")
 
     def test_each_tag_records_its_download_size(self):
         """The tier question is 'does it fit', so the size has to be on the card."""

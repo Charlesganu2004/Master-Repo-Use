@@ -44,47 +44,57 @@ NOT_A_LANE = {"all-curated", "public-allowlist"}
 # setup separate prevents a bare GitHub clone from being presented as a complete
 # computer setup.
 
-# Local model runtimes and the tags each hardware tier can actually host.
+# Local model runtimes, and one setup recipe per model the hardware document has
+# already vetted.
+#
+# The tag list is READ from docs/hardware-profiles.json rather than written here.
+# The first version of this file hardcoded six tags and one of them, gemma2:2b,
+# was not in the vetted set at all - the atlas was offering to pull something no
+# document had ever checked. Deriving the list makes that class of drift
+# impossible rather than merely unlikely.
 #
 # Catalog entries are reference-only by design: a repository URL is not a vetted
-# install. These are different. Each is a reviewed command for a named runtime at
-# a named tag, with no placeholder to fill in, which is what setup-ready means.
-#
-# Sizes are the 4-bit quantised download, which is what governs whether a tier can
-# hold it. The tier a tag belongs to comes from docs/hardware-profiles.json.
-MODEL_SETUPS = [
-    ("ollama-runtime", "Ollama runtime", "models",
-     "The local runtime the model tags below need. Installs once, then serves on 127.0.0.1:11434.",
-     {"windows": "winget install --id Ollama.Ollama --accept-source-agreements --accept-package-agreements",
-      "wsl": "curl -fsSL https://ollama.com/install.sh | sh",
-      "linux": "curl -fsSL https://ollama.com/install.sh | sh",
-      "macos": "brew install ollama && brew services start ollama",
-      "other": "curl -fsSL https://ollama.com/install.sh | sh"}),
+# install. These are different. Each names a runtime and an exact tag that the
+# hardware document records, with no placeholder to fill in.
+HARDWARE_PROFILES = json.loads(
+    (ROOT / "docs" / "hardware-profiles.json").read_text(encoding="utf-8"))
 
-    ("model-phi3-mini", "phi3:mini", "models",
-     "Microsoft, 3.8B at 4-bit, about 2.3 GB. The 8 GB tier. Needs the Ollama runtime first.",
-     {k: "ollama pull phi3:mini" for k in ("windows", "wsl", "linux", "macos", "other")}),
+OLLAMA_RUNTIME = (
+    "ollama-runtime", "Ollama runtime", "models",
+    "The local runtime every model tag below needs. Installs once, then serves on "
+    "127.0.0.1:11434.",
+    {"windows": "winget install --id Ollama.Ollama --accept-source-agreements --accept-package-agreements",
+     "wsl": "curl -fsSL https://ollama.com/install.sh | sh",
+     "linux": "curl -fsSL https://ollama.com/install.sh | sh",
+     "macos": "brew install ollama && brew services start ollama",
+     "other": "curl -fsSL https://ollama.com/install.sh | sh"})
 
-    ("model-gemma2-2b", "gemma2:2b", "models",
-     "Google, 2B at 4-bit, about 1.6 GB. The smallest tier that is still useful.",
-     {k: "ollama pull gemma2:2b" for k in ("windows", "wsl", "linux", "macos", "other")}),
+LIST_INSTALLED = (
+    "model-list-installed", "List installed models", "models",
+    "What this machine already holds, and how much disk each one is using.",
+    {k: "ollama list" for k in ("windows", "wsl", "linux", "macos", "other")})
 
-    ("model-phi3-medium", "phi3:medium", "models",
-     "Microsoft, 14B at 4-bit, about 7.9 GB. The 16 GB tier.",
-     {k: "ollama pull phi3:medium" for k in ("windows", "wsl", "linux", "macos", "other")}),
 
-    ("model-gemma2-9b", "gemma2:9b", "models",
-     "Google, 9B at 4-bit, about 5.4 GB. The 16 GB tier.",
-     {k: "ollama pull gemma2:9b" for k in ("windows", "wsl", "linux", "macos", "other")}),
+def _model_slug(tag: str) -> str:
+    return "model-" + re.sub(r"[^a-z0-9]+", "-", tag.lower()).strip("-")
 
-    ("model-gemma2-27b", "gemma2:27b", "models",
-     "Google, 27B at 4-bit, about 16 GB. The 32 GB tier; it will swap below that.",
-     {k: "ollama pull gemma2:27b" for k in ("windows", "wsl", "linux", "macos", "other")}),
 
-    ("model-list-installed", "List installed models", "models",
-     "What this machine already holds, and how much disk each one is using.",
-     {k: "ollama list" for k in ("windows", "wsl", "linux", "macos", "other")}),
-]
+def _model_setups() -> list[tuple]:
+    """One entry per vetted ollama model, ordered smallest machine first."""
+    models = [m for m in HARDWARE_PROFILES["models"] if m.get("runtime") == "ollama"]
+    models.sort(key=lambda m: (m["min_ram_gb"], m["params_b"], m["tag"]))
+    setups = [OLLAMA_RUNTIME]
+    for model in models:
+        detail = (f"{model['vendor']}, {model['params_b']}B at {model['quant']}, "
+                  f"needs {model['min_ram_gb']} GB. {model['use']} Licence: {model['license']}.")
+        setups.append((_model_slug(model["tag"]), model["tag"], "models", detail,
+                       {k: f"ollama pull {model['tag']}"
+                        for k in ("windows", "wsl", "linux", "macos", "other")}))
+    setups.append(LIST_INSTALLED)
+    return setups
+
+
+MODEL_SETUPS = _model_setups()
 
 
 def model_setup_recipes() -> list[dict]:
@@ -128,15 +138,38 @@ _PS_CLONE = ("$p=Join-Path $HOME 'Master-Repo-Use'; "
 _SH_CLONE = ('p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull --ff-only; '
              f'else git clone {REPO_URL} "$p"; fi && ')
 
+# Every owner recipe starts by making sure the repository is present and current.
+# Each recipe stays standalone - the Build tab may run any one of them alone - but
+# the preamble is recorded separately so a profile can print it once.
+_CLONE_PREAMBLE = {"windows": _PS_CLONE, "wsl": _SH_CLONE, "macos": _SH_CLONE,
+                   "linux": _SH_CLONE, "other": _SH_CLONE}
 
-def _rules_commands(client: str) -> dict:
-    """Same intent per platform: refresh the repo, then write that client's rules."""
-    ps = _PS_CLONE + ("& (Join-Path $p 'scripts/setup-global-ai.ps1') -RepoPath $p "
-                      f"-Client {client} -AutoSkills")
-    sh = _SH_CLONE + f'bash "$p/scripts/setup-global-ai.sh" "$p" --client {client} --auto-skills'
+
+def _rules_bodies(client: str) -> dict:
+    """The step itself, without the clone. Same intent on every platform."""
+    ps = ("& (Join-Path $p 'scripts/setup-global-ai.ps1') -RepoPath $p "
+          f"-Client {client} -AutoSkills")
+    sh = f'bash "$p/scripts/setup-global-ai.sh" "$p" --client {client} --auto-skills'
     return {"windows": ps, "wsl": sh, "macos": sh, "linux": sh,
             "other": sh.replace('bash "$p', 'sh "$p')}
 
+
+def _with_clone(bodies: dict) -> dict:
+    """A standalone command: clone-or-refresh, then the body."""
+    return {key: _CLONE_PREAMBLE[key] + body for key, body in bodies.items()}
+
+
+def _rules_commands(client: str) -> dict:
+    return _with_clone(_rules_bodies(client))
+
+
+_GUARD_BODIES = {
+    "windows": "python (Join-Path $p 'scripts/install_auto_mode.py') --repo $p",
+    "wsl": 'python3 "$p/scripts/install_auto_mode.py" --repo "$p"',
+    "macos": 'python3 "$p/scripts/install_auto_mode.py" --repo "$p"',
+    "linux": 'python3 "$p/scripts/install_auto_mode.py" --repo "$p"',
+    "other": 'python3 "$p/scripts/install_auto_mode.py" --repo "$p"',
+}
 
 GLOBAL_RULES_SETUPS = [
     ("rules-all-clients", "Global rules - every client", "instructions",
@@ -166,11 +199,7 @@ GLOBAL_RULES_SETUPS = [
      "Installs the no-prune and no-compress PreToolUse hooks. These enforce the rules "
      "outside the model, which is what matters: an instruction reading 'do not compress "
      "me' only holds while something is still reading it.",
-     {"windows": _PS_CLONE + "python (Join-Path $p 'scripts/install_auto_mode.py') --repo $p",
-      "wsl": _SH_CLONE + 'python3 "$p/scripts/install_auto_mode.py" --repo "$p"',
-      "macos": _SH_CLONE + 'python3 "$p/scripts/install_auto_mode.py" --repo "$p"',
-      "linux": _SH_CLONE + 'python3 "$p/scripts/install_auto_mode.py" --repo "$p"',
-      "other": _SH_CLONE + 'python3 "$p/scripts/install_auto_mode.py" --repo "$p"'}),
+     _with_clone(_GUARD_BODIES)),
 
     ("rules-verify", "Verify what was written", "instructions",
      "Shows the block that landed in each client file, so a claimed setup can be checked "
@@ -184,15 +213,26 @@ GLOBAL_RULES_SETUPS = [
 
 
 def global_rules_recipes() -> list[dict]:
-    return [{
-        "id": f"setup-{ident}",
-        "name": name,
-        "kind": "setup",
-        "state": "ready",
-        "trust": "owner-repository",
-        "detail": detail,
-        "commands": commands,
-    } for ident, name, _family, detail, commands in GLOBAL_RULES_SETUPS]
+    recipes = []
+    for ident, name, _family, detail, commands in GLOBAL_RULES_SETUPS:
+        recipe = {
+            "id": f"setup-{ident}",
+            "name": name,
+            "kind": "setup",
+            "state": "ready",
+            "trust": "owner-repository",
+            "detail": detail,
+            "commands": commands,
+        }
+        # Recorded only where it is genuinely the shared preamble, so a profile
+        # can drop the repeat without any string matching at read time.
+        if all(command.startswith(_CLONE_PREAMBLE[key])
+               for key, command in commands.items()):
+            recipe["preambles"] = dict(_CLONE_PREAMBLE)
+            recipe["bodies"] = {key: command[len(_CLONE_PREAMBLE[key]):]
+                                for key, command in commands.items()}
+        recipes.append(recipe)
+    return recipes
 
 
 def global_rules_lane() -> tuple[list, list]:
@@ -207,6 +247,85 @@ def global_rules_lane() -> tuple[list, list]:
     return lanes, comps
 
 
+
+# Easy Setup. Four answers to "I have a new machine, what do I run?"
+#
+# A profile is an ordered list of reviewed recipes, nothing more. It cannot
+# install anything the Build tab could not already install one node at a time;
+# it removes the need to know which nodes to pick and in what order.
+#
+# Two steps are written as tokens the client resolves rather than fixed ids:
+#   rules:{client}  the client picker's answer (all, claude, codex, gemini, copilot)
+#   model:{tier}    the largest tag the entered RAM can actually host
+# Both fail visibly. An unresolved token is dropped from the script and named in
+# the notes, instead of emitting a command with a placeholder still in it.
+#
+# No profile lists master-repo-global. It runs setup-global-ai with no client
+# argument, which means all four, so following the client picker with it would
+# silently undo the pick. The rules step already clones the repository and runs
+# the same script with the chosen client, and everything else that script does is
+# client-independent. master-repo-global stays available in Build for anyone who
+# does want all four in one step.
+PROFILES = [
+    {
+        "id": "rules-only",
+        "name": "Global rules only",
+        "summary": "The contract and the guards. No models, no clone beyond this repo.",
+        "detail": "Writes the Master Repo contract and the protected auto-mode block into "
+                  "the client you pick, then installs the no-prune and no-compress hooks so "
+                  "the rules hold outside the model as well as inside it.",
+        "bestFor": "An existing machine that already has its tooling and only needs the rules.",
+        "steps": ["rules:{client}", "setup-rules-guards", "setup-rules-verify"],
+    },
+    {
+        "id": "software-developer",
+        "name": "Software developer",
+        "summary": "Rules, the repository itself, and one local model that fits.",
+        "detail": "Everything in Global rules, plus the Ollama runtime and the largest "
+                  "model tag the entered RAM can host. The rules step already clones the "
+                  "repository, so this does not clone it again. Enough to work offline.",
+        "bestFor": "A new laptop that will write code and wants a local model for the cheap work.",
+        "steps": ["rules:{client}", "setup-rules-guards",
+                  "setup-ollama-runtime", "model:{tier}", "setup-rules-verify"],
+    },
+    {
+        "id": "engineering",
+        "name": "Engineering",
+        "summary": "The developer profile plus a second model and the installed-model check.",
+        "detail": "Adds a second local tag so routing has somewhere to go, and lists what is "
+                  "installed at the end so the machine can be checked rather than assumed. "
+                  "Aimed at a workstation that will run local inference regularly.",
+        "bestFor": "A workstation with the memory to hold more than one model at a time.",
+        "steps": ["rules:{client}", "setup-rules-guards",
+                  "setup-ollama-runtime", "model:{tier}", "model:{tier2}",
+                  "setup-model-list-installed", "setup-rules-verify"],
+    },
+    {
+        "id": "everything",
+        "name": "Everything ready",
+        "summary": "Every reviewed recipe, in dependency order.",
+        "detail": "Runs every setup-ready recipe this repository holds. Nothing here is "
+                  "catalog code: catalog entries stay reference-only, so this installs the "
+                  "runtime, the rules and the reviewed model tags, and nothing else.",
+        "bestFor": "A machine being set up once, thoroughly, where disk is not the constraint.",
+        "steps": ["rules:{client}", "setup-rules-guards",
+                  "setup-ollama-runtime", "ALL_MODEL_TAGS",
+                  "setup-model-list-installed", "setup-rules-verify"],
+    },
+]
+
+# The client picker's options, in the order they are offered.
+PROFILE_CLIENTS = [
+    {"id": "all", "name": "All clients", "detail": "Claude, Codex, Gemini and Copilot together."},
+    {"id": "claude", "name": "Claude", "detail": "~/.claude/CLAUDE.md"},
+    {"id": "codex", "name": "Codex (GPT)", "detail": "~/.codex/AGENTS.md"},
+    {"id": "gemini", "name": "Gemini", "detail": "~/.gemini/GEMINI.md"},
+    {"id": "copilot", "name": "Copilot", "detail": "~/.copilot/copilot-instructions.md"},
+]
+
+# Built from the same clone helpers the rules recipes use, so the preamble is
+# byte-identical everywhere. Easy Setup relies on that: it prints the clone once
+# and the bodies after it, instead of cloning the same repository three times.
 MASTER_SETUP_RECIPE = {
     "id": "master-repo-global",
     "name": "Master Repo global AI setup",
@@ -214,13 +333,18 @@ MASTER_SETUP_RECIPE = {
     "state": "ready",
     "trust": "owner-repository",
     "detail": "Clones or refreshes Master-Repo-Use and installs its global client pointers.",
-    "commands": {
-        "windows": "$p=Join-Path $HOME 'Master-Repo-Use'; if (Test-Path (Join-Path $p '.git')) { git -C $p pull --ff-only } else { git clone https://github.com/Charlesganu2004/Master-Repo-Use.git $p }; & (Join-Path $p 'scripts/setup-global-ai.ps1') -RepoPath $p",
-        "wsl": "p=\"$HOME/Master-Repo-Use\"; if [ -d \"$p/.git\" ]; then git -C \"$p\" pull --ff-only; else git clone https://github.com/Charlesganu2004/Master-Repo-Use.git \"$p\"; fi && bash \"$p/scripts/setup-global-ai.sh\" \"$p\"",
-        "macos": "p=\"$HOME/Master-Repo-Use\"; if [ -d \"$p/.git\" ]; then git -C \"$p\" pull --ff-only; else git clone https://github.com/Charlesganu2004/Master-Repo-Use.git \"$p\"; fi && bash \"$p/scripts/setup-global-ai.sh\" \"$p\"",
-        "linux": "p=\"$HOME/Master-Repo-Use\"; if [ -d \"$p/.git\" ]; then git -C \"$p\" pull --ff-only; else git clone https://github.com/Charlesganu2004/Master-Repo-Use.git \"$p\"; fi && bash \"$p/scripts/setup-global-ai.sh\" \"$p\"",
-        "other": "p=\"$HOME/Master-Repo-Use\"; if [ -d \"$p/.git\" ]; then git -C \"$p\" pull --ff-only; else git clone https://github.com/Charlesganu2004/Master-Repo-Use.git \"$p\"; fi && sh \"$p/scripts/setup-global-ai.sh\" \"$p\"",
+    "preambles": dict(_CLONE_PREAMBLE),
+    "bodies": {
+        "windows": "& (Join-Path $p 'scripts/setup-global-ai.ps1') -RepoPath $p",
+        "wsl": 'bash "$p/scripts/setup-global-ai.sh" "$p"',
+        "macos": 'bash "$p/scripts/setup-global-ai.sh" "$p"',
+        "linux": 'bash "$p/scripts/setup-global-ai.sh" "$p"',
+        "other": 'sh "$p/scripts/setup-global-ai.sh" "$p"',
     },
+}
+MASTER_SETUP_RECIPE["commands"] = {
+    key: _CLONE_PREAMBLE[key] + MASTER_SETUP_RECIPE["bodies"][key]
+    for key in MASTER_SETUP_RECIPE["bodies"]
 }
 
 # These runtime nodes are implemented by the owner repository itself. Other
@@ -304,15 +428,39 @@ ROUTES = [
      ["hardware-gate", "rtt", "caveman-compact"], "air-gapped work", "16 GB RAM minimum"),
 ]
 
+def tier_tags(gb: int, count: int = 2) -> list[str]:
+    """The largest vetted tags this tier can host, from two different vendors.
+
+    Read from docs/hardware-profiles.json rather than written out, so a tier can
+    never come to name a tag the hardware document has not checked. Two vendors
+    rather than the top two by size, because a tier offering two builds of the
+    same family is a worse answer than one offering a choice.
+    """
+    fits = [(index, model) for index, model in enumerate(HARDWARE_PROFILES["models"])
+            if model.get("runtime") == "ollama" and model["min_ram_gb"] <= gb]
+    # Size decides; ties fall back to the order the hardware document lists them
+    # in, which is the author's own ordering rather than an alphabetical accident.
+    fits.sort(key=lambda pair: (-pair[1]["params_b"], pair[0]))
+    chosen, vendors = [], set()
+    for _index, model in fits:
+        if model["vendor"] in vendors:
+            continue
+        vendors.add(model["vendor"])
+        chosen.append(model["tag"])
+        if len(chosen) == count:
+            break
+    return chosen
+
+
 HARDWARE = [
     ("4gb", "4 GB RAM", "Hosted API only", 4,
      "Local inference will swap and thrash. That is the honest answer, not a limit to engineer around.", []),
     ("8gb", "8 GB RAM", "Smallest useful local tier", 8,
-     "3B class models at 4-bit quantization, with headroom left for the OS.", ["phi3:mini", "gemma2:2b"]),
+     "3B class models at 4-bit quantization, with headroom left for the OS.", tier_tags(8)),
     ("16gb", "16 GB RAM", "Comfortable local tier", 16,
-     "7B to 8B class at 4-bit. The common developer laptop.", ["phi3:medium", "gemma2:9b"]),
+     "7B to 8B class at 4-bit. The common developer laptop.", tier_tags(16)),
     ("32gb", "32 GB RAM", "Large local tier", 32,
-     "13B to 14B class, or 7B at higher precision.", ["phi4", "gemma2:27b"]),
+     "13B to 14B class, or 7B at higher precision.", tier_tags(32)),
     ("apple", "Apple silicon", "Unified memory is shared", 0,
      "GPU and CPU draw on one pool, so usable model size sits below the headline number. Metal acceleration is automatic in Ollama.", []),
     ("gpu", "Discrete GPU", "VRAM is the real limit", 0,
@@ -662,6 +810,8 @@ def build() -> dict:
         "components": comps,
         "setupRecipes": ([MASTER_SETUP_RECIPE] + model_setup_recipes()
                      + global_rules_recipes()),
+        "profiles": PROFILES,
+        "profileClients": PROFILE_CLIENTS,
         "routes": routes,
         "hardware": [{"id": i, "label": l, "verdict": v, "gb": g, "detail": d, "models": m}
                      for i, l, v, g, d, m in HARDWARE],

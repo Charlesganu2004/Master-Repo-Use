@@ -58,6 +58,7 @@ const AtlasCore = (() => {
     hw: load('atlas.hw', { ram: null, vram: null, storage: null, cpu: null }),
     customLanes: load('atlas.customLanes', []),
     suggestions: load('atlas.suggestions', []),
+    profileClient: load('atlas.profileClient', 'all'),
   };
 
   function load(key, fallback) {
@@ -430,6 +431,136 @@ const AtlasCore = (() => {
     return ids.map(id => ({ ...combinedCommandFor(id), id, current: id === state.platform }));
   }
 
+
+  /* ------------------------------------------------- easy setup profiles */
+
+  /* A profile is an ordered list of reviewed recipes and nothing more. It can
+     install nothing the Build tab could not already install one node at a time;
+     what it removes is having to know which nodes, and in what order.
+
+     Two steps are tokens rather than fixed ids, because the right answer depends
+     on choices made elsewhere on the page: which client the rules go to, and how
+     much memory this machine actually has. An unresolved token is dropped and
+     named in the notes. It never becomes a command with a placeholder left in. */
+
+  function setProfileClient(id) {
+    state.profileClient = id;
+    save('atlas.profileClient', id);
+    emit();
+  }
+
+  function recipeById(id) {
+    if (!state.data) return null;
+    return (state.data.setupRecipes || []).find(r => r.id === id) || null;
+  }
+
+  /** Model recipes are named for their tag, so a tier's tag list resolves directly. */
+  function recipeForTag(tag) {
+    if (!state.data) return null;
+    return (state.data.setupRecipes || []).find(
+      r => r.name === tag && r.id.indexOf('setup-model-') === 0) || null;
+  }
+
+  function modelRecipesForTier() {
+    const tier = currentTier();
+    if (!tier || !tier.models || !tier.models.length) return [];
+    return tier.models.map(recipeForTag).filter(Boolean);
+  }
+
+  function allModelRecipes() {
+    if (!state.data) return [];
+    return (state.data.setupRecipes || []).filter(
+      r => r.id.indexOf('setup-model-') === 0 && r.id !== 'setup-model-list-installed');
+  }
+
+  /** Steps to recipes, with every failure to resolve recorded rather than hidden. */
+  function resolveProfile(profile) {
+    const recipes = [];
+    const notes = [];
+    const push = recipe => {
+      if (recipe && !recipes.some(r => r.id === recipe.id)) recipes.push(recipe);
+    };
+    (profile.steps || []).forEach(step => {
+      if (step === 'rules:{client}') {
+        const client = state.profileClient || 'all';
+        const id = client === 'all' ? 'setup-rules-all-clients' : `setup-rules-${client}`;
+        const recipe = recipeById(id);
+        if (recipe) push(recipe);
+        else notes.push(`No rules recipe for the client "${client}".`);
+        return;
+      }
+      if (step === 'model:{tier}' || step === 'model:{tier2}') {
+        const tiered = modelRecipesForTier();
+        if (!tiered.length) {
+          notes.push('No model chosen: enter the RAM of this machine in step 3, and the '
+                     + 'tier decides which tag fits.');
+          return;
+        }
+        const wanted = step === 'model:{tier2}' ? tiered[1] : tiered[0];
+        if (wanted) push(wanted);
+        else if (step === 'model:{tier2}') {
+          notes.push('This tier lists only one model tag, so the second model step is empty.');
+        }
+        return;
+      }
+      if (step === 'ALL_MODEL_TAGS') {
+        const all = allModelRecipes();
+        if (!all.length) notes.push('No model recipes are present in this data file.');
+        all.forEach(push);
+        return;
+      }
+      const recipe = recipeById(step);
+      if (recipe) push(recipe);
+      else notes.push(`Step "${step}" names a recipe that is not in this data file.`);
+    });
+    return { recipes, notes };
+  }
+
+  /** Same contract as combinedCommandFor: commands only in text, reasons in fields. */
+  function profileScriptFor(profileId, platformId = state.platform) {
+    const profile = ((state.data && state.data.profiles) || []).find(p => p.id === profileId);
+    if (!profile) return { ok: false, text: 'Unknown profile.', notes: [], blocked: [] };
+    const chosen = PLATFORMS.find(p => p.id === platformId);
+    if (!chosen) {
+      return { ok: false, profile, text: 'Choose your operating system first.',
+               notes: [], blocked: [] };
+    }
+    const { recipes, notes } = resolveProfile(profile);
+    const commands = [];
+    const blocked = [];
+    /* Several owner recipes begin by cloning or refreshing the repository. Each
+       has to, because Build may run any one of them on its own. In a profile they
+       run back to back, and three identical clones in a row reads as a bug even
+       though it is harmless. The preamble is a recorded field rather than a
+       matched prefix, so this drops the repeat without guessing at strings. */
+    const seenPreambles = new Set();
+    recipes.forEach(recipe => {
+      const command = recipe.commands && recipe.commands[platformId];
+      if (typeof command !== 'string' || !command.trim()
+          || /REVIEWED_VERSION|<[^>]+>/.test(command)) {
+        blocked.push(`${recipe.name}: no ${chosen.label} command in its recipe`);
+        return;
+      }
+      const preamble = recipe.preambles && recipe.preambles[platformId];
+      const body = recipe.bodies && recipe.bodies[platformId];
+      if (preamble && body && seenPreambles.has(preamble)) {
+        commands.push(body.trim());
+        return;
+      }
+      if (preamble) seenPreambles.add(preamble);
+      commands.push(command.trim());
+    });
+    if (!commands.length) {
+      return { ok: false, profile, platform: chosen, notes, blocked, steps: recipes,
+               text: `Nothing in this profile has a ${chosen.label} command yet.` };
+    }
+    return { ok: true, profile, platform: chosen, notes, blocked, steps: recipes,
+             commandCount: commands.length, text: commands.join('\n') };
+  }
+
+  function profiles() { return (state.data && state.data.profiles) || []; }
+  function profileClients() { return (state.data && state.data.profileClients) || []; }
+
   /* --------------------------------------------------- custom lanes */
 
   function addCustomLane({ name, family, kind, description }) {
@@ -493,6 +624,7 @@ const AtlasCore = (() => {
       match: l => l.family === 'mcp' },
     { id: 'routes', label: 'Hybrid routes', hint: 'How work is split across models.' },
     { id: 'hardware', label: 'Hardware', hint: 'What this machine can actually host.' },
+    { id: 'easy', label: 'Easy setup', hint: 'Four profiles for a new machine, with a client picker.' },
     { id: 'basket', label: 'Build', hint: 'Components you combined, and the script for them.' },
     { id: 'custom', label: 'Custom lanes', hint: 'Lanes you add yourself.' },
     { id: 'suggest', label: 'Suggest', hint: 'Propose a lane or a feed.' },
@@ -539,6 +671,7 @@ const AtlasCore = (() => {
     setPlatform, platform, scanCommand, commandFor,
     setupRecipeFor, setupCommandFor, setupStateFor, canBuild,
     setHardware, usableMemory, tierFor, currentTier, routesForMachine,
+    profiles, profileClients, setProfileClient, resolveProfile, profileScriptFor,
     visibleLanes, visibleComponents, subcategories, subDescription, lanesForTab,
     toggleFamily, toggleKind, toggleSub, setQuery, clearFilters, activeFilterCount,
     detailFor, select, laneName,

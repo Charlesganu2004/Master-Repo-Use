@@ -105,6 +105,21 @@ body.atlas-next ::-webkit-scrollbar-thumb:hover{background:var(--ink)}
 .atlas-next #filters .subnotes{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
 .atlas-next #filters .subnote{color:var(--dim);font-size:13px;line-height:1.5;max-width:74ch}
 .atlas-next #filters .subnote b{color:var(--ink);font-weight:700}
+/* Easy setup. Each profile is a disclosure so four of them fit on one screen
+   without any of them being reduced to a name. */
+.atlas-next .easy{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:var(--card,transparent)}
+.atlas-next .easy>summary{cursor:pointer;list-style:none;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.atlas-next .easy>summary::-webkit-details-marker{display:none}
+.atlas-next .easy>summary b{font-size:15px}
+.atlas-next .easy>summary:hover b{color:var(--accent)}
+.atlas-next .easy[open]>summary{margin-bottom:8px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.atlas-next .easysteps{margin:10px 0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.atlas-next .easysteps li{line-height:1.55}
+.atlas-next .easysteps li b{font-weight:700}
+.atlas-next .easyclients{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 4px}
+.atlas-next .easyclients .chip{min-height:32px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--dim);padding:5px 12px;font-size:13px;white-space:nowrap;cursor:pointer}
+.atlas-next .easyclients .chip:hover{border-color:var(--accent);color:var(--ink)}
+.atlas-next .easyclients .chip.on{border-color:var(--accent);background:var(--accent);color:var(--bg);font-weight:800}
 
 .atlas-next #tabs{display:flex;gap:6px;min-width:0}
 .atlas-next .tab{min-height:42px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--dim);padding:8px 11px;font-size:14px;line-height:1.1;transition:color 140ms var(--next-ease),background 140ms var(--next-ease),border-color 140ms var(--next-ease)}
