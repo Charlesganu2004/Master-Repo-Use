@@ -43,6 +43,170 @@ NOT_A_LANE = {"all-curated", "public-allowlist"}
 # legitimately be a test, workflow dispatch, slash command or template. Keeping
 # setup separate prevents a bare GitHub clone from being presented as a complete
 # computer setup.
+
+# Local model runtimes and the tags each hardware tier can actually host.
+#
+# Catalog entries are reference-only by design: a repository URL is not a vetted
+# install. These are different. Each is a reviewed command for a named runtime at
+# a named tag, with no placeholder to fill in, which is what setup-ready means.
+#
+# Sizes are the 4-bit quantised download, which is what governs whether a tier can
+# hold it. The tier a tag belongs to comes from docs/hardware-profiles.json.
+MODEL_SETUPS = [
+    ("ollama-runtime", "Ollama runtime", "models",
+     "The local runtime the model tags below need. Installs once, then serves on 127.0.0.1:11434.",
+     {"windows": "winget install --id Ollama.Ollama --accept-source-agreements --accept-package-agreements",
+      "wsl": "curl -fsSL https://ollama.com/install.sh | sh",
+      "linux": "curl -fsSL https://ollama.com/install.sh | sh",
+      "macos": "brew install ollama && brew services start ollama",
+      "other": "curl -fsSL https://ollama.com/install.sh | sh"}),
+
+    ("model-phi3-mini", "phi3:mini", "models",
+     "Microsoft, 3.8B at 4-bit, about 2.3 GB. The 8 GB tier. Needs the Ollama runtime first.",
+     {k: "ollama pull phi3:mini" for k in ("windows", "wsl", "linux", "macos", "other")}),
+
+    ("model-gemma2-2b", "gemma2:2b", "models",
+     "Google, 2B at 4-bit, about 1.6 GB. The smallest tier that is still useful.",
+     {k: "ollama pull gemma2:2b" for k in ("windows", "wsl", "linux", "macos", "other")}),
+
+    ("model-phi3-medium", "phi3:medium", "models",
+     "Microsoft, 14B at 4-bit, about 7.9 GB. The 16 GB tier.",
+     {k: "ollama pull phi3:medium" for k in ("windows", "wsl", "linux", "macos", "other")}),
+
+    ("model-gemma2-9b", "gemma2:9b", "models",
+     "Google, 9B at 4-bit, about 5.4 GB. The 16 GB tier.",
+     {k: "ollama pull gemma2:9b" for k in ("windows", "wsl", "linux", "macos", "other")}),
+
+    ("model-gemma2-27b", "gemma2:27b", "models",
+     "Google, 27B at 4-bit, about 16 GB. The 32 GB tier; it will swap below that.",
+     {k: "ollama pull gemma2:27b" for k in ("windows", "wsl", "linux", "macos", "other")}),
+
+    ("model-list-installed", "List installed models", "models",
+     "What this machine already holds, and how much disk each one is using.",
+     {k: "ollama list" for k in ("windows", "wsl", "linux", "macos", "other")}),
+]
+
+
+def model_setup_recipes() -> list[dict]:
+    """One reviewed recipe per runtime or tag, so Build can emit real commands."""
+    return [{
+        "id": f"setup-{ident}",
+        "name": name,
+        "kind": "setup",
+        "state": "ready",
+        "trust": "named-vendor-runtime",
+        "detail": detail,
+        "commands": commands,
+    } for ident, name, _family, detail, commands in MODEL_SETUPS]
+
+
+def model_setup_lane() -> tuple[list, list]:
+    lanes = [lane("sys-model-setup", "Local model setup", "models", "model",
+                  "runtime", "Reviewed install commands for local model runtimes and tags.",
+                  len(MODEL_SETUPS))]
+    comps = []
+    for index, (ident, name, family, detail, commands) in enumerate(MODEL_SETUPS):
+        comps.append({
+            "id": ident, "name": name, "lane": "sys-model-setup", "family": family,
+            "kind": "model", "detail": detail, "order": index, "cmd": dict(commands),
+            "setupRecipe": f"setup-{ident}", "setupState": "ready",
+        })
+    return lanes, comps
+
+
+
+# The global rules half of setup: which client instruction files carry the Master
+# Repo contract and the protected auto-mode block.
+#
+# Split per client because the answer to "set up my rules" depends on which
+# assistant is being set up, and writing all four when only one is installed
+# leaves three orphan files that later look authoritative.
+REPO_URL = "https://github.com/Charlesganu2004/Master-Repo-Use.git"
+_PS_CLONE = ("$p=Join-Path $HOME 'Master-Repo-Use'; "
+             "if (Test-Path (Join-Path $p '.git')) { git -C $p pull --ff-only } "
+             f"else {{ git clone {REPO_URL} $p }}; ")
+_SH_CLONE = ('p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull --ff-only; '
+             f'else git clone {REPO_URL} "$p"; fi && ')
+
+
+def _rules_commands(client: str) -> dict:
+    """Same intent per platform: refresh the repo, then write that client's rules."""
+    ps = _PS_CLONE + ("& (Join-Path $p 'scripts/setup-global-ai.ps1') -RepoPath $p "
+                      f"-Client {client} -AutoSkills")
+    sh = _SH_CLONE + f'bash "$p/scripts/setup-global-ai.sh" "$p" --client {client} --auto-skills'
+    return {"windows": ps, "wsl": sh, "macos": sh, "linux": sh,
+            "other": sh.replace('bash "$p', 'sh "$p')}
+
+
+GLOBAL_RULES_SETUPS = [
+    ("rules-all-clients", "Global rules - every client", "instructions",
+     "Writes the Master Repo contract and the protected auto-mode block to Claude, "
+     "Codex, Gemini and Copilot at once. The default: one rule set, no client left "
+     "holding a contradicting copy.",
+     _rules_commands("all")),
+
+    ("rules-claude", "Global rules - Claude", "instructions",
+     "~/.claude/CLAUDE.md only. Use when Claude Code is the only assistant installed.",
+     _rules_commands("claude")),
+
+    ("rules-codex", "Global rules - Codex (GPT)", "instructions",
+     "~/.codex/AGENTS.md only. Codex is the GPT surface; --client gpt is accepted as an alias.",
+     _rules_commands("codex")),
+
+    ("rules-gemini", "Global rules - Gemini", "instructions",
+     "~/.gemini/GEMINI.md only.",
+     _rules_commands("gemini")),
+
+    ("rules-copilot", "Global rules - Copilot", "instructions",
+     "~/.copilot/copilot-instructions.md, plus the COPILOT_CUSTOM_INSTRUCTIONS_DIRS "
+     "environment variable that makes Copilot read the repository.",
+     _rules_commands("copilot")),
+
+    ("rules-guards", "Auto-mode guards", "instructions",
+     "Installs the no-prune and no-compress PreToolUse hooks. These enforce the rules "
+     "outside the model, which is what matters: an instruction reading 'do not compress "
+     "me' only holds while something is still reading it.",
+     {"windows": _PS_CLONE + "python (Join-Path $p 'scripts/install_auto_mode.py') --repo $p",
+      "wsl": _SH_CLONE + 'python3 "$p/scripts/install_auto_mode.py" --repo "$p"',
+      "macos": _SH_CLONE + 'python3 "$p/scripts/install_auto_mode.py" --repo "$p"',
+      "linux": _SH_CLONE + 'python3 "$p/scripts/install_auto_mode.py" --repo "$p"',
+      "other": _SH_CLONE + 'python3 "$p/scripts/install_auto_mode.py" --repo "$p"'}),
+
+    ("rules-verify", "Verify what was written", "instructions",
+     "Shows the block that landed in each client file, so a claimed setup can be checked "
+     "rather than trusted.",
+     {"windows": "Get-ChildItem $HOME\.claude\CLAUDE.md,$HOME\.codex\AGENTS.md,$HOME\.gemini\GEMINI.md,$HOME\.copilot\copilot-instructions.md -ErrorAction SilentlyContinue | Select-String -Pattern 'MASTER-REPO-USE:BEGIN'",
+      "wsl": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null",
+      "macos": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null",
+      "linux": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null",
+      "other": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null"}),
+]
+
+
+def global_rules_recipes() -> list[dict]:
+    return [{
+        "id": f"setup-{ident}",
+        "name": name,
+        "kind": "setup",
+        "state": "ready",
+        "trust": "owner-repository",
+        "detail": detail,
+        "commands": commands,
+    } for ident, name, _family, detail, commands in GLOBAL_RULES_SETUPS]
+
+
+def global_rules_lane() -> tuple[list, list]:
+    lanes = [lane("sys-global-rules", "Global rules setup", "instructions", "instruction",
+                  "runtime", "Per-client commands that install the Master Repo contract "
+                  "and the protected auto-mode block.", len(GLOBAL_RULES_SETUPS))]
+    comps = [{
+        "id": ident, "name": name, "lane": "sys-global-rules", "family": family,
+        "kind": "instruction", "detail": detail, "order": index, "cmd": dict(commands),
+        "setupRecipe": f"setup-{ident}", "setupState": "ready",
+    } for index, (ident, name, family, detail, commands) in enumerate(GLOBAL_RULES_SETUPS)]
+    return lanes, comps
+
+
 MASTER_SETUP_RECIPE = {
     "id": "master-repo-global",
     "name": "Master Repo global AI setup",
@@ -399,7 +563,7 @@ def skill_lanes() -> tuple[list, list]:
 
 def build() -> dict:
     lanes, comps = [], []
-    for producer in (stage_lanes, catalog_lanes, script_lanes, workflow_lanes,
+    for producer in (stage_lanes, model_setup_lane, global_rules_lane, catalog_lanes, script_lanes, workflow_lanes,
                  test_lanes, doc_lanes, hook_lanes, skill_lanes):
         l, c = producer()
         lanes.extend(l)
@@ -413,7 +577,12 @@ def build() -> dict:
             component["action"] = {"kind": "reference", "state": "review-required"}
             continue
         is_runtime_stage = component.get("lane", "").startswith("sys-")
-        if not is_runtime_stage or component["id"] in MASTER_SETUP_STAGE_IDS:
+        # A component that already carries its own reviewed recipe keeps it. The
+        # model tags are runtime nodes by lane prefix but are not fail-closed:
+        # each one names a vendor runtime and an exact tag, already reviewed.
+        if component.get("setupRecipe"):
+            component["setupState"] = "ready"
+        elif not is_runtime_stage or component["id"] in MASTER_SETUP_STAGE_IDS:
             component["setupRecipe"] = MASTER_SETUP_RECIPE["id"]
             component["setupState"] = "ready"
         else:
@@ -465,7 +634,8 @@ def build() -> dict:
         "families": [{"id": f, "name": n, "kind": k} for f, n, k in FAMILIES],
         "lanes": lanes,
         "components": comps,
-        "setupRecipes": [MASTER_SETUP_RECIPE],
+        "setupRecipes": ([MASTER_SETUP_RECIPE] + model_setup_recipes()
+                     + global_rules_recipes()),
         "routes": routes,
         "hardware": [{"id": i, "label": l, "verdict": v, "gb": g, "detail": d, "models": m}
                      for i, l, v, g, d, m in HARDWARE],

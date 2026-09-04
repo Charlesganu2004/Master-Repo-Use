@@ -1,8 +1,17 @@
 param(
   [string]$RepoPath = "$HOME\Master-Repo-Use",
+  # Which client instruction files to write. 'all' is the default because a rule
+  # that lives in only one client is a rule the other clients will contradict.
+  # 'gpt' is accepted as an alias for codex, which is the GPT surface.
+  [ValidateSet('all','claude','codex','gemini','copilot','gpt','chatgpt','openai')]
+  [string]$Client = 'all',
   [switch]$CopilotOnly,
   [switch]$AutoSkills
 )
+
+if ($CopilotOnly) { $Client = 'copilot' }
+if ($Client -in @('gpt','chatgpt','openai')) { $Client = 'codex' }
+function Test-Writes([string]$Name) { return ($Client -eq 'all' -or $Client -eq $Name) }
 
 $ErrorActionPreference = 'Stop'
 $begin = '<!-- MASTER-REPO-USE:BEGIN -->'
@@ -39,12 +48,18 @@ if ($AutoSkills) {
   $common = $common.TrimEnd() + "`n" + (Get-Content -Raw -Path $autoFile).TrimEnd()
 }
 
-if (-not $CopilotOnly) {
+if (Test-Writes 'claude') {
   Set-MasterRepoBlock "$HOME\.claude\CLAUDE.md" ($common + "`nClaude-specific entrypoint: $RepoPath\CLAUDE.md")
+}
+if (Test-Writes 'codex') {
   Set-MasterRepoBlock "$HOME\.codex\AGENTS.md" $common
+}
+if (Test-Writes 'gemini') {
   Set-MasterRepoBlock "$HOME\.gemini\GEMINI.md" ($common + "`nGemini-specific entrypoint: $RepoPath\GEMINI.md")
 }
-Set-MasterRepoBlock "$HOME\.copilot\copilot-instructions.md" ($common + "`nCopilot-specific guide: $RepoPath\docs\COPILOT-SETUP.md")
+if (Test-Writes 'copilot') {
+  Set-MasterRepoBlock "$HOME\.copilot\copilot-instructions.md" ($common + "`nCopilot-specific guide: $RepoPath\docs\COPILOT-SETUP.md")
+}
 
 [Environment]::SetEnvironmentVariable('COPILOT_CUSTOM_INSTRUCTIONS_DIRS',$RepoPath,'User')
 $env:COPILOT_CUSTOM_INSTRUCTIONS_DIRS = $RepoPath
@@ -81,7 +96,7 @@ if (($userPath -split ';') -notcontains $bin) {
 Write-Host 'Master Repo global AI setup complete.' -ForegroundColor Green
 Write-Host "Repo: $RepoPath"
 Write-Host "Copilot: $HOME\.copilot\copilot-instructions.md"
-if (-not $CopilotOnly) { Write-Host "Claude: $HOME\.claude\CLAUDE.md | Codex: $HOME\.codex\AGENTS.md | Gemini: $HOME\.gemini\GEMINI.md" }
+if ($Client -ne 'copilot') { Write-Host "Claude: $HOME\.claude\CLAUDE.md | Codex: $HOME\.codex\AGENTS.md | Gemini: $HOME\.gemini\GEMINI.md" }
 Write-Host "Watermark command: & '$bin\master-watermark.ps1' <input> <output-folder>"
 Write-Host 'GitHub audit: gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use'
 Write-Host "Optional AI request: python '$RepoPath\scripts\maintenance_request.py' --auto"

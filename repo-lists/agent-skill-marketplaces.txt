@@ -1,0 +1,45 @@
+# Agent Skill Marketplaces and Skill Packs - verified 2026-09-01
+#
+# Every slug resolved against the GitHub API on 2026-09-01. Stars, licences and
+# push ages are as measured.
+#
+# LICENCE NOTE: several very popular entries here have NO LICENCE. Star count is
+# not permission. An unlicensed repository is all-rights-reserved: read it, learn
+# from it, link to it, copy nothing.
+
+# --- Skill registries and ecosystems
+vercel-labs/skills            # 30.4k stars, MIT, 17d. Vercel's skill collection, including
+                              # skills/find-skills for discovery. MIT, so usable.
+vercel-labs/agent-skills      # 30.8k stars, NO LICENCE, 7d. Popular and active, and still
+                              # all-rights-reserved. LINK ONLY.
+addyosmani/agent-skills       # already catalogued in design-agent-skills
+mattpocock/skills             # already catalogued in design-agent-skills
+sedarged/Agent-skills-ecosystem   # 0 stars, NO LICENCE, 151d. An index of the ecosystem.
+                              # LINK ONLY, and treat its entries as unverified.
+
+# --- Individual skills that do a specific job
+mvanhorn/last30days-skill     # 61.2k stars, MIT, 2d. Summarises the last thirty days of work.
+                              # Directly relevant to the chat/code monitor lane.
+BehiSecc/VibeSec-Skill        # 1.3k stars, Apache-2.0, 199d. Security review skill. Quiet but
+                              # licensed and inside the 18 month release window is not
+                              # applicable here: no releases, so age governs. Watch it.
+petergyang/no-ai-slop         # 7.2k stars, MIT, 3d. Guards against low-effort generated output.
+hardikpandya/stop-slop        # 16.8k stars, MIT, 171d. Same problem, different approach.
+                              # Both listed because they disagree about method, which is useful.
+Vincentwei1021/video-shotcraft    # 7.5k stars, Apache-2.0, 3d. Video shot composition.
+tirth8205/code-review-graph   # 31.2k stars, MIT, 8d. Graph-based code review, with a VS Code
+                              # extension under code-review-graph-vscode.
+Leonxlnx/taste-skill          # 84.3k stars, MIT, 11d. Design-taste judgement for generated UI.
+mprknowledgerepo-dev/taste-skill-frontend
+                              # 0 stars, MIT, 79d. Frontend companion to the above. Licensed,
+                              # but unproven; read before adopting.
+
+# --- Vercel Labs tooling
+vercel-labs/agent-browser     # 41.9k stars, Apache-2.0, pushed today. Browser control for agents.
+vercel-labs/json-render       # 16.1k stars, Apache-2.0, 5d. Renders JSON as UI.
+vercel-labs/portless          # 12.1k stars, Apache-2.0, 6d. Local tunnelling without port juggling.
+vercel-labs/deepsec           # 7.9k stars, Apache-2.0, pushed today. Security analysis.
+
+# NOT ADDED, and why:
+#   agentskill.sh -- a website, not a repository. Added to repo-lists/watch-sources.txt
+#     instead, which is the list the guardian polls for new candidates.

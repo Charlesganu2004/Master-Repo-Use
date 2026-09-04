@@ -591,6 +591,10 @@ def main() -> int:
     parser.add_argument("--adoption-review-days", type=int, default=270)
     parser.add_argument("--remove-stale-after-days", type=int, default=365)
     parser.add_argument("--archive-grace-days", type=int, default=30)
+    # 18 months. A tagged release is a stronger maintenance signal than a commit,
+    # so a quiet repository that still ships keeps its place. Age only; a security
+    # finding removes an entry regardless of how recently it released.
+    parser.add_argument("--release-grace-days", type=int, default=547)
     parser.add_argument("--deep", action="store_true")
     parser.add_argument("--batch-size", type=int, default=12)
     parser.add_argument("--batch-index", type=int, default=0)
@@ -652,13 +656,25 @@ def main() -> int:
             args.remove_stale_after_days,
             args.archive_grace_days,
         )
-        # Age flagged it. Before trusting that, ask whether it has shipped a release
-        # recently. Archived repos are excluded: a sunset release is indistinguishable
-        # from a healthy one, which is exactly how Flowise nearly kept its place.
+        # Age flagged it. Before trusting that, ask whether it has shipped a release.
+        #
+        # The window is 18 months, not the 120-day stale threshold. A release is a
+        # much stronger signal than a commit: someone judged the thing ready to
+        # ship, tagged it and published it. Plenty of finished libraries go quiet
+        # on main for a year and are still the correct dependency. Push age alone
+        # reads those as decaying.
+        #
+        # Archived repositories are excluded, because a sunset release looks
+        # identical to a healthy one from the outside. That exception is why
+        # Flowise stayed removed: 3.1.4 shipped 30 days before its EOL date.
+        #
+        # This only rescues from AGE. A security finding is handled below and is
+        # not affected: a repository with malware is removed no matter how
+        # recently it shipped.
         if result.status in {"STALE", "REVIEW", "REMOVE"} and not result.archived \
                 and not (overrides.get(repo) or {}).get("mode"):
             rel_age = latest_release_age(repo)
-            if rel_age is not None and rel_age <= args.stale_after_days:
+            if rel_age is not None and rel_age <= args.release_grace_days:
                 result.status = "HEALTHY"
                 result.note = (f"released {rel_age}d ago; a release is maintenance even when "
                                f"the last push was {result.age_days}d ago")

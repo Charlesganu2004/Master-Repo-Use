@@ -2,14 +2,36 @@
 set -euo pipefail
 
 REPO_PATH="${1:-$HOME/Master-Repo-Use}"
-MODE="all"
+# Which client instruction files to write. "all" is the default because a rule
+# that lives in only one client is a rule the other clients will contradict.
+CLIENT="all"
 AUTO=0
+prev=""
 for arg in "$@"; do
+  case "$prev" in
+    --client)
+      case "$arg" in
+        all|claude|codex|gemini|copilot) CLIENT="$arg" ;;
+        gpt|chatgpt|openai) CLIENT="codex" ;;   # Codex is the GPT surface
+        *) echo "Unknown --client '$arg'. Use all|claude|codex|gemini|copilot." >&2; exit 2 ;;
+      esac ;;
+  esac
   case "$arg" in
-    --copilot-only) MODE="--copilot-only" ;;
+    --copilot-only) CLIENT="copilot" ;;
     --auto-skills)  AUTO=1 ;;
   esac
+  prev="$arg"
 done
+
+writes() { [ "$CLIENT" = "all" ] || [ "$CLIENT" = "$1" ]; }
+# python3 on POSIX, plain python on Git Bash for Windows. Resolved once so a
+# missing interpreter fails here with a clear message, not mid-write.
+PY_BIN="$(command -v python3 || command -v python || true)"
+if [ -z "$PY_BIN" ]; then
+  echo "No python interpreter found on PATH (tried python3, python)." >&2
+  exit 1
+fi
+
 BEGIN='<!-- MASTER-REPO-USE:BEGIN -->'
 END='<!-- MASTER-REPO-USE:END -->'
 
@@ -23,7 +45,7 @@ upsert_block() {
   local body="$2"
   mkdir -p "$(dirname "$file")"
   touch "$file"
-  python3 - "$file" "$BEGIN" "$END" "$body" <<'PY'
+  "$PY_BIN" - "$file" "$BEGIN" "$END" "$body" <<'PY'
 import pathlib, sys
 p=pathlib.Path(sys.argv[1]); begin=sys.argv[2]; end=sys.argv[3]; body=sys.argv[4]
 text=p.read_text(encoding='utf-8') if p.exists() else ''
@@ -51,22 +73,32 @@ if [ "$AUTO" = "1" ]; then
 $(cat "$AUTO_FILE")"
 fi
 
-if [ "$MODE" != "--copilot-only" ]; then
+if writes claude; then
+  mkdir -p "$HOME/.claude"
   upsert_block "$HOME/.claude/CLAUDE.md" "$common
 Claude-specific entrypoint: $REPO_PATH/CLAUDE.md"
+fi
+
+if writes codex; then
+  mkdir -p "$HOME/.codex"
   upsert_block "$HOME/.codex/AGENTS.md" "$common"
+fi
+
+if writes gemini; then
   mkdir -p "$HOME/.gemini"
   upsert_block "$HOME/.gemini/GEMINI.md" "$common
 Gemini-specific entrypoint: $REPO_PATH/GEMINI.md"
 fi
 
-mkdir -p "$HOME/.copilot"
-upsert_block "$HOME/.copilot/copilot-instructions.md" "$common
+if writes copilot; then
+  mkdir -p "$HOME/.copilot"
+  upsert_block "$HOME/.copilot/copilot-instructions.md" "$common
 Copilot-specific guide: $REPO_PATH/docs/COPILOT-SETUP.md"
+fi
 
 for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
   touch "$rc"
-  python3 - "$rc" "$REPO_PATH" <<'PY'
+  "$PY_BIN" - "$rc" "$REPO_PATH" <<'PY'
 import pathlib, sys, re
 p=pathlib.Path(sys.argv[1]); repo=sys.argv[2]
 text=p.read_text(encoding='utf-8') if p.exists() else ''
@@ -107,9 +139,13 @@ esac
 echo "Master Repo global AI setup complete."
 echo "Repo: $REPO_PATH"
 echo "Copilot instructions: $HOME/.copilot/copilot-instructions.md"
-[ "$MODE" = "--copilot-only" ] || echo "Claude: $HOME/.claude/CLAUDE.md | Codex: $HOME/.codex/AGENTS.md | Gemini: $HOME/.gemini/GEMINI.md"
+[ "$CLIENT" = "copilot" ] || echo "Claude: $HOME/.claude/CLAUDE.md | Codex: $HOME/.codex/AGENTS.md | Gemini: $HOME/.gemini/GEMINI.md"
 echo "Watermark command: master-watermark <input> <output-folder>"
 echo "GitHub audit: gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use"
 echo "Optional AI request: python $REPO_PATH/scripts/maintenance_request.py --auto"
 echo "Token budget remains opt-in: $REPO_PATH/docs/TOKEN-BUDGET.md"
-[ "$AUTO" = "1" ] && echo "Auto mode written to every client instruction file." \n  || echo "Auto mode not enabled. Re-run with --auto-skills to turn it on."
+if [ "$AUTO" = "1" ]; then
+  echo "Auto mode written to every client instruction file."
+else
+  echo "Auto mode not enabled. Re-run with --auto-skills to turn it on."
+fi
