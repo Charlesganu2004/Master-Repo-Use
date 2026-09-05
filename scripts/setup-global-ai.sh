@@ -11,9 +11,10 @@ for arg in "$@"; do
   case "$prev" in
     --client)
       case "$arg" in
-        all|claude|codex|gemini|copilot) CLIENT="$arg" ;;
+        all|claude|codex|gemini|copilot|antigravity) CLIENT="$arg" ;;
         gpt|chatgpt|openai) CLIENT="codex" ;;   # Codex is the GPT surface
-        *) echo "Unknown --client '$arg'. Use all|claude|codex|gemini|copilot." >&2; exit 2 ;;
+        ag|google-antigravity) CLIENT="antigravity" ;;
+        *) echo "Unknown --client '$arg'. Use all|claude|codex|gemini|copilot|antigravity." >&2; exit 2 ;;
       esac ;;
   esac
   case "$arg" in
@@ -84,10 +85,40 @@ if writes codex; then
   upsert_block "$HOME/.codex/AGENTS.md" "$common"
 fi
 
-if writes gemini; then
+# One file, two clients. Verified 2026-09-04 against
+# antigravity.google/docs/rules-workflows/: Antigravity reads its GLOBAL rules
+# from ~/.gemini/GEMINI.md, the same path the Gemini CLI uses, and not from any
+# ~/.antigravity/ tree. So the block is written once for whichever of the two was
+# asked for. Writing it twice would not double anything, but it would let the
+# second body silently replace the first, which is worse.
+if writes gemini || writes antigravity; then
   mkdir -p "$HOME/.gemini"
   upsert_block "$HOME/.gemini/GEMINI.md" "$common
-Gemini-specific entrypoint: $REPO_PATH/GEMINI.md"
+Gemini-specific entrypoint: $REPO_PATH/GEMINI.md
+Google Antigravity reads this same file as its global rules. Its skills live in ~/.gemini/config/skills/, its plugins in ~/.gemini/config/plugins/, and its MCP servers in ~/.gemini/config/mcp_config.json."
+fi
+
+# The part that is genuinely Antigravity-only. Its documented global skill path is
+# ~/.gemini/config/skills/<folder>/SKILL.md, which the Gemini CLI does not read.
+# Every skill in this repository already carries the one frontmatter field
+# Antigravity requires, description, so they install as-is with no rewriting.
+if writes antigravity; then
+  "$PY_BIN" - "$REPO_PATH" "$HOME/.gemini/config/skills" <<'PY'
+import pathlib, shutil, sys
+source = pathlib.Path(sys.argv[1]) / "skills"
+target = pathlib.Path(sys.argv[2])
+target.mkdir(parents=True, exist_ok=True)
+installed = []
+for skill in sorted(p for p in source.iterdir() if p.is_dir()):
+    if not (skill / "SKILL.md").is_file():
+        continue                      # a directory without SKILL.md is not a skill
+    destination = target / skill.name
+    if destination.exists():
+        shutil.rmtree(destination)
+    shutil.copytree(skill, destination)
+    installed.append(skill.name)
+print("Antigravity skills installed: " + (", ".join(installed) or "none found"))
+PY
 fi
 
 if writes copilot; then
@@ -139,7 +170,7 @@ esac
 echo "Master Repo global AI setup complete."
 echo "Repo: $REPO_PATH"
 echo "Copilot instructions: $HOME/.copilot/copilot-instructions.md"
-[ "$CLIENT" = "copilot" ] || echo "Claude: $HOME/.claude/CLAUDE.md | Codex: $HOME/.codex/AGENTS.md | Gemini: $HOME/.gemini/GEMINI.md"
+[ "$CLIENT" = "copilot" ] || echo "Claude: $HOME/.claude/CLAUDE.md | Codex: $HOME/.codex/AGENTS.md | Gemini and Antigravity: $HOME/.gemini/GEMINI.md"
 echo "Watermark command: master-watermark <input> <output-folder>"
 echo "GitHub audit: gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use"
 echo "Optional AI request: python $REPO_PATH/scripts/maintenance_request.py --auto"

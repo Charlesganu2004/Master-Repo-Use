@@ -27,21 +27,45 @@ OVERRIDE = "# APPROVED RECOMPRESS"
 BEGIN = "<!-- NO-COMPRESS:BEGIN -->"
 END = "<!-- NO-COMPRESS:END -->"
 
+# A verb only counts in COMMAND position: at the start, after a chaining
+# operator, or behind an interpreter that runs it.
+#
+# The first version matched the token anywhere in the command, and that refused
+#   head -5 ~/.claude/skills/caveman-ultra-compact/SKILL.md
+# because "caveman" appears in a directory name being READ. Reading a capability
+# definition has never been the risk, and the guard already has a test saying so.
+# It is the same class of mistake as the redirect one below: a name appearing as
+# an argument is not the tool being run.
+_CHAIN = r"(?:^|[|;&(`]|&&|\|\|)"
+# Ways a compressor is actually launched. Anything not on this list has to be in
+# bare command position, which is what an invocation looks like.
+_LAUNCHER = (r"(?:sudo\s+|\w+=\S+\s+)*"
+             r"(?:(?:python3?|py)\s+-m\s+"
+             # `python compress.py ...` - the script IS the compressor, so the
+             # name still has to follow immediately for this to match.
+             r"|(?:python3?|py)\s+"
+             r"|npx\s+(?:-y\s+)?|uvx\s+|pipx\s+run\s+"
+             r"|node\s+|bash\s+-c\s+|sh\s+-c\s+)?")
+_COMPRESSOR_NAMES = (r"caveman[\w-]*"
+                     r"|token-compact|compress\.py"
+                     r"|llmlingua|LLMLingua"
+                     r"|headroom"
+                     r"|rtt|reducethemtokens")
+
 # Tools whose whole purpose is to make a file smaller.
 COMPRESSORS = re.compile(
-    r"(?:^|[|;&]|\s)(?:"
-    r"caveman[\w-]*"
-    r"|token-compact|compress\.py"
-    r"|llmlingua|LLMLingua"
-    r"|headroom"
-    r"|rtt|reducethemtokens"
-    r")\b",
+    _CHAIN + r"\s*" + _LAUNCHER + r"(?:" + _COMPRESSOR_NAMES + r")\b",
     re.IGNORECASE,
 )
 
 # Truncating writes. A plain '>' is included here, unlike the no-prune guard,
-# because rewriting a protected file wholesale is precisely the risk.
-TRUNCATING = re.compile(r"(?:^|[|;&]|\s)(?:truncate\b|Clear-Content\b)", re.IGNORECASE)
+# because rewriting a protected file wholesale is precisely the risk. Same
+# command-position rule, for the same reason: a path containing the word
+# "truncate" is not a truncation.
+TRUNCATING = re.compile(
+    _CHAIN + r"\s*" + _LAUNCHER + r"(?:truncate|Clear-Content)\b",
+    re.IGNORECASE,
+)
 
 # A redirect only truncates what it points AT. The first version matched any '>'
 # anywhere in a command that also happened to mention a protected filename, so

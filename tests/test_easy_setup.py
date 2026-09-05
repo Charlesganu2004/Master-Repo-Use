@@ -69,8 +69,24 @@ class TheFourProfilesExist(unittest.TestCase):
 
 
 class TheClientPicker(unittest.TestCase):
-    def test_it_offers_all_four_clients_plus_all_at_once(self):
-        self.assertEqual(set(CLIENTS), {"all", "claude", "codex", "gemini", "copilot"})
+    def test_it_offers_every_client_plus_all_at_once(self):
+        self.assertEqual(set(CLIENTS),
+                         {"all", "claude", "codex", "gemini", "copilot", "antigravity"})
+
+    def test_antigravity_and_gemini_are_separate_options_despite_one_rules_file(self):
+        """They share ~/.gemini/GEMINI.md, so the temptation is to merge them.
+
+        Picking Antigravity does strictly more than picking Gemini: the same rules
+        file, plus every skill copied into ~/.gemini/config/skills/, which the
+        Gemini CLI does not read. Merging them would silently drop the skills for
+        anyone who picked Gemini, or install them for someone who did not ask.
+        """
+        self.assertIn("gemini", CLIENTS)
+        self.assertIn("antigravity", CLIENTS)
+        self.assertIn(".gemini/GEMINI.md", CLIENTS["gemini"]["detail"])
+        self.assertIn(".gemini/GEMINI.md", CLIENTS["antigravity"]["detail"])
+        self.assertIn("skills", CLIENTS["antigravity"]["detail"])
+        self.assertNotIn("skills", CLIENTS["gemini"]["detail"])
 
     def test_all_is_offered_first(self):
         self.assertEqual(DATA["profileClients"][0]["id"], "all")

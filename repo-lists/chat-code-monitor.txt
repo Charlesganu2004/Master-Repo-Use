@@ -1,0 +1,66 @@
+# Chat and Code Activity Monitoring - verified 2026-09-04
+#
+# Charles asked for a lane that watches chat and code activity, transcribes what
+# is on screen, and produces a summary a team can read.
+#
+# The honest finding before the entries: that is two mature problems and one
+# immature one. Screen capture, OCR and time tracking are solved and have real
+# projects behind them. Reading a session and writing a summary a team would
+# actually use is not: every candidate found on 2026-09-04 had between 0 and 1
+# stars. Those are recorded at the bottom as candidates, not as dependencies.
+#
+# CONSENT. Everything in the first section records a person's screen or keyboard.
+# Running one of these on a shared or work machine is a decision about other
+# people, not only about you. Each entry notes whether it keeps data local.
+
+# --- Screen capture and continuous recall (records the screen; local storage is the deciding property)
+screenpipe/screenpipe         # 21.4k stars, NOASSERTION on GitHub, pushed today. Continuous local
+                              # screen and audio recording with search over it. NOTE: catalogued
+                              # under screenpipe/. Both mediar-ai/screenpipe and
+                              # louis030195/screen-pipe redirect here, so recording either would
+                              # pin a stale name. Licence is "Other" on the API: read LICENSE
+                              # before shipping anything built on it.
+openrecall/openrecall         # 2.9k stars, AGPL-3.0, 345d, no releases at all. Open alternative to
+                              # the proprietary recall features, fully local. AGPL-3.0 is VIRAL:
+                              # linking it into a product obliges you to release that product's
+                              # source. Fine to run, expensive to build on. Stale but inside the
+                              # 365 day threshold; watch it.
+ActivityWatch/activitywatch   # 18.8k stars, MPL-2.0, pushed today. Automated time tracking, fully
+                              # local, cross-platform. Latest release 2024-10-05, which is old, but
+                              # main is active daily so age is not the question here. MPL-2.0 is
+                              # file-level copyleft: much easier to live with than AGPL.
+
+# --- Agent session monitoring (watches the assistant rather than the screen)
+hoangsonww/Claude-Code-Agent-Monitor   # 971 stars, MIT, 1d. Real-time dashboard for Claude Code
+                              # and Codex sessions. Already catalogued in ai-client-tools; listed
+                              # here because it is the closest thing to the chat half of this lane.
+Maciek-roboblog/Claude-Code-Usage-Monitor   # 8.7k stars, MIT, 61d. Usage and burn-rate monitor
+                              # with predictions. Answers "how much is this costing", not "what
+                              # was said".
+ccusage/ccusage               # 18.4k stars, NOASSERTION, pushed today. npx-runnable usage report.
+                              # NOTE: catalogued under ccusage/. ryoppippi/ccusage redirects here.
+
+# --- Summarising what was found (the piece that turns a log into something readable)
+danielmiessler/Fabric         # 43.8k stars, MIT, 1d. A framework of composable prompt patterns,
+                              # several of which summarise transcripts and meetings. The most
+                              # credible summarisation layer here by a wide margin.
+nilbuild/git-standup          # 7.8k stars, MIT, 424d, last release 2020-02-20. Recalls what you or
+                              # your team did on the last working day, from git history alone.
+                              # NOTE: catalogued under nilbuild/. kamranahmedse/git-standup
+                              # redirects here. PAST the 365 day threshold and the release is six
+                              # years old, so it survives on neither rule: kept only because it is
+                              # a 200-line shell script you can read in full before running.
+
+# --- Transcription and OCR (not duplicated here: the speech and OCR pieces live in repo-lists/media-transcription-ocr.txt, the lane that owns them)
+
+# CANDIDATES, not entries. Team-summary tooling found 2026-09-04, all at 0-1 stars:
+#   Nishilsoni/StandUp, natori-hrj/herdr-standup, moneycaringcoder/herdr-standup,
+#   AntonioGallegosMolina/gitdigest, NickCirv/git-digest
+# Each does roughly the right thing. None has been used by anyone. Recording them
+# as catalog entries would say "these are options", and they are not yet.
+#
+# NOT ADDED, and why:
+#   Rewind.ai, Limitless -- commercial products, no source repository.
+#   mvanhorn/last30days-skill -- the name suggests it summarises your last thirty
+#     days. It does not; it researches a topic across social platforms. Catalogued
+#     in agent-skill-marketplaces with that correction attached.

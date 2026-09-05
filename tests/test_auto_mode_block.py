@@ -23,6 +23,7 @@ HOOK = ROOT / "scripts" / "hooks" / "no_prune_guard.py"
 #   285 tokens   caveman and token reducers made mandatory and uncompressible
 #   326 tokens   skills, MCP servers, tools and agents added to that protection
 #   355 tokens   inheritance for new capabilities, and every build/command/lane
+#   434 tokens   the exemption stated as global, and the one override that lifts it
 #
 # This number only moves when a rule is added, never on its own. Each rule has to
 # sit in the always-loaded block because a rule consulted only when something
@@ -33,7 +34,13 @@ HOOK = ROOT / "scripts" / "hooks" / "no_prune_guard.py"
 # line per rule. The next addition will cost roughly 30 tokens per session per
 # client, permanently, and the honest lever is deciding a rule is not mandatory
 # rather than trying to word it shorter.
-BLOCK_BUDGET_BYTES = 1500
+#
+# The 2026-09-04 rise from 1500 to 1800 bought one rule: that the no-compaction
+# exemption is global rather than a chat-only courtesy, and that exactly one thing
+# lifts it. It is here rather than in the skill because a compaction pass is
+# running precisely when nothing is reading the skill, and because the override
+# has to be named where the rule is or the next pass invents its own.
+BLOCK_BUDGET_BYTES = 1800
 
 
 class TheAlwaysLoadedBlock(unittest.TestCase):

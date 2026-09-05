@@ -187,8 +187,17 @@ GLOBAL_RULES_SETUPS = [
      _rules_commands("codex")),
 
     ("rules-gemini", "Global rules - Gemini", "instructions",
-     "~/.gemini/GEMINI.md only.",
+     "~/.gemini/GEMINI.md only. Google Antigravity reads the same file, so this also "
+     "gives Antigravity its rules; it just does not install the skill folders.",
      _rules_commands("gemini")),
+
+    ("rules-antigravity", "Global rules - Google Antigravity", "instructions",
+     "~/.gemini/GEMINI.md for the rules, plus every skill in this repository copied "
+     "into ~/.gemini/config/skills/, which is Antigravity's documented global skill "
+     "path and one the Gemini CLI does not read. Verified against "
+     "antigravity.google/docs on 2026-09-04: there is no ~/.antigravity/ tree, and "
+     "plugins and MCP config live beside the skills under ~/.gemini/config/.",
+     _rules_commands("antigravity")),
 
     ("rules-copilot", "Global rules - Copilot", "instructions",
      "~/.copilot/copilot-instructions.md, plus the COPILOT_CUSTOM_INSTRUCTIONS_DIRS "
@@ -316,16 +325,113 @@ PROFILES = [
 
 # The client picker's options, in the order they are offered.
 PROFILE_CLIENTS = [
-    {"id": "all", "name": "All clients", "detail": "Claude, Codex, Gemini and Copilot together."},
+    {"id": "all", "name": "All clients",
+     "detail": "Claude, Codex, Gemini, Copilot and Antigravity together."},
     {"id": "claude", "name": "Claude", "detail": "~/.claude/CLAUDE.md"},
     {"id": "codex", "name": "Codex (GPT)", "detail": "~/.codex/AGENTS.md"},
     {"id": "gemini", "name": "Gemini", "detail": "~/.gemini/GEMINI.md"},
     {"id": "copilot", "name": "Copilot", "detail": "~/.copilot/copilot-instructions.md"},
+    # Same rules file as Gemini, plus the skills tree. Listed separately because
+    # picking it does more than picking Gemini does, not less.
+    {"id": "antigravity", "name": "Google Antigravity",
+     "detail": "~/.gemini/GEMINI.md, plus skills into ~/.gemini/config/skills/"},
 ]
 
 # Built from the same clone helpers the rules recipes use, so the preamble is
 # byte-identical everywhere. Easy Setup relies on that: it prints the clone once
 # and the bodies after it, instead of cloning the same repository three times.
+
+# Google Antigravity. A hosted surface rather than a local runtime, so what is
+# installable here is its CLI. Commands are the vendor's own, read from
+# antigravity.google/download on 2026-09-04; the model list on the surface node
+# comes from antigravity.google/docs/models the same day.
+#
+# These pipe a remote script into a shell, which is what Google documents. It is
+# the same shape as the Ollama recipe and carries the same trust basis: a named
+# vendor over TLS, and nothing pinned, because the vendor publishes no checksum.
+ANTIGRAVITY_SETUPS = [
+    ("antigravity-cli", "Antigravity CLI", "surfaces",
+     "Google's agentic development CLI. Free for individual developers. Signs in with "
+     "a Google account; no key to paste.",
+     {"windows": "irm https://antigravity.google/cli/install.ps1 | iex",
+      "wsl": "curl -fsSL https://antigravity.google/cli/install.sh | bash",
+      "linux": "curl -fsSL https://antigravity.google/cli/install.sh | bash",
+      "macos": "curl -fsSL https://antigravity.google/cli/install.sh | bash",
+      "other": "curl -fsSL https://antigravity.google/cli/install.sh | bash"}),
+]
+
+
+def antigravity_recipes() -> list[dict]:
+    return [{
+        "id": f"setup-{ident}",
+        "name": name,
+        "kind": "setup",
+        "state": "ready",
+        "trust": "named-vendor-runtime",
+        "detail": detail,
+        "commands": commands,
+    } for ident, name, _family, detail, commands in ANTIGRAVITY_SETUPS]
+
+
+# The models Antigravity hosts, read from antigravity.google/docs/models on
+# 2026-09-04. These are REFERENCE nodes, not setup recipes, and deliberately so:
+# a hosted model has nothing to install. You sign in and pick it. Giving them a
+# setup command would be inventing one.
+#
+# The plan column is the part worth having in the atlas. Charles runs a paid tier
+# alongside local models, and the three non-Google models are the ones a plan
+# change actually takes away.
+#
+# Version strings are the weakest fact here. They came from a rendered docs page
+# rather than a raw read, so treat the minor digits as needing a re-check before
+# anyone depends on an exact string.
+ANTIGRAVITY_MODELS = [
+    ("gemini-3-8-flash", "Gemini 3.8 Flash",
+     "Google. Available on every plan including the free tier. The default for bulk work."),
+    ("gemini-3-7-flash", "Gemini 3.7 Flash",
+     "Google. Available on every plan. Previous Flash generation, kept selectable."),
+    ("gemini-3-6-flash", "Gemini 3.6 Flash",
+     "Google. Available on every plan. Two generations back."),
+    ("gemini-3-1-pro", "Gemini 3.1 Pro",
+     "Google. Available on every plan. The reasoning tier; draws on the same rate limit as "
+     "Flash rather than a separate one."),
+    ("claude-sonnet-4-6-thinking", "Claude Sonnet 4.6 (thinking)",
+     "Anthropic, hosted inside Antigravity. Marked unavailable on the Enterprise plan."),
+    ("claude-opus-4-6-thinking", "Claude Opus 4.6 (thinking)",
+     "Anthropic, hosted inside Antigravity. Marked unavailable on the Enterprise plan."),
+    ("gpt-oss-120b", "GPT-OSS-120b",
+     "Open-weight, hosted inside Antigravity. Marked unavailable on the Enterprise plan."),
+    ("nano-banana-2", "Nano Banana 2",
+     "Google. Image work rather than reasoning. Available on every plan."),
+]
+
+
+def antigravity_model_lane() -> tuple[list, list]:
+    """Hosted Antigravity models as reference nodes.
+
+    Separate from sys-model-setup, which is local Ollama tags with a real
+    ``ollama pull`` behind each one. Mixing the two would put a node offering an
+    install command next to one that cannot have one, in the same lane, which is
+    exactly the confusion the setup/reference split exists to prevent.
+    """
+    lanes = [lane("sys-antigravity-models", "Antigravity hosted models", "models", "model",
+                  "runtime",
+                  "Models Google Antigravity serves. Reference only: a hosted model is "
+                  "selected in the client, not installed, so none of these carries a "
+                  "setup command. Rate limits are a five-hour bucket inside a weekly "
+                  "cap, published as percentages remaining rather than token counts.",
+                  len(ANTIGRAVITY_MODELS))]
+    comps = [{
+        "id": f"ag-{ident}", "name": name, "lane": "sys-antigravity-models",
+        "family": "models", "kind": "model", "detail": detail, "order": index,
+        # Not "unavailable". Unavailable means a recipe is missing and should be
+        # written. Hosted means no recipe can exist, and the two should not read
+        # the same in the interface.
+        "hosted": True,
+    } for index, (ident, name, detail) in enumerate(ANTIGRAVITY_MODELS)]
+    return lanes, comps
+
+
 MASTER_SETUP_RECIPE = {
     "id": "master-repo-global",
     "name": "Master Repo global AI setup",
@@ -355,6 +461,9 @@ MASTER_SETUP_STAGE_IDS = {
     "owner-approval-stage", "workspace-trust", "secret-scope", "master-repo-auto",
     "plugin-registry", "no-prune-hook", "branch-pr",
 }
+
+# Runtime stages that carry their own vendor recipe rather than the owner one.
+STAGE_OWN_RECIPES = {"antigravity": "setup-antigravity-cli"}
 
 FAMILIES = [
     ("intake", "Intake and routing", "instruction"),
@@ -389,6 +498,12 @@ STAGES = [
     ("surfaces", "copilot", "GitHub Copilot", "Native GitHub assistant surface.", "gh copilot explain"),
     ("surfaces", "gemini", "Gemini", "Multimodal and hosted model surface.", "gemini"),
     ("surfaces", "opencode", "OpenCode", "Multi-provider client surface.", None),
+    ("surfaces", "antigravity", "Google Antigravity",
+     "Google's agentic development platform: IDE, CLI and SDK. Free for individual "
+     "developers. Hosts Gemini 3.8/3.7/3.6 Flash, Gemini 3.1 Pro, Claude Sonnet 4.6 and "
+     "Opus 4.6 (thinking), GPT-OSS-120b, and Nano Banana 2 for image work. Rate limits "
+     "are per plan, tracked as a weekly and a five-hour remaining count.",
+     "antigravity"),
     ("identity", "owner-approval-stage", "Owner approval", "Only Charles approves, by passcode or by pinned revision.", "gh pr comment <n> --body 'I approve <passcode>'"),
     ("identity", "workspace-trust", "Workspace trust", "Binds access to the active repository and workspace.", None),
     ("identity", "secret-scope", "Secret scope", "Keeps credentials out of committed files and prompts.", None),
@@ -737,7 +852,8 @@ def skill_lanes() -> tuple[list, list]:
 
 def build() -> dict:
     lanes, comps = [], []
-    for producer in (stage_lanes, model_setup_lane, global_rules_lane, catalog_lanes, script_lanes, workflow_lanes,
+    for producer in (stage_lanes, model_setup_lane, antigravity_model_lane, global_rules_lane,
+                 catalog_lanes, script_lanes, workflow_lanes,
                  test_lanes, doc_lanes, hook_lanes, skill_lanes):
         l, c = producer()
         lanes.extend(l)
@@ -750,6 +866,15 @@ def build() -> dict:
         if component.get("slug"):
             component["action"] = {"kind": "reference", "state": "review-required"}
             continue
+        # A hosted model is signed into, not installed. It is not fail-closed and
+        # it is not pending a recipe: there is nothing for a recipe to do.
+        if component.get("hosted"):
+            component["setupState"] = "hosted"
+            component["action"] = {"kind": "reference", "state": "hosted"}
+            continue
+        own = STAGE_OWN_RECIPES.get(component["id"])
+        if own:
+            component["setupRecipe"] = own
         is_runtime_stage = component.get("lane", "").startswith("sys-")
         # A component that already carries its own reviewed recipe keeps it. The
         # model tags are runtime nodes by lane prefix but are not fail-closed:
@@ -809,7 +934,7 @@ def build() -> dict:
         "lanes": lanes,
         "components": comps,
         "setupRecipes": ([MASTER_SETUP_RECIPE] + model_setup_recipes()
-                     + global_rules_recipes()),
+                     + global_rules_recipes() + antigravity_recipes()),
         "profiles": PROFILES,
         "profileClients": PROFILE_CLIENTS,
         "routes": routes,

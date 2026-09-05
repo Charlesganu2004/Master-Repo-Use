@@ -146,6 +146,11 @@ const AtlasCore = (() => {
     if (component && component.setupState === 'review-required') {
       return { id: 'review-required', label: 'Setup recipe needs security review' };
     }
+    /* A hosted model has nothing to install, so "no recipe yet" would be wrong:
+       it reads as work outstanding when there is none to do. */
+    if (component && component.setupState === 'hosted') {
+      return { id: 'hosted', label: 'Hosted, sign in rather than install' };
+    }
     return { id: 'unavailable', label: 'No complete setup recipe yet' };
   }
 

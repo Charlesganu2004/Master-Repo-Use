@@ -12,3 +12,22 @@ omnigent-ai/omnigent
 getomnico/omni
 YeQing17-2026/OmniAgent  # license NOASSERTION - read before use
 FoundationAgents/MetaGPT
+
+
+# NOT AN ENTRY, and why. Kept as a comment rather than a catalogued slug, and kept
+# out of any '# ---' section so the note never reaches the published artifact:
+#
+#   prosdevlab/graphweave -- LINK ONLY. Verified 2026-09-04: 1 star, 160d, no
+#     releases, and NO LICENCE FILE. The README's last line says MIT, but nothing
+#     backs it and the API reports null, so it is all-rights-reserved until a
+#     LICENSE lands and cannot be depended on. What it is: a React Flow canvas
+#     that emits a GraphSchema which a FastAPI + LangGraph backend turns into a
+#     StateGraph and streams back over SSE. Its own README says end-to-end graph
+#     execution is not wired yet. Source was reviewed: ordinary pnpm monorepo, no
+#     install hooks, nothing hostile. The licence and the maturity are the
+#     problem, not the code.
+#     NAME COLLISION, five ways, which is the reason this note exists at all. The
+#     graphweave/graphweaver family holds at least five unrelated projects: a
+#     GraphQL API layer, a GraphRAG tool, a network-analysis app, a WebMCP
+#     threat-modelling canvas, and this one. Two of them are already catalogued
+#     under other lanes. Check the owner, never the name.

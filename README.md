@@ -775,6 +775,8 @@ The repository-side file describes the desired policy; the GitHub server setting
 | `scripts/verify_model_tags.py` | checks every model tag in the advisor actually resolves |
 | `scripts/generate_hardware_profiles.py` | regenerates the advisor dataset from the sizing formula |
 | `scripts/generate_hardware_doc.py` | regenerates `docs/LOCAL-MODEL-HARDWARE.md` from that dataset |
+| `docs/CHAT-CODE-MONITOR.md` | activity capture, its MongoDB schema and indexes, and the consent design |
+| `scripts/monitor-indexes.js` | the monitor store's indexes, re-runnable per machine |
 | `quantum/` | quantum-computing lane |
 | `cost-reduction/` | cloud/token/cost lane |
 

@@ -18,8 +18,11 @@ sedarged/Agent-skills-ecosystem   # 0 stars, NO LICENCE, 151d. An index of the e
                               # LINK ONLY, and treat its entries as unverified.
 
 # --- Individual skills that do a specific job (single-purpose skills, each solving one named problem)
-mvanhorn/last30days-skill     # 61.2k stars, MIT, 2d. Summarises the last thirty days of work.
-                              # Directly relevant to the chat/code monitor lane.
+mvanhorn/last30days-skill     # 61.2k stars, MIT, 2d. CORRECTED 2026-09-04: this researches a
+                              # TOPIC across Reddit, X, YouTube, HN, Polymarket and the web and
+                              # synthesises a grounded summary. It does not summarise your own
+                              # last thirty days of work, which is what the earlier note here
+                              # claimed. The name reads the other way; check before relying on it.
 BehiSecc/VibeSec-Skill        # 1.3k stars, Apache-2.0, 199d. Security review skill. Quiet but
                               # licensed and inside the 18 month release window is not
                               # applicable here: no releases, so age governs. Watch it.
@@ -39,6 +42,26 @@ vercel-labs/agent-browser     # 41.9k stars, Apache-2.0, pushed today. Browser c
 vercel-labs/json-render       # 16.1k stars, Apache-2.0, 5d. Renders JSON as UI.
 vercel-labs/portless          # 12.1k stars, Apache-2.0, 6d. Local tunnelling without port juggling.
 vercel-labs/deepsec           # 7.9k stars, Apache-2.0, pushed today. Security analysis.
+
+# --- Commercial distribution channels (real marketplace manifests, but the product behind them is not open; list, never depend)
+prassoai/macroscope-local     # verified 2026-09-04: 5 stars, MIT, 20d, release 2026-08-03.
+                              # LINK ONLY. The name misleads twice over. "local" does not mean
+                              # local inference: it means reviewing your working tree instead of a
+                              # pull request. And the MIT licence covers install.sh and the plugin
+                              # glue, not the product: the actual macroscope binaries are ~33MB
+                              # prebuilt Go blobs served from Releases with no source anywhere, and
+                              # use "requires an active Macroscope account", so your code goes to a
+                              # vendor service. install.sh was read rather than assumed: no sudo,
+                              # writes only under $HOME, contacts only api.github.com and release
+                              # URLs, no telemetry, no eval or obfuscation, and it does verify
+                              # SHA-256 against GitHub's per-asset digests. Three things to know
+                              # before running it anyway: the advertised path is curl | bash off
+                              # raw main, so it runs whatever main holds at that moment;
+                              # REQUIRE_CHECKSUM defaults to 0, so a MISSING digest warns instead
+                              # of failing, and fail-closed is opt-in; and three env vars can
+                              # redirect where the binary and bundle come from. Listed because it
+                              # ships a genuine .claude-plugin/marketplace.json for Claude Code,
+                              # Codex, Cursor and OpenCode. Five stars is very little corroboration.
 
 # NOT ADDED, and why:
 #   agentskill.sh -- a website, not a repository. Added to repo-lists/watch-sources.txt

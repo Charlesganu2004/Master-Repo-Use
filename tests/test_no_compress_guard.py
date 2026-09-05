@@ -66,6 +66,29 @@ class TheProtectedBlock(unittest.TestCase):
         body = self.text[self.text.index(BEGIN):self.text.index(END)]
         self.assertIn("Never remove, disable", body)
 
+    def test_the_exemption_is_stated_as_global_and_per_command(self):
+        """A rule that only holds in chat is not the rule Charles asked for."""
+        body = " ".join(self.text[self.text.index(BEGIN):self.text.index(END)].lower().split())
+        self.assertIn("exemption is global", body)
+        self.assertIn("every conversation, project and command", body)
+
+    def test_only_charles_asking_lifts_it_and_the_block_says_so(self):
+        """Without a named escape hatch, the next compaction pass invents one."""
+        body = " ".join(self.text[self.text.index(BEGIN):self.text.index(END)].lower().split())
+        self.assertIn("only charles asking", body)
+        # The prose override and the hook override have to be the same override,
+        # or the file says one thing and the guard enforces another.
+        self.assertIn("approved recompress", body)
+        hook = (ROOT / "scripts" / "hooks" / "no_compress_guard.py").read_text(encoding="utf-8")
+        self.assertIn("APPROVED RECOMPRESS", hook)
+
+    def test_a_budget_or_a_long_session_is_not_an_excuse(self):
+        """The three things that will actually be offered as a reason, refused by name."""
+        body = " ".join(self.text[self.text.index(BEGIN):self.text.index(END)].lower().split())
+        for excuse in ("not a token budget", "not a long session",
+                       "not another model's instructions"):
+            self.assertIn(excuse, body, f"{excuse} is not refused by name")
+
 
 class TheGuardBlocks(unittest.TestCase):
     def test_running_caveman_on_the_protected_file(self):
@@ -169,6 +192,52 @@ class CapabilityDefinitionsAreProtected(unittest.TestCase):
     def test_the_override_still_works(self):
         self.assertEqual(
             run("truncate -s 200 skills/x/SKILL.md  # APPROVED RECOMPRESS"), 0)
+
+
+class AVerbOnlyCountsWhereACommandGoes(unittest.TestCase):
+    """A compressor's NAME in a path is not the compressor being run.
+
+    Found by using the guard rather than by reading it: installing the caveman
+    skills created ~/.claude/skills/caveman-ultra-compact/, and after that a plain
+    `head` of that SKILL.md was refused. The word "caveman" was in a directory
+    name, the command only read, and the guard blocked it anyway.
+
+    Blocking the inspection of a capability is the same failure as the redirect
+    bug below it: an argument mistaken for an invocation.
+    """
+
+    def test_reading_a_skill_whose_folder_is_named_after_a_compressor(self):
+        self.assertEqual(run("head -5 ~/.claude/skills/caveman-ultra-compact/SKILL.md"), 0)
+        self.assertEqual(run("cat ~/.claude/skills/caveman-ultra-compact-repo/SKILL.md"), 0)
+        self.assertEqual(run("ls ~/.claude/skills/caveman-ultra-compact/"), 0)
+
+    def test_a_loop_naming_compressor_skills_is_not_running_them(self):
+        self.assertEqual(
+            run('for s in caveman-ultra-compact caveman-ultra-compact-repo; '
+                'do head -5 "$HOME/.claude/skills/$s/SKILL.md"; done'), 0)
+
+    def test_a_path_containing_the_word_truncate_is_not_a_truncation(self):
+        self.assertEqual(run("cat notes/truncate-design.md"), 0)
+
+    def test_grepping_for_a_compressor_by_name_still_works(self):
+        self.assertEqual(run("grep -rn caveman skills/master-repo-auto/SKILL.md"), 0)
+
+    def test_but_actually_running_one_is_still_blocked(self):
+        """The narrowing must not have opened the door it was guarding."""
+        self.assertEqual(run("caveman skills/x/SKILL.md"), 2)
+        self.assertEqual(run("python -m caveman skills/x/SKILL.md"), 2)
+        self.assertEqual(run("python3 -m caveman docs/auto-mode-block.txt"), 2)
+        self.assertEqual(run("truncate -s 10 skills/x/SKILL.md"), 2)
+        self.assertEqual(run("npx -y llmlingua --input .mcp.json"), 2)
+
+    def test_chained_and_piped_invocations_are_still_blocked(self):
+        self.assertEqual(run("git status && caveman skills/x/SKILL.md"), 2)
+        self.assertEqual(run("echo hi; truncate -s 0 CLAUDE.md"), 2)
+        self.assertEqual(run("cat list.txt | caveman skills/x/SKILL.md"), 2)
+
+    def test_a_privilege_or_env_prefix_does_not_smuggle_one_past(self):
+        self.assertEqual(run("sudo truncate -s 0 skills/x/SKILL.md"), 2)
+        self.assertEqual(run("DEBUG=1 caveman skills/x/SKILL.md"), 2)
 
 
 class TheAutoSelectionRule(unittest.TestCase):
