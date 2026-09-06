@@ -1,4 +1,4 @@
-"""Eighteen designs share one data layer and palette layer. These stop them drifting.
+"""Twenty-eight designs share one data layer and palette layer. These stop them drifting.
 
 The data layer is generated from files that exist, so the most valuable checks
 are the ones that catch a lane pointing at something deleted, a component in a
@@ -24,7 +24,16 @@ INTERACTIVE = ["d3-console.html", "d4-orbital.html", "d5-blueprint.html",
                "d11-command.html", "d12-index.html", "d13-skill-tree.html",
                "d14-river.html", "d15-city.html", "d16-patchbay.html",
                "d17-campaign.html", "d18-stack-forge.html",
-               "d19-code-cinema.html", "d20-repo-bridge.html"]
+               "d19-code-cinema.html", "d20-repo-bridge.html",
+               # Ten analytical layers. Every design above is, underneath, a list
+               # of equal-sized cards: a lane holding four entries renders the
+               # same as one holding a hundred and eighty. These encode quantity
+               # and relationship in the geometry, which is what none of the
+               # first eighteen could do however they were styled.
+               "d21-treemap.html", "d22-matrix.html", "d23-sunburst.html",
+               "d24-flow.html", "d25-rail.html", "d26-contact-sheet.html",
+               "d27-terrace.html", "d28-broadside.html", "d29-ledger.html",
+               "d30-bundle.html"]
 
 AUTHORED_SOURCE_PAIRS = [
     ("d18-stack-forge.html", "d18-stack-forge.ts", "d18-stack-forge.js"),
@@ -463,7 +472,7 @@ console.log(JSON.stringify({{added, rejected, result:A.combinedCommand(), linuxF
 
 
 class ThePalettes(unittest.TestCase):
-    """One palette layer for eighteen designs, so colours can be judged together.
+    """One palette layer for twenty-eight designs, so colours can be judged together.
 
     Each design keeps its own layout and defines its own tokens; themes.css
     overrides those tokens at higher specificity. A design that stops loading it
@@ -499,6 +508,29 @@ class ThePalettes(unittest.TestCase):
             body = (DESIGNS / name).read_text(encoding="utf-8")
             self.assertIn("AtlasTheme.mount", body, f"{name} has no palette switcher")
             self.assertIn("'ember'", body, f"{name} does not default to ember")
+
+    def test_every_design_boots_a_layer_that_actually_exists(self):
+        """A page whose boot key is unknown throws on load and passes every other test.
+
+        Nothing else here reads the argument to AtlasNext.boot(). A design could
+        ship pointing at a layer that was never written, or at one whose key was
+        renamed, and the file checks, the gallery check and the palette check
+        would all still be green while the page rendered nothing but an error in
+        the console. This is the check that the page runs at all.
+        """
+        runtime = (DESIGNS / "atlas-next.js").read_text(encoding="utf-8")
+        for name in INTERACTIVE:
+            body = (DESIGNS / name).read_text(encoding="utf-8")
+            key = re.search(r"AtlasNext\.boot\('([\w-]+)'\)", body)
+            if not key:
+                continue          # the five original designs boot their own runtime
+            key = key.group(1)
+            for registry in ("LABELS", "SHELLS", "MAPS"):
+                start = runtime.index(f"{registry} = {{" if registry != "LABELS"
+                                      else "const LABELS = {")
+                block = runtime[start:start + 20000]
+                self.assertIn(key, block,
+                              f"{name} boots '{key}', which is missing from {registry}")
 
     def test_every_design_loads_the_palette_layer(self):
         for name in INTERACTIVE + ["index.html"]:

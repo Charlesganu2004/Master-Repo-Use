@@ -63,6 +63,7 @@ Routine maintenance is **GitHub-first and deterministic**, never an automatic pa
 - ADKs: `docs/ADK-GUIDE.md`
 - Lifecycle triage: `docs/CATALOG-TRIAGE-2026-08-25.md`
 - Activity monitoring and its MongoDB store: `docs/CHAT-CODE-MONITOR.md`
+- Adopting a catalogued skill pack: `scripts/install_catalog_skill.py` (catalog gate, scan, no execution)
 
 ## High-use cross-agent tools
 

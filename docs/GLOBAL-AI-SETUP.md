@@ -104,6 +104,70 @@ A private GitHub repository likewise cannot silently modify all Claude.ai conver
 
 Keep `.github/copilot-instructions.md` and `AGENTS.md` committed. Repository-aware GitHub Copilot workflows can consume those files when they operate on this repository. Access to the private catalog from other repositories depends on the permissions and environment of that Copilot session.
 
+## Google Antigravity
+
+Antigravity reads its **global rules from `~/.gemini/GEMINI.md`**, the same file the Gemini CLI
+uses. There is no `~/.antigravity/` tree, and a script that writes one produces a file nothing
+loads. Verified against `antigravity.google/docs/rules-workflows/` on 2026-09-04.
+
+Where it differs from Gemini is everything else, all of it under `~/.gemini/config/`:
+
+| What | Path |
+|---|---|
+| Global rules | `~/.gemini/GEMINI.md` (shared with the Gemini CLI) |
+| Skills | `~/.gemini/config/skills/<folder>/SKILL.md` |
+| Plugins | `~/.gemini/config/plugins/<name>/plugin.json` |
+| MCP servers | `~/.gemini/config/mcp_config.json` |
+| Workspace rules | `.agents/rules/` in the repository |
+
+So `--client gemini` gives Antigravity its rules, and `--client antigravity` gives it the rules
+**plus** every skill in this repository copied into the path the Gemini CLI does not read:
+
+```bash
+bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --client antigravity --auto-skills
+```
+
+Its hosted models are reference entries in the atlas rather than setup recipes, because a hosted
+model is signed into rather than installed. The three non-Google ones, Claude Sonnet 4.6 (thinking),
+Claude Opus 4.6 (thinking) and GPT-OSS-120b, are the ones a plan change takes away.
+
+The CLI has a vendor-published installer, which is unusual enough to be worth stating plainly: both
+`antigravity.google/cli/install.ps1` and `.../install.sh` return 200 from Google Frontend and the
+shell script was read before this was written. It installs to `$HOME/.local/bin`. It covers **the
+CLI only**; the desktop client, the IDE and the SDK are separate downloads, OS package repositories
+and PyPI respectively. On PyPI the SDK is `google-antigravity`; plain `antigravity` is an unrelated
+joke package.
+
+## Adopting a catalogued skill pack
+
+A catalog entry is a reference, not an install: the repository deliberately gives no way to run one,
+because a URL is not a vetting. `scripts/install_catalog_skill.py` is the reviewed middle step.
+
+```bash
+python "$HOME/Master-Repo-Use/scripts/install_catalog_skill.py" --list
+python "$HOME/Master-Repo-Use/scripts/install_catalog_skill.py" mattpocock/skills --dry-run
+python "$HOME/Master-Repo-Use/scripts/install_catalog_skill.py" mattpocock/skills
+```
+
+It installs into Claude Code and Antigravity together, and four things it refuses to do are the
+reason it is safe to run:
+
+- **A slug that is not in `repo-lists/` is refused**, before anything is fetched. A skills
+  marketplace is exactly where a near-name repository gets installed by mistake, and the catalog
+  already knows which one was vetted.
+- **Nothing from the repository is executed.** No `npm install`, no postinstall, no build. Hooks are
+  disabled for the clone, submodules are not fetched, and only directories containing a `SKILL.md`
+  are copied.
+- **A skill folder it did not install is never overwritten.** Installs are namespaced by owner and
+  carry a `.installed-from` marker, so two packs shipping a `review` skill cannot silently replace
+  each other, and nothing removes a capability somebody else put there.
+- **Scanner findings block the install** until you have read them and passed `--accept-findings`.
+
+Expect false positives and read them rather than forcing past them. `mattpocock/skills` trips the
+prompt-injection heuristic on one line of a setup wizard that tells a human to click "Reveal test
+key" in a Stripe dashboard. That is documentation of a manual step, not an attack, which is exactly
+why the script refuses rather than deletes.
+
 ## Making catalog repos work across clients
 
 Use this compatibility order:

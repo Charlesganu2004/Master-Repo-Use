@@ -106,7 +106,7 @@ h1 span{color:var(--accent)}
 .s-workbench{background:#08090b}
 .s-workbench::before{content:"";position:absolute;left:15px;top:13px;bottom:13px;width:48px;border-right:1px solid var(--line);background:repeating-linear-gradient(0deg,transparent 0 16px,rgba(255,255,255,.08) 16px 17px)}
 .s-workbench::after{content:"01  task-intake()\A 02  lane-match()\A 03  build();";white-space:pre;position:absolute;left:82px;top:26px;color:var(--accent);font:12px/1.9 var(--mono)}
-.s-journal{background:color-mix(in srgb,var(--panel) 88%,var(--accent2)}
+.s-journal{background:color-mix(in srgb,var(--panel) 88%,var(--accent2))}
 .s-journal::before{content:"";position:absolute;left:25px;top:13px;bottom:13px;width:1px;background:var(--accent)}
 .s-journal::after{content:"CHAPTER 01\A Roadmap notes";white-space:pre;position:absolute;left:42px;top:32px;color:var(--ink);font:700 14px/1.8 Georgia,serif}
 .s-command{background:radial-gradient(circle at 60% 35%,rgba(255,255,255,.12),transparent 40%),var(--panel)}
@@ -130,13 +130,63 @@ h1 span{color:var(--accent)}
 .s-cinema::before,.s-cinema::after{content:"";position:absolute;left:8px;right:8px;height:8px;background:repeating-linear-gradient(90deg,#eee8da 0 12px,transparent 12px 23px)}.s-cinema::before{top:8px}.s-cinema::after{bottom:8px}.s-cinema{background-image:linear-gradient(90deg,transparent 0 7%,#eee8da 7% 31%,transparent 31% 36%,#eee8da 36% 64%,transparent 64% 69%,#eee8da 69% 93%,transparent 93%)}
 .s-bridge{background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 22%,var(--panel)) 0 30%,var(--bg) 30% 35%,color-mix(in srgb,var(--knowledge) 22%,var(--panel)) 35% 65%,var(--bg) 65% 70%,color-mix(in srgb,var(--delivery) 22%,var(--panel)) 70%)}
 .s-bridge::after{content:"REPOS  →  RUNTIME  →  SKILLS";position:absolute;left:16px;right:16px;top:43px;color:var(--ink);font:900 10px/1 var(--mono);text-align:center;letter-spacing:.05em}
+
+/* Added with the ten analytical layers. Each previews its own map grammar rather
+   than a generic pattern, so the card says what the page will look like. */
+.s-treemap{background:var(--panel);padding:0}
+.s-treemap::after{content:"";position:absolute;inset:12px;background:
+  linear-gradient(var(--accent),var(--accent)) 0 0/46% 58% no-repeat,
+  linear-gradient(var(--capability),var(--capability)) 100% 0/52% 33% no-repeat,
+  linear-gradient(var(--knowledge),var(--knowledge)) 100% 38%/52% 26% no-repeat,
+  linear-gradient(var(--control),var(--control)) 0 100%/46% 38% no-repeat,
+  linear-gradient(var(--delivery),var(--delivery)) 100% 100%/52% 30% no-repeat;
+  opacity:.88}
+.s-matrix{background:var(--bg)}
+.s-matrix::after{content:"";position:absolute;inset:14px;background:
+  radial-gradient(circle,var(--accent) 0 4px,transparent 5px) 0 0/26px 22px,
+  radial-gradient(circle,var(--knowledge) 0 3px,transparent 4px) 13px 11px/26px 22px;
+  opacity:.9}
+.s-matrix::before{content:"";position:absolute;left:14px;top:14px;bottom:14px;width:2px;background:var(--line);box-shadow:0 0 0 0 var(--line)}
+.s-sunburst{background:radial-gradient(circle at 50% 52%,var(--panel) 0 16px,transparent 17px),var(--bg)}
+.s-sunburst::after{content:"";position:absolute;left:50%;top:52%;width:96px;height:96px;transform:translate(-50%,-50%);border-radius:50%;
+  background:conic-gradient(var(--accent) 0 22%,var(--capability) 22% 44%,var(--knowledge) 44% 63%,var(--control) 63% 79%,var(--model) 79% 91%,var(--delivery) 91%);
+  mask:radial-gradient(circle,transparent 0 17px,#000 18px)}
+.s-sankey{background:var(--panel)}
+.s-sankey::after{content:"";position:absolute;inset:16px;background:
+  linear-gradient(14deg,transparent 44%,var(--accent) 44% 56%,transparent 56%),
+  linear-gradient(-11deg,transparent 62%,var(--knowledge) 62% 72%,transparent 72%),
+  linear-gradient(5deg,transparent 24%,var(--delivery) 24% 32%,transparent 32%);
+  opacity:.75}
+.s-sankey::before{content:"";position:absolute;left:16px;top:16px;bottom:16px;width:7px;background:var(--accent);box-shadow:130px 0 0 var(--capability),260px 0 0 var(--delivery)}
+.s-rail{background:var(--bg);background-image:linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:46px 100%}
+.s-rail::after{content:"";position:absolute;left:18px;top:22px;height:11px;width:92px;border-radius:6px;background:var(--accent);
+  box-shadow:46px 22px 0 var(--capability),92px 44px 0 -12px var(--knowledge),138px 22px 0 -30px var(--control)}
+.s-contact{background:var(--bg)}
+.s-contact::after{content:"";position:absolute;inset:12px;background:
+  linear-gradient(var(--accent) 3px,color-mix(in srgb,var(--panel) 80%,transparent) 3px);
+  background-size:29px 25px;opacity:.95}
+.s-terrace{background:var(--bg)}
+.s-terrace::after{content:"";position:absolute;left:50%;top:50%;width:120px;height:120px;
+  transform:translate(-50%,-50%) rotateX(58deg) rotateZ(-45deg);
+  background:var(--accent);box-shadow:0 0 0 1px var(--bg),14px 14px 0 var(--capability),28px 28px 0 var(--knowledge);opacity:.9}
+.s-broadside{background:var(--panel)}
+.s-broadside::after{content:"ATLAS";position:absolute;left:12px;right:12px;top:26px;color:var(--ink);
+  font:900 44px/1 Georgia,serif;letter-spacing:-.05em;text-align:center}
+.s-broadside::before{content:"";position:absolute;left:0;right:0;bottom:20px;height:10px;background:repeating-linear-gradient(90deg,var(--accent) 0 26px,transparent 26px 46px)}
+.s-ledger{background:#07080a}
+.s-ledger::after{content:"01 [k] rag-vector\A 02 [c] mcp-access\A 03 [m] llama3.1:8b";white-space:pre;position:absolute;left:18px;top:22px;color:var(--accent);font:11.5px/2.1 var(--mono)}
+.s-bundle{background:radial-gradient(circle at 50% 50%,var(--panel),var(--bg) 72%)}
+.s-bundle::after{content:"";position:absolute;left:50%;top:50%;width:92px;height:92px;transform:translate(-50%,-50%);border-radius:50%;
+  border:1.5px dashed color-mix(in srgb,var(--ink) 34%,transparent)}
+.s-bundle::before{content:"";position:absolute;left:50%;top:50%;width:78px;height:78px;transform:translate(-50%,-50%);border-radius:50%;
+  background:conic-gradient(from 20deg,transparent 0 8%,var(--accent) 8% 11%,transparent 11% 30%,var(--knowledge) 30% 33%,transparent 33% 55%,var(--delivery) 55% 58%,transparent 58% 78%,var(--control) 78% 81%,transparent 81%)}
 </style>
 </head>
 <body>
 <div class="shell">
 
 <h1>Atlas <span>designs</span></h1>
-<p class="lede">Eighteen ways through the same system. They share one data layer and one engine, so a
+<p class="lede">Twenty-eight ways through the same system. They share one data layer and one engine, so a
 lane added anywhere appears in all of them and a click means the same thing everywhere. What
 differs is how the map is drawn and how you move through it.</p>
 <p class="counts" id="counts">Reading the atlas data…</p>
@@ -152,7 +202,7 @@ rather than the paint. Each card also has direct links per palette. A palette tr
 
 <div class="note">
   <h2>What every design carries</h2>
-  <p>The differences are visual and navigational. These are identical in all eighteen, by design:</p>
+  <p>The differences are visual and navigational. These are identical in all twenty-eight, by design:</p>
   <ul>
     <li><b>Your system first.</b> Windows, Ubuntu/WSL, macOS, Linux or Other. That choice decides
       the scan command and every command shown afterwards. Nothing is guessed from the browser.</li>
@@ -271,6 +321,62 @@ const DESIGNS = [
     tagline: 'sources → runtime → skills',
     what: '<b>Separate discovery from safe setup.</b> Repositories, runtime parts, and reusable skills occupy three connected zones, keeping reviewed setup recipes distinct from catalog links.',
     from: 'System architecture bridges, authored in typed TSX and compiled to offline JavaScript.' },
+
+  /* Ten analytical layers. The eighteen above are all, underneath, a list of
+     equal-sized cards in some arrangement: a lane holding four entries looks
+     exactly like one holding a hundred and eighty. These ten encode quantity and
+     relationship in the geometry itself, which is the thing the first eighteen
+     could not do however they were styled. */
+
+  { file: 'd21-treemap.html', name: 'Treemap', swatch: 's-treemap',
+    tagline: 'area is the count',
+    what: '<b>Size finally means something.</b> A squarified treemap where each cell's area is how many components a family or lane actually holds, so the lopsidedness of the catalog is visible at a glance rather than buried in a count badge. Labels hide themselves when a cell is too small to hold them honestly, and stay available to a screen reader.',
+    from: 'The Bruls, Huizing and van Wijk squarified layout, computed in plain JavaScript and laid out as percentage-positioned DOM so every cell keeps focus and hover for free.' },
+
+  { file: 'd22-matrix.html', name: 'Matrix', swatch: 's-matrix',
+    tagline: 'lanes by kind · cross-listings visible',
+    what: '<b>What the lists hide.</b> Rows are lanes, columns are the six kinds, and every cell says how many components sit at that intersection. It is the only view that makes the shape of the cross-listing readable rather than something you infer from opening lanes one at a time.',
+    from: 'Adjacency-matrix conventions for dense graphs, with magnitude on two channels so it survives greyscale.' },
+
+  { file: 'd23-sunburst.html', name: 'Sunburst', swatch: 's-sunburst',
+    tagline: 'families inner · lanes outer',
+    what: '<b>Proportion in one glance.</b> Two rings of hand-built SVG arcs: families inside, their lanes outside, angle proportional to what each holds. The wheel answers how big, and the list under it stays the working roadmap so the page is still a tool rather than a chart.',
+    from: 'Radial partition diagrams, drawn as inline SVG arc paths with no charting library.' },
+
+  { file: 'd24-flow.html', name: 'Flow', swatch: 's-sankey',
+    tagline: 'family → kind → readiness',
+    what: '<b>Why something cannot be built.</b> Ribbons flow from family to kind to setup readiness, so the question Build raises and never answers visually gets an answer: what is ready, what needs review, what is hosted, and what has no recipe at all.',
+    from: 'Sankey ribbon geometry, drawn as filled cubic beziers whose widths carry the counts.' },
+
+  { file: 'd25-rail.html', name: 'Rail', swatch: 's-rail',
+    tagline: 'setup order, not time',
+    what: '<b>What has to happen before what.</b> A timeline whose axis is setup order rather than dates: scan, rules, runtime, models, guards, verify. Anything the data does not sequence lands in an unsequenced column and says so, instead of being placed by guesswork.',
+    from: 'Gantt conventions, positioned entirely with CSS Grid column spans so there is no pixel arithmetic to drift.' },
+
+  { file: 'd26-contact-sheet.html', name: 'Contact Sheet', swatch: 's-contact',
+    tagline: 'all of it, at once',
+    what: '<b>No truncation.</b> Every visible component in one dense grid of small frames, rather than the first sixteen of each group. Three densities, sticky family headers, and offscreen frames skipped by the browser so the whole set stays smooth.',
+    from: 'The photographic contact sheet, made viable at this size by content-visibility rather than by hand-rolled virtualisation.' },
+
+  { file: 'd27-terrace.html', name: 'Terrace', swatch: 's-terrace',
+    tagline: 'isometric floors · flat toggle',
+    what: '<b>Depth as a count.</b> Each family is a floor and the stack makes the imbalance physical. Isometric layouts are genuinely hard to read for some people, so the 3D is a toggle rather than a requirement, and labels are counter-rotated so they stay flat and legible.',
+    from: 'CSS 3D transforms with preserve-3d. No renderer, no library, and a flat fallback that is a first-class view rather than an apology.' },
+
+  { file: 'd28-broadside.html', name: 'Broadside', swatch: 's-broadside',
+    tagline: 'editorial · scroll-driven',
+    what: '<b>Award-site craft, used honestly.</b> Viewport-scale display type, a seamless marquee, film grain baked into a data URI rather than filtered every frame, and reveals driven by the scroll timeline. Every effect degrades to a plain readable page, because that is the version most people will see.',
+    from: 'The layout and motion grammar of award-winning JavaScript sites, rebuilt with modern CSS so none of it needs GSAP or a scroll library.' },
+
+  { file: 'd29-ledger.html', name: 'Ledger', swatch: 's-ledger',
+    tagline: 'monospace · greyscale-safe',
+    what: '<b>The one that works with no colour at all.</b> Fixed character-width columns align with no measuring code, kinds carry text sigils rather than only a hue, and the active filters are printed back as the command that would reproduce them, which teaches the filter model better than a legend does.',
+    from: 'Terminal and log-surface conventions, with ch units doing the column maths.' },
+
+  { file: 'd30-bundle.html', name: 'Bundle', swatch: 's-bundle',
+    tagline: 'routes as bundled edges',
+    what: '<b>The routes, drawn.</b> Lanes sit around a circle ordered by family, and each route becomes an edge pulled toward the centre so edges sharing a region bundle together. Focus a lane and everything it does not touch dims. A ring of real buttons carries the keyboard, because SVG paths cannot.',
+    from: 'Holten hierarchical edge bundling, reduced to quadratic beziers with a tension factor.' },
 ];
 
 function render(theme){
@@ -318,7 +424,7 @@ function counts(){
   const subs = new Set((window.__ATLAS_DATA__.components || [])
     .map(c => c.sub || 'Catalog')).size;
   el.innerHTML =
-    `All eighteen read <b>${meta.lanes}</b> lanes · <b>${meta.components}</b> components · ` +
+    `All twenty-eight read <b>${meta.lanes}</b> lanes · <b>${meta.components}</b> components · ` +
     `<b>${meta.routes}</b> hybrid routes · <b>${(window.__ATLAS_DATA__.families || []).length}</b> ` +
     `families · <b>${subs}</b> sub-categories, generated from files in this repository.` +
     (meta.redacted

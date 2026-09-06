@@ -777,6 +777,7 @@ The repository-side file describes the desired policy; the GitHub server setting
 | `scripts/generate_hardware_doc.py` | regenerates `docs/LOCAL-MODEL-HARDWARE.md` from that dataset |
 | `docs/CHAT-CODE-MONITOR.md` | activity capture, its MongoDB schema and indexes, and the consent design |
 | `scripts/monitor-indexes.js` | the monitor store's indexes, re-runnable per machine |
+| `scripts/install_catalog_skill.py` | the reviewed path from a catalogued skill pack to an installed one |
 | `quantum/` | quantum-computing lane |
 | `cost-reduction/` | cloud/token/cost lane |
 

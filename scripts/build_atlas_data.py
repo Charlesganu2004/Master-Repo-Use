@@ -210,14 +210,18 @@ GLOBAL_RULES_SETUPS = [
      "me' only holds while something is still reading it.",
      _with_clone(_GUARD_BODIES)),
 
+    # Verifies BOTH halves. The rules half is a block in a file; the skills half is
+    # a directory of folders, and a setup that wrote the block and silently failed
+    # to copy the skills would look identical without the second command.
     ("rules-verify", "Verify what was written", "instructions",
-     "Shows the block that landed in each client file, so a claimed setup can be checked "
-     "rather than trusted.",
-     {"windows": "Get-ChildItem $HOME\.claude\CLAUDE.md,$HOME\.codex\AGENTS.md,$HOME\.gemini\GEMINI.md,$HOME\.copilot\copilot-instructions.md -ErrorAction SilentlyContinue | Select-String -Pattern 'MASTER-REPO-USE:BEGIN'",
-      "wsl": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null",
-      "macos": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null",
-      "linux": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null",
-      "other": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null"}),
+     "Lists the client files carrying the block, then the skill folders each client "
+     "can actually see. A setup that wrote the rules and quietly failed to copy the "
+     "skills looks complete until you check the second one.",
+     {"windows": "Get-ChildItem $HOME\.claude\CLAUDE.md,$HOME\.codex\AGENTS.md,$HOME\.gemini\GEMINI.md,$HOME\.copilot\copilot-instructions.md -ErrorAction SilentlyContinue | Select-String -Pattern 'MASTER-REPO-USE:BEGIN'; Get-ChildItem $HOME\.claude\skills,$HOME\.gemini\config\skills -Directory -ErrorAction SilentlyContinue | Select-Object FullName",
+      "wsl": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null",
+      "macos": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null",
+      "linux": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null",
+      "other": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null"}),
 ]
 
 
