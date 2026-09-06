@@ -854,6 +854,30 @@ def skill_lanes() -> tuple[list, list]:
     return lanes, comps
 
 
+def design_pages() -> list[dict]:
+    """Every interactive design, read from the files rather than listed by hand.
+
+    The root index.html had no link to designs/ at all, so twenty-eight working
+    designs were published and unreachable. Fixing that by hand-listing them in
+    two places is how the list goes stale on the twenty-ninth, so the list is
+    derived: filename, plus the <title> the page already declares.
+    """
+    pages = []
+    for path in sorted((ROOT / "designs").glob("d*.html")):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        title = re.search(r"<title>(.*?)</title>", text, re.S)
+        note = re.search(r'<meta name="description" content="(.*?)"', text, re.S)
+        if not title:
+            continue                  # not a design page if it does not name itself
+        name = title.group(1).split("|")[0].strip()
+        pages.append({
+            "file": f"designs/{path.name}",
+            "name": name,
+            "detail": (note.group(1).strip() if note else ""),
+        })
+    return pages
+
+
 def build() -> dict:
     lanes, comps = [], []
     for producer in (stage_lanes, model_setup_lane, antigravity_model_lane, global_rules_lane,
@@ -939,6 +963,7 @@ def build() -> dict:
         "components": comps,
         "setupRecipes": ([MASTER_SETUP_RECIPE] + model_setup_recipes()
                      + global_rules_recipes() + antigravity_recipes()),
+        "designs": design_pages(),
         "profiles": PROFILES,
         "profileClients": PROFILE_CLIENTS,
         "routes": routes,

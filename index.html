@@ -22,7 +22,7 @@
       <span><strong>Graphite Atlas</strong><small>Master Repo Use</small></span>
     </a>
     <nav class="primary-nav" aria-label="Primary navigation">
-      <a href="#atlas">Atlas</a><a href="#routes">Routes</a><a href="#hardware">Hardware</a><a href="#health">Health</a>
+      <a href="#atlas">Atlas</a><a href="#routes">Routes</a><a href="#setup">Setup</a><a href="#designs">Designs</a><a href="#hardware">Hardware</a><a href="#health">Health</a>
     </nav>
     <div class="mast-actions">
       <span class="live-pill"><i></i> System current</span>
@@ -39,7 +39,7 @@
         <p class="hero-lede">Explore the complete instruction, capability, knowledge, model, governance, and delivery system. Every lens keeps the full topology in view.</p>
         <div class="hero-actions">
           <a class="primary-button" href="#atlas">Enter the full map <span>↘</span></a>
-          <a class="text-link" href="#routes">Explore hybrid routes <span>36 paths</span></a>
+          <a class="text-link" href="#setup">Set up a machine <span id="heroProfileCount">4 profiles</span></a><a class="text-link" href="#designs">Browse the designs <span id="heroDesignCount">designs</span></a>
         </div>
       </div>
       <div class="hero-visual" aria-hidden="true">
@@ -49,8 +49,8 @@
         <svg viewBox="0 0 640 520" role="presentation"><path d="M84 176 C214 98 310 160 380 244 S516 342 590 270"/><path d="M62 350 C190 302 248 406 374 336 S488 128 584 150"/></svg>
       </div>
       <div class="metric-ribbon" aria-label="Atlas statistics">
-        <article><span>01</span><strong>52</strong><p>connected components</p></article>
-        <article><span>02</span><strong>16</strong><p>visible system lanes</p></article>
+        <article><span>01</span><strong id="metricComponents">52</strong><p>catalogued components</p></article>
+        <article><span>02</span><strong id="metricLanes">16</strong><p>system lanes</p></article>
         <article><span>03</span><strong>12</strong><p>purpose built canvases</p></article>
         <article><span>04</span><strong>36</strong><p>hybrid model routes</p></article>
       </div>
@@ -79,6 +79,31 @@
       <div class="section-heading route-heading"><div><p class="eyebrow">Hybrid route matrix</p><h2 id="routesTitle">Thirty six ways through.</h2></div><p>Choose a decision profile, inspect its model handoff, then trace the exact path back onto the atlas.</p></div>
       <div class="route-workspace"><div><div class="route-filters" id="routeFilters" role="toolbar" aria-label="Filter routes"></div><div class="hybrid-cards" id="hybridCards" aria-live="polite"></div></div><aside class="route-detail" id="routeDetail"><p class="eyebrow">Selected path</p><div class="route-number" id="routeNumber">01</div><h3 id="routeTitle">Balanced build</h3><p id="routeRule">A practical default that keeps easy work local and escalates only when validation requires it.</p><div class="route-path" id="routePath"></div><dl id="routeMetrics"></dl><button class="primary-button wide" type="button" id="traceRoute">Trace on atlas <span>↗</span></button></aside></div>
     </section>
+    <section class="routes-section page-shell" id="setup" aria-labelledby="setupTitle">
+      <div class="section-heading route-heading">
+        <div><p class="eyebrow">Easy setup</p><h2 id="setupTitle">Four answers to "new machine, what do I run?"</h2></div>
+        <p>Pick a profile and the assistant it should configure. Every profile installs the protected auto-mode block first, so the caveman rules and the token reducers are in place before anything else runs.</p>
+      </div>
+      <div class="setup-picker">
+        <div>
+          <p class="eyebrow">01 - which assistant</p>
+          <div class="client-row" id="clientRow" role="toolbar" aria-label="Choose the client to configure"></div>
+        </div>
+        <div>
+          <p class="eyebrow">02 - which profile</p>
+          <div class="profile-grid" id="profileGrid"></div>
+        </div>
+      </div>
+      <p class="setup-note" id="setupNote">The full command builder, with your operating system and memory folded in, lives in any of the interactive designs below.</p>
+    </section>
+    <section class="routes-section page-shell" id="designs" aria-labelledby="designsTitle">
+      <div class="section-heading route-heading">
+        <div><p class="eyebrow">Interactive designs</p><h2 id="designsTitle">One catalog. <span id="designHeadCount">Many</span> ways through it.</h2></div>
+        <p>Each is a complete working product over the same data, not a mockup: the same scan, the same filters, the same Build basket. What changes is how the map is drawn.</p>
+      </div>
+      <div class="design-links" id="designLinks"></div>
+      <p class="setup-note"><a class="primary-button" href="designs/index.html">Open the design gallery <span>&#8599;</span></a></p>
+    </section>
     <section class="hardware-section" id="hardware" aria-labelledby="hardwareTitle">
       <div class="page-shell hardware-grid"><div class="hardware-copy"><p class="eyebrow">Local model advisor</p><h2 id="hardwareTitle">Know what your machine can carry.</h2><p>Set your memory and operating system. The atlas returns a conservative tier with a practical routing recommendation.</p><label class="ram-label" for="ramRange"><span>System memory</span><output id="ramValue">16 GB</output></label><input id="ramRange" type="range" min="4" max="64" step="2" value="16"><div class="ram-scale"><span>4 GB</span><span>64 GB</span></div></div><article class="hardware-result" id="hardwareResult"><div class="result-top"><span class="result-status" id="hardwareStatus">Solid daily driver</span><strong id="hardwareFits">30</strong></div><p id="hardwareSummary">Loading the hardware profile for this system.</p><div class="result-bars" id="hardwareBars"></div><button type="button" class="quiet-button" id="hardwareRoute">Show a matching route</button></article></div>
     </section>
@@ -88,7 +113,7 @@
       <div class="health-footer"><span id="healthUpdated">Loading catalog signal</span><span>Public privacy mode</span></div><div data-private class="private-health"><h3>Private rows</h3><div id="healthRows"></div></div>
     </section>
   </main>
-  <footer class="site-footer"><div class="page-shell"><div><strong>Graphite Atlas</strong><p>Designed as a high definition operational website for Master Repo Use.</p></div><nav aria-label="Footer"><a href="#atlas">Atlas</a><a href="#routes">Routes</a><a href="design-options.html">18 design directions</a></nav><p class="build-label">Build <span id="buildLabel">dev</span></p></div></footer>
+  <footer class="site-footer"><div class="page-shell"><div><strong>Graphite Atlas</strong><p>Designed as a high definition operational website for Master Repo Use.</p></div><nav aria-label="Footer"><a href="#atlas">Atlas</a><a href="#routes">Routes</a><a href="designs/index.html">Interactive designs</a><a href="design-options.html">Palette studio</a></nav><p class="build-label">Build <span id="buildLabel">dev</span></p></div></footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

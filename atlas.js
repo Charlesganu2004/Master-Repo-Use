@@ -612,6 +612,120 @@ function assertRegistry() {
   if (errors.length) throw new Error(errors.join('; '));
 }
 
+/* ---------------------------------------------------------------- catalog
+
+   This page carries its own registry: a fifty-two component map of the runtime
+   path, asserted by assertRegistry(). That is a deliberate, curated view and is
+   not the catalog.
+
+   The catalog is much larger, and until now this page never mentioned it. It
+   also never linked to designs/ at all, so twenty-nine working designs were
+   being published and were unreachable from the site that publishes them. The
+   three renderers below close that: real counts, the Easy Setup profiles, and
+   the designs themselves, all read from the generated data rather than typed
+   here where they would go stale. */
+
+const catalog = { data: null, client: 'all' };
+
+async function loadCatalog() {
+  try {
+    const response = await fetch('designs/atlas-data.json', { cache: 'no-store' });
+    if (!response.ok) throw new Error('catalog unavailable');
+    catalog.data = await response.json();
+  } catch (error) {
+    /* The map, routes and advisor do not depend on this, so a failure here
+       degrades one section rather than the page. Say so where the content
+       would have been instead of leaving three empty boxes. */
+    const note = document.getElementById('setupNote');
+    if (note) note.textContent = 'The catalog data is unavailable in this preview. The map, routes and hardware advisor above remain fully interactive.';
+    return;
+  }
+  renderCatalogMetrics();
+  renderClients();
+  renderProfiles();
+  renderDesignLinks();
+}
+
+function renderCatalogMetrics() {
+  const meta = catalog.data.meta || {};
+  const components = document.getElementById('metricComponents');
+  const lanes = document.getElementById('metricLanes');
+  if (components && meta.components) components.textContent = meta.components;
+  if (lanes && meta.lanes) lanes.textContent = meta.lanes;
+  const designs = (catalog.data.designs || []).length;
+  const heroDesigns = document.getElementById('heroDesignCount');
+  if (heroDesigns) heroDesigns.textContent = designs + ' designs';
+  const headCount = document.getElementById('designHeadCount');
+  if (headCount) headCount.textContent = designs;
+  const heroProfiles = document.getElementById('heroProfileCount');
+  const profiles = (catalog.data.profiles || []).length;
+  if (heroProfiles) heroProfiles.textContent = profiles + ' profiles';
+}
+
+function renderClients() {
+  const host = document.getElementById('clientRow');
+  if (!host) return;
+  host.innerHTML = (catalog.data.profileClients || []).map(function (client) {
+    const on = client.id === catalog.client;
+    return '<button type="button" class="route-chip' + (on ? ' active' : '') + '" data-client="' + client.id +
+      '" aria-pressed="' + on + '"><strong>' + escapeHtml(client.name) + '</strong><small>' +
+      escapeHtml(client.detail) + '</small></button>';
+  }).join('');
+  host.querySelectorAll('[data-client]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      catalog.client = button.getAttribute('data-client');
+      renderClients();
+      renderProfiles();
+    });
+  });
+}
+
+function renderProfiles() {
+  const host = document.getElementById('profileGrid');
+  if (!host) return;
+  const recipes = {};
+  (catalog.data.setupRecipes || []).forEach(function (recipe) { recipes[recipe.id] = recipe; });
+  host.innerHTML = (catalog.data.profiles || []).map(function (profile) {
+    /* Two of the steps are tokens the client resolves, not fixed ids. Showing
+       the token raw would read as a placeholder somebody forgot, so name what
+       it will become instead. */
+    const steps = (profile.steps || []).map(function (step) {
+      if (step === 'rules:{client}') return 'Global rules for ' + clientName(catalog.client);
+      if (step === 'model:{tier}') return 'Largest local model your memory can host';
+      if (step === 'model:{tier2}') return 'A second local model for routing';
+      if (step === 'ALL_MODEL_TAGS') return 'Every vetted model tag';
+      const recipe = recipes[step];
+      return recipe ? recipe.name : step;
+    });
+    return '<article class="profile-card"><h3>' + escapeHtml(profile.name) + '</h3>' +
+      '<p class="profile-summary">' + escapeHtml(profile.summary) + '</p>' +
+      '<ol class="profile-steps">' + steps.map(function (step) {
+        return '<li>' + escapeHtml(step) + '</li>';
+      }).join('') + '</ol>' +
+      '<p class="profile-best"><span>Best for</span>' + escapeHtml(profile.bestFor || '') + '</p></article>';
+  }).join('');
+}
+
+function clientName(id) {
+  const found = (catalog.data.profileClients || []).filter(function (client) { return client.id === id; })[0];
+  return found ? found.name : id;
+}
+
+function renderDesignLinks() {
+  const host = document.getElementById('designLinks');
+  if (!host) return;
+  host.innerHTML = (catalog.data.designs || []).map(function (design) {
+    return '<a class="design-link" href="' + design.file + '"><strong>' + escapeHtml(design.name) +
+      '</strong><small>' + escapeHtml(design.detail || '') + '</small></a>';
+  }).join('');
+}
+
+function escapeHtml(value) {
+  return String(value === null || value === undefined ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function init() {
   assertRegistry();
   bindControls();
@@ -621,6 +735,7 @@ function init() {
   selectRoute(state.selectedRoute);
   loadHardware();
   loadHealth();
+  loadCatalog();
   checkBuild();
 }
 
