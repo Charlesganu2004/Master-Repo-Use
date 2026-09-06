@@ -32,8 +32,22 @@ END = "<!-- MASTER-REPO-USE:END -->"
 CLIENTS = {
     "Claude Code": ".claude/CLAUDE.md",
     "Codex": ".codex/AGENTS.md",
-    "Gemini": ".gemini/GEMINI.md",
+    # Gemini CLI and Google Antigravity read the SAME file. Verified 2026-09-04
+    # against antigravity.google/docs/rules-workflows/, which says global rules
+    # live in ~/.gemini/GEMINI.md. There is no ~/.antigravity/ tree, so listing
+    # Antigravity separately here would write the block twice to one path and let
+    # the second write replace the first.
+    "Gemini + Antigravity": ".gemini/GEMINI.md",
     "Copilot": ".copilot/copilot-instructions.md",
+}
+
+# Where each client looks for skill folders. Both take the same layout: one
+# directory per skill, holding a SKILL.md with frontmatter. Antigravity requires
+# only `description`, which every skill in this repository already has, so the
+# same folders install unmodified into both.
+SKILL_ROOTS = {
+    "Claude Code": ".claude/skills",
+    "Antigravity": ".gemini/config/skills",
 }
 
 
@@ -62,18 +76,33 @@ def upsert_block(path: pathlib.Path, body: str, dry: bool) -> str:
     return action
 
 
-def install_skill(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
-    source = repo / "skills" / "master-repo-auto"
+def install_skill(repo: pathlib.Path, home: pathlib.Path, dry: bool,
+                  root: str = ".claude/skills") -> str:
+    """Install every skill in the repository into one client's skill root.
+
+    All of them, not just master-repo-auto. The rule Charles asked for is that
+    capabilities are global and get selected automatically when they fit, and a
+    skill that was never copied to the machine cannot be selected at all. A
+    directory without a SKILL.md is not a skill and is skipped rather than copied
+    as an empty folder the client will scan on every start.
+    """
+    source = repo / "skills"
     if not source.is_dir():
         return "skipped, source missing"
-    target = home / ".claude" / "skills" / "master-repo-auto"
+    skills = sorted(p for p in source.iterdir()
+                    if p.is_dir() and (p / "SKILL.md").is_file())
+    if not skills:
+        return "skipped, no SKILL.md found"
     if dry:
-        return "would install"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    if target.exists():
-        shutil.rmtree(target)
-    shutil.copytree(source, target)
-    return "installed"
+        return f"would install {len(skills)} into {root}"
+    target = home / pathlib.PurePosixPath(root)
+    target.mkdir(parents=True, exist_ok=True)
+    for skill in skills:
+        destination = target / skill.name
+        if destination.exists():
+            shutil.rmtree(destination)
+        shutil.copytree(skill, destination)
+    return f"installed {len(skills)} into {root}: " + ", ".join(s.name for s in skills)
 
 
 GUARDS = ("no_prune_guard", "no_compress_guard")
@@ -160,7 +189,8 @@ def main() -> int:
     print(f"Home     : {home}")
     print(f"Mode     : {'dry run, nothing written' if dry else 'writing'}\n")
 
-    print(f"skill    : {install_skill(repo, home, dry)}")
+    for client, root in SKILL_ROOTS.items():
+        print(f"skills   : {client:<12} {install_skill(repo, home, dry, root)}")
     print(f"hook     : {'skipped by request' if args.no_hook else register_hook(repo, home, dry)}")
     for name, rel in CLIENTS.items():
         print(f"{name:<9}: {upsert_block(home / rel, body, dry)}  ({rel})")

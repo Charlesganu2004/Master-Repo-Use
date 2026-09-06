@@ -1,0 +1,56 @@
+# MongoDB Storage and Indexing - verified 2026-09-04
+#
+# Charles asked for MongoDB storage and indexing as its own lane. It is separate
+# from multi-model-data on purpose: that lane is about engines that serve several
+# access patterns at once, and this one is about a single engine and the tools
+# that drive it.
+#
+# LICENCE, first, because it is the thing that surprises people. The MongoDB
+# server is SSPL, which GitHub reports as NOASSERTION. SSPL is not an OSI-approved
+# open source licence: offering MongoDB itself as a service obliges you to release
+# your whole service stack. Using it as a database inside your own product is
+# fine. The drivers below are Apache-2.0 and carry none of that.
+
+# --- The server (SSPL: read the licence before you offer it as a service)
+mongodb/mongo                 # 28.5k stars, NOASSERTION (SSPL-1.0), pushed today. The server.
+
+# --- Drivers (Apache-2.0 throughout; none of the server's licence attaches here)
+mongodb/mongo-python-driver   # 4.4k stars, Apache-2.0, pushed today. PyMongo. The default for
+                              # anything in this repository, which is Python from end to end.
+mongodb/motor                 # 2.5k stars, Apache-2.0, 4d. The async Python driver. Use when the
+                              # caller is already async; PyMongo otherwise.
+mongodb/node-mongodb-native   # 10.2k stars, Apache-2.0, pushed today. The Node driver.
+mongodb/mongo-cxx-driver      # 1.1k stars, Apache-2.0, pushed today. The C++ driver. Relevant to
+                              # the cpp-toolchain lane rather than incidental.
+mongodb/laravel-mongodb       # 7.1k stars, MIT, 1d. The PHP/Laravel integration.
+
+# --- Operating it (the shell, the GUI and the dump tools: this is where an index actually gets created, explained, and backed up)
+mongodb-js/mongosh            # 400 stars, Apache-2.0, pushed today. The shell. This is where an
+                              # index actually gets created and explained.
+mongodb-js/compass            # 1.5k stars, NOASSERTION, pushed today. The GUI. Its explain-plan
+                              # view is the fastest way to find out an index is not being used.
+mongodb/mongo-tools           # 1.1k stars, NOASSERTION, pushed today. mongodump, mongorestore,
+                              # mongoexport. The backup and migration path.
+mongodb/mongodb-atlas-cli     # 186 stars, Apache-2.0, pushed today. Drives the hosted service.
+                              # Only relevant if the data goes to Atlas rather than a local server.
+
+# --- Agent access (how an assistant queries the store without anyone hand-writing an adapter for it first)
+mongodb-js/mongodb-mcp-server # 1.1k stars, Apache-2.0, pushed today. The official MongoDB MCP
+                              # server. This is the entry that makes the lane matter here: it is
+                              # how an assistant queries the store without a hand-written adapter.
+                              # Cross-listed conceptually with mcp-local-servers; it lives here
+                              # because it is versioned with the database, not with the MCP set.
+
+# --- Reference (worked index and vector-search definitions to read; the app code wrapped around them is demo code)
+mongodb-developer/GenAI-Showcase   # 4.3k stars, MIT, 2d. Worked examples of vector search and
+                              # retrieval on MongoDB. Read for the index definitions; the app code
+                              # around them is demo code.
+
+# NOT ADDED, and why:
+#   mongodb/chatbot -- ARCHIVED 2025-09-29. Archived is archived.
+#   mongodb/mongodb-kubernetes-operator -- ARCHIVED 2025-11-20.
+#   mongodb-developer/mongodb-mcp-server -- 27 stars, NO LICENCE, archived, last
+#     pushed 2025-04-30. Superseded by mongodb-js/mongodb-mcp-server above. Easy
+#     to catalogue by mistake: the names differ by one path segment.
+#   Percona-Lab/mongodb_consistent_backup -- last pushed 2021-03-25. Five years
+#     past the removal threshold with no release since.

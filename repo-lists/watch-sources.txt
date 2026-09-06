@@ -1,0 +1,22 @@
+# Sources polled for new catalog candidates - added 2026-09-01
+#
+# These are not repositories. They are places new skills and tools appear, which
+# the guardian checks for candidates. Nothing here enters the catalog directly:
+# a candidate becomes an entry only after it resolves to a real repository, has a
+# licence recorded, and passes the security scan.
+#
+# Format: one URL per line, with what to look for.
+
+https://agentskill.sh/          # 275,000+ skills for Claude Code, Cursor, Copilot, Windsurf and
+                                # others, with quality and security scores per skill. Poll for
+                                # newly trending entries in Development and Engineering.
+                                # CAUTION: an aggregator of user-submitted skills is exactly the
+                                # shape of a supply-chain risk. Its own score is a signal, not a
+                                # verdict; scan before adopting anything from it.
+
+https://www.skills.sh/docs      # Skill format documentation. Useful for keeping the repo's own
+                                # skills compatible; nothing to catalogue.
+
+https://github.com/topics/artificial-intelligence   # GitHub topic, high volume and low precision
+https://github.com/topics/ai-website                # GitHub topic
+https://findarepo.com/categories/ai-agents/         # curated directory

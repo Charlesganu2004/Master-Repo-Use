@@ -1,8 +1,18 @@
 param(
   [string]$RepoPath = "$HOME\Master-Repo-Use",
+  # Which client instruction files to write. 'all' is the default because a rule
+  # that lives in only one client is a rule the other clients will contradict.
+  # 'gpt' is accepted as an alias for codex, which is the GPT surface.
+  [ValidateSet('all','claude','codex','gemini','copilot','antigravity','gpt','chatgpt','openai','ag','google-antigravity')]
+  [string]$Client = 'all',
   [switch]$CopilotOnly,
   [switch]$AutoSkills
 )
+
+if ($CopilotOnly) { $Client = 'copilot' }
+if ($Client -in @('gpt','chatgpt','openai')) { $Client = 'codex' }
+if ($Client -in @('ag','google-antigravity')) { $Client = 'antigravity' }
+function Test-Writes([string]$Name) { return ($Client -eq 'all' -or $Client -eq $Name) }
 
 $ErrorActionPreference = 'Stop'
 $begin = '<!-- MASTER-REPO-USE:BEGIN -->'
@@ -39,12 +49,45 @@ if ($AutoSkills) {
   $common = $common.TrimEnd() + "`n" + (Get-Content -Raw -Path $autoFile).TrimEnd()
 }
 
-if (-not $CopilotOnly) {
+if (Test-Writes 'claude') {
   Set-MasterRepoBlock "$HOME\.claude\CLAUDE.md" ($common + "`nClaude-specific entrypoint: $RepoPath\CLAUDE.md")
-  Set-MasterRepoBlock "$HOME\.codex\AGENTS.md" $common
-  Set-MasterRepoBlock "$HOME\.gemini\GEMINI.md" ($common + "`nGemini-specific entrypoint: $RepoPath\GEMINI.md")
 }
-Set-MasterRepoBlock "$HOME\.copilot\copilot-instructions.md" ($common + "`nCopilot-specific guide: $RepoPath\docs\COPILOT-SETUP.md")
+if (Test-Writes 'codex') {
+  Set-MasterRepoBlock "$HOME\.codex\AGENTS.md" $common
+}
+# One file, two clients. Verified 2026-09-04 against
+# antigravity.google/docs/rules-workflows/: Antigravity reads its GLOBAL rules
+# from ~/.gemini/GEMINI.md, the same path the Gemini CLI uses, and not from any
+# ~/.antigravity/ tree. Written once for whichever of the two was asked for,
+# because writing it twice would let the second body replace the first.
+if ((Test-Writes 'gemini') -or (Test-Writes 'antigravity')) {
+  $geminiBody = $common + "`nGemini-specific entrypoint: $RepoPath\GEMINI.md" +
+    "`nGoogle Antigravity reads this same file as its global rules. Its skills live in ~/.gemini/config/skills/, its plugins in ~/.gemini/config/plugins/, and its MCP servers in ~/.gemini/config/mcp_config.json."
+  Set-MasterRepoBlock "$HOME\.gemini\GEMINI.md" $geminiBody
+}
+
+# The part that is genuinely Antigravity-only. Its documented global skill path is
+# ~/.gemini/config/skills/<folder>/SKILL.md, which the Gemini CLI does not read.
+# Every skill in this repository already carries the one frontmatter field
+# Antigravity requires, description, so they install as-is with no rewriting.
+if (Test-Writes 'antigravity') {
+  $skillRoot = Join-Path $HOME '.gemini\config\skills'
+  New-Item -ItemType Directory -Force -Path $skillRoot | Out-Null
+  $installed = @()
+  Get-ChildItem -Path (Join-Path $RepoPath 'skills') -Directory | Sort-Object Name | ForEach-Object {
+    if (Test-Path (Join-Path $_.FullName 'SKILL.md')) {
+      $destination = Join-Path $skillRoot $_.Name
+      if (Test-Path $destination) { Remove-Item -Recurse -Force $destination }
+      Copy-Item -Recurse -Path $_.FullName -Destination $destination
+      $installed += $_.Name
+    }
+  }
+  if ($installed.Count -gt 0) { Write-Host ("Antigravity skills installed: " + ($installed -join ', ')) }
+  else { Write-Host 'Antigravity skills installed: none found' }
+}
+if (Test-Writes 'copilot') {
+  Set-MasterRepoBlock "$HOME\.copilot\copilot-instructions.md" ($common + "`nCopilot-specific guide: $RepoPath\docs\COPILOT-SETUP.md")
+}
 
 [Environment]::SetEnvironmentVariable('COPILOT_CUSTOM_INSTRUCTIONS_DIRS',$RepoPath,'User')
 $env:COPILOT_CUSTOM_INSTRUCTIONS_DIRS = $RepoPath
@@ -81,7 +124,7 @@ if (($userPath -split ';') -notcontains $bin) {
 Write-Host 'Master Repo global AI setup complete.' -ForegroundColor Green
 Write-Host "Repo: $RepoPath"
 Write-Host "Copilot: $HOME\.copilot\copilot-instructions.md"
-if (-not $CopilotOnly) { Write-Host "Claude: $HOME\.claude\CLAUDE.md | Codex: $HOME\.codex\AGENTS.md | Gemini: $HOME\.gemini\GEMINI.md" }
+if ($Client -ne 'copilot') { Write-Host "Claude: $HOME\.claude\CLAUDE.md | Codex: $HOME\.codex\AGENTS.md | Gemini and Antigravity: $HOME\.gemini\GEMINI.md" }
 Write-Host "Watermark command: & '$bin\master-watermark.ps1' <input> <output-folder>"
 Write-Host 'GitHub audit: gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use'
 Write-Host "Optional AI request: python '$RepoPath\scripts\maintenance_request.py' --auto"

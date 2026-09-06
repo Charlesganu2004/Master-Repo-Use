@@ -1,0 +1,26 @@
+# Media, Transcription and OCR - verified 2026-09-01
+#
+# The runtime pieces behind the chat/code monitor lane: capturing audio, reading
+# what is on screen, and understanding a document. Every slug resolved against the
+# GitHub API on 2026-09-01.
+
+# --- Speech and transcription (audio to text; local matters here, because shipping audio to a third party is a different product with different consent needs)
+jamiepine/voicebox            # 52.3k stars, MIT, 27d, released 132d ago. Local voice capture and
+                              # transcription. Local matters here: a monitor that ships audio to a
+                              # third party is a different product with different consent needs.
+
+# --- Optical character recognition (pixels to text; the piece that turns a screenshot of a window into something searchable)
+baidu/Unlimited-OCR           # 25.2k stars, MIT, 38d. OCR without a page or size ceiling. The
+                              # piece that turns a screenshot of a window into text.
+
+# --- Document and codebase comprehension (reads a document or repository and answers about it, rather than extracting raw text)
+Egonex-AI/Understand-Anything # 81.5k stars, MIT, pushed today, released 56d ago. NOTE: catalogued
+                              # under Egonex-AI. The widely-posted Lum1104/Understand-Anything is a
+                              # redirect to this, so recording that slug would pin a stale name.
+
+# --- Text humanisation (rewrites generated text to read as written; two unrelated projects share the word, so check which one you mean)
+blader/humanizer              # 42.5k stars, MIT, 17d. Rewrites generated text to read as written.
+Humanizr/Humanizer            # 9.9k stars, 0d. NOASSERTION on GitHub; the LICENSE file is MIT.
+                              # A .NET string/date/number humanisation library, unrelated to the
+                              # above despite the name. Both are listed because searching for
+                              # "humanizer" returns them interchangeably and they are not.

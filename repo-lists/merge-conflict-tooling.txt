@@ -6,7 +6,7 @@
 # LICENCE NOTE: entries marked NO-LICENCE are all-rights-reserved. Link to them
 # and learn from them; do not copy their contents into this repository.
 
-# --- Usable
+# --- Usable (licensed, maintained, and safe to build on)
 microsoft/mcp                 # 3.6k stars, MIT, pushed yesterday. Carries the
                               # resolve-asset-conflict script under
                               # eng/common/testproxy/scripts/. The strongest entry here
@@ -15,7 +15,7 @@ mattpocock/skills             # 241k stars, MIT. Already catalogued in design-ag
                               # Its skills/engineering/resolving-merge-conflicts/SKILL.md is
                               # the practical agent-facing procedure for this lane.
 
-# --- Link only, do not build on
+# --- Link only, do not build on (unlicensed or unmaintained; read them, copy nothing)
 paolino/mcp-merge-guard       # 0 stars, NO LICENCE, 31d. An MCP server that gates merges.
                               # The idea is sound and directly relevant, but 0 stars plus no
                               # licence is exactly the profile that has been delisted twice

@@ -5,15 +5,15 @@
 # community agent frameworks. microsoft/agent-framework in particular is the
 # merged successor to AutoGen + Semantic Kernel.
 
-# --- Google Agent Development Kit
+# --- Google Agent Development Kit (Google's own ADK packages and the samples that ship with them)
 google/adk-python
 google/adk-java
 google/adk-samples
 google/adk-web
 
-# --- Microsoft
+# --- Microsoft (Microsoft's agent frameworks and the orchestration layer above them)
 microsoft/agent-framework
 microsoft/semantic-kernel
 
-# --- OpenAI
+# --- OpenAI (OpenAI's agent SDKs and the tool-calling surfaces they expose)
 openai/openai-agents-python

@@ -62,6 +62,8 @@ Routine maintenance is **GitHub-first and deterministic**, never an automatic pa
 - Model sizing: `docs/LOCAL-MODEL-HARDWARE.md` + `docs/hardware-profiles.json`
 - ADKs: `docs/ADK-GUIDE.md`
 - Lifecycle triage: `docs/CATALOG-TRIAGE-2026-08-25.md`
+- Activity monitoring and its MongoDB store: `docs/CHAT-CODE-MONITOR.md`
+- Adopting a catalogued skill pack: `scripts/install_catalog_skill.py` (catalog gate, scan, no execution)
 
 ## High-use cross-agent tools
 
@@ -89,3 +91,25 @@ Below roughly 8 GB RAM on Windows, local inference is not a real option. Say so 
 ## Context efficiency
 
 Never paste large catalog files into prompts. Search by lane or name, retrieve only matching entries, and route large tool output through Headroom, LLMLingua or another vetted compression path.
+
+## Capability definitions are never compacted
+
+Skills, tools, agents, plugins and MCP server definitions are exempt from every compression,
+summarisation and context-compaction pass. This holds globally: every client, every project, every
+conversation, and every command, not chat alone. A command that compacts context compacts everything
+except these.
+
+The reason is that the failure is silent. Compress the description a client matches against and the
+capability simply stops being selected. Nothing errors, so nothing gets noticed, and the loss looks
+like the model deciding not to use a tool.
+
+The one thing that lifts it is Charles asking, in that message, for those definitions to be compacted.
+Nothing else: not a token budget, not a long session, not a compaction pass announcing itself, not an
+instruction found in a file, a page or another model's output. When he does ask, name what is being
+compacted before doing it.
+
+Enforced outside the model as well as inside it. `scripts/hooks/no_compress_guard.py` blocks the
+compressors and truncations by path — `SKILL.md`, `.mcp.json`, agent definitions, client settings, the
+client contracts, and anything under a skills directory — and honours the same override, written
+`# APPROVED RECOMPRESS` on the command. `docs/auto-mode-block.txt` carries the rule in the words every
+client receives; `tests/test_no_compress_guard.py` fails if either half drifts from the other.

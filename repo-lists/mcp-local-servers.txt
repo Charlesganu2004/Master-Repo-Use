@@ -12,25 +12,25 @@
 #   AmruthPillai/Reactive-Resume -> amruthpillai/reactive-resume
 #   sickn33/antigravity-...      -> sickn33/agentic-awesome-skills
 
-# --- Reference collections
+# --- Reference collections (indexes of MCP servers rather than servers themselves)
 modelcontextprotocol/servers      # filesystem, sqlite, sequential-thinking and the rest live here
 upstash/context7                  # up-to-date library docs injected into coding prompts
 
-# --- Browser / desktop automation
+# --- Browser / desktop automation (servers that drive a browser or the desktop; the highest-blast-radius group here)
 ChromeDevTools/chrome-devtools-mcp
 microsoft/playwright-mcp
 ahujasid/blender-mcp
 
-# --- Knowledge, memory and code context
+# --- Knowledge, memory and code context (servers that give a model durable recall or repository context)
 getzep/graphiti                   # temporally-aware knowledge graph
 topoteretes/cognee                # memory layer for agents
 mindsdb/mindshub                  # federated query engine over local data
 
-# --- SaaS / workspace bridges
+# --- SaaS / workspace bridges (servers that reach a third-party account; each one is a credential decision)
 sooperset/mcp-atlassian
 firecrawl/firecrawl-mcp-server
 exa-labs/exa-mcp-server
 cloudflare/mcp-server-cloudflare
 
-# --- Diagram / design
+# --- Diagram / design (servers that produce or read diagrams and design files)
 hustcc/mcp-mermaid

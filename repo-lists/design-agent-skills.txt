@@ -16,7 +16,7 @@ Agents365-ai/drawio-skill                   # draw.io diagrams from natural lang
 supabase/agent-skills                       # editorial diagram types without Mermaid
 Graphify-Labs/graphify                      # renamed from safishamsi/graphify
 
-# --- Design systems and UI judgement
+# --- Design systems and UI judgement (skills that decide whether generated UI is any good, not just whether it renders)
 VoltAgent/awesome-claude-design             # 68 ready-to-use DESIGN.md system files
 nextlevelbuilder/ui-ux-pro-max-skill        # UI/UX design intelligence across platforms
 bergside/awesome-design-skills              # directory of design skills for agent tools
@@ -25,19 +25,34 @@ emilkowalski/skills                         # design-engineering capabilities
 Owl-Listener/designer-skills                # designer commands and templates
 hamen/material-3-skill                      # Material Design 3 components and theming
 ZeroZ-lab/cc-design                         # high-fidelity HTML prototypes  # NO-LICENCE: link only
+JCodesMore/ai-website-cloner-template       # verified 2026-09-04: 33.8k stars, MIT, 21d, release
+                                            # 2026-08-10. A template repo rather than a pure skill
+                                            # pack, listed here because the durable value is the
+                                            # AGENT WORKFLOW behind /clone-website: browser recon,
+                                            # design-token extraction, per-component spec files
+                                            # holding computed CSS, a parallel build fanned out
+                                            # across git worktrees, then visual-diff QA. It
+                                            # generates fresh idiomatic React/Tailwind, it does not
+                                            # rip markup. No npm lifecycle hooks; mainstream deps.
+                                            # TWO CAUTIONS. It reproduces other people's designs:
+                                            # upstream's own README rules out phishing, passing off
+                                            # and ToS violation, and permission is the user's to
+                                            # establish. And the name attracts typosquats (258
+                                            # similarly-named repos, one at 39 stars), so the
+                                            # JCodesMore/ owner is the entry, not the name.
 
-# --- Motion and 3D
+# --- Motion and 3D (animation and spatial work, where the failure mode is jank rather than a wrong pixel)
 greensock/gsap-skills                       # GSAP animation skills (MIT, unlike GSAP itself)
 CloudAI-X/threejs-skills                    # Three.js skill collection  # NO-LICENCE: link only
 
-# --- Broader Claude Code frameworks referenced alongside the design lists
+# --- Broader Claude Code frameworks referenced alongside the design lists (catalogued so the writeups resolve)
 obra/superpowers                            # plan -> test -> code methodology
 hesreallyhim/awesome-claude-code            # the largest Claude Code index
 SuperClaude-Org/SuperClaude_Framework       # commands and personas
 mattpocock/skills                           # coding-practice skills targeting agent failure modes
 yamadashy/repomix                           # packs a codebase into one file for model consumption
 
-# --- Added 2026-08-27: interactive and high-definition design references
+# --- Added 2026-08-27: interactive and high-definition design references (provenance grouping for the interactive and HD design links supplied that day)
 freshtechbro/claudedesignskills   # design skill pack; 792 stars, MIT, quiet since 2025-11
 freeCodeCamp/freeCodeCamp         # interactive HTML/CSS/JS curriculum; 454k stars, BSD-3
 Chalarangelo/30-seconds-of-css    # ARCHIVED 2023; CC-BY-4.0 snippet reference only
@@ -49,4 +64,13 @@ Chalarangelo/30-seconds-of-css    # ARCHIVED 2023; CC-BY-4.0 snippet reference o
 #     Bing-rendered GitHub topic page that do not resolve to findable repositories.
 #   Superdesign, Awwwards, Colorlib, Frontend Mentor -- websites and galleries, not
 #     repositories. Useful to browse; nothing to catalogue.
+#   gztchan/awesome-design -- 17.5k stars, but last pushed 2024-07-04, which is 792
+#     days on 2026-09-04. Twice past the removal threshold, and the release-grace
+#     rule cannot rescue it: the only release it ever cut is 1.0.0 from 2017-07-25,
+#     roughly six times the 547 day window. It is also unlicensed; the README
+#     claims CC0 but no LICENSE file backs it. A link list cannot be a dependency,
+#     so the real risk is link rot across several hundred URLs unmaintained for two
+#     years, where an expired domain can be re-registered and serve something else.
+#     Two independent policy failures. The stars are historical reputation, not
+#     evidence of maintenance.
 
