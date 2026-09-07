@@ -105,18 +105,34 @@ def install_skill(repo: pathlib.Path, home: pathlib.Path, dry: bool,
     return f"installed {len(skills)} into {root}: " + ", ".join(s.name for s in skills)
 
 
+# Two PreToolUse guards, matched on Bash, plus one UserPromptSubmit injector.
 GUARDS = ("no_prune_guard", "no_compress_guard")
+
+# The event each hook binds to, and whether it takes a tool matcher.
+# UserPromptSubmit has no matcher: it fires on every prompt, which is the whole
+# reason it can enforce a standing pipeline that skills alone cannot.
+HOOK_EVENTS = {
+    "no_prune_guard": ("PreToolUse", "Bash"),
+    "no_compress_guard": ("PreToolUse", "Bash"),
+    "skill_pipeline": ("UserPromptSubmit", None),
+}
+ALL_HOOKS = GUARDS + ("skill_pipeline",)
 
 
 def register_hook(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
-    """Register both PreToolUse guards without disturbing existing settings.
+    """Register the guards and the prompt pipeline, leaving other settings alone.
 
     no_prune_guard keeps chosen tools from being deleted. no_compress_guard keeps
     the NO-COMPRESS block from being summarised away. Both exist because a rule
     that only holds while a model is paying attention is not a rule.
+
+    skill_pipeline is the answer to "why do I have to type a slash". Skills are
+    model-invocable, so they fire on the model's judgement; a UserPromptSubmit
+    hook fires on every prompt regardless of judgement, and injects the standing
+    rules into the turn before the model reads it.
     """
     settings = home / ".claude" / "settings.json"
-    available = [(name, repo / "scripts" / "hooks" / f"{name}.py") for name in GUARDS]
+    available = [(name, repo / "scripts" / "hooks" / f"{name}.py") for name in ALL_HOOKS]
     available = [(name, path) for name, path in available if path.exists()]
     if not available:
         return "skipped, hooks missing"
@@ -132,13 +148,14 @@ def register_hook(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
             settings.with_suffix(".json.bak").write_text(raw, encoding="utf-8")
 
     hooks = data.setdefault("hooks", {})
-    pre = hooks.setdefault("PreToolUse", [])
     added, refreshed = [], []
 
     for name, path in available:
+        event, matcher = HOOK_EVENTS[name]
+        bucket = hooks.setdefault(event, [])
         command = f'{json.dumps(sys.executable)} {json.dumps(str(path))}'
         existing = None
-        for entry in pre:
+        for entry in bucket:
             for hook in entry.get("hooks", []):
                 if name in str(hook.get("command", "")):
                     existing = hook
@@ -146,8 +163,10 @@ def register_hook(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
             existing["command"] = command      # refresh the path, do not duplicate
             refreshed.append(name)
         else:
-            pre.append({"matcher": "Bash",
-                        "hooks": [{"type": "command", "command": command}]})
+            entry = {"hooks": [{"type": "command", "command": command}]}
+            if matcher:
+                entry["matcher"] = matcher
+            bucket.append(entry)
             added.append(name)
 
     if not dry:
