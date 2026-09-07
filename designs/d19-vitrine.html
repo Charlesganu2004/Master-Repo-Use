@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A museum vitrine: one lit object on a warm wall, with most of the viewport deliberately empty.">
+<title>Vitrine | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* ===========================================================================
+   VITRINE. The only page where emptiness is the subject. Roughly seventy per
+   cent of the viewport is bare lit wall and the content is one small object,
+   perfectly lit, in the middle of it.
+
+   Warm neutral throughout, never cool. Serif with real oldstyle figures. Zero
+   chrome: nothing on this page looks like a control until you are near it.
+
+   The discipline that makes it work is refusing to fill the space. Every other
+   page in the set answers "how do I show 970 things at once". This one answers
+   "what if you showed one".
+   ========================================================================= */
+:root{
+  --wall:#141210; --wall-lit:#1e1a16; --plinth:#0d0b09;
+  --ink:#efe7db; --dim:#a2978a; --rule:#3a332b;
+  --gold:#c8a86a;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--wall);color:var(--ink);
+  font:16px/1.6 var(--serif);font-variant-numeric:oldstyle-nums;
+  height:100vh;height:100dvh;overflow:hidden;
+}
+button,input,select{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+:focus-visible{outline:1px solid var(--gold);outline-offset:4px}
+
+/* The wall wash. One soft pool of light behind the object and nothing else. */
+.wash{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(58vmax 44vmax at 50% 42%,var(--wall-lit),transparent 70%);
+}
+
+.room{
+  position:relative;z-index:1;height:100vh;height:100dvh;
+  display:grid;grid-template-rows:auto 1fr auto;
+  padding:6dvh 6vw 4dvh;gap:0;
+}
+
+/* Top rail: a single hairline and the quietest possible navigation. */
+.rail{display:flex;align-items:baseline;gap:26px;padding-bottom:16px;border-bottom:1px solid var(--rule)}
+.rail h1{margin:0;font-size:19px;font-weight:400;letter-spacing:.14em;text-transform:uppercase}
+.rail .tabs{display:flex;gap:20px;flex-wrap:wrap;margin-left:auto}
+.rail .tab{font:400 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:2px 0;
+  border-bottom:1px solid transparent;transition:color 900ms cubic-bezier(.22,1,.36,1)}
+.rail .tab:hover{color:var(--ink)}
+.rail .tab[aria-selected="true"]{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* The object. At most 52vmin, with vast air on every side. */
+.centre{display:grid;place-items:center;min-height:0;position:relative}
+.object{
+  width:min(52vmin,620px);max-height:64dvh;overflow:auto;
+  padding:34px 38px;background:var(--plinth);
+  border:1px solid var(--rule);
+  box-shadow:
+    0 1px 0 color-mix(in srgb,var(--ink) 8%,transparent) inset,
+    0 40px 90px -50px #000,
+    0 2px 3px -1px rgb(0 0 0 / .5);
+  text-align:center;
+}
+.object .cat{font:400 11px/1 var(--mono);letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
+.object h2{margin:16px 0 10px;font-size:clamp(23px,3vw,36px);font-weight:400;line-height:1.15;letter-spacing:-.01em}
+.object p{margin:0 auto;color:var(--dim);font-size:15px;max-width:38ch}
+.object .meta{margin-top:22px;padding-top:16px;border-top:1px solid var(--rule);
+  display:flex;justify-content:center;gap:22px;font:400 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;color:var(--dim);flex-wrap:wrap}
+.object .act{margin-top:22px}
+.object .plus{border:1px solid var(--gold);color:var(--gold);padding:9px 22px;
+  font:400 11px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;
+  transition:background 900ms cubic-bezier(.22,1,.36,1),color 900ms cubic-bezier(.22,1,.36,1)}
+.object .plus:hover{background:var(--gold);color:var(--plinth)}
+.object .plus.in{background:var(--gold);color:var(--plinth)}
+.object .plan-tag{font:400 11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+
+/* Objects cross-fade with a 12px rise. Never horizontal, never scale. */
+@media (prefers-reduced-motion:no-preference){
+  .object{animation:rise 900ms cubic-bezier(.22,1,.36,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}}
+}
+
+/* Wall labels: the rest of the collection, small and quiet, along the bottom. */
+.labels{
+  padding-top:16px;border-top:1px solid var(--rule);
+  display:flex;gap:0;overflow-x:auto;scroll-snap-type:x proximity;
+}
+.label{
+  flex:0 0 auto;scroll-snap-align:start;padding:8px 20px 8px 0;margin-right:20px;
+  border-right:1px solid var(--rule);text-align:left;min-width:170px;max-width:230px;
+  transition:color 900ms cubic-bezier(.22,1,.36,1);color:var(--dim);
+}
+.label:last-child{border-right:0}
+.label:hover,.label.on{color:var(--ink)}
+.label b{display:block;font-weight:400;font-size:14px;overflow-wrap:anywhere}
+.label i{font-style:normal;font:400 10px/1.6 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);opacity:0}
+.label:hover i,.label.on i{opacity:1}
+
+/* The gallery apparatus, kept off the wall until wanted. */
+.apparatus{
+  position:fixed;right:0;top:0;bottom:0;width:min(340px,86vw);z-index:5;
+  background:var(--plinth);border-left:1px solid var(--rule);
+  padding:22px;overflow:auto;transform:translateX(100%);
+  transition:transform 900ms cubic-bezier(.22,1,.36,1);
+}
+.apparatus.open{transform:none}
+.apparatus h3{margin:0 0 12px;font:400 11px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
+.apparatus #setup,.apparatus #filters,.apparatus #side{font-size:13px}
+.appbtn{
+  position:fixed;right:18px;top:18px;z-index:6;border:1px solid var(--rule);
+  padding:8px 16px;font:400 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--dim);
+}
+.appbtn:hover{color:var(--ink);border-color:var(--gold)}
+.pane{font-size:13.5px}
+
+@media (max-width:820px){
+  .room{padding:4dvh 5vw 3dvh}
+  .object{width:auto;max-width:100%}
+  .rail{flex-wrap:wrap;gap:12px}
+}
+</style>
+</head>
+<body>
+<div class="wash"></div>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes, esc = P.esc;
+
+document.body.insertAdjacentHTML('beforeend', `
+<button class="appbtn" id="appbtn" aria-expanded="false">Apparatus</button>
+<div class="room">
+  <header class="rail">
+    <h1>Vitrine</h1>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Collection views"></nav>
+  </header>
+  <section class="centre" id="main-content"><div id="stage" tabindex="-1"></div></section>
+  <footer class="labels" id="wall"></footer>
+</div>
+<aside class="apparatus" id="apparatus">
+  <h3>The room</h3><div id="themehost"></div>
+  <h3 style="margin-top:20px">Your machine</h3><div id="setup"></div>
+  <h3 style="margin-top:20px">Selection</h3><div id="filters"></div>
+  <h3 style="margin-top:20px">Catalogue note</h3><div id="side" aria-label="Component inspector"></div>
+</aside>`);
+
+/* One object at a time. The selected component IS the exhibit; everything else
+   is a small label along the bottom wall. */
+function render(stage){
+  const visible = A.visibleComponents();
+  if(!visible.length){
+    stage.innerHTML = '<div class="object"><p>Nothing in this room on the current selection.</p></div>';
+    document.getElementById('wall').innerHTML = '';
+    return;
+  }
+  const current = visible.find(c => c.id === A.state.selected) || visible[0];
+  stage.innerHTML = `<article class="object" data-node="1" data-comp="${esc(current.id)}">
+    <p class="cat">${esc(A.laneName(current.lane))}</p>
+    <h2>${esc(current.name)}</h2>
+    <p>${esc(current.detail)}</p>
+    <div class="meta"><span>${esc(current.kind)}</span>${current.sub ? `<span>${esc(current.sub)}</span>` : ''}</div>
+    <div class="act">${add(current)}</div>
+  </article>`;
+
+  const wall = document.getElementById('wall');
+  wall.innerHTML = visible.slice(0, 60).map(c => `
+    <button class="label${c.id === current.id ? ' on' : ''}" data-pick="${esc(c.id)}">
+      <b>${esc(c.name)}</b><i>${esc(c.kind)}</i>
+    </button>`).join('');
+  wall.querySelectorAll('[data-pick]').forEach(b => {
+    b.addEventListener('click', () => { A.select(b.dataset.pick); render(stage); });
+  });
+  stage.querySelectorAll('[data-add]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      if(A.state.basket.includes(id)) A.removeFromBasket(id); else A.addToBasket(id);
+      P.draw();
+    });
+  });
+}
+
+function add(c){
+  if(!A.canBuild(c)){
+    const s = A.setupStateFor(c);
+    return `<span class="plan-tag">${esc(s.label)}</span>`;
+  }
+  const inB = A.state.basket.includes(c.id);
+  return `<button class="plus${inB ? ' in' : ''}" data-add="${esc(c.id)}">${inB ? 'In the build' : 'Add to build'}</button>`;
+}
+
+const app = document.getElementById('apparatus');
+const btn = document.getElementById('appbtn');
+btn.addEventListener('click', () => {
+  const open = app.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+P.mount({
+  renderMap: render,
+  onFilter: () => { if(P.tab === 'map') render(document.getElementById('stage')); },
+  onSelect: () => { if(P.tab === 'map') render(document.getElementById('stage')); },
+});
+</script>
+</body>
+</html>

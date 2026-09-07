@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="An aerospace head-up display: stroked phosphor geometry arranged radially around a central boresight.">
+<title>Boresight | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* ===========================================================================
+   BORESIGHT. Monochrome phosphor on near-black, every shape STROKED and never
+   filled, and the structural signature: content is arranged RADIALLY around a
+   central reticle instead of in reading order.
+
+   There is no document flow on this page. Every child is absolutely positioned.
+   That is what makes it impossible to mistake for the others, and it is also
+   what makes it honest: a HUD does not have a sidebar.
+
+   Overlaps brighten rather than occlude, because the layers use plus-lighter,
+   which is how a real combiner glass behaves.
+   ========================================================================= */
+@property --sweep{syntax:'<angle>';inherits:false;initial-value:0deg}
+
+:root{
+  --hud:#7dfcb4;            /* one phosphor, no second hue anywhere */
+  --hud-dim:color-mix(in srgb,var(--hud) 42%,transparent);
+  --hud-faint:color-mix(in srgb,var(--hud) 16%,transparent);
+  --warn:#ffd166;
+  --bg:#03060a;
+  --mono:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg);color:var(--hud);
+  font:12px/1.4 var(--mono);letter-spacing:.06em;
+  height:100vh;height:100dvh;overflow:hidden;position:relative;
+  text-shadow:0 0 6px color-mix(in srgb,var(--hud) 55%,transparent);
+}
+button,input,select{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+:focus-visible{outline:1px solid var(--warn);outline-offset:2px}
+
+/* Combiner glass: a faint grid and a vignette, both stroked, never filled. */
+.glassbed{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,transparent 0 39px,var(--hud-faint) 39px 40px),
+    repeating-linear-gradient(90deg,transparent 0 39px,var(--hud-faint) 39px 40px),
+    radial-gradient(circle at 50% 50%,transparent 44%,#000 92%);
+  opacity:.5;
+}
+.scan{
+  position:fixed;inset:0;z-index:1;pointer-events:none;mix-blend-mode:plus-lighter;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,color-mix(in srgb,var(--hud) 5%,transparent) 2px 3px);
+}
+
+/* NOTHING is in flow. Every block is pinned. */
+.hud > *{position:absolute}
+
+/* Centre: the boresight. */
+.bore{
+  left:50%;top:50%;width:min(62vmin,660px);height:min(62vmin,660px);
+  transform:translate(-50%,-50%);z-index:5;
+}
+.bore svg{width:100%;height:100%;overflow:visible}
+.bore circle,.bore line,.bore path,.bore rect{fill:none;stroke:var(--hud-dim);stroke-width:1}
+.bore .tick{stroke:var(--hud);stroke-width:1.4}
+/* The sweep is the one continuous motion on the page. Everything else ticks. */
+.sweeper{transform-origin:50% 50%}
+@media (prefers-reduced-motion:no-preference){
+  .sweeper{animation:sweep 5.5s linear infinite}
+  @keyframes sweep{to{transform:rotate(360deg)}}
+}
+
+/* Contacts: components projected onto the reticle by family angle and lane
+   depth. Position carries meaning here, which no card grid can do. */
+.contact{
+  position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;padding:0;
+  border:1px solid var(--hud);background:none;
+  transition:none;
+}
+.contact::after{
+  content:'';position:absolute;inset:3px;border:1px solid transparent;
+}
+.contact:hover,.contact.on{background:color-mix(in srgb,var(--hud) 28%,transparent)}
+.contact.on::after{border-color:var(--warn)}
+.contact.staged{border-color:var(--warn);border-width:2px}
+.contact .lbl{
+  position:absolute;left:18px;top:-3px;white-space:nowrap;font-size:10px;
+  color:var(--hud);opacity:0;pointer-events:none;
+}
+.contact:hover .lbl,.contact.on .lbl{opacity:1}
+
+/* Four data blocks pinned to the corners, leaving the centre clear. */
+.blk{z-index:6;max-width:min(30vw,360px)}
+.blk h2{font:700 10px/1 var(--mono);letter-spacing:.28em;margin:0 0 8px;color:var(--hud-dim)}
+.tl{left:22px;top:20px}
+.tr{right:22px;top:20px;text-align:right}
+.bl{left:22px;bottom:20px;max-height:44dvh;overflow:auto;width:min(30vw,360px)}
+.br{right:22px;bottom:20px;max-height:44dvh;overflow:auto;width:min(32vw,400px)}
+
+.read{display:flex;gap:10px;align-items:baseline;font-variant-numeric:tabular-nums}
+.read b{font-size:26px;font-weight:400;letter-spacing:-.02em}
+.read span{font-size:10px;color:var(--hud-dim);letter-spacing:.2em}
+@media (prefers-reduced-motion:no-preference){
+  .read b{animation:retick 250ms steps(1) 1}
+  @keyframes retick{from{background:color-mix(in oklab,var(--hud) 22%,transparent)}}
+}
+
+.tabs{display:flex;flex-wrap:wrap;gap:0;justify-content:flex-end}
+.tabs .tab{padding:4px 9px;border:1px solid var(--hud-faint);margin:0 0 -1px -1px;
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--hud-dim)}
+.tabs .tab:hover{color:var(--hud);border-color:var(--hud-dim)}
+.tabs .tab[aria-selected="true"]{color:var(--bg);background:var(--hud);border-color:var(--hud)}
+
+/* Ladder: the selected family's contents, as a stroked list. */
+.ladder{display:flex;flex-direction:column}
+.rung{
+  position:relative;display:grid;grid-template-columns:26px 1fr auto;gap:8px;align-items:baseline;
+  padding:4px 6px;border-left:1px solid var(--hud-faint);
+}
+.rung:hover,.rung.on{background:color-mix(in srgb,var(--hud) 12%,transparent);border-left-color:var(--hud)}
+.rung i{font-style:normal;font-size:9px;color:var(--hud-dim)}
+.rung b{font-weight:400;font-size:11.5px;overflow-wrap:anywhere}
+.rung .plus{border:1px solid var(--hud-dim);width:18px;height:18px;line-height:16px;text-align:center;font-size:11px}
+.rung .plus.in{background:var(--warn);border-color:var(--warn);color:var(--bg)}
+.rung .plan-tag{font-size:9px;color:var(--hud-dim);letter-spacing:.1em}
+
+#setup,#filters{font-size:11px}
+#setup .os,#filters .chip{border:1px solid var(--hud-faint);padding:3px 7px;color:var(--hud-dim);background:none}
+#setup .os.on,#filters .chip.on{background:var(--hud);color:var(--bg);border-color:var(--hud)}
+#setup input{border:1px solid var(--hud-faint);padding:3px 6px;width:64px;color:var(--hud)}
+#setup .num{display:none}
+#side{font-size:11.5px}
+.pane{font-size:11.5px}
+
+@media (max-width:900px){
+  .bore{display:none}
+  .hud > *{position:static}
+  .hud{padding:16px;height:100dvh;overflow:auto;display:flex;flex-direction:column;gap:18px}
+  .bl,.br{max-height:none;width:auto}
+}
+</style>
+</head>
+<body>
+<div class="glassbed"></div><div class="scan"></div>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes, esc = P.esc;
+
+document.body.insertAdjacentHTML('beforeend', `
+<div class="hud">
+  <div class="blk tl">
+    <h2>Boresight</h2>
+    <div class="read"><b data-visible-count>0</b><span>contacts</span></div>
+    <div class="read"><b data-basket-count>0</b><span>staged</span></div>
+    <div id="themehost" style="margin-top:10px"></div>
+  </div>
+
+  <div class="blk tr">
+    <h2>Mode</h2>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Boresight views"></div>
+  </div>
+
+  <div class="bore" aria-hidden="true">
+    <svg viewBox="0 0 400 400">
+      <circle cx="200" cy="200" r="196"/><circle cx="200" cy="200" r="150"/>
+      <circle cx="200" cy="200" r="104"/><circle cx="200" cy="200" r="58"/>
+      <line x1="200" y1="8" x2="200" y2="52"/><line x1="200" y1="348" x2="200" y2="392"/>
+      <line x1="8" y1="200" x2="52" y2="200"/><line x1="348" y1="200" x2="392" y2="200"/>
+      <line class="tick" x1="176" y1="200" x2="192" y2="200"/>
+      <line class="tick" x1="208" y1="200" x2="224" y2="200"/>
+      <line class="tick" x1="200" y1="176" x2="200" y2="192"/>
+      <line class="tick" x1="200" y1="208" x2="200" y2="224"/>
+      <g class="sweeper"><line x1="200" y1="200" x2="200" y2="12" stroke="var(--hud)" stroke-width="1.2"/></g>
+    </svg>
+    <div id="contacts"></div>
+  </div>
+
+  <div class="blk bl">
+    <h2>Systems</h2>
+    <div id="setup"></div>
+    <h2 style="margin-top:14px">Filters</h2>
+    <div id="filters"></div>
+  </div>
+
+  <div class="blk br" id="main-content">
+    <h2>Ladder</h2>
+    <div id="stage" tabindex="-1"></div>
+  </div>
+
+  <div class="blk" id="side" aria-label="Component inspector"
+       style="left:50%;bottom:20px;transform:translateX(-50%);max-width:min(38vw,470px);z-index:7"></div>
+</div>`);
+
+/* Contacts are projected, not laid out. Family decides the bearing, position
+   within the family decides the range. Two components in the same family sit on
+   the same radial, which is the whole point: the picture carries the grouping. */
+function project(){
+  const host = document.getElementById('contacts');
+  if(!host) return;
+  const families = A.state.data.families.map(f => f.id);
+  const visible = A.visibleComponents();
+  const perFamily = new Map();
+  const marks = visible.slice(0, 260).map(c => {
+    const seen = (perFamily.get(c.family) || 0);
+    perFamily.set(c.family, seen + 1);
+    const bearing = (families.indexOf(c.family) / Math.max(families.length, 1)) * Math.PI * 2 - Math.PI / 2;
+    const spread = ((seen % 13) - 6) * 0.021;      // fan them off the exact radial
+    const range = 20 + ((seen * 7) % 76);          // percent of the reticle radius
+    const angle = bearing + spread;
+    const x = 50 + Math.cos(angle) * range * 0.5;
+    const y = 50 + Math.sin(angle) * range * 0.5;
+    const staged = A.state.basket.includes(c.id);
+    return `<button class="contact${A.state.selected === c.id ? ' on' : ''}${staged ? ' staged' : ''}"
+      data-node="1" data-comp="${esc(c.id)}" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%"
+      aria-label="${esc(c.name)}, ${esc(c.kind)}"><span class="lbl">${esc(c.name)}</span></button>`;
+  }).join('');
+  host.innerHTML = marks;
+  host.querySelectorAll('[data-node]').forEach(n => {
+    n.addEventListener('click', e => {
+      A.select(n.dataset.comp);
+      P.popover(e.clientX, e.clientY, n.dataset.comp);
+      host.querySelectorAll('.contact.on').forEach(a => a.classList.remove('on'));
+      n.classList.add('on');
+    });
+  });
+}
+
+function render(stage){
+  const visible = A.visibleComponents();
+  if(!visible.length){ stage.innerHTML = '<p style="opacity:.6">No contacts on this filter.</p>'; project(); return; }
+  stage.innerHTML = `<div class="ladder">${visible.slice(0, 90).map((c, i) => `
+    <div class="rung${A.state.selected === c.id ? ' on' : ''}" data-node="1" data-comp="${esc(c.id)}">
+      <i>${String(i + 1).padStart(3,'0')}</i><b>${esc(c.name)}</b>${add(c)}
+    </div>`).join('')}</div>
+    ${visible.length > 90 ? `<p style="opacity:.55;font-size:10px;margin-top:8px">${visible.length - 90} more on this filter</p>` : ''}`;
+  wire(stage);
+  project();
+  counts();
+}
+
+function add(c){
+  if(!A.canBuild(c)){
+    const s = A.setupStateFor(c);
+    return `<span class="plan-tag">${esc(s.id === 'choose-platform' ? 'NO OS' : s.id === 'review-required' ? 'RVW' : s.id === 'hosted' ? 'HOST' : 'NONE')}</span>`;
+  }
+  const inB = A.state.basket.includes(c.id);
+  return `<button class="plus${inB ? ' in' : ''}" data-add="${esc(c.id)}" aria-label="${inB?'Remove':'Add'} ${esc(c.name)}">${inB ? '#' : '+'}</button>`;
+}
+
+function wire(stage){
+  stage.querySelectorAll('[data-node]').forEach(n => {
+    n.addEventListener('click', e => {
+      if(e.target.closest('[data-add]')) return;
+      A.select(n.dataset.comp);
+      P.popover(e.clientX, e.clientY, n.dataset.comp);
+      stage.querySelectorAll('.rung.on').forEach(a => a.classList.remove('on'));
+      n.classList.add('on');
+    });
+  });
+  stage.querySelectorAll('[data-add]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      if(A.state.basket.includes(id)) A.removeFromBasket(id); else A.addToBasket(id);
+      P.draw(); counts();
+    });
+  });
+}
+
+function counts(){
+  const c = A.counts();
+  document.querySelectorAll('[data-basket-count]').forEach(n => n.textContent = String(c.basket).padStart(3,'0'));
+  document.querySelectorAll('[data-visible-count]').forEach(n => n.textContent = String(c.visibleComponents).padStart(3,'0'));
+}
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+P.mount({
+  renderMap: render,
+  onFilter: () => { if(P.tab === 'map') render(document.getElementById('stage')); counts(); },
+  onSelect: counts,
+});
+A.on(counts);
+</script>
+</body>
+</html>
