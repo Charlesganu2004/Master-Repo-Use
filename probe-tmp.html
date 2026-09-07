@@ -1,0 +1,67 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>probe</title>
+<style>
+@property --a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@property --t { syntax: '<number>'; inherits: false; initial-value: 0; }
+html { font-size: 0.0625vw; }
+:root { --accent: oklch(72% 0.19 45); --ink: #eae8e1; --ground: #0d0d0c; }
+body { margin:0; background: var(--ground); color: var(--ink); font: 16px system-ui; }
+#ring {
+  width: 300px; height: 300px;
+  background: conic-gradient(from var(--a), transparent 0 70%,
+    color-mix(in oklab, var(--accent) 60%, transparent) 85%, transparent);
+  mask: radial-gradient(circle, transparent 58%, #000 60%);
+  animation: spin 8s linear infinite;
+}
+@keyframes spin { to { --a: 360deg; } }
+#dots { width:200px; height:200px;
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 44%, transparent) 30%, transparent 32%);
+  background-size: 12px 12px; }
+#grid { width:200px;height:200px;
+  background-image: linear-gradient(90deg, #d3c9b5 1px, transparent 0), linear-gradient(#e3d9c3 1px, transparent 0);
+  background-size: 40px 40px; }
+#big { font-size: 232rem; line-height: 0.9; letter-spacing: -0.035em; }
+#txt { background: linear-gradient(90deg, var(--accent), var(--ink));
+  -webkit-background-clip: text; background-clip: text; color: transparent; font-size:60px; }
+#grain { position:relative; width:200px;height:200px;background:var(--accent);
+  filter: url(#grainf); }
+#pop { opacity:1; transition: opacity .4s, display .4s allow-discrete; }
+@starting-style { #pop { opacity: 0; } }
+#vt { view-transition-name: probe-vt; }
+@container (min-width: 10px) { #cq { color: lime; } }
+#scr { animation: fade linear both; animation-timeline: view(); animation-range: entry 0% entry 40%; }
+@keyframes fade { from { opacity:0 } to { opacity:1 } }
+</style>
+<svg width="0" height="0"><filter id="grainf">
+  <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" result="N"/>
+  <feColorMatrix in="N" type="saturate" values="0"/>
+</filter></svg>
+<div id="ring"></div><div id="dots"></div><div id="grid"></div>
+<div id="big">W</div><div id="txt">grad</div><div id="grain"></div>
+<div id="pop">pop</div><div id="vt">vt</div><div id="cq">cq</div><div id="scr">scr</div>
+<script>
+window.RESULT = {
+  atProperty: CSS.supports('background','conic-gradient(from var(--a), red, blue)'),
+  registered: (()=>{ const e=document.getElementById('ring'); return getComputedStyle(e).getPropertyValue('--a').trim(); })(),
+  colorMix: CSS.supports('color','color-mix(in oklab, red 60%, transparent)'),
+  oklch: CSS.supports('color','oklch(72% 0.19 45)'),
+  mask: CSS.supports('mask','radial-gradient(circle, transparent 58%, #000 60%)'),
+  scrollTimeline: CSS.supports('animation-timeline','view()'),
+  startingStyle: CSS.supports('transition-behavior','allow-discrete'),
+  viewTransitions: typeof document.startViewTransition === 'function',
+  vtName: CSS.supports('view-transition-name','probe-vt'),
+  containerQ: CSS.supports('container-type','inline-size'),
+  dvh: CSS.supports('height','100dvh'),
+  has: CSS.supports('selector(:has(a))'),
+  textWrapBalance: CSS.supports('text-wrap','balance'),
+  rootFS: getComputedStyle(document.documentElement).fontSize,
+  bigFS: getComputedStyle(document.getElementById('big')).fontSize,
+  grainFilterApplied: getComputedStyle(document.getElementById('grain')).filter,
+  bgClipText: CSS.supports('background-clip','text'),
+  canvas2d: !!document.createElement('canvas').getContext('2d'),
+  conicComputed: getComputedStyle(document.getElementById('ring')).backgroundImage.slice(0,140),
+  dotsComputed: getComputedStyle(document.getElementById('dots')).backgroundImage.slice(0,120),
+  origin: location.protocol
+};
+</script>

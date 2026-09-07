@@ -1,0 +1,87 @@
+<!doctype html><meta charset=utf-8><title>typetest2</title>
+<style>
+@property --n { syntax:"<integer>"; inherits:false; initial-value:0; }
+@property --wg { syntax:"<number>"; inherits:true; initial-value:400; }
+body{background:#07080b;color:#e8e6e1;margin:0;padding:16px;font:12px/1.5 Consolas,monospace}
+pre{white-space:pre-wrap}
+.od{font:60px/1 Consolas,monospace}
+.od span::after{counter-set:n var(--n);content:counter(n)}
+.vw{font-family:"Segoe UI Variable Display";font-size:80px;font-variation-settings:"wght" var(--wg);animation:wv 2s linear infinite alternate}
+@keyframes wv{to{--wg:800}}
+</style>
+<div class=od><span style="--n:4"></span><span style="--n:2"></span><span style="--n:9"></span></div>
+<div class=vw id=vw>Weight wave</div>
+<pre id=out></pre>
+<script>
+var L=[];
+function log(s){L.push(s)}
+// 1. does counter-set + var(--n) actually RENDER digits?
+var od=document.querySelector('.od');
+log('ODOMETER counter-set with @property <integer>: rendered text = "'+od.innerText.trim()+'" (expect "429")');
+// 2. variable weight: measure width AND ink via canvas at several wght
+function meas(fam,fvs,fw){
+  var s=document.createElement('span');
+  s.textContent='Hamburgefonstiv HAMBURG';
+  s.style.cssText='position:absolute;font-size:100px;white-space:pre;font-family:'+fam+';';
+  if(fvs) s.style.fontVariationSettings=fvs;
+  if(fw) s.style.fontWeight=fw;
+  document.body.appendChild(s);
+  var r=s.getBoundingClientRect(); s.remove(); return r.width;
+}
+var fams=['"Segoe UI Variable Display"','"Segoe UI Variable Text"','"Segoe UI"','system-ui','"Bahnschrift"','"Sitka Banner"','"Cascadia Mono"'];
+log('\n=== width @100px, via font-variation-settings "wght" ===');
+fams.forEach(function(f){
+  var a=meas(f,'"wght" 200'), b=meas(f,'"wght" 400'), c=meas(f,'"wght" 900');
+  log(f+'  fvs200='+a.toFixed(1)+'  fvs400='+b.toFixed(1)+'  fvs900='+c.toFixed(1)+'  VARIES='+(Math.abs(a-c)>0.5));
+});
+log('\n=== width @100px, via font-weight keyword ===');
+fams.forEach(function(f){
+  var a=meas(f,null,200), b=meas(f,null,400), c=meas(f,null,900);
+  log(f+'  fw200='+a.toFixed(1)+'  fw400='+b.toFixed(1)+'  fw900='+c.toFixed(1)+'  VARIES='+(Math.abs(a-c)>0.5));
+});
+// 3. Bahnschrift wdth axis
+log('\n=== Bahnschrift wdth axis (condensed<->expanded) ===');
+[75,100,125].forEach(function(w){ log('wdth '+w+' -> '+meas('"Bahnschrift"','"wdth" '+w).toFixed(1)) });
+log('font-stretch on Bahnschrift: 75%='+ (function(){var s=document.createElement('span');s.textContent='Hamburgefonstiv HAMBURG';s.style.cssText='position:absolute;font-size:100px;white-space:pre;font-family:Bahnschrift;font-stretch:75%';document.body.appendChild(s);var w=s.getBoundingClientRect().width;s.remove();return w.toFixed(1)})() + '  100%='+ (function(){var s=document.createElement('span');s.textContent='Hamburgefonstiv HAMBURG';s.style.cssText='position:absolute;font-size:100px;white-space:pre;font-family:Bahnschrift;font-stretch:100%';document.body.appendChild(s);var w=s.getBoundingClientRect().width;s.remove();return w.toFixed(1)})());
+// 4. font metrics for exact clamp/positioning maths
+log('\n=== metrics @100px (canvas TextMetrics) ===');
+var c=document.createElement('canvas').getContext('2d');
+var mf=['Segoe UI Variable Display','Segoe UI','Bahnschrift','Impact','Arial Black','Haettenschweiler','Sitka Banner','Georgia','Cambria','Constantia','Cascadia Mono','Consolas','Bodoni MT','Century Gothic','Franklin Gothic Medium','Rockwell','Trebuchet MS'];
+mf.forEach(function(f){
+  c.font='100px "'+f+'"';
+  var m=c.measureText('H');
+  var mx=c.measureText('x');
+  log(f.padEnd(28)+' cap='+(m.actualBoundingBoxAscent||0).toFixed(1)+' xh='+(mx.actualBoundingBoxAscent||0).toFixed(1)+' fontAsc='+(m.fontBoundingBoxAscent||0).toFixed(1)+' fontDesc='+(m.fontBoundingBoxDescent||0).toFixed(1)+' widthH='+m.width.toFixed(1));
+});
+// 5. does the wght animation actually produce distinct frames?
+var el=document.getElementById('vw');
+var ws=[]; var t0=performance.now();
+function samp(){ ws.push(getComputedStyle(el).fontVariationSettings); if(ws.length<4){setTimeout(samp,180)} else finish(); }
+setTimeout(samp,60);
+function finish(){
+  log('\n=== animated font-variation-settings samples ===\n'+ws.join('\n'));
+  log('distinct frames = '+(new Set(ws)).size);
+  // 6. text-box-trim per font: cap ratio
+  log('\n=== text-box-trim box height @100px/line-height:1 ===');
+  ['Segoe UI Variable Display','Impact','Arial Black','Georgia','Bahnschrift','Cascadia Mono','Sitka Banner','Bodoni MT'].forEach(function(f){
+    var d=document.createElement('div');
+    d.textContent='Hxp';
+    d.style.cssText='position:absolute;font-size:100px;line-height:1;text-box:trim-both cap alphabetic;font-family:"'+f+'"';
+    document.body.appendChild(d); var h=d.getBoundingClientRect().height; d.remove();
+    var d2=document.createElement('div'); d2.textContent='Hxp';
+    d2.style.cssText='position:absolute;font-size:100px;line-height:1;font-family:"'+f+'"';
+    document.body.appendChild(d2); var h2=d2.getBoundingClientRect().height; d2.remove();
+    log(f.padEnd(28)+' trimmed='+h.toFixed(2)+'  untrimmed='+h2.toFixed(2));
+  });
+  // 7. can we animate --n integer for odometer
+  log('\n=== misc supports ===');
+  ['animation-composition','offset-path: path("M0,0 L10,10")','offset-distance: 50%','offset-rotate: auto','text-spacing-trim: trim-start','white-space-collapse: preserve','overflow-wrap: anywhere','hyphens: auto','font-kerning: none','font-feature-settings: "ss01"','font-variant-caps: all-small-caps','letter-spacing: -0.06em','word-spacing: 1em','text-indent: -0.5em','text-transform: full-width','unicode-bidi: plaintext','writing-mode: sideways-rl','text-combine-upright: all','ruby-align: center','scroll-timeline-name: --x','timeline-scope: --x','view-timeline-name: --v','animation-range: entry 0% cover 40%','interpolate-size: allow-keywords','transition-behavior: allow-discrete','@starting-style'].forEach(function(q){
+    if(q[0]==='@'){ log((CSS.supports('(position:fixed)')?'':'')+'  (at-rule '+q+' — check separately)'); return; }
+    var i=q.indexOf(':');
+    var p=i<0?q:q.slice(0,i).trim(), v=i<0?'':q.slice(i+1).trim();
+    log((i<0? (CSS.supports(p,'normal')||CSS.supports(p,'replace')?'YES ':'no  ') : (CSS.supports(p,v)?'YES ':'no  '))+q);
+  });
+  log('@starting-style parsed: '+(function(){try{var s=document.createElement('style');s.textContent='@starting-style{.z{opacity:0}}';document.head.appendChild(s);var ok=s.sheet.cssRules.length>0&&s.sheet.cssRules[0].constructor.name.indexOf('StartingStyle')>=0;s.remove();return ok}catch(e){return 'err '+e}})());
+  document.getElementById('out').textContent=L.join('\n');
+}
+</script>

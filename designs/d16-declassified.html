@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A declassified paper dossier of the catalog: manila ground, redaction bars, and no easing anywhere.">
+<title>Declassified | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* ===========================================================================
+   DOSSIER. The only light-ground page in the set, which is most of why it is
+   recognisable from a thumbnail among fourteen dark ones.
+
+   Rules it holds to, all of them the opposite of the house style:
+     zero border-radius, zero box-shadow, zero gradient on any surface
+     every rule is 1px SOLID at full opacity, never a 12% hairline
+     one monospace family at violently non-modular sizes: 11 / 13 / 64 / 180
+     nothing eases, ever. steps() only.
+   ========================================================================= */
+:root{
+  --paper:#e8e4d9; --paper-2:#d8d2c2; --ink:#0f0f0d; --stamp:#c1121f;
+  --mid:color-mix(in srgb, var(--ink) 38%, var(--paper));
+  --mono:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box;border-radius:0!important;box-shadow:none}
+html,body{margin:0;height:100%}
+body{
+  background:var(--paper);color:var(--ink);font:13px/1.45 var(--mono);
+  height:100vh;height:100dvh;overflow:hidden;
+  /* Pure #000 is reserved for redaction bars alone, so black reads as an
+     action rather than as a colour. */
+}
+button,input,select{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--stamp);outline-offset:1px}
+
+/* Toner speckle over the WHOLE page including type. Grain that stops at the
+   text is the giveaway that it was pasted behind the content. */
+.grain{
+  position:fixed;inset:0;z-index:90;pointer-events:none;mix-blend-mode:multiply;opacity:.34;
+  background:
+    repeating-linear-gradient(0deg,#0000 0 2px,#0f0f0d0d 2px 3px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
+}
+.crop{position:fixed;width:24px;height:24px;z-index:80;pointer-events:none}
+.crop.tl{top:14px;left:14px;border-top:1px solid var(--ink);border-left:1px solid var(--ink)}
+.crop.tr{top:14px;right:14px;border-top:1px solid var(--ink);border-right:1px solid var(--ink)}
+.crop.bl{bottom:14px;left:14px;border-bottom:1px solid var(--ink);border-left:1px solid var(--ink)}
+.crop.br{bottom:14px;right:14px;border-bottom:1px solid var(--ink);border-right:1px solid var(--ink)}
+
+/* The whole viewport is one ruled form. No sidebar concept: the inspector is a
+   COLUMN of the same document, sharing identical ink rules. */
+.sheet{
+  height:100vh;height:100dvh;display:grid;
+  grid-template-columns:repeat(12,1fr);
+  grid-template-rows:96px 38px 1fr 44px;
+  padding:30px;gap:0;
+}
+.sheet > *{outline:1px solid var(--ink);outline-offset:-1px;min-width:0;min-height:0}
+
+.head{grid-column:1/13;display:flex;align-items:stretch;overflow:hidden}
+.head-id{
+  padding:12px 16px;border-right:1px solid var(--ink);display:flex;flex-direction:column;
+  justify-content:space-between;min-width:210px;overflow:hidden;
+}
+.classline{font-size:9px;letter-spacing:.34em;text-transform:uppercase}
+.title{
+  /* System monospace has no condensed cut, so squeeze it and it reads as
+     stencil lettering rather than as a font choice. */
+  font-size:clamp(30px,4.4vw,52px);line-height:.86;letter-spacing:-.03em;
+  transform:scaleX(.82);transform-origin:left center;white-space:nowrap;
+}
+.head-meta{flex:1;padding:12px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:0 18px;align-content:space-between}
+.tabstrip{grid-column:1/13;display:flex;align-items:stretch;overflow-x:auto;overflow-y:hidden}
+.tabstrip #tabs{display:flex}
+.tabstrip #themehost{margin-left:auto;display:flex;align-items:center;padding:0 12px;border-left:1px solid var(--ink)}
+.fld{display:flex;align-items:baseline;font-size:11px;text-transform:uppercase;letter-spacing:.14em}
+.fld::after{content:'';flex:1;border-bottom:1px dotted var(--ink);opacity:.5;margin:0 6px 4px}
+.fld b{font-weight:700;letter-spacing:.06em}
+.head-stamp{display:grid;place-items:center;padding:0 22px;border-left:1px solid var(--ink)}
+.stamp{
+  border:3px solid var(--stamp);color:var(--stamp);font-size:17px;letter-spacing:.28em;
+  padding:5px 13px;transform:rotate(-8.5deg);opacity:.78;mix-blend-mode:multiply;font-weight:700;
+}
+
+.left{grid-column:1/4;grid-row:3;display:flex;flex-direction:column;overflow:hidden}
+.body{grid-column:4/10;grid-row:3;display:flex;flex-direction:column;overflow:hidden}
+.right{grid-column:10/13;grid-row:3;overflow:auto}
+.foot{grid-column:1/13;display:flex;align-items:center;gap:0;font-size:10px;letter-spacing:.2em;text-transform:uppercase}
+.foot > span{padding:0 14px;border-right:1px solid var(--ink);line-height:42px}
+
+.sec{padding:10px 14px;border-bottom:1px solid var(--ink);font-size:10px;letter-spacing:.24em;text-transform:uppercase;font-weight:700}
+.scroll{overflow:auto;flex:1;padding:10px 14px}
+.left .scroll{padding:0}
+
+/* Case-file rows. A dotted leader from the label to the value is what makes a
+   list read as a printed form instead of as a table. */
+.row{
+  position:relative;display:grid;grid-template-columns:52px 1fr auto;gap:10px;
+  padding:7px 14px;border-bottom:1px solid color-mix(in srgb,var(--ink) 24%,transparent);
+  align-items:baseline;
+}
+.row:hover,.row.on{background:var(--ink);color:var(--paper)}
+.row:hover .num,.row.on .num{color:var(--paper)}
+.num{font-size:10px;letter-spacing:.06em;color:var(--mid);font-variant-numeric:tabular-nums slashed-zero}
+.nm{font-size:12.5px;overflow-wrap:anywhere}
+.dt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.row .map-select{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;cursor:pointer}
+.row .plus{position:relative;z-index:2;width:20px;height:20px;border:1px solid currentColor;display:grid;place-items:center;font-size:11px}
+.row .plus.in{background:var(--stamp);border-color:var(--stamp);color:var(--paper)}
+.row .plan-tag{font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
+
+/* Redaction is the interaction primitive. Reveal in six discrete jumps, never
+   a fade: a fade reads as a UI transition, a jump reads as paper. */
+.redact{background:#000;color:#0000;user-select:none;padding:0 .3em;box-decoration-break:clone}
+.row:hover .redact,.row.on .redact{background:#0000;color:inherit;transition:color 0s}
+
+.groupline{display:flex;align-items:center;gap:10px;padding:12px 14px 6px;border-bottom:3px double var(--ink)}
+.groupline h2{font-size:13px;letter-spacing:.2em;text-transform:uppercase;margin:0}
+.groupline small{margin-left:auto;font-size:10px;color:var(--mid);font-variant-numeric:tabular-nums}
+
+/* Hatched bars, never solid fills. Density carries the number. */
+.bar{height:9px;border:1px solid var(--ink);position:relative;margin-top:5px}
+.bar i{display:block;height:100%;background:repeating-linear-gradient(45deg,var(--ink) 0 1px,transparent 1px 5px)}
+
+.tabs{display:flex;flex-wrap:wrap}
+.tabs .tab{padding:0 13px;line-height:36px;white-space:nowrap;border-right:1px solid var(--ink);border-bottom:1px solid var(--ink);font-size:10px;letter-spacing:.16em;text-transform:uppercase;background:none}
+.tabs .tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+#filters{padding:10px 14px;display:flex;flex-direction:column;gap:8px;font-size:11px}
+#setup{padding:10px 14px;font-size:11px}
+#side{font-size:12px}
+.pane{padding:12px 14px}
+
+*{transition-timing-function:steps(4,end);transition-duration:120ms}
+@media (max-width:1100px){
+  .sheet{grid-template-columns:repeat(6,1fr);grid-template-rows:auto 1fr auto;padding:18px}
+  .left,.body,.right,.head,.foot,.tabstrip{grid-column:1/7;grid-row:auto}
+  .right{max-height:34dvh}
+  .title{font-size:34px}
+}
+</style>
+</head>
+<body>
+<div class="crop tl"></div><div class="crop tr"></div><div class="crop bl"></div><div class="crop br"></div>
+<div class="grain"></div>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+/* This page owns its shell. There is no shared shell function any more: that
+   was the reason the previous set read as one design with a different chart
+   dropped into it. What stays shared is the DATA and the INSPECTOR, which is
+   what keeps every page a working tool instead of a mockup. */
+const A = AtlasCore, P = AtlasPanes, esc = P.esc;
+
+document.body.insertAdjacentHTML('beforeend', `
+<div class="sheet">
+  <header class="head">
+    <div class="head-id">
+      <p class="classline">Internal use only</p>
+      <h1 class="title">DECLASSIFIED</h1>
+    </div>
+    <div class="head-meta">
+      <p class="fld">File<b data-visible-count>0</b></p>
+      <p class="fld">Marked<b data-basket-count>0</b></p>
+      <p class="fld">Sheet<b>01</b></p>
+    </div>
+    <div class="head-stamp"><span class="stamp">OPEN</span></div>
+  </header>
+
+  <nav class="tabstrip tabs"><div id="tabs" role="tablist" aria-label="Dossier sections"></div><div id="themehost"></div></nav>
+
+  <aside class="left">
+    <p class="sec">Intake</p>
+    <div class="scroll"><div id="setup"></div><div id="filters"></div></div>
+  </aside>
+
+  <main class="body" id="main-content">
+    <div class="scroll" id="stage" tabindex="-1"></div>
+  </main>
+
+  <aside class="right" id="side" aria-label="Component inspector"></aside>
+
+  <footer class="foot">
+    <span>Master Repo</span><span>Catalog transcript</span><span id="footNote">Select a line to open its file</span>
+  </footer>
+</div>`);
+
+function renderDossier(stage){
+  const groups = new Map();
+  A.visibleComponents().forEach(c => {
+    if(!groups.has(c.family)) groups.set(c.family, []);
+    groups.get(c.family).push(c);
+  });
+  if(!groups.size){ stage.innerHTML = '<p style="padding:20px">No lines match the current filters.</p>'; return; }
+  const famName = id => (A.state.data.families.find(f => f.id === id) || {name:id}).name;
+  let n = 0;
+  stage.innerHTML = [...groups.entries()].map(([fam, items]) => {
+    const rows = items.map(c => {
+      n += 1;
+      /* Every third detail is struck through as a redaction bar. It is a real
+         reveal on hover, not decoration: the text is present and selectable
+         the moment the row is active. */
+      const redacted = n % 3 === 0;
+      return `<article class="row${A.state.selected === c.id ? ' on' : ''}" data-node="1" data-comp="${esc(c.id)}">
+        <span class="num">${String(n).padStart(4,'0')}</span>
+        <span class="nm">${esc(c.name)}
+          <br><span class="dt${redacted ? ' redact' : ''}">${esc(c.detail.slice(0,84))}</span></span>
+        ${plusFor(c)}
+        <button class="map-select" data-select aria-label="Open the file for ${esc(c.name)}"></button>
+      </article>`;
+    }).join('');
+    return `<section>
+      <div class="groupline"><h2>${esc(famName(fam))}</h2><small>${items.length} line${items.length===1?'':'s'}</small>
+        <div class="bar" style="width:120px"><i style="width:${Math.round(items.length / A.visibleComponents().length * 100)}%"></i></div></div>
+      ${rows}</section>`;
+  }).join('');
+  wire(stage);
+  counts();
+}
+
+function plusFor(c){
+  if(!A.canBuild(c)){
+    const s = A.setupStateFor(c);
+    return `<span class="plan-tag">${esc(s.id === 'choose-platform' ? 'no OS' : s.id === 'review-required' ? 'review' : s.id === 'hosted' ? 'hosted' : 'no recipe')}</span>`;
+  }
+  const inB = A.state.basket.includes(c.id);
+  return `<button class="plus${inB ? ' in' : ''}" data-add="${esc(c.id)}" aria-label="${inB?'Remove':'Add'} ${esc(c.name)}">${inB?'X':'+'}</button>`;
+}
+
+function wire(stage){
+  /* Selection opens the shared inspector and the shared popover, so this page
+     stays consistent with every other one. There is no toggleBasket in the
+     core: add and remove are separate calls, and P.draw() is what repaints. */
+  stage.querySelectorAll('[data-node]').forEach(node => {
+    node.addEventListener('click', e => {
+      if(e.target.closest('[data-add]')) return;
+      A.select(node.dataset.comp);
+      P.popover(e.clientX, e.clientY, node.dataset.comp);
+      stage.querySelectorAll('.row.on').forEach(a => a.classList.remove('on'));
+      node.classList.add('on');
+    });
+  });
+  stage.querySelectorAll('[data-add]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      if(A.state.basket.includes(id)) A.removeFromBasket(id); else A.addToBasket(id);
+      P.draw();
+      counts();
+    });
+  });
+}
+
+function counts(){
+  const c = A.counts();
+  document.querySelectorAll('[data-basket-count]').forEach(n => n.textContent = c.basket);
+  document.querySelectorAll('[data-visible-count]').forEach(n => n.textContent = c.visibleComponents);
+}
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+P.mount({
+  renderMap: renderDossier,
+  onFilter: () => { if(P.tab === 'map') renderDossier(document.getElementById('stage')); counts(); },
+  onSelect: counts,
+});
+A.on(counts);
+</script>
+</body>
+</html>

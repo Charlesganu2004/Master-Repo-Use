@@ -1,0 +1,95 @@
+<!doctype html><meta charset=utf-8><title>typetest3</title>
+<style>
+@property --n { syntax:"<integer>"; inherits:true; initial-value:0; }
+body{background:#07080b;color:#e8e6e1;margin:0;padding:16px;font:12px/1.5 Consolas,monospace}
+pre{white-space:pre-wrap}
+/* A: plain counter-reset, no var */
+.a::after{counter-reset:n 4;content:counter(n)}
+/* B: counter-set literal */
+.b::after{counter-set:n 5;content:counter(n)}
+/* C: counter-set var registered integer */
+.c{--n:6}
+.c::after{counter-set:n var(--n);content:counter(n)}
+/* D: counter-reset var registered integer */
+.d{--n:7}
+.d::after{counter-reset:n var(--n);content:counter(n)}
+/* E: counter-set calc */
+.e{--n:8}
+.e::after{counter-set:n calc(var(--n) + 1);content:counter(n)}
+/* F: animated integer */
+@keyframes cnt{from{--n:0}to{--n:9}}
+.f::after{counter-set:n var(--n);content:counter(n);animation:cnt 4s steps(9) infinite}
+/* G: strip translate approach */
+.strip{height:1em;overflow:hidden;display:inline-block;vertical-align:top}
+.strip i{display:block;font-style:normal;transform:translateY(calc(var(--n) * -1em));transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+</style>
+<div style="font:40px/1 Consolas,monospace">
+<span class=a></span><span class=b></span><span class=c></span><span class=d></span><span class=e></span><span class=f></span>
+<span class=strip style="--n:3"><i>0<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</i></span>
+</div>
+<pre id=out></pre>
+<script>
+var L=[]; function log(s){L.push(s)}
+function txt(sel){var e=document.querySelector(sel); var cs=getComputedStyle(e,'::after'); return cs.content+' | counterSet='+cs.counterSet+' | counterReset='+cs.counterReset;}
+['.a','.b','.c','.d','.e','.f'].forEach(function(s){log(s+'  '+txt(s))});
+// visible rendering check via range/innerText won't see ::after. Use element width as proxy: a digit has width>0
+['.a','.b','.c','.d','.e','.f'].forEach(function(s){log(s+' rendered width='+document.querySelector(s).getBoundingClientRect().width.toFixed(2)+' (0 = nothing painted)')});
+log('strip element height='+document.querySelector('.strip').getBoundingClientRect().height.toFixed(2));
+
+function w(fam,fw,ls){
+  var s=document.createElement('span'); s.textContent='Hamburgefonstiv HAMBURG';
+  s.style.cssText='position:absolute;font-size:200px;white-space:pre;font-family:'+fam+';font-weight:'+fw+(ls?';letter-spacing:'+ls:'');
+  document.body.appendChild(s); var r=s.getBoundingClientRect().width; s.remove(); return r;
+}
+log('\n=== font-weight CONTINUITY on "Segoe UI Variable Display" @200px ===');
+var prev=null,out=[];
+for(var k=300;k<=700;k+=25){ var v=w('"Segoe UI Variable Display"',k); out.push(k+'='+v.toFixed(1)); }
+log(out.join('  '));
+log('\n=== same for "Segoe UI" (static family) ===');
+out=[]; for(var k=300;k<=900;k+=50){ out.push(k+'='+w('"Segoe UI"',k).toFixed(1)); } log(out.join('  '));
+log('\n=== same for "Sitka Banner" ===');
+out=[]; for(var k=300;k<=900;k+=100){ out.push(k+'='+w('"Sitka Banner"',k).toFixed(1)); } log(out.join('  '));
+
+log('\n=== named Bahnschrift / condensed families present? ===');
+function has(f){var c=document.createElement('canvas').getContext('2d');var t='mmmmmmmmmmlliWWWW0123';c.font='72px monospace';var b=c.measureText(t).width;c.font='72px "'+f+'", monospace';if(c.measureText(t).width!==b)return true;c.font='72px serif';var b2=c.measureText(t).width;c.font='72px "'+f+'", serif';return c.measureText(t).width!==b2}
+['Bahnschrift','Bahnschrift Light','Bahnschrift SemiLight','Bahnschrift SemiBold','Bahnschrift Condensed','Bahnschrift SemiCondensed','Bahnschrift Light Condensed','Bahnschrift SemiBold Condensed','Arial Narrow','Franklin Gothic Book','Franklin Gothic Demi Cond','Impact','Haettenschweiler','Agency FB','Bebas Neue','Oswald','Segoe UI Black','Segoe UI Semibold','Segoe UI Light','Segoe UI Historic','Nirmala UI','MV Boli','HoloLens MDL2 Assets','Segoe Fluent Icons','Segoe MDL2 Assets','Marlett','Webdings','Wingdings','Symbol','Cambria Math','Modern No. 20','Engravers MT','Gill Sans MT','Lucida Sans Unicode','MS Reference Sans Serif','Microsoft Sans Serif','Segoe UI Symbol','Nirmala Text'].forEach(function(f){ if(has(f)) L.push('  PRESENT '+f); else L.push('  absent  '+f); });
+
+log('\n=== font-stretch on Bahnschrift, sweep ===');
+out=[]; [50,62.5,75,87.5,100,112.5,125,150].forEach(function(p){
+  var s=document.createElement('span'); s.textContent='Hamburgefonstiv HAMBURG';
+  s.style.cssText='position:absolute;font-size:200px;white-space:pre;font-family:Bahnschrift;font-stretch:'+p+'%';
+  document.body.appendChild(s); out.push(p+'%='+s.getBoundingClientRect().width.toFixed(1)); s.remove();
+});
+log(out.join('  '));
+
+log('\n=== canvas letterSpacing / wordSpacing / fontStretch / fontVariantCaps ===');
+var c2=document.createElement('canvas').getContext('2d');
+log('ctx.letterSpacing supported: '+('letterSpacing' in c2)+'  ctx.wordSpacing: '+('wordSpacing' in c2)+'  ctx.fontStretch: '+('fontStretch' in c2)+'  ctx.fontVariantCaps: '+('fontVariantCaps' in c2)+'  ctx.textRendering: '+('textRendering' in c2));
+c2.font='100px "Segoe UI Variable Display"'; var base=c2.measureText('ATLAS').width;
+try{ c2.letterSpacing='0.3em'; }catch(e){}
+log('  letterSpacing 0 -> '+base.toFixed(1)+'   0.3em -> '+c2.measureText('ATLAS').width.toFixed(1));
+
+log('\n=== SVG text APIs ===');
+var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+svg.setAttribute('width',400); svg.setAttribute('height',200);
+svg.innerHTML='<path id="pp" d="M20,150 C120,20 280,20 380,150" fill="none"/><text id="tt" font-size="24" font-family="Segoe UI"><textPath href="#pp" startOffset="10%">Atlas along a curve</textPath></text>';
+document.body.appendChild(svg);
+var p=svg.querySelector('#pp'), t=svg.querySelector('#tt');
+log('path.getTotalLength()='+p.getTotalLength().toFixed(2));
+log('text.getComputedTextLength()='+t.getComputedTextLength().toFixed(2));
+log('textLength attr + lengthAdjust supported: '+('textLength' in t)+' / '+('lengthAdjust' in t));
+log('getExtentOfChar(0)='+JSON.stringify((function(){var b=t.getExtentOfChar(0);return {x:+b.x.toFixed(1),y:+b.y.toFixed(1),w:+b.width.toFixed(1),h:+b.height.toFixed(1)}})()));
+log('getRotationOfChar(5)='+t.getRotationOfChar(5).toFixed(2)+' deg  (per-char rotation on path is computed by the UA)');
+svg.remove();
+
+log('\n=== misc render checks ===');
+function boxOf(css,txtv){var d=document.createElement('div');d.textContent=txtv||'Hxp Atlas';d.style.cssText='position:absolute;'+css;document.body.appendChild(d);var r=d.getBoundingClientRect();d.remove();return r}
+var n1=boxOf('font:100px/1 "Segoe UI";font-variant-caps:normal','Hamburg');
+var n2=boxOf('font:100px/1 "Segoe UI";font-variant-caps:all-small-caps','Hamburg');
+log('all-small-caps changes width: '+n1.width.toFixed(1)+' -> '+n2.width.toFixed(1)+'  ('+(Math.abs(n1.width-n2.width)>1?'SYNTHESISED/REAL, works':'no effect')+')');
+var p1=boxOf('font:100px/1 "Segoe UI";-webkit-text-stroke:6px red;paint-order:stroke fill','Hxp');
+log('paint-order+text-stroke computed: '+getComputedStyle(document.body).webkitTextStrokeWidth+' (probe box w='+p1.width.toFixed(1)+')');
+log('CSS.supports(paint-order,stroke): '+CSS.supports('paint-order','stroke'));
+log('\ndevicePixelRatio='+devicePixelRatio+'  innerWidth='+innerWidth+'  innerHeight='+innerHeight);
+document.getElementById('out').textContent=L.join('\n');
+</script>

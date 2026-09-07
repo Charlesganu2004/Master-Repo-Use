@@ -1,0 +1,110 @@
+<!doctype html><meta charset=utf-8><title>typetest5</title>
+<style>
+@property --a{syntax:"<angle>";inherits:false;initial-value:0deg}
+@property --sw{syntax:"<length>";inherits:false;initial-value:0px}
+@property --n{syntax:"<integer>";inherits:true;initial-value:0}
+*{box-sizing:border-box}
+body{background:#08090c;color:#eae7e1;margin:0;font:13px/1.4 Consolas,monospace}
+section{padding:18px 24px;border-bottom:1px solid #1b1d22}
+h6{margin:0 0 10px;font:600 10px/1 Consolas;letter-spacing:.24em;text-transform:uppercase;color:#6c7280}
+
+/* 1 — fill-the-viewport line, SVG textLength */
+.fill{display:block;width:100%;height:11vw}
+
+/* 2 — fake continuous weight via animated text-stroke behind fill */
+.fw{font:400 96px/0.86 "Segoe UI Variable Display","Segoe UI",system-ui;
+    text-box:trim-both cap alphabetic;letter-spacing:-0.035em;
+    -webkit-text-stroke:var(--sw) #eae7e1;paint-order:stroke fill;
+    animation:swell 2.4s cubic-bezier(.45,0,.25,1) infinite alternate}
+@keyframes swell{from{--sw:0px}to{--sw:7px}}
+
+/* 3 — per-char stagger, zero JS maths */
+.stag{font:800 64px/1 "Bahnschrift","Segoe UI",sans-serif;letter-spacing:.02em;text-box:trim-both cap alphabetic}
+.stag span{display:inline-block;animation:drop 1.1s cubic-bezier(.16,1,.3,1) infinite;
+  animation-delay:calc(sibling-index() * 55ms)}
+@keyframes drop{0%{opacity:0;transform:translateY(-.55em) scaleY(1.6);filter:blur(6px)}
+ 22%,72%{opacity:1;transform:none;filter:blur(0)}100%{opacity:0;transform:translateY(.3em);filter:blur(4px)}}
+
+/* 4 — conic gradient swept through the glyphs, edge-masked */
+.conic{font:900 92px/0.9 "Segoe UI Variable Display","Segoe UI";letter-spacing:-.04em;
+ text-box:trim-both cap alphabetic;
+ background:conic-gradient(from var(--a) at 50% 50%,#ff3b30,#ffd60a,#30d158,#0a84ff,#bf5af2,#ff3b30);
+ -webkit-background-clip:text;background-clip:text;color:transparent;
+ animation:spin 7s linear infinite}
+@keyframes spin{to{--a:360deg}}
+
+/* 5 — split-flap */
+.flap{display:inline-grid;grid-auto-flow:column;gap:4px;perspective:600px;font:700 46px/1 "Cascadia Mono",Consolas,monospace}
+.cell{position:relative;width:.72em;height:1.16em;background:#15171c;border-radius:3px;
+ display:grid;place-items:center;color:#f2efe8;
+ box-shadow:inset 0 0 0 1px #23262d, 0 6px 18px #0008;transform-style:preserve-3d}
+.cell::before{content:"";position:absolute;inset:50% 0 auto;height:1px;background:#000a;z-index:3}
+.cell b{display:block;transform-origin:50% 0;font-weight:700}
+.cell.f b{animation:flip .42s cubic-bezier(.4,0,.2,1) infinite}
+@keyframes flip{0%{transform:rotateX(0)}49.9%{transform:rotateX(-90deg)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+
+/* 6 — odometer, pure CSS */
+.odo{display:inline-flex;font:700 46px/1 "Cascadia Mono",Consolas,monospace;font-variant-numeric:tabular-nums;
+ background:#101318;padding:.16em .3em;border-radius:4px;box-shadow:inset 0 0 0 1px #23262d}
+.odo i{display:block;height:1em;overflow:hidden;font-style:normal;width:.62em;text-align:center}
+.odo i::after{counter-set:d var(--n);content:counter(d);display:block;
+ animation:roll 2.6s steps(1) infinite}
+@keyframes roll{0%{--n:0}10%{--n:1}20%{--n:2}30%{--n:3}40%{--n:4}50%{--n:5}60%{--n:6}70%{--n:7}80%{--n:8}90%{--n:9}100%{--n:0}}
+
+/* 7 — vertical rail */
+.rail{display:flex;gap:26px;height:220px}
+.rail .v{writing-mode:vertical-rl;font:600 15px/1 "Segoe UI";letter-spacing:.42em;text-transform:uppercase;color:#8a919c}
+.rail .u{writing-mode:vertical-rl;text-orientation:upright;font:800 30px/1.06 "Bahnschrift";letter-spacing:.06em;color:#eae7e1}
+.rail .s{writing-mode:sideways-lr;font:700 13px/1 Consolas;letter-spacing:.34em;color:#4d9}
+
+/* 8 — marquee, duration derived from track width */
+.mq{overflow:hidden;--w:2400px;--px-per-s:110}
+.mq div{display:flex;width:max-content;animation:slide calc(var(--w)/var(--px-per-s)*1s) linear infinite}
+.mq span{font:800 54px/1 "Haettenschweiler","Impact",sans-serif;letter-spacing:.02em;padding-right:.5em;
+ white-space:nowrap;color:#0000;-webkit-text-stroke:1.4px #4a505c}
+.mq span:nth-child(odd){color:#eae7e1;-webkit-text-stroke:0}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+/* 9 — spotlight mask on giant type */
+.spot{position:relative;font:900 clamp(3rem,11vw,11rem)/0.82 "Segoe UI Variable Display","Segoe UI";
+ letter-spacing:-.05em;text-box:trim-both cap alphabetic;color:#eae7e1;
+ -webkit-mask-image:radial-gradient(120% 220% at var(--mx,30%) 50%,#000 12%,#0006 42%,#0000 70%);
+ mask-image:radial-gradient(120% 220% at var(--mx,30%) 50%,#000 12%,#0006 42%,#0000 70%);
+ animation:sweep 6s ease-in-out infinite alternate}
+@keyframes sweep{to{--mx:82%}}
+
+/* 10 — reflow around a shape */
+.flowbox{font:17px/1.5 "Sitka Banner",Georgia,serif;text-align:justify;hyphens:auto}
+.flowbox .sh{float:left;width:190px;height:190px;
+ shape-outside:polygon(0 0, 100% 0, 0 100%);shape-margin:14px;
+ background:linear-gradient(135deg,#ff3b30,#bf5af2);clip-path:polygon(0 0,100% 0,0 100%)}
+</style>
+
+<section><h6>1 — SVG textLength: line fills exactly 100% width, zero JS</h6>
+<svg class=fill viewBox="0 0 1000 100" preserveAspectRatio="none">
+ <text x="0" y="78" textLength="1000" lengthAdjust="spacingAndGlyphs" font-family="Segoe UI Variable Display, Segoe UI" font-weight="900" font-size="96" fill="#eae7e1">ATLAS SYSTEM</text>
+</svg></section>
+
+<section><h6>2 — synthetic continuous weight axis (text-stroke + paint-order)</h6>
+<div class=fw>Weight without a variable axis</div></section>
+
+<section><h6>3 — per-char stagger via sibling-index()</h6>
+<div class=stag><span>K</span><span>I</span><span>N</span><span>E</span><span>T</span><span>I</span><span>C</span><span>&nbsp;</span><span>T</span><span>Y</span><span>P</span><span>E</span></div></section>
+
+<section><h6>4 — conic sweep through glyphs</h6><div class=conic>SPECTRAL</div></section>
+
+<section><h6>5 + 6 — split-flap and pure-CSS odometer</h6>
+<span class=flap><span class="cell f"><b>A</b></span><span class="cell f"><b>T</b></span><span class=cell><b>L</b></span><span class="cell f"><b>A</b></span><span class=cell><b>S</b></span></span>
+&nbsp;&nbsp;
+<span class=odo><i style="--n:0"></i><i style="--n:0"></i><i style="--n:0"></i><i style="--n:0"></i></span></section>
+
+<section><h6>7 — vertical rails</h6>
+<div class=rail><div class=v>Catalogue index</div><div class=u>ATLAS</div><div class=s>SIDEWAYS-LR</div><div class=v>2026 / 09</div></div></section>
+
+<section><h6>8 — marquee, outline/solid alternation</h6>
+<div class=mq><div><span>REPOSITORIES</span><span>REPOSITORIES</span><span>REPOSITORIES</span><span>REPOSITORIES</span><span>REPOSITORIES</span><span>REPOSITORIES</span></div></div></section>
+
+<section><h6>9 — spotlight mask sweeping giant type</h6><div class=spot>CATALOG</div></section>
+
+<section><h6>10 — reflow around a shape</h6>
+<div class=flowbox><span class=sh></span>The layout is the design. Text reflows around a real geometric shape using shape-outside with a polygon, and the same polygon drives clip-path so the painted wedge and the exclusion area agree exactly. Justified setting with hyphenation keeps the measure tight against the diagonal so the rag reads as a deliberate edge rather than an accident of wrapping. This is the sort of thing that makes a page look art-directed instead of templated, and it costs nothing but two matching polygon declarations.</div></section>

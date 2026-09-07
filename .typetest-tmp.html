@@ -1,0 +1,101 @@
+<!doctype html><meta charset=utf-8><title>typetest</title>
+<style>
+@property --a { syntax:"<angle>"; inherits:false; initial-value:0deg; }
+@property --n { syntax:"<integer>"; inherits:false; initial-value:0; }
+body{background:#07080b;color:#e8e6e1;font-family:ui-sans-serif,system-ui,sans-serif;margin:0;padding:20px}
+#out{white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.vf{font-family:"Segoe UI Variable Display","SF Pro Display",system-ui;font-size:60px;font-variation-settings:"wght" 300,"opsz" 36}
+.vf2{font-family:"Segoe UI Variable Display",system-ui;font-size:60px;font-variation-settings:"wght" 700,"opsz" 36}
+.tbt{text-box-trim:trim-both;text-box-edge:cap alphabetic;font-size:100px;line-height:1;background:#222}
+.odo::after{counter-set:n var(--n);content:counter(n)}
+.grad{font-size:80px;font-weight:900;background:conic-gradient(from var(--a),#f43,#fd0,#3fa,#4af,#f43);-webkit-background-clip:text;background-clip:text;color:transparent}
+.slr{writing-mode:sideways-lr;height:120px}
+</style>
+<div class=vf id=v1>Hamburgefonstiv 300</div>
+<div class=vf2 id=v2>Hamburgefonstiv 700</div>
+<div class=tbt id=tb>Trim</div>
+<div class=odo id=od style="--n:7"></div>
+<div class=grad id=gr>GRADIENT</div>
+<div class=slr id=sl>sideways</div>
+<svg width=300 height=120><path id=p d="M10,100 Q150,10 290,100" fill=none stroke="#333"/><text font-size=20 fill="#fff"><textPath href="#p" startOffset="0"><animate attributeName="startOffset" from="0" to="120" dur="3s" repeatCount="indefinite"/>SMIL PATH TEXT</textPath></text></svg>
+<div id=out></div>
+<script>
+var S=CSS.supports.bind(CSS);
+var tests={
+ 'text-box-trim':S('text-box-trim','trim-both'),
+ 'text-box-edge cap alphabetic':S('text-box-edge','cap alphabetic'),
+ 'text-box shorthand':S('text-box','trim-both cap alphabetic'),
+ 'font-variation-settings':S('font-variation-settings','"wght" 500'),
+ 'transition font-variation-settings':S('transition-property','font-variation-settings'),
+ 'font-variation-settings in @property-free anim':S('animation-name','x'),
+ 'writing-mode sideways-lr':S('writing-mode','sideways-lr'),
+ 'writing-mode vertical-rl':S('writing-mode','vertical-rl'),
+ 'text-orientation upright':S('text-orientation','upright'),
+ 'shape-outside polygon':S('shape-outside','polygon(0 0,100% 0,50% 100%)'),
+ 'shape-outside url':S('shape-outside','url(a.png)'),
+ 'shape-outside gradient':S('shape-outside','linear-gradient(#000,#0000)'),
+ 'shape-margin':S('shape-margin','10px'),
+ 'background-clip text':S('background-clip','text'),
+ 'mask-image linear':S('mask-image','linear-gradient(#000,#0000)'),
+ 'mask-composite intersect':S('mask-composite','intersect'),
+ 'counter-set':S('counter-set','n 3'),
+ 'text-wrap balance':S('text-wrap','balance'),
+ 'text-wrap pretty':S('text-wrap','pretty'),
+ 'font-synthesis-weight none':S('font-synthesis-weight','none'),
+ 'animation-timeline view()':S('animation-timeline','view()'),
+ 'animation-timeline scroll()':S('animation-timeline','scroll()'),
+ 'attr() typed':S('width','attr(data-w type(<length>), 10px)'),
+ 'sibling-index()':S('width','calc(sibling-index() * 10px)'),
+ 'if()':S('color','if(style(--x:1): red; else: blue)'),
+ 'round()/mod()':S('width','calc(mod(round(down, 7 / 1), 10) * 1px)'),
+ 'color-mix oklab':S('color','color-mix(in oklab, red 50%, blue)'),
+ 'oklch':S('color','oklch(0.7 0.2 30)'),
+ 'text-emphasis':S('text-emphasis','filled dot'),
+ 'initial-letter':S('initial-letter','3'),
+ 'font-palette':S('font-palette','--x'),
+ 'paint-order stroke':S('paint-order','stroke fill'),
+ '-webkit-text-stroke':S('-webkit-text-stroke','2px red'),
+ 'view-transition-name':S('view-transition-name','a'),
+ 'anchor-name':S('anchor-name','--a'),
+ 'corner-shape':S('corner-shape','squircle'),
+ 'text-autospace':S('text-autospace','normal'),
+ 'line-clamp std':S('line-clamp','3'),
+ 'contrast-color()':S('color','contrast-color(red)'),
+ 'font-variant-numeric tabular':S('font-variant-numeric','tabular-nums'),
+ 'font-stretch pct':S('font-stretch','75%'),
+ 'text-underline-offset':S('text-underline-offset','4px'),
+ 'backdrop-filter':S('backdrop-filter','blur(4px)'),
+ 'filter url()':S('filter','url(#x)'),
+ 'mix-blend-mode plus-lighter':S('mix-blend-mode','plus-lighter'),
+ 'CSS Highlights ::highlight':(typeof CSS.highlights!=='undefined'),
+ 'Houdini paintWorklet':(typeof CSS.paintWorklet!=='undefined'),
+ 'registerProperty':(typeof CSS.registerProperty!=='undefined')
+};
+function hasFont(f){
+  var c=document.createElement('canvas').getContext('2d');
+  var t='mmmmmmmmmmlliWWWW0123';
+  c.font='72px monospace'; var base=c.measureText(t).width;
+  c.font='72px "'+f+'", monospace'; var w=c.measureText(t).width;
+  if(w!==base) return true;
+  c.font='72px serif'; var b2=c.measureText(t).width;
+  c.font='72px "'+f+'", serif'; return c.measureText(t).width!==b2;
+}
+var fonts=['Segoe UI Variable Display','Segoe UI Variable Text','Segoe UI Variable Small','Segoe UI','Bahnschrift','Cascadia Code','Cascadia Mono','Consolas','Georgia','Constantia','Candara','Corbel','Franklin Gothic Medium','Impact','Arial Black','Trebuchet MS','Palatino Linotype','Sitka Display','Sitka Banner','Sitka Heading','Cambria','Rockwell','Courier New','Lucida Console','Times New Roman','Verdana','Tahoma','Calibri','Ebrima','Gabriola','Ink Free','Segoe Print','Segoe Script','Sylfaen','Yu Gothic','Bookman Old Style','Century Gothic','Garamond','Perpetua','Baskerville Old Face','Copperplate Gothic Bold','Haettenschweiler','Bodoni MT','Didot','Optima','Futura','Helvetica Neue','Menlo','SF Mono','Charter'];
+var fres={}; fonts.forEach(function(f){fres[f]=hasFont(f)});
+var w1=document.getElementById('v1').getBoundingClientRect().width;
+var w2=document.getElementById('v2').getBoundingClientRect().width;
+var gen=['ui-sans-serif','ui-serif','ui-monospace','ui-rounded','system-ui','math','fangsong','cursive','fantasy'];
+var genres={}; var probe=document.createElement('span'); probe.textContent='Hamburgefonstiv'; probe.style.fontSize='72px'; document.body.appendChild(probe);
+gen.forEach(function(g){probe.style.fontFamily=g; genres[g]=probe.getBoundingClientRect().width});
+probe.remove();
+var cs=getComputedStyle(document.getElementById('tb'));
+document.getElementById('out').textContent =
+ 'UA: '+navigator.userAgent+'\n\n=== CSS.supports ===\n'+
+ Object.keys(tests).map(function(k){return (tests[k]?'YES ':'no  ')+k}).join('\n')+
+ '\n\n=== fonts PRESENT ===\n'+Object.keys(fres).filter(function(k){return fres[k]}).join(' | ')+
+ '\n\n=== fonts ABSENT ===\n'+Object.keys(fres).filter(function(k){return !fres[k]}).join(' | ')+
+ '\n\n=== variable weight width test (same string, wght 300 vs 700) ===\n300='+w1.toFixed(2)+'  700='+w2.toFixed(2)+'  differs='+(Math.abs(w1-w2)>0.5)+
+ '\n\n=== generic family widths (differing = distinct font) ===\n'+Object.keys(genres).map(function(k){return k+' = '+genres[k].toFixed(2)}).join('\n')+
+ '\n\n=== odometer counter-set rendered ===\n'+getComputedStyle(document.getElementById('od'),'::after').content+
+ '\n\n=== text-box-trim computed ===\n'+cs.textBoxTrim+' / '+cs.textBoxEdge+' | trimmed box height='+document.getElementById('tb').getBoundingClientRect().height.toFixed(2)+' (untrimmed 100px/1.0 = 100)';
+</script>

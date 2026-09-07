@@ -1,0 +1,70 @@
+<title>raf</title>
+<style>body{background:#05060a;color:#9fb;font:12px ui-monospace,monospace;margin:0;padding:10px}
+ canvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1}
+ pre{white-space:pre-wrap;position:relative;z-index:1}</style>
+<canvas id="cv"></canvas><pre id="out">measuring…</pre>
+<script>
+const out=document.getElementById('out'),log=s=>out.textContent+=s+"\n";out.textContent="";
+const cv=document.getElementById('cv');
+const tests=[];
+function push(name,setup,draw,w,h){tests.push({name,setup,draw,w,h});}
+
+// flow field at true 1080p backing store
+function flow(N){return {
+ setup(x,w,h){x.fillStyle='#05060a';x.fillRect(0,0,w,h);
+  this.px=new Float32Array(N);this.py=new Float32Array(N);this.age=new Float32Array(N);
+  for(let i=0;i<N;i++){this.px[i]=Math.random()*w;this.py[i]=Math.random()*h;this.age[i]=Math.random()*200;}
+  this.t=0;},
+ draw(x,w,h){this.t+=0.004;const {px,py,age}=this;
+  x.globalCompositeOperation='source-over';x.fillStyle='rgba(5,6,10,0.055)';x.fillRect(0,0,w,h);
+  x.globalCompositeOperation='lighter';x.beginPath();
+  for(let i=0;i<N;i++){const a=Math.sin(px[i]*.006+this.t)*1.6+Math.cos(py[i]*.009-this.t*.7)*1.6+Math.sin((px[i]+py[i])*.004)*1.2;
+   const nx=px[i]+Math.cos(a)*1.6,ny=py[i]+Math.sin(a)*1.6;x.moveTo(px[i],py[i]);x.lineTo(nx,ny);px[i]=nx;py[i]=ny;
+   if(++age[i]>260||nx<0||nx>w||ny<0||ny>h){px[i]=Math.random()*w;py[i]=Math.random()*h;age[i]=0;}}
+  x.strokeStyle='rgba(120,215,255,0.16)';x.lineWidth=1;x.stroke();
+  x.globalCompositeOperation='source-over';}};}
+
+function ascii(cw,chh){return {
+ setup(x,w,h){x.font=(chh-2)+'px ui-monospace, Consolas, monospace';x.textBaseline='top';this.t=0;
+  this.cols=Math.floor(w/cw);this.rows=Math.floor(h/chh);},
+ draw(x,w,h){this.t+=.03;const ramp=" .·:-=+*coa%#@";
+  x.fillStyle='#05060a';x.fillRect(0,0,w,h);
+  for(let r=0;r<this.rows;r++){let s='';
+   for(let c=0;c<this.cols;c++){const u=c/this.cols-.5,v=r/this.rows-.5;
+    const d=Math.hypot(u*1.9,v);const n=Math.sin(d*14-this.t*3)*.5+.5;
+    const wv=Math.sin(u*9+this.t)*Math.cos(v*7-this.t*.6)*.5+.5;
+    const f=Math.max(0,Math.min(.999,n*.6+wv*.6-d*.9+.35));s+=ramp[(f*ramp.length)|0];}
+   const g=r/this.rows;x.fillStyle='rgb('+(60+g*40|0)+','+(190-g*60|0)+','+(255-g*40|0)+')';
+   x.fillText(s,0,r*chh);}}};}
+
+push("flowfield N=1400 @1920x1080",flow(1400).setup,flow(1400).draw);
+let f1=flow(1400),f2=flow(4000),f3=flow(9000),f4=flow(18000);
+let a1=ascii(9,15),a2=ascii(7,12),a3=ascii(5,9);
+const suite=[
+ ["flowfield N=1400  @1920x1080",f1],["flowfield N=4000  @1920x1080",f2],
+ ["flowfield N=9000  @1920x1080",f3],["flowfield N=18000 @1920x1080",f4],
+ ["ascii 213x72 (9x15 cell)",a1],["ascii 274x90 (7x12 cell)",a2],["ascii 384x120 (5x9 cell)",a3],
+];
+let idx=0;
+function run(){
+ if(idx>=suite.length){log("DPR="+devicePixelRatio+"  backing 1920x1080");log("--- done ---");return;}
+ const [name,obj]=suite[idx];
+ cv.width=1920;cv.height=1080;
+ const x=cv.getContext('2d',{alpha:false});
+ obj.setup(x,1920,1080);
+ let n=0,t0=0,frames=90,times=[];
+ function step(ts){
+  if(n===0)t0=ts;
+  obj.draw(x,1920,1080);
+  times.push(ts);
+  if(++n<frames)requestAnimationFrame(step);
+  else{
+   const dur=times[times.length-1]-times[0];
+   const ms=dur/(frames-1);
+   log(name.padEnd(30)+" "+ms.toFixed(2)+" ms/frame  ("+(1000/ms).toFixed(0)+" fps, vsync-capped)");
+   idx++;requestAnimationFrame(run);}
+ }
+ requestAnimationFrame(step);
+}
+run();
+</script>

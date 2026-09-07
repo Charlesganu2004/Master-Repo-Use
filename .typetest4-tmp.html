@@ -1,0 +1,72 @@
+<!doctype html><meta charset=utf-8><title>typetest4</title>
+<style>
+@property --i { syntax:"<number>"; inherits:false; initial-value:0; }
+body{background:#07080b;color:#e8e6e1;margin:0;padding:16px;font:12px/1.5 Consolas,monospace}
+pre{white-space:pre-wrap}
+/* per-char stagger via sibling-index() — no JS maths */
+.si span{animation:rise 1s both;animation-delay:calc(sibling-index() * 40ms)}
+@keyframes rise{from{opacity:0;transform:translateY(.4em)}to{opacity:1;transform:none}}
+/* per-char stagger via typed attr() */
+.at span{--k:attr(data-i type(<number>), 0);animation:rise 1s both;animation-delay:calc(var(--k) * 40ms)}
+/* fixed-attachment gradient through text */
+.fix{font:900 60px/1 "Segoe UI";background:linear-gradient(120deg,#f43,#fd0,#3fa) fixed;-webkit-background-clip:text;background-clip:text;color:transparent}
+/* shape-outside from a gradient */
+.sh{float:left;width:220px;height:220px;shape-outside:radial-gradient(circle at 0 50%, #000 60%, transparent 61%);shape-margin:12px}
+/* sideways */
+.sw{writing-mode:sideways-lr;height:140px;font:700 28px/1 "Segoe UI";letter-spacing:.3em}
+.vu{writing-mode:vertical-rl;text-orientation:upright;height:140px;font:700 28px/1 "Segoe UI";letter-spacing:.1em}
+</style>
+<div class=si style="font:30px/1 Consolas"><span>A</span><span>T</span><span>L</span><span>A</span><span>S</span></div>
+<div class=at style="font:30px/1 Consolas"><span data-i=0>A</span><span data-i=1>T</span><span data-i=2>L</span><span data-i=3>A</span><span data-i=4>S</span></div>
+<div class=fix>FIXED GRADIENT</div>
+<div class=sw>SIDEWAYS-LR</div><div class=vu>UPRIGHT</div>
+<div><span class=sh></span><span style="font:16px/1.4 Georgia">Reflow text around a shape. Reflow text around a shape. Reflow text around a shape. Reflow text around a shape. Reflow text around a shape. Reflow text around a shape. Reflow text around a shape.</span></div>
+<svg id=sv width=760 height=200 style="display:block;background:#111">
+  <path id=arc d="M20,170 C200,20 560,20 740,170" fill="none" stroke="#2a2a2a"/>
+  <text id=t1 font-size="28" fill="#fff" font-family="Segoe UI"><textPath href="#arc" startOffset="0">Atlas curve</textPath></text>
+  <text id=t2 x="20" y="60" font-size="28" fill="#0f8" font-family="Segoe UI" textLength="720" lengthAdjust="spacingAndGlyphs">STRETCH TO FIT</text>
+  <text id=t3 x="20" y="110" font-size="28" fill="#08f" font-family="Segoe UI" textLength="720" lengthAdjust="spacing">SPACING ONLY</text>
+  <text id=t4 x="20" y="150" font-size="28" fill="#f80" font-family="Segoe UI">NATURAL WIDTH</text>
+</svg>
+<pre id=out></pre>
+<script>
+var L=[]; function log(s){L.push(s)}
+function cs(el,prop){return getComputedStyle(el)[prop]}
+var sis=document.querySelectorAll('.si span');
+log('=== per-char stagger, sibling-index() in animation-delay ===');
+[].forEach.call(sis,function(s,i){L.push('  span'+i+' animation-delay = '+cs(s,'animationDelay'))});
+var ats=document.querySelectorAll('.at span');
+log('=== per-char stagger, typed attr() data-i in animation-delay ===');
+[].forEach.call(ats,function(s,i){L.push('  span'+i+' data-i='+s.dataset.i+' --k='+cs(s,'--k')+' animation-delay='+cs(s,'animationDelay'))});
+
+log('\n=== SVG textLength / lengthAdjust actual painted widths (target 720) ===');
+['t2','t3','t4'].forEach(function(id){var e=document.getElementById(id);
+ log('  #'+id+' getComputedTextLength='+e.getComputedTextLength().toFixed(2)+'  bbox.w='+e.getBBox().width.toFixed(2)+'  lengthAdjust='+e.getAttribute('lengthAdjust'));});
+
+log('\n=== per-char geometry along a path (for hand-rolled kinetic type) ===');
+var t1=document.getElementById('t1');
+var n=t1.getNumberOfChars();
+log('  chars='+n);
+for(var i=0;i<n;i+=3){ var b=t1.getExtentOfChar(i); log('   char '+i+' "'+t1.textContent[i]+'" x='+b.x.toFixed(1)+' y='+b.y.toFixed(1)+' rot='+t1.getRotationOfChar(i).toFixed(1)+'deg'); }
+log('  arc length='+document.getElementById('arc').getTotalLength().toFixed(1));
+
+log('\n=== background-attachment:fixed + background-clip:text ===');
+var f=document.querySelector('.fix');
+log('  computed background-attachment='+cs(f,'backgroundAttachment')+'  background-clip='+cs(f,'backgroundClip')+'  color='+cs(f,'color'));
+
+log('\n=== shape-outside from gradient ===');
+log('  computed='+cs(document.querySelector('.sh'),'shapeOutside')+'  shape-margin='+cs(document.querySelector('.sh'),'shapeMargin'));
+
+log('\n=== writing modes ===');
+var sw=document.querySelector('.sw').getBoundingClientRect(), vu=document.querySelector('.vu').getBoundingClientRect();
+log('  sideways-lr box '+sw.width.toFixed(1)+'x'+sw.height.toFixed(1)+'   vertical-rl+upright box '+vu.width.toFixed(1)+'x'+vu.height.toFixed(1));
+
+log('\n=== more supports ===');
+[['animation-timeline','view()'],['animation-range','entry 0% cover 30%'],['view-timeline','--v block'],['animation-timeline','scroll(root block)'],['offset-path','ray(45deg)'],['offset-path','url(#arc)'],['d','path("M0,0")'],['mask-image','url(#m)'],['mask-type','luminance'],['-webkit-mask-composite','source-in'],['background-clip','border-area'],['text-emphasis-position','over right'],['initial-letter','3 2'],['hanging-punctuation','first'],['font-optical-sizing','none'],['font-variant-alternates','styleset(ss01)'],['text-rendering','geometricPrecision'],['scale','1.2'],['rotate','12deg'],['translate','10px'],['transform-box','fill-box'],['clip-path','path("M0,0")'],['clip-path','shape(from 0 0, line to 10px 10px)'],['filter','drop-shadow(0 0 4px red)'],['text-shadow','0 0 0 red'],['will-change','font-weight'],['content-visibility','auto'],['container-type','inline-size'],['zoom','1.5'],['text-box-edge','ex alphabetic'],['text-box-edge','text alphabetic'],['line-height','1lh'],['width','1cap'],['width','1ic'],['width','1rlh'],['width','100dvh'],['width','100svh'],['width','100lvh'],['width','calc(1cqw)'],['font-size','clamp(1rem, 12vw, 20rem)'],['letter-spacing','calc(-0.02em + 0.3vw)']].forEach(function(a){
+  L.push((CSS.supports(a[0],a[1])?'YES ':'no  ')+a[0]+': '+a[1]);
+});
+// cap unit real value
+var d=document.createElement('div'); d.style.cssText='position:absolute;font:100px "Segoe UI";width:1cap;height:1ic'; document.body.appendChild(d);
+log('\n1cap @100px Segoe UI = '+d.getBoundingClientRect().width.toFixed(2)+'px   1ic = '+d.getBoundingClientRect().height.toFixed(2)+'px'); d.remove();
+document.getElementById('out').textContent=L.join('\n');
+</script>
