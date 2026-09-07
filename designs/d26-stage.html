@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A dark stage lit by one volumetric cone from an emitter above the frame.">
+<title>Stage | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* ===========================================================================
+   STAGE. One shaft of light falling into the viewport from an emitter above
+   the top edge, and a single subject standing in the pool it makes.
+
+   The cone is a conic-gradient with its origin OFF CANVAS, which is the part
+   that is easy to get wrong: put the origin inside the viewport and you get a
+   pie chart rather than a beam. Origin above the top edge, narrow angular
+   spread, and a vertical mask so it fades as it falls.
+
+   Type is kept OUT of the cone. Light over text is the fastest way to make a
+   cinematic page unreadable, so the beam lands to one side of everything that
+   has to be read.
+   ========================================================================= */
+@property --cone{syntax:'<angle>';inherits:false;initial-value:180deg}
+
+:root{
+  --st-bg:#05070d; --st-ink:#e8ecf5; --st-dim:#8b93a7;
+  --beam:#cfe4ff;
+  --hot:#ffd9a0;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--st-bg);color:var(--st-ink);font:14px/1.5 var(--sans);
+  height:100vh;height:100dvh;overflow:hidden;
+}
+button,input,select{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--hot);outline-offset:3px}
+
+/* The beam. Origin at 62% across and ABOVE the frame, so what reaches the
+   viewport is a wedge rather than a fan. */
+.beam{
+  position:fixed;inset:-30% -10% -10%;z-index:0;pointer-events:none;
+  background:conic-gradient(from var(--cone) at 62% -18%,
+    transparent 0deg,
+    color-mix(in srgb,var(--beam) 0%,transparent) 8deg,
+    color-mix(in srgb,var(--beam) 13%,transparent) 12deg,
+    color-mix(in srgb,var(--beam) 20%,transparent) 15deg,
+    color-mix(in srgb,var(--beam) 13%,transparent) 18deg,
+    transparent 24deg,
+    transparent 360deg);
+  -webkit-mask-image:linear-gradient(#000 0%,#000 46%,transparent 88%);
+  mask-image:linear-gradient(#000 0%,#000 46%,transparent 88%);
+  filter:blur(18px);
+}
+/* The pool where it lands. */
+.pool{
+  position:fixed;left:62%;top:70%;width:64vmin;height:26vmin;z-index:0;pointer-events:none;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(50% 50% at 50% 50%,color-mix(in srgb,var(--beam) 15%,transparent),transparent 70%);
+  filter:blur(20px);
+}
+@media (prefers-reduced-motion:no-preference){
+  .beam{animation:sweepcone 24s ease-in-out infinite alternate}
+  @keyframes sweepcone{to{--cone:172deg}}
+}
+.dust{
+  position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.2;mix-blend-mode:screen;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='d'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23d)'/%3E%3C/svg%3E")}
+
+.house{
+  position:relative;z-index:2;height:100vh;height:100dvh;
+  display:grid;grid-template-columns:minmax(0,1.05fr) minmax(300px,.72fr);
+  grid-template-rows:auto 1fr;gap:0 40px;padding:5dvh 4vw;
+}
+.top{grid-column:1/3;display:flex;align-items:baseline;gap:24px;flex-wrap:wrap;margin-bottom:22px}
+.top h1{margin:0;font-size:clamp(26px,3.4vw,46px);font-weight:300;letter-spacing:-.02em}
+.top .tabs{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.top .tab{padding:6px 13px;border-radius:2px;font-size:12.5px;color:var(--st-dim);
+  border:1px solid color-mix(in srgb,var(--st-ink) 10%,transparent)}
+.top .tab:hover{color:var(--st-ink)}
+.top .tab[aria-selected="true"]{background:var(--hot);color:#0d0a05;border-color:var(--hot);font-weight:600}
+
+/* Left: the roster, kept out of the beam. */
+.roster{overflow:auto;padding-right:14px}
+.grp{margin:20px 0 8px;font:600 10px/1 var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--st-dim)}
+.grp:first-child{margin-top:0}
+.cue{
+  position:relative;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:baseline;
+  padding:8px 12px;border-left:2px solid transparent;
+}
+.cue:hover{border-left-color:color-mix(in srgb,var(--hot) 50%,transparent);
+  background:color-mix(in srgb,var(--st-ink) 4%,transparent)}
+.cue.on{border-left-color:var(--hot);background:color-mix(in srgb,var(--hot) 9%,transparent)}
+.cue b{font-weight:500;font-size:13.5px;overflow-wrap:anywhere}
+.cue small{display:block;color:var(--st-dim);font-size:11.5px}
+.cue .plus{width:22px;height:22px;border-radius:50%;border:1px solid color-mix(in srgb,var(--st-ink) 22%,transparent);
+  font:400 12px/20px var(--mono);text-align:center}
+.cue .plus.in{background:var(--hot);border-color:var(--hot);color:#0d0a05}
+.cue .plan-tag{font:600 9.5px/1 var(--mono);letter-spacing:.1em;color:var(--st-dim)}
+
+/* Right: the subject, standing in the pool. */
+.subject{
+  align-self:center;padding:30px 32px;
+  border:1px solid color-mix(in srgb,var(--st-ink) 12%,transparent);
+  background:linear-gradient(color-mix(in srgb,var(--st-ink) 5%,transparent),transparent);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  box-shadow:0 40px 90px -60px #000;
+}
+.subject .cat{font:600 10px/1 var(--mono);letter-spacing:.28em;text-transform:uppercase;color:var(--hot)}
+.subject h2{margin:14px 0 10px;font-size:clamp(22px,2.6vw,34px);font-weight:300;line-height:1.15}
+.subject p{margin:0;color:var(--st-dim);font-size:14px;max-width:44ch}
+.subject .meta{margin-top:18px;display:flex;gap:18px;flex-wrap:wrap;
+  font:600 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--st-dim)}
+.deck{margin-top:22px;padding-top:18px;border-top:1px solid color-mix(in srgb,var(--st-ink) 10%,transparent);
+  max-height:34dvh;overflow:auto}
+.deck h3{margin:0 0 8px;font:600 10px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--st-dim)}
+.deck section{margin-bottom:14px}
+#setup .os,#filters .chip{border:1px solid color-mix(in srgb,var(--st-ink) 14%,transparent);
+  padding:3px 9px;font-size:11.5px;color:var(--st-dim);border-radius:2px}
+#setup .os.on,#filters .chip.on{background:var(--hot);color:#0d0a05;border-color:var(--hot)}
+#setup input{border:1px solid color-mix(in srgb,var(--st-ink) 14%,transparent);width:56px;padding:3px 6px;color:var(--st-ink)}
+#setup .num{display:none}
+#setup,#filters,#side{font-size:12.5px}
+.pane{font-size:13px}
+
+@media (max-width:1000px){
+  .house{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto}
+  .top{grid-column:1}
+  .subject{align-self:start}
+  .pool{display:none}
+}
+</style>
+</head>
+<body>
+<div class="beam"></div><div class="pool"></div><div class="dust"></div>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes, esc = P.esc;
+
+document.body.insertAdjacentHTML('beforeend', `
+<div class="house">
+  <header class="top">
+    <h1>Stage</h1>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Stage views"></nav>
+  </header>
+  <main class="roster" id="main-content"><div id="stage" tabindex="-1"></div></main>
+  <aside>
+    <div class="subject" id="subject"></div>
+    <div class="deck">
+      <section><h3>Rig</h3><div id="themehost"></div></section>
+      <section><h3>Machine</h3><div id="setup"></div></section>
+      <section><h3>Cues</h3><div id="filters"></div></section>
+      <section><h3>Note</h3><div id="side" aria-label="Component inspector"></div></section>
+    </div>
+  </aside>
+</div>`);
+
+function render(stage){
+  const visible = A.visibleComponents();
+  const subject = document.getElementById('subject');
+  if(!visible.length){
+    stage.innerHTML = '<p style="color:var(--st-dim)">No cues on this filter.</p>';
+    subject.innerHTML = '';
+    return;
+  }
+  const groups = new Map();
+  visible.forEach(c => {
+    if(!groups.has(c.family)) groups.set(c.family, []);
+    groups.get(c.family).push(c);
+  });
+  const famName = id => (A.state.data.families.find(f => f.id === id) || {name:id}).name;
+  stage.innerHTML = [...groups.entries()].map(([fam, items]) => `
+    <p class="grp">${esc(famName(fam))} <span style="opacity:.6">${items.length}</span></p>
+    ${items.slice(0, 20).map(c => `<article class="cue${A.state.selected === c.id ? ' on' : ''}" data-node="1" data-comp="${esc(c.id)}">
+      <span><b>${esc(c.name)}</b><small>${esc(c.detail)}</small></span>${add(c)}
+    </article>`).join('')}`).join('');
+
+  const lit = visible.find(c => c.id === A.state.selected) || visible[0];
+  subject.innerHTML = `
+    <p class="cat">${esc(A.laneName(lit.lane))}</p>
+    <h2>${esc(lit.name)}</h2>
+    <p>${esc(lit.detail)}</p>
+    <div class="meta"><span>${esc(lit.kind)}</span>${lit.sub ? `<span>${esc(lit.sub)}</span>` : ''}</div>`;
+  wire(stage);
+  counts();
+}
+
+function add(c){
+  if(!A.canBuild(c)){
+    const s = A.setupStateFor(c);
+    return `<span class="plan-tag">${esc(s.id === 'choose-platform' ? 'no rig' : s.id === 'review-required' ? 'review' : s.id === 'hosted' ? 'hosted' : 'no cue')}</span>`;
+  }
+  const inB = A.state.basket.includes(c.id);
+  return `<button class="plus${inB ? ' in' : ''}" data-add="${esc(c.id)}" aria-label="${inB?'Remove':'Add'} ${esc(c.name)}">${inB ? '✓' : '+'}</button>`;
+}
+
+function wire(stage){
+  stage.querySelectorAll('[data-node]').forEach(n => {
+    n.addEventListener('click', e => {
+      if(e.target.closest('[data-add]')) return;
+      A.select(n.dataset.comp);
+      render(stage);
+    });
+  });
+  stage.querySelectorAll('[data-add]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      if(A.state.basket.includes(id)) A.removeFromBasket(id); else A.addToBasket(id);
+      P.draw(); counts();
+    });
+  });
+}
+
+function counts(){
+  const c = A.counts();
+  document.querySelectorAll('[data-basket-count]').forEach(n => n.textContent = c.basket);
+  document.querySelectorAll('[data-visible-count]').forEach(n => n.textContent = c.visibleComponents);
+}
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+P.mount({
+  renderMap: render,
+  onFilter: () => { if(P.tab === 'map') render(document.getElementById('stage')); counts(); },
+  onSelect: counts,
+});
+A.on(counts);
+</script>
+</body>
+</html>

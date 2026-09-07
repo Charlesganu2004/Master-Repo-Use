@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A risograph print: two spot inks that miss registration, with the overlap making a third colour.">
+<title>Riso | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* ===========================================================================
+   RISO. Every element is printed TWICE in two spot inks that do not quite line
+   up, and their overlap generates a third colour through multiply blending.
+   That misregistration is the whole hook and it is also the interaction: focus
+   a row and the plates snap into register.
+
+   Two inks only, ever. A riso with three spot colours is a riso with a mistake
+   in it, and the third colour on this page is always the overlap rather than a
+   third plate.
+   ========================================================================= */
+:root{
+  --stock:#efe9dc;                 /* paper */
+  --ink-a:#0050c8;                 /* federal blue */
+  --ink-b:#ff5a48;                 /* fluorescent orange */
+  --rs-ink:#181410;
+  --rs-dim:#7a7266;
+  --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --reg:1;                         /* 1 = out of register, 0 = registered */
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:#ddd6c6;color:var(--rs-ink);font:14px/1.45 var(--sans);
+  height:100vh;height:100dvh;overflow:hidden;padding:4dvh 3vw;
+}
+button,input,select{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--ink-a);outline-offset:2px}
+
+/* The sheet, with a visible paper edge and registration marks at its corners. */
+.sheet{
+  position:relative;height:100%;background:var(--stock);
+  padding:26px 30px;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(0,0,0,.4), 0 24px 60px -30px #000;
+  display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:auto auto 1fr;
+  gap:0 26px;
+}
+.regmark{position:absolute;width:16px;height:16px;pointer-events:none;opacity:.5}
+.regmark::before,.regmark::after{content:'';position:absolute;background:var(--rs-ink)}
+.regmark::before{left:7px;top:0;width:1px;height:100%}
+.regmark::after{top:7px;left:0;height:1px;width:100%}
+.rm1{left:8px;top:8px}.rm2{right:8px;top:8px}.rm3{left:8px;bottom:8px}.rm4{right:8px;bottom:8px}
+
+/* Halftone screens at the classic 60 degree separation, one per ink. */
+.sheet::before{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:5;mix-blend-mode:multiply;opacity:.22;
+  background:
+    repeating-linear-gradient(15deg,#00000012 0 1px,transparent 1px 4px),
+    repeating-linear-gradient(75deg,#00000012 0 1px,transparent 1px 4px);
+}
+
+/* The two-plate primitive. Any element carrying .plate prints twice through
+   pseudo-elements, offset in opposite directions, multiplying where they meet. */
+.plate{position:relative;isolation:isolate}
+.plate > .pa,.plate > .pb{display:block;mix-blend-mode:multiply}
+.plate > .pa{color:var(--ink-a);transform:translate(calc(var(--reg) * -2px),calc(var(--reg) * -1.5px))}
+.plate > .pb{position:absolute;inset:0;color:var(--ink-b);
+  transform:translate(calc(var(--reg) * 2px),calc(var(--reg) * 1.5px))}
+@media (prefers-reduced-motion:no-preference){
+  .plate > .pa,.plate > .pb{transition:transform 240ms cubic-bezier(.2,.9,.2,1)}
+  .drift{animation:drift 6s ease-in-out infinite alternate}
+  @keyframes drift{to{--reg:1.4}}
+}
+
+.mast{grid-column:1/3;position:relative;margin-bottom:6px}
+.mast h1{margin:0;font-size:clamp(40px,7.4vw,104px);line-height:.84;letter-spacing:-.04em;font-weight:800;text-transform:uppercase}
+.mast .sub{margin:8px 0 0;font:700 11px/1 var(--mono);letter-spacing:.3em;text-transform:uppercase;color:var(--rs-dim)}
+
+.bar{grid-column:1/3;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:10px 0;border-top:2px solid var(--rs-ink);border-bottom:2px solid var(--rs-ink);margin-bottom:14px}
+.tabs{display:flex;flex-wrap:wrap;gap:0}
+.tabs .tab{padding:3px 10px;font:700 11px/1.5 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--rs-dim)}
+.tabs .tab:hover{color:var(--rs-ink)}
+.tabs .tab[aria-selected="true"]{background:var(--ink-a);color:var(--stock)}
+.cnt{margin-left:auto;display:flex;gap:14px;font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--rs-dim)}
+.cnt b{color:var(--ink-b)}
+
+.body{overflow:auto;padding-right:8px}
+.side{overflow:auto;border-left:2px solid var(--rs-ink);padding-left:20px}
+.side h3{margin:0 0 8px;font:700 10px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--ink-a)}
+.side section{margin-bottom:18px}
+
+.grp{margin:18px 0 8px;font:800 12px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase}
+.grp:first-child{margin-top:0}
+.run{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.card{
+  position:relative;padding:11px 13px;border:2px solid var(--rs-ink);min-height:74px;
+  --reg:1;
+}
+.card:hover,.card.on{--reg:0;background:color-mix(in srgb,var(--ink-b) 14%,var(--stock))}
+.card b{display:block;font-size:13.5px;font-weight:700;overflow-wrap:anywhere;line-height:1.25}
+.card small{display:block;margin-top:4px;font-size:11px;color:var(--rs-dim);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .plus{position:absolute;right:8px;bottom:8px;width:20px;height:20px;border:2px solid var(--rs-ink);
+  font:800 11px/16px var(--mono);text-align:center}
+.card .plus.in{background:var(--ink-a);border-color:var(--ink-a);color:var(--stock)}
+.card .plan-tag{position:absolute;right:9px;bottom:9px;font:700 9px/1 var(--mono);letter-spacing:.08em;color:var(--rs-dim)}
+
+#setup .os,#filters .chip{border:2px solid var(--rs-ink);padding:2px 8px;font:700 11px/1.5 var(--mono);text-transform:uppercase;letter-spacing:.06em}
+#setup .os.on,#filters .chip.on{background:var(--ink-a);color:var(--stock);border-color:var(--ink-a)}
+#setup input{border:2px solid var(--rs-ink);padding:2px 6px;width:54px}
+#setup .num{display:none}
+#setup,#filters,#side{font-size:12.5px}
+.pane{font-size:13px}
+
+@media (max-width:980px){
+  .sheet{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto}
+  .mast,.bar{grid-column:1}
+  .side{border-left:0;border-top:2px solid var(--rs-ink);padding:14px 0 0;max-height:36dvh}
+}
+</style>
+</head>
+<body>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes, esc = P.esc;
+
+document.body.insertAdjacentHTML('beforeend', `
+<div class="sheet">
+  <span class="regmark rm1"></span><span class="regmark rm2"></span>
+  <span class="regmark rm3"></span><span class="regmark rm4"></span>
+
+  <header class="mast">
+    <div class="plate drift"><h1 class="pa">Riso</h1><h1 class="pb" aria-hidden="true">Riso</h1></div>
+    <p class="sub">Two inks. The third colour is the overlap.</p>
+  </header>
+
+  <div class="bar">
+    <div class="tabs" id="tabs" role="tablist" aria-label="Riso sections"></div>
+    <div class="cnt"><span>Pulled <b data-visible-count>0</b></span><span>Held <b data-basket-count>0</b></span></div>
+  </div>
+
+  <main class="body" id="main-content"><div id="stage" tabindex="-1"></div></main>
+
+  <aside class="side">
+    <section><h3>Press</h3><div id="themehost"></div></section>
+    <section><h3>Machine</h3><div id="setup"></div></section>
+    <section><h3>Plates</h3><div id="filters"></div></section>
+    <section><h3>Note</h3><div id="side" aria-label="Component inspector"></div></section>
+  </aside>
+</div>`);
+
+function render(stage){
+  const groups = new Map();
+  A.visibleComponents().forEach(c => {
+    if(!groups.has(c.family)) groups.set(c.family, []);
+    groups.get(c.family).push(c);
+  });
+  if(!groups.size){ stage.innerHTML = '<p>Nothing on this run.</p>'; return; }
+  const famName = id => (A.state.data.families.find(f => f.id === id) || {name:id}).name;
+  stage.innerHTML = [...groups.entries()].map(([fam, items]) => `
+    <p class="grp">${esc(famName(fam))} / ${items.length}</p>
+    <div class="run">${items.slice(0, 24).map(c => `
+      <article class="card${A.state.selected === c.id ? ' on' : ''}" data-node="1" data-comp="${esc(c.id)}">
+        <b>${esc(c.name)}</b><small>${esc(c.detail)}</small>${add(c)}
+      </article>`).join('')}</div>`).join('');
+  wire(stage);
+  counts();
+}
+
+function add(c){
+  if(!A.canBuild(c)){
+    const s = A.setupStateFor(c);
+    return `<span class="plan-tag">${esc(s.id === 'choose-platform' ? 'SET OS' : s.id === 'review-required' ? 'REVIEW' : s.id === 'hosted' ? 'HOSTED' : 'NO RUN')}</span>`;
+  }
+  const inB = A.state.basket.includes(c.id);
+  return `<button class="plus${inB ? ' in' : ''}" data-add="${esc(c.id)}" aria-label="${inB?'Remove':'Add'} ${esc(c.name)}">${inB ? '×' : '+'}</button>`;
+}
+
+function wire(stage){
+  stage.querySelectorAll('[data-node]').forEach(n => {
+    n.addEventListener('click', e => {
+      if(e.target.closest('[data-add]')) return;
+      A.select(n.dataset.comp);
+      P.popover(e.clientX, e.clientY, n.dataset.comp);
+      stage.querySelectorAll('.card.on').forEach(a => a.classList.remove('on'));
+      n.classList.add('on');
+    });
+  });
+  stage.querySelectorAll('[data-add]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      if(A.state.basket.includes(id)) A.removeFromBasket(id); else A.addToBasket(id);
+      P.draw(); counts();
+    });
+  });
+}
+
+function counts(){
+  const c = A.counts();
+  document.querySelectorAll('[data-basket-count]').forEach(n => n.textContent = c.basket);
+  document.querySelectorAll('[data-visible-count]').forEach(n => n.textContent = c.visibleComponents);
+}
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+P.mount({
+  renderMap: render,
+  onFilter: () => { if(P.tab === 'map') render(document.getElementById('stage')); counts(); },
+  onSelect: counts,
+});
+A.on(counts);
+</script>
+</body>
+</html>
