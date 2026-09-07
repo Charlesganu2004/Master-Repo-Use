@@ -13,20 +13,27 @@ separate mechanisms and they are easy to confuse:
 
 Mechanism 2 is automatic but it is a JUDGEMENT. The model decides. That is fine
 for "use the pdf skill when there is a pdf" and useless for "always run these
-four first", because the one time it matters is the time the model does not
-think to look.
+first", because the one time it matters is the time the model does not think to
+look.
 
 This hook is mechanism 3, and it is the only deterministic one. UserPromptSubmit
 fires on EVERY prompt before the model reads it, and its `additionalContext` is
 injected into that turn. Nothing is left to judgement: the rule arrives with the
 prompt whether the model would have thought of it or not.
 
-COST, because this is charged on every single turn of every session forever.
-The core block below is deliberately short, and the conditional lines only
-attach when the prompt actually looks like that kind of work. An unconditional
-dump of every rule would be a few hundred tokens per turn, permanently, and
-would be exactly the kind of always-loaded bloat that docs/auto-mode-block.txt
-already has a budget test for.
+COST, stated because it is real and was accepted rather than hidden. This rides
+on every turn of every session forever. Seven mandatory rules is about 1.2 kB,
+call it 290 tokens per prompt. Charles asked for plan, caveman, design,
+anti-slop and full-output to fire on every prompt and conversation across chat,
+cowork and code, was told the price, and confirmed. So the core is unconditional
+and the budget test tracks the number rather than arguing with the decision.
+The four LANES stay conditional on top of it, because a lane that fires on a
+prompt it does not fit is noise rather than enforcement.
+
+Slash commands get the pipeline too. An earlier version skipped them on the
+reasoning that the user had already named what they wanted, which was wrong for
+this repository: "every command has this too" was the instruction, and a
+/command is exactly where a design or full-output rule most needs to hold.
 
 Exit codes: 0 always. A hook that fails closed on a malformed event would make
 the session unusable, and this one is advisory rather than a guard.
@@ -37,12 +44,18 @@ import json
 import re
 import sys
 
-# Always. Four rules, one line each, because this rides on every prompt.
-CORE = """Standing pipeline for this turn, before anything else:
-1. Compress repeatedly-loaded prose with the caveman skills; route commands through rtk. Retrieve matching entries only, never a whole catalog or file tree.
-2. Never compact a skill, tool, agent, plugin, MCP server or catalog entry. Global, every conversation and every command. Only Charles asking in that message lifts it.
-3. Full output. No "rest of code", no "similar to above", no skeleton where an implementation was asked for. If you run out of room, stop at a clean break and say what remains.
-4. Verify before claiming. Run the check, quote the real output, and report a failure first."""
+# MANDATORY, every prompt, no condition. Charles asked for these five to run on
+# every prompt and conversation across chat, cowork and code, was told what the
+# per-turn cost of that is, and confirmed. So they are unconditional and the
+# budget test below tracks the price rather than arguing with it.
+CORE = """Standing pipeline. Run these before anything else, every prompt, no exceptions:
+1. PLAN first. State the read and the approach before producing anything. On more than a couple of steps, write the plan down and work it.
+2. CAVEMAN. Compress repeatedly-loaded prose with the caveman skills; route commands through rtk. Retrieve matching entries only, never a whole catalog, file tree or log.
+3. DESIGN. Any user-visible output goes through the design taste skills: state the design read and the dials, then build.
+4. ANTI-SLOP. No em dashes anywhere. One theme, one accent, one radius scale per surface. No AI-purple, no three-equal-cards, no generic names, no invented precision, no filler verbs, no fake screenshots.
+5. FULL OUTPUT. No "rest of code", no "similar to above", no skeleton where an implementation was asked for. Out of room means stop at a clean break and say exactly what remains.
+6. NEVER COMPACT a skill, tool, agent, plugin, MCP server or catalog entry. Global, every conversation and every command. Only Charles asking in that message lifts it.
+7. VERIFY before claiming. Run the check, quote the real output, report a failure first."""
 
 # Conditional. Each costs nothing on the turns it does not apply to.
 #
@@ -57,22 +70,22 @@ CORE = """Standing pipeline for this turn, before anything else:
 LANES = (
     (r"\b(secur|vulnerab|exploit|secret|credential|token|auth|malware|scan|"
      r"inject|breach|leak)\w*",
-     "5. Security-relevant: findings need evidence that can be quoted. A pattern match is a reason to look, never a reason to delete."),
+     "8. Security-relevant: findings need evidence that can be quoted. A pattern match is a reason to look, never a reason to delete."),
 
     (r"\b(ui|ux|design|css|html|page|site|website|layout|theme|palette|"
      r"typograph|figma|landing|frontend|front-end|visual|mockup|style)\w*",
-     "5. UI work: load the design taste skills before writing markup, and state the design read and the dials first. Anti-slop rules apply: no em dashes anywhere, one theme per page, one accent, one radius scale."),
+     "8. UI work specifically: audit the existing surface before replacing it, and name the aesthetic family you are reaching for rather than defaulting."),
 
     (r"\b(install|clone|dependenc|package|npm|pip|repositor|third.?party|"
      r"skill pack|marketplace|mcp server)\w*",
-     "5. Adding anything third-party: run the dep-audit path first. Catalogued is not vetted, and scripts/install_catalog_skill.py is the reviewed route into a skill root."),
+     "8. Adding anything third-party: run the dep-audit path first. Catalogued is not vetted, and scripts/install_catalog_skill.py is the reviewed route into a skill root."),
 
     (r"\b(pricing|version|latest|current|today|release|changelog|"
      r"model name|quota)\w*",
-     "5. This asks for something that changes: retrieve it, do not recall it. Cite what you read."),
+     "8. This asks for something that changes: retrieve it, do not recall it. Cite what you read."),
 )
 
-ORCHESTRATION = ("6. More than about three independent pieces of work here: fan them out, "
+ORCHESTRATION = ("9. More than about three independent pieces of work here: fan them out, "
                  "then verify the results adversarially rather than trusting the first pass.")
 
 # A prompt long enough to hold several asks usually does.
@@ -102,32 +115,58 @@ def context_for(prompt: str) -> str:
     return "\n".join(parts)
 
 
+def find_prompt(event: dict) -> str:
+    """The user's text, wherever this client happens to put it.
+
+    Claude Code nests it under `input`. Antigravity's PreInvocation payload is a
+    trajectory rather than a single prompt, so the last user message is the
+    closest equivalent. Neither shape is guessed at: both are read, and anything
+    unrecognised yields an empty string and a silent no-op.
+    """
+    for holder in (event.get("input"), event):
+        if isinstance(holder, dict) and isinstance(holder.get("prompt"), str):
+            return holder["prompt"]
+    messages = event.get("messages") or event.get("trajectory")
+    if isinstance(messages, list):
+        for message in reversed(messages):
+            if isinstance(message, dict) and message.get("role") == "user":
+                content = message.get("content")
+                if isinstance(content, str):
+                    return content
+                if isinstance(content, list):        # content-part arrays
+                    return " ".join(part.get("text", "") for part in content
+                                    if isinstance(part, dict))
+    return ""
+
+
 def main() -> int:
+    # One source for the rules, two output shapes. Writing the pipeline into a
+    # second file for Antigravity would guarantee the two drift, and the whole
+    # point is that every client gets the SAME standing rules.
+    antigravity = "--antigravity" in sys.argv
+
     try:
         event = json.load(sys.stdin)
     except Exception:
         return 0                      # never break a session over a bad event
 
-    prompt = ""
-    for holder in (event.get("input"), event):
-        if isinstance(holder, dict) and isinstance(holder.get("prompt"), str):
-            prompt = holder["prompt"]
-            break
+    prompt = find_prompt(event)
     if not prompt.strip():
         return 0
+    context = context_for(prompt)
 
-    # An explicit slash command is already an explicit instruction. Injecting the
-    # standing pipeline on top of it is noise, and worse, it competes with the
-    # skill the user just named.
-    if prompt.lstrip().startswith("/"):
-        return 0
-
-    print(json.dumps({
-        "hookSpecificOutput": {
-            "hookEventName": "UserPromptSubmit",
-            "additionalContext": context_for(prompt),
-        }
-    }))
+    if antigravity:
+        # PreInvocation fires before the model is called. ephemeralMessage is the
+        # right slot: it reaches the model for this invocation without being
+        # recorded as something the user said.
+        print(json.dumps({"injectSteps": [{"ephemeralMessage": context}]}))
+    else:
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "UserPromptSubmit",
+                "additionalContext": context,
+            }
+        }))
     return 0
 
 

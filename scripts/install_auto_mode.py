@@ -181,6 +181,49 @@ def register_hook(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
     return "; ".join(parts) or "nothing to do"
 
 
+def register_antigravity_hook(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
+    """Give Antigravity the same standing pipeline, in its own hook format.
+
+    Antigravity is the only other client verified to have a real hook mechanism,
+    so it is the only other one where the rules can be enforced rather than
+    merely written down. Codex, the Gemini CLI and Copilot get the same rules
+    through their instruction files, where the written rule IS the mechanism.
+
+    Schema read from antigravity.google/docs/hooks on 2026-09-07 rather than
+    guessed. Three things about it differ from Claude Code and each would break
+    the hook silently if assumed:
+      the file is ~/.gemini/config/hooks.json, keyed by hook NAME at the top level
+      the per-prompt event is PreInvocation, not UserPromptSubmit
+      PreInvocation handlers sit directly under the event key and take no matcher
+    """
+    hook = repo / "scripts" / "hooks" / "skill_pipeline.py"
+    if not hook.exists():
+        return "skipped, hook missing"
+    config = home / ".gemini" / "config" / "hooks.json"
+
+    data: dict = {}
+    if config.exists():
+        raw = config.read_text(encoding="utf-8")
+        try:
+            data = json.loads(raw)
+        except ValueError:
+            return "REFUSED: hooks.json is not valid JSON, refusing to overwrite it"
+        if not dry:
+            config.with_suffix(".json.bak").write_text(raw, encoding="utf-8")
+
+    command = f'{json.dumps(sys.executable)} {json.dumps(str(hook))} --antigravity'
+    entry = data.setdefault("master-repo-pipeline", {})
+    existed = bool(entry.get("PreInvocation"))
+    entry["enabled"] = True
+    entry["PreInvocation"] = [{"type": "command", "command": command, "timeout": 15}]
+
+    if dry:
+        return "would refresh PreInvocation" if existed else "would register PreInvocation"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    return "refreshed PreInvocation" if existed else "registered PreInvocation"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Install Master Repo auto mode.")
     parser.add_argument("--repo", default=str(pathlib.Path(__file__).resolve().parents[1]))
@@ -211,6 +254,7 @@ def main() -> int:
     for client, root in SKILL_ROOTS.items():
         print(f"skills   : {client:<12} {install_skill(repo, home, dry, root)}")
     print(f"hook     : {'skipped by request' if args.no_hook else register_hook(repo, home, dry)}")
+    print(f"ag hook  : {'skipped by request' if args.no_hook else register_antigravity_hook(repo, home, dry)}")
     for name, rel in CLIENTS.items():
         print(f"{name:<9}: {upsert_block(home / rel, body, dry)}  ({rel})")
 

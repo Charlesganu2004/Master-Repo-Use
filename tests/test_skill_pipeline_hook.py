@@ -11,10 +11,11 @@ Only the third is deterministic. The first two both depend on somebody deciding,
 and the one turn where it matters is the turn nobody thought to decide.
 
 The other half of this file is the cost. This text is prepended to every prompt
-in every session forever, so the core stays short and the lane lines only attach
-when the prompt is actually that kind of work. A test that lets the injected
-block grow without bound would recreate exactly the always-loaded bloat that
-docs/auto-mode-block.txt already has a budget for.
+in every session forever. Seven mandatory rules is about 1.2 kB, call it 290
+tokens a turn; that price was quoted to Charles and accepted, so the ceiling
+here exists to make the NEXT addition a decision rather than a drift. The four
+lanes stay conditional on top of the core, because a lane firing on a prompt it
+does not fit is noise rather than enforcement.
 """
 from __future__ import annotations
 
@@ -43,11 +44,25 @@ def run(prompt: str) -> str:
 
 
 class ItFiresOnEveryOrdinaryPrompt(unittest.TestCase):
-    def test_a_plain_prompt_gets_the_core_rules(self):
+    MANDATORY = ("PLAN first", "CAVEMAN", "DESIGN", "ANTI-SLOP",
+                 "FULL OUTPUT", "NEVER COMPACT", "VERIFY")
+
+    def test_a_plain_prompt_gets_every_mandatory_rule(self):
+        """All seven, unconditionally. Charles asked for these on every prompt
+        and every conversation across chat, cowork and code, was told the
+        per-turn cost, and confirmed. Nothing here is allowed to be conditional
+        on the prompt looking like the right kind of work."""
         out = run("fix the flaky test in the retry module")
         self.assertTrue(out, "the hook emitted nothing for an ordinary prompt")
-        for rule in ("caveman", "Never compact a skill", "Full output", "Verify before claiming"):
-            self.assertIn(rule, out, f"the core is missing: {rule}")
+        for rule in self.MANDATORY:
+            self.assertIn(rule, out, f"the mandatory core is missing: {rule}")
+
+    def test_the_mandatory_core_survives_a_prompt_about_nothing(self):
+        """The worst case for a conditional design rule is a prompt with no
+        design words in it, which is exactly when it used to vanish."""
+        out = run("what time is it")
+        for rule in self.MANDATORY:
+            self.assertIn(rule, out, f"{rule} dropped out on an unrelated prompt")
 
     def test_the_event_name_is_the_one_the_client_expects(self):
         event = json.dumps({"input": {"prompt": "hello"}})
@@ -64,11 +79,17 @@ class ItFiresOnEveryOrdinaryPrompt(unittest.TestCase):
             self.assertTrue(proc.stdout.strip(), f"no output for {event}")
 
 
-class ItStaysQuietWhenItShould(unittest.TestCase):
-    def test_a_slash_command_is_left_alone(self):
-        """The user already named what they want. Injecting competes with it."""
-        self.assertEqual(run("/brandkit make me a board"), "")
-        self.assertEqual(run("  /code-review high"), "")
+class ItFiresOnCommandsToo(unittest.TestCase):
+    def test_a_slash_command_gets_the_pipeline_too(self):
+        """Reversed deliberately. The first version skipped slash commands on
+        the reasoning that the user had already said what they wanted. The
+        instruction here is "every command has this too", and a /command is
+        exactly where a design or full-output rule most needs to hold."""
+        for command in ("/brandkit make me a board", "  /code-review high"):
+            out = run(command)
+            self.assertTrue(out, f"{command} got no pipeline")
+            self.assertIn("FULL OUTPUT", out)
+            self.assertIn("ANTI-SLOP", out)
 
     def test_an_empty_prompt_produces_nothing(self):
         self.assertEqual(run("   "), "")
@@ -83,10 +104,14 @@ class ItStaysQuietWhenItShould(unittest.TestCase):
 class TheLanesAttachOnlyWhenRelevant(unittest.TestCase):
     """Each conditional line costs nothing on the turns it does not apply to."""
 
-    def test_ui_work_pulls_in_the_design_rules(self):
+    def test_ui_work_adds_the_audit_rule_on_top_of_the_mandatory_design_one(self):
+        """The design and anti-slop rules moved into the unconditional core, so
+        the UI lane now carries only what is specific to UI: audit before
+        replacing, and name the aesthetic rather than defaulting."""
         out = run("redo the landing page css and make the layout cooler")
-        self.assertIn("design taste skills", out)
-        self.assertIn("no em dashes", out)
+        self.assertIn("audit the existing surface", out)
+        self.assertIn("DESIGN.", out)            # from the core, not the lane
+        self.assertIn("No em dashes anywhere", out)
 
     def test_adding_a_dependency_pulls_in_the_audit_rule(self):
         out = run("add this npm package to the project")
@@ -102,7 +127,7 @@ class TheLanesAttachOnlyWhenRelevant(unittest.TestCase):
 
     def test_an_unrelated_prompt_gets_no_lane_line(self):
         out = run("rename this variable")
-        self.assertNotIn("5.", out, "a lane attached to a prompt it does not fit")
+        self.assertNotIn("8.", out, "a lane attached to a prompt it does not fit")
 
     def test_only_one_lane_ever_attaches(self):
         """Stacking them would defeat the budget on any broad prompt."""
@@ -125,16 +150,98 @@ class ItAsksForFanOutOnlyOnBigPrompts(unittest.TestCase):
 class TheInjectedBlockStaysCheap(unittest.TestCase):
     """Charged on every prompt of every session, so it needs a ceiling."""
 
-    def test_the_core_is_small(self):
-        self.assertLess(len(pipeline.CORE.encode("utf-8")), 800,
-                        "the always-injected core is growing; move detail into a skill")
+    def test_the_core_is_tracked_not_unbounded(self):
+        """Seven mandatory rules is roughly 1.2 kB, call it 290 tokens a prompt.
+        That price was quoted and accepted. The ceiling exists so the next
+        addition is a decision rather than a drift."""
+        self.assertLess(len(pipeline.CORE.encode("utf-8")), 1400,
+                        "the always-injected core grew past what was agreed")
 
-    def test_the_worst_case_is_still_small(self):
+    def test_the_worst_case_stays_bounded(self):
         worst = max(len(run(p).encode("utf-8")) for p in (
             "redo the css landing page design " + "x " * 400,
             "install an npm package and also scan it, plus update docs",
         ))
-        self.assertLess(worst, 1400, "the worst-case injection is too large per turn")
+        self.assertLess(worst, 1900, "the worst-case injection is too large per turn")
+
+
+class ItServesAntigravityToo(unittest.TestCase):
+    """Antigravity is the only other client verified to have a real hook, so it
+    is the only other one where these rules are enforced rather than merely
+    written down. Its schema differs in three ways that each fail silently if
+    assumed, so each is pinned here.
+
+    One hook script serves both clients on purpose. A second file holding the
+    same rules for Antigravity would drift from this one, and the entire point
+    is that every client gets the SAME standing pipeline.
+    """
+
+    def ag(self, event: dict) -> dict:
+        proc = subprocess.run([sys.executable, str(HOOK), "--antigravity"],
+                              input=json.dumps(event), capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0)
+        return json.loads(proc.stdout) if proc.stdout.strip() else {}
+
+    def test_it_emits_the_injectsteps_shape_not_the_claude_shape(self):
+        out = self.ag({"input": {"prompt": "build a thing"}})
+        self.assertIn("injectSteps", out)
+        self.assertNotIn("hookSpecificOutput", out)
+
+    def test_the_context_rides_as_an_ephemeral_message(self):
+        """ephemeralMessage reaches the model for this invocation without being
+        recorded as something the user said."""
+        step = self.ag({"input": {"prompt": "build a thing"}})["injectSteps"][0]
+        self.assertIn("ephemeralMessage", step)
+        self.assertIn("PLAN first", step["ephemeralMessage"])
+
+    def test_it_reads_the_last_user_message_from_a_trajectory(self):
+        """PreInvocation hands over a trajectory, not a single prompt field."""
+        out = self.ag({"messages": [
+            {"role": "user", "content": "an older thing"},
+            {"role": "assistant", "content": "done"},
+            {"role": "user", "content": "scan this for a vulnerability"}]})
+        self.assertIn("evidence that can be quoted", out["injectSteps"][0]["ephemeralMessage"])
+
+    def test_it_reads_a_content_part_array(self):
+        out = self.ag({"messages": [{"role": "user", "content": [{"text": "redo the css layout"}]}]})
+        self.assertIn("audit the existing surface", out["injectSteps"][0]["ephemeralMessage"])
+
+    def test_both_clients_receive_identical_rules(self):
+        prompt = "refactor the parser"
+        claude = run(prompt)
+        antigravity = self.ag({"input": {"prompt": prompt}})["injectSteps"][0]["ephemeralMessage"]
+        self.assertEqual(claude, antigravity, "the two clients drifted apart")
+
+
+class TheInstallerRegistersAntigravity(unittest.TestCase):
+    """Every one of these was read from the vendor docs, not assumed."""
+
+    def test_it_writes_the_documented_path(self):
+        self.assertIn('".gemini" / "config" / "hooks.json"', INSTALLER)
+
+    def test_it_uses_preinvocation_not_userpromptsubmit(self):
+        """Antigravity has no UserPromptSubmit. Binding to one would never fire."""
+        self.assertIn('entry["PreInvocation"]', INSTALLER)
+
+    def test_preinvocation_carries_no_matcher(self):
+        """The docs are explicit that the matcher is ignored for this event."""
+        block = INSTALLER[INSTALLER.index("def register_antigravity_hook"):]
+        block = block[:block.index("def main")]
+        self.assertNotIn('"matcher"', block)
+
+    def test_the_entry_is_keyed_by_hook_name_at_the_top_level(self):
+        self.assertIn('data.setdefault("master-repo-pipeline", {})', INSTALLER)
+
+    def test_it_passes_the_antigravity_flag(self):
+        self.assertIn("--antigravity", INSTALLER)
+
+    def test_it_backs_up_before_overwriting(self):
+        block = INSTALLER[INSTALLER.index("def register_antigravity_hook"):]
+        self.assertIn('with_suffix(".json.bak")', block[:block.index("def main")])
+
+    def test_it_refuses_rather_than_clobber_unreadable_json(self):
+        block = INSTALLER[INSTALLER.index("def register_antigravity_hook"):]
+        self.assertIn("REFUSED", block[:block.index("def main")])
 
 
 class TheInstallerRegistersIt(unittest.TestCase):

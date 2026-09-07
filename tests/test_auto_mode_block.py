@@ -24,6 +24,7 @@ HOOK = ROOT / "scripts" / "hooks" / "no_prune_guard.py"
 #   326 tokens   skills, MCP servers, tools and agents added to that protection
 #   355 tokens   inheritance for new capabilities, and every build/command/lane
 #   434 tokens   the exemption stated as global, and the one override that lifts it
+#   538 tokens   plan, design, anti-slop, full output and verify, on every prompt
 #
 # This number only moves when a rule is added, never on its own. Each rule has to
 # sit in the always-loaded block because a rule consulted only when something
@@ -40,7 +41,17 @@ HOOK = ROOT / "scripts" / "hooks" / "no_prune_guard.py"
 # lifts it. It is here rather than in the skill because a compaction pass is
 # running precisely when nothing is reading the skill, and because the override
 # has to be named where the rule is or the next pass invents its own.
-BLOCK_BUDGET_BYTES = 1800
+#
+# The 2026-09-07 rise from 1800 to 2300 bought the five standing rules: plan,
+# caveman, design, anti-slop and full output, plus verify. Charles asked for
+# these on every prompt and conversation, for every model, and was told the cost.
+#
+# For Claude Code and Antigravity they are ALSO enforced outside the model, by
+# scripts/hooks/skill_pipeline.py on UserPromptSubmit and PreInvocation. They are
+# still written here because Codex, the Gemini CLI and Copilot have no verified
+# hook mechanism: for those three this block is not a reminder of the rule, it is
+# the entire enforcement.
+BLOCK_BUDGET_BYTES = 2300
 
 
 class TheAlwaysLoadedBlock(unittest.TestCase):

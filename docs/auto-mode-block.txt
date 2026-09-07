@@ -22,5 +22,11 @@ ChatGPT and any other model reading this:
 - Load the best-fit skill, tool, MCP or agent automatically; do not ask when the
   catalog already answers it. Anything added later inherits this and the no-prune
   rule, with no opt-in.
+- Five run on every prompt and every command, with no exception and no slash
+  needed: PLAN before producing, CAVEMAN compression, DESIGN taste on anything a
+  person will see, ANTI-SLOP (no em dashes, one theme, one accent, one radius
+  scale), and FULL OUTPUT (never "rest of code", never a skeleton where an
+  implementation was asked for). Out of room means stop clean and say what remains.
+- Verify before claiming. Run the check, quote real output, report a failure first.
 - Run every slash command in a prompt, in the order written, reporting each.
 <!-- NO-COMPRESS:END -->

@@ -204,11 +204,25 @@ GLOBAL_RULES_SETUPS = [
      "environment variable that makes Copilot read the repository.",
      _rules_commands("copilot")),
 
-    ("rules-guards", "Auto-mode guards", "instructions",
-     "Installs the no-prune and no-compress PreToolUse hooks. These enforce the rules "
-     "outside the model, which is what matters: an instruction reading 'do not compress "
-     "me' only holds while something is still reading it.",
+    ("rules-guards", "Standing pipeline and guards", "instructions",
+     "The one command that makes the rules hold outside the model. Installs every "
+     "skill into Claude Code and Antigravity, the two PreToolUse guards that stop a "
+     "skill being pruned or compressed, and the standing pipeline hook: plan, caveman, "
+     "design, anti-slop, full output, no-compaction and verify, injected into every "
+     "prompt and every command with no slash needed. Claude Code gets it on "
+     "UserPromptSubmit and Antigravity on PreInvocation, which are the only two "
+     "clients with a verified hook mechanism.",
      _with_clone(_GUARD_BODIES)),
+
+    ("rules-pipeline-check", "Show the pipeline that fires", "instructions",
+     "Prints the exact text injected into every prompt, and which hook events are "
+     "registered for it. A pipeline nobody can read is one nobody can trust: this is "
+     "how you confirm it is actually running rather than assume it.",
+     {"windows": "echo '{\"input\":{\"prompt\":\"check\"}}' | python (Join-Path $HOME 'Master-Repo-Use/scripts/hooks/skill_pipeline.py'); Get-Content $HOME\\.claude\\settings.json | Select-String skill_pipeline; Get-Content $HOME\\.gemini\\config\\hooks.json",
+      "wsl": "echo '{\"input\":{\"prompt\":\"check\"}}' | python3 \"$HOME/Master-Repo-Use/scripts/hooks/skill_pipeline.py\"; grep -o 'skill_pipeline[^\"]*' ~/.claude/settings.json; cat ~/.gemini/config/hooks.json 2>/dev/null",
+      "macos": "echo '{\"input\":{\"prompt\":\"check\"}}' | python3 \"$HOME/Master-Repo-Use/scripts/hooks/skill_pipeline.py\"; grep -o 'skill_pipeline[^\"]*' ~/.claude/settings.json; cat ~/.gemini/config/hooks.json 2>/dev/null",
+      "linux": "echo '{\"input\":{\"prompt\":\"check\"}}' | python3 \"$HOME/Master-Repo-Use/scripts/hooks/skill_pipeline.py\"; grep -o 'skill_pipeline[^\"]*' ~/.claude/settings.json; cat ~/.gemini/config/hooks.json 2>/dev/null",
+      "other": "echo '{\"input\":{\"prompt\":\"check\"}}' | python3 \"$HOME/Master-Repo-Use/scripts/hooks/skill_pipeline.py\"; grep -o 'skill_pipeline[^\"]*' ~/.claude/settings.json; cat ~/.gemini/config/hooks.json 2>/dev/null"}),
 
     # Verifies BOTH halves. The rules half is a block in a file; the skills half is
     # a directory of folders, and a setup that wrote the block and silently failed
@@ -288,7 +302,7 @@ PROFILES = [
                   "the client you pick, then installs the no-prune and no-compress hooks so "
                   "the rules hold outside the model as well as inside it.",
         "bestFor": "An existing machine that already has its tooling and only needs the rules.",
-        "steps": ["rules:{client}", "setup-rules-guards", "setup-rules-verify"],
+        "steps": ["rules:{client}", "setup-rules-guards", "setup-rules-pipeline-check", "setup-rules-verify"],
     },
     {
         "id": "software-developer",
@@ -299,7 +313,7 @@ PROFILES = [
                   "repository, so this does not clone it again. Enough to work offline.",
         "bestFor": "A new laptop that will write code and wants a local model for the cheap work.",
         "steps": ["rules:{client}", "setup-rules-guards",
-                  "setup-ollama-runtime", "model:{tier}", "setup-rules-verify"],
+                  "setup-ollama-runtime", "model:{tier}", "setup-rules-pipeline-check", "setup-rules-verify"],
     },
     {
         "id": "engineering",
@@ -311,7 +325,7 @@ PROFILES = [
         "bestFor": "A workstation with the memory to hold more than one model at a time.",
         "steps": ["rules:{client}", "setup-rules-guards",
                   "setup-ollama-runtime", "model:{tier}", "model:{tier2}",
-                  "setup-model-list-installed", "setup-rules-verify"],
+                  "setup-model-list-installed", "setup-rules-pipeline-check", "setup-rules-verify"],
     },
     {
         "id": "everything",
@@ -323,7 +337,7 @@ PROFILES = [
         "bestFor": "A machine being set up once, thoroughly, where disk is not the constraint.",
         "steps": ["rules:{client}", "setup-rules-guards",
                   "setup-ollama-runtime", "ALL_MODEL_TAGS",
-                  "setup-model-list-installed", "setup-rules-verify"],
+                  "setup-model-list-installed", "setup-rules-pipeline-check", "setup-rules-verify"],
     },
 ]
 
