@@ -132,6 +132,12 @@ button{cursor:pointer}
   .body{grid-template-columns:1fr}
   .dock{border-left:0;border-top:1px solid var(--p-faint);padding:10px 0 0}
 }
+
+.otheros{margin-top:10px;border:1px solid var(--p-faint);padding:8px 10px}
+.otheros summary{cursor:pointer;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--p-dim);list-style:none}
+.otheros summary::-webkit-details-marker{display:none}
+.otheros summary::before{content:"[+] ";color:var(--amber)}
+.otheros[open] summary::before{content:"[-] "}
 </style>
 </head>
 <body>

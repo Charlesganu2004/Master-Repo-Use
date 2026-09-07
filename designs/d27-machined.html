@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A machined instrument face: anisotropic brushed metal with debossed type and engraved rules.">
+<title>Machined | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* ===========================================================================
+   MACHINED. Brushed aluminium with type cut into it rather than printed on it.
+
+   Metal is not a gradient, it is an ANISOTROPIC reflector: it reflects
+   differently along the grain than across it. A conic base gives the radial
+   component and two fine off-axis repeating gradients give the striations. Any
+   plain linear-gradient reads as plastic, which is why most "metal" UI does.
+
+   Depth comes from one rule and its reverse. Light is from above, so a RAISED
+   edge is bright on top and dark below, and a RECESSED one is dark on top and
+   bright below. Swapping that single pair is what turns a boss into a groove.
+   ========================================================================= */
+:root{
+  --al:#8f9399;
+  --mc-ink:#1a1d21; --etch:#40454c; --lite:#e6eaef;
+  --anod:#c2450f;                 /* one anodised accent, used sparingly */
+  --sans:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  color:var(--mc-ink);font:13.5px/1.5 var(--sans);
+  height:100vh;height:100dvh;overflow:hidden;padding:2.6dvh 2vw;
+  background:#5d6167;
+}
+
+button,input,select{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--anod);outline-offset:2px}
+
+/* The face. Conic base plus two striation passes plus a specular sweep. */
+.face{
+  position:relative;height:100%;border-radius:6px;overflow:hidden;
+  background:
+    repeating-linear-gradient(92deg,#ffffff14 0 1px,#00000010 1px 2px,transparent 2px 4px),
+    repeating-linear-gradient(88deg,#ffffff0d 0 1px,transparent 1px 3px),
+    conic-gradient(from 210deg at 50% 40%,
+      #b9bec4,#8f9399 18%,#a7abb1 34%,#7e8288 52%,#b2b7bd 70%,#878b91 86%,#b9bec4);
+  box-shadow:
+    inset 0 1px 0 #ffffff5c,
+    inset 0 -1px 0 #00000055,
+    0 24px 60px -30px #000;
+  display:grid;grid-template-columns:minmax(0,1fr) 330px;grid-template-rows:auto auto 1fr;
+  gap:0 20px;padding:20px 22px;
+}
+/* Specular sweep, raking across the whole plate. */
+.face::before{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:1;mix-blend-mode:screen;
+  background:linear-gradient(104deg,transparent 34%,#ffffff2e 47%,#ffffff10 53%,transparent 66%);
+}
+.face > *{position:relative;z-index:2;min-width:0;min-height:0}
+
+/* Type cut INTO the metal: dark fill, bright shadow below, dark shadow above. */
+.deboss{
+  color:#2a2e34;
+  text-shadow:0 1px 0 #ffffff70, 0 -1px 0 #00000045;
+}
+.emboss{
+  color:#f0f3f6;
+  text-shadow:0 -1px 0 #00000060, 0 1px 0 #ffffff30;
+}
+
+.plate-top{grid-column:1/3;display:flex;align-items:baseline;gap:20px;flex-wrap:wrap;
+  padding-bottom:14px;
+  border-bottom:1px solid #ffffff55;box-shadow:0 1px 0 #00000038}
+.plate-top h1{margin:0;font-size:clamp(24px,3vw,40px);font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.serial{font:600 11px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase}
+.gauges{margin-left:auto;display:flex;gap:20px}
+.gauge{text-align:right}
+.gauge b{display:block;font:700 24px/1 var(--mono);letter-spacing:-.02em}
+.gauge span{font:600 9px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase}
+
+.rail{grid-column:1/3;display:flex;gap:2px;flex-wrap:wrap;padding:12px 0}
+.rail .tab{
+  padding:6px 13px;border-radius:3px;font:600 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  background:linear-gradient(#a9aeb4,#8b8f95);
+  box-shadow:inset 0 1px 0 #ffffff6b, inset 0 -1px 0 #00000045, 0 1px 2px #00000038;
+  color:#2b2f35;text-shadow:0 1px 0 #ffffff5e;
+}
+.rail .tab:hover{background:linear-gradient(#b4b9bf,#93979d)}
+.rail .tab[aria-selected="true"]{
+  background:linear-gradient(#6f7379,#8c9096);
+  box-shadow:inset 0 2px 4px #00000066, inset 0 -1px 0 #ffffff2e;
+  color:#f2f5f8;text-shadow:0 -1px 0 #00000070;
+}
+
+.well{
+  grid-row:3;overflow:auto;border-radius:4px;padding:12px 14px;
+  background:linear-gradient(#7d8187,#8d9197);
+  box-shadow:inset 0 2px 5px #00000059, inset 0 -1px 0 #ffffff33;
+}
+.side{grid-row:3;overflow:auto;border-radius:4px;padding:14px;
+  background:linear-gradient(#8b8f95,#9599a0);
+  box-shadow:inset 0 2px 5px #0000004d, inset 0 -1px 0 #ffffff33}
+.side h3{margin:0 0 8px;font:700 10px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:#2c3036;text-shadow:0 1px 0 #ffffff5e}
+.side section{margin-bottom:16px}
+
+.grp{margin:16px 0 7px;font:700 10px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;
+  color:#2b2f35;text-shadow:0 1px 0 #ffffff52}
+.grp:first-child{margin-top:0}
+.part{
+  position:relative;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;
+  padding:8px 11px;margin-bottom:4px;border-radius:3px;
+  background:linear-gradient(#9ea2a8,#8f9399);
+  box-shadow:inset 0 1px 0 #ffffff5e, inset 0 -1px 0 #00000038, 0 1px 2px #0000002e;
+}
+.part:hover{background:linear-gradient(#a8adb3,#989ca2)}
+.part.on{background:linear-gradient(#74787e,#8a8e94);
+  box-shadow:inset 0 2px 4px #00000059;color:#f0f3f6}
+.part.on b{text-shadow:0 -1px 0 #00000060}
+.part b{font-size:13px;font-weight:600;overflow-wrap:anywhere}
+.part small{display:block;font-size:11px;color:#3c4149}
+.part.on small{color:#d7dbe0}
+.part .plus{width:22px;height:22px;border-radius:3px;font:700 12px/20px var(--mono);text-align:center;
+  background:linear-gradient(#adb2b8,#8f9399);box-shadow:inset 0 1px 0 #ffffff6b,0 1px 2px #00000038}
+.part .plus.in{background:var(--anod);color:#fff;box-shadow:inset 0 2px 4px #0006}
+.part .plan-tag{font:700 9px/1 var(--mono);letter-spacing:.08em;color:#3f444c}
+
+#setup .os,#filters .chip{border-radius:3px;padding:3px 9px;font:600 11px/1.4 var(--mono);
+  background:linear-gradient(#a9aeb4,#8b8f95);box-shadow:inset 0 1px 0 #ffffff5e,0 1px 2px #0000002e;color:#2b2f35}
+#setup .os.on,#filters .chip.on{background:var(--anod);color:#fff;box-shadow:inset 0 2px 4px #0006}
+#setup input{border-radius:3px;width:56px;padding:3px 6px;
+  background:#7f8389;box-shadow:inset 0 2px 4px #0000005e;color:#f0f3f6}
+#setup .num{display:none}
+#setup,#filters,#side{font-size:12.5px}
+.pane{font-size:13px}
+
+@media (max-width:980px){
+  .face{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto}
+  .plate-top,.rail{grid-column:1}
+  .well,.side{grid-row:auto;max-height:44dvh}
+}
+
+.otheros{margin-top:12px;border-radius:4px;padding:10px 12px;
+  background:linear-gradient(#8b8f95,#9599a0);box-shadow:inset 0 2px 4px #0000004d}
+.otheros summary{cursor:pointer;font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  color:#2b2f35;text-shadow:0 1px 0 #ffffff52;list-style:none}
+.otheros summary::-webkit-details-marker{display:none}
+</style>
+</head>
+<body>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes, esc = P.esc;
+
+document.body.insertAdjacentHTML('beforeend', `
+<div class="face">
+  <header class="plate-top">
+    <h1 class="deboss">Machined</h1>
+    <span class="serial deboss">MR / 970</span>
+    <div class="gauges">
+      <div class="gauge"><b class="deboss" data-visible-count>0</b><span class="deboss">Parts</span></div>
+      <div class="gauge"><b class="deboss" data-basket-count>0</b><span class="deboss">Fitted</span></div>
+    </div>
+  </header>
+  <nav class="rail" id="tabs" role="tablist" aria-label="Machined views"></nav>
+  <main class="well" id="main-content"><div id="stage" tabindex="-1"></div></main>
+  <aside class="side">
+    <section><h3>Finish</h3><div id="themehost"></div></section>
+    <section><h3>Machine</h3><div id="setup"></div></section>
+    <section><h3>Gauge</h3><div id="filters"></div></section>
+    <section><h3>Spec</h3><div id="side" aria-label="Component inspector"></div></section>
+  </aside>
+</div>`);
+
+function render(stage){
+  const groups = new Map();
+  A.visibleComponents().forEach(c => {
+    if(!groups.has(c.family)) groups.set(c.family, []);
+    groups.get(c.family).push(c);
+  });
+  if(!groups.size){ stage.innerHTML = '<p class="deboss">No parts on this gauge.</p>'; return; }
+  const famName = id => (A.state.data.families.find(f => f.id === id) || {name:id}).name;
+  stage.innerHTML = [...groups.entries()].map(([fam, items]) => `
+    <p class="grp">${esc(famName(fam))} / ${items.length}</p>
+    ${items.slice(0, 22).map(c => `<article class="part${A.state.selected === c.id ? ' on' : ''}" data-node="1" data-comp="${esc(c.id)}">
+      <span><b>${esc(c.name)}</b><small>${esc(c.detail.slice(0,88))}</small></span>${add(c)}
+    </article>`).join('')}`).join('');
+  wire(stage);
+  counts();
+}
+
+function add(c){
+  if(!A.canBuild(c)){
+    const s = A.setupStateFor(c);
+    return `<span class="plan-tag">${esc(s.id === 'choose-platform' ? 'SET OS' : s.id === 'review-required' ? 'REVIEW' : s.id === 'hosted' ? 'HOSTED' : 'NO SPEC')}</span>`;
+  }
+  const inB = A.state.basket.includes(c.id);
+  return `<button class="plus${inB ? ' in' : ''}" data-add="${esc(c.id)}" aria-label="${inB?'Remove':'Add'} ${esc(c.name)}">${inB ? '×' : '+'}</button>`;
+}
+
+function wire(stage){
+  stage.querySelectorAll('[data-node]').forEach(n => {
+    n.addEventListener('click', e => {
+      if(e.target.closest('[data-add]')) return;
+      A.select(n.dataset.comp);
+      P.popover(e.clientX, e.clientY, n.dataset.comp);
+      stage.querySelectorAll('.part.on').forEach(a => a.classList.remove('on'));
+      n.classList.add('on');
+    });
+  });
+  stage.querySelectorAll('[data-add]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      if(A.state.basket.includes(id)) A.removeFromBasket(id); else A.addToBasket(id);
+      P.draw(); counts();
+    });
+  });
+}
+
+function counts(){
+  const c = A.counts();
+  document.querySelectorAll('[data-basket-count]').forEach(n => n.textContent = String(c.basket).padStart(3,'0'));
+  document.querySelectorAll('[data-visible-count]').forEach(n => n.textContent = String(c.visibleComponents).padStart(3,'0'));
+}
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+P.mount({
+  renderMap: render,
+  onFilter: () => { if(P.tab === 'map') render(document.getElementById('stage')); counts(); },
+  onSelect: counts,
+});
+A.on(counts);
+</script>
+</body>
+</html>

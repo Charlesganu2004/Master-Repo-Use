@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Three planes separated by blur radius alone, so the viewport reads as a camera looking into a space.">
+<title>Depth | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* ===========================================================================
+   DEPTH. Three planes at blur(7px), blur(2.5px) and blur(0), with matching
+   shadow weights. That is the whole mechanism: blur is the strongest monocular
+   depth cue after occlusion, so three siblings at three blur radii read as
+   three distances from a camera with no perspective, no 3D transform and no
+   renderer involved.
+
+   The viewport is the camera. It is looking INTO a space rather than at a
+   document, which is why the near plane is anchored to the bottom edge and
+   bleeds off it: something cut off by the frame is closer than the frame.
+
+   Parallax is transform-only at three rates, so it stays on the compositor.
+   ========================================================================= */
+:root{
+  --dp-bg:#0a0d14; --dp-ink:#e9edf6; --dp-dim:#8d96a8;
+  --far:#141a26; --mid:#1a2130; --near:#212a3c;
+  --cy:#6ee7d0;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--dp-bg);color:var(--dp-ink);font:14px/1.5 var(--sans);
+  height:100vh;height:100dvh;overflow:hidden;
+}
+button,input,select{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--cy);outline-offset:3px}
+
+.space{position:relative;height:100vh;height:100dvh;overflow:hidden}
+
+/* FAR: heavily blurred slabs. Never interactive, and aria-hidden, because a
+   control nobody can read is not a control. */
+.plane-far{
+  position:absolute;inset:-6%;z-index:0;filter:blur(7px);opacity:.85;
+  display:grid;grid-template-columns:repeat(7,1fr);gap:22px;padding:6% 4%;
+  will-change:transform;
+}
+.plane-far .slab{background:var(--far);border-radius:8px;
+  box-shadow:0 10px 30px -18px #000}
+
+/* MID: lightly blurred, still not interactive. */
+.plane-mid{
+  position:absolute;inset:-4%;z-index:1;filter:blur(2.5px);opacity:.9;
+  display:grid;grid-template-columns:repeat(5,1fr);gap:26px;padding:12% 8%;
+  will-change:transform;
+}
+.plane-mid .slab{background:var(--mid);border-radius:10px;
+  box-shadow:0 18px 44px -24px #000}
+
+/* NEAR: sharp, and the only plane you can touch. Anchored to the bottom edge
+   and allowed to bleed off it. */
+.plane-near{
+  position:absolute;inset:0;z-index:2;display:grid;
+  grid-template-columns:minmax(0,1fr) 330px;grid-template-rows:auto auto 1fr;
+  gap:0 26px;padding:4dvh 3.4vw 0;will-change:transform;
+}
+.plane-near > *{min-width:0;min-height:0}
+
+.top{grid-column:1/3;display:flex;align-items:baseline;gap:22px;flex-wrap:wrap}
+.top h1{margin:0;font-size:clamp(26px,3.2vw,44px);font-weight:200;letter-spacing:-.025em}
+.top .rd{margin-left:auto;display:flex;gap:18px;font:600 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dp-dim)}
+.top .rd b{color:var(--cy);font-weight:700}
+
+.tabs{grid-column:1/3;display:flex;gap:5px;flex-wrap:wrap;padding:16px 0 14px}
+.tabs .tab{padding:7px 14px;border-radius:8px;font-size:12.5px;color:var(--dp-dim);
+  background:color-mix(in srgb,var(--dp-ink) 5%,transparent)}
+.tabs .tab:hover{color:var(--dp-ink)}
+.tabs .tab[aria-selected="true"]{background:var(--cy);color:#06120f;font-weight:600}
+
+.deck{grid-row:3;overflow:auto;padding-bottom:4dvh;padding-right:12px}
+.dock{grid-row:3;overflow:auto;padding-bottom:4dvh;
+  border-left:1px solid color-mix(in srgb,var(--dp-ink) 9%,transparent);padding-left:22px}
+.dock h3{margin:0 0 8px;font:600 10px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--dp-dim)}
+.dock section{margin-bottom:16px}
+
+.grp{margin:18px 0 8px;font:600 10px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--dp-dim)}
+.grp:first-child{margin-top:0}
+.tile{
+  position:relative;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;
+  padding:12px 15px;margin-bottom:6px;border-radius:12px;background:var(--near);
+  box-shadow:
+    0 1px 1px -1px #00000080, 0 2px 3px -1px #00000066,
+    0 6px 10px -3px #0000005c, 0 14px 22px -8px #00000052,
+    inset 0 1px 0 #ffffff10;
+  transition:transform 220ms cubic-bezier(.2,.8,.2,1);
+}
+.tile:hover{transform:translateY(-3px)}
+.tile.on{box-shadow:0 0 0 1.5px var(--cy), 0 18px 30px -12px #000}
+.tile b{font-weight:600;font-size:13.5px;overflow-wrap:anywhere}
+.tile small{display:block;color:var(--dp-dim);font-size:11.5px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tile .plus{width:26px;height:26px;border-radius:9px;font:400 14px/24px var(--mono);text-align:center;
+  background:color-mix(in srgb,var(--dp-ink) 8%,transparent)}
+.tile .plus.in{background:var(--cy);color:#06120f}
+.tile .plan-tag{font:600 9.5px/1 var(--mono);letter-spacing:.1em;color:var(--dp-dim)}
+
+#setup .os,#filters .chip{border-radius:8px;padding:4px 10px;font-size:11.5px;border:0;
+  background:color-mix(in srgb,var(--dp-ink) 7%,transparent);color:var(--dp-dim)}
+#setup .os.on,#filters .chip.on{background:var(--cy);color:#06120f}
+#setup input{border-radius:8px;border:0;width:58px;padding:4px 8px;
+  background:color-mix(in srgb,var(--dp-ink) 8%,transparent);color:var(--dp-ink)}
+#setup .num{display:none}
+#setup,#filters,#side{font-size:12.5px}
+.pane{font-size:13px}
+
+@media (max-width:980px){
+  .plane-near{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto}
+  .top,.tabs{grid-column:1}
+  .deck,.dock{grid-row:auto}
+  .dock{border-left:0;border-top:1px solid color-mix(in srgb,var(--dp-ink) 9%,transparent);padding:14px 0 0}
+}
+
+.otheros{margin-top:12px;border-radius:12px;padding:11px 14px;background:var(--near);
+  box-shadow:inset 0 1px 0 #ffffff10}
+.otheros summary{cursor:pointer;font-size:12.5px;color:var(--dp-dim);list-style:none}
+.otheros summary::-webkit-details-marker{display:none}
+.otheros summary::before{content:"+ ";color:var(--cy);font-weight:700}
+.otheros[open] summary::before{content:"- "}
+</style>
+</head>
+<body>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes, esc = P.esc;
+
+document.body.insertAdjacentHTML('beforeend', `
+<div class="space">
+  <div class="plane-far" id="far" aria-hidden="true"></div>
+  <div class="plane-mid" id="mid" aria-hidden="true"></div>
+  <div class="plane-near" id="near">
+    <header class="top">
+      <h1>Depth</h1>
+      <div class="rd"><span>near <b data-visible-count>0</b></span><span>held <b data-basket-count>0</b></span></div>
+    </header>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Depth views"></nav>
+    <main class="deck" id="main-content"><div id="stage" tabindex="-1"></div></main>
+    <aside class="dock">
+      <section><h3>Focus</h3><div id="themehost"></div></section>
+      <section><h3>Machine</h3><div id="setup"></div></section>
+      <section><h3>Filter</h3><div id="filters"></div></section>
+      <section><h3>Detail</h3><div id="side" aria-label="Component inspector"></div></section>
+    </aside>
+  </div>
+</div>`);
+
+/* The two out-of-focus planes are made from the SAME data, so the depth is a
+   real view of the catalog rather than decorative rectangles. Slab height is
+   the lane size, which is why the background has structure at all. */
+function backdrop(){
+  const lanes = new Map();
+  A.visibleComponents().forEach(c => lanes.set(c.lane, (lanes.get(c.lane) || 0) + 1));
+  const sizes = [...lanes.values()];
+  const peak = Math.max(...sizes, 1);
+  const slab = (n, i) => `<div class="slab" style="align-self:${i % 2 ? 'end' : 'start'};height:${(18 + n / peak * 62).toFixed(1)}%"></div>`;
+  document.getElementById('far').innerHTML = sizes.slice(0, 21).map(slab).join('');
+  document.getElementById('mid').innerHTML = sizes.slice(21, 36).map(slab).join('');
+}
+
+function render(stage){
+  const groups = new Map();
+  A.visibleComponents().forEach(c => {
+    if(!groups.has(c.family)) groups.set(c.family, []);
+    groups.get(c.family).push(c);
+  });
+  if(!groups.size){ stage.innerHTML = '<p style="color:var(--dp-dim)">Nothing in focus.</p>'; backdrop(); return; }
+  const famName = id => (A.state.data.families.find(f => f.id === id) || {name:id}).name;
+  stage.innerHTML = [...groups.entries()].map(([fam, items]) => `
+    <p class="grp">${esc(famName(fam))} <span style="opacity:.65">${items.length}</span></p>
+    ${items.slice(0, 20).map(c => `<article class="tile${A.state.selected === c.id ? ' on' : ''}" data-node="1" data-comp="${esc(c.id)}">
+      <span><b>${esc(c.name)}</b><small>${esc(c.detail)}</small></span>${add(c)}
+    </article>`).join('')}`).join('');
+  wire(stage);
+  backdrop();
+  counts();
+}
+
+function add(c){
+  if(!A.canBuild(c)){
+    const s = A.setupStateFor(c);
+    return `<span class="plan-tag">${esc(s.id === 'choose-platform' ? 'pick an OS' : s.id === 'review-required' ? 'review' : s.id === 'hosted' ? 'hosted' : 'no recipe')}</span>`;
+  }
+  const inB = A.state.basket.includes(c.id);
+  return `<button class="plus${inB ? ' in' : ''}" data-add="${esc(c.id)}" aria-label="${inB?'Remove':'Add'} ${esc(c.name)}">${inB ? '✓' : '+'}</button>`;
+}
+
+function wire(stage){
+  stage.querySelectorAll('[data-node]').forEach(n => {
+    n.addEventListener('click', e => {
+      if(e.target.closest('[data-add]')) return;
+      A.select(n.dataset.comp);
+      P.popover(e.clientX, e.clientY, n.dataset.comp);
+      stage.querySelectorAll('.tile.on').forEach(a => a.classList.remove('on'));
+      n.classList.add('on');
+    });
+  });
+  stage.querySelectorAll('[data-add]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      if(A.state.basket.includes(id)) A.removeFromBasket(id); else A.addToBasket(id);
+      P.draw(); counts();
+    });
+  });
+}
+
+function counts(){
+  const c = A.counts();
+  document.querySelectorAll('[data-basket-count]').forEach(n => n.textContent = c.basket);
+  document.querySelectorAll('[data-visible-count]').forEach(n => n.textContent = c.visibleComponents);
+}
+
+/* Three rates, transform only, so all of it stays on the compositor. */
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const far = document.getElementById('far');
+  const mid = document.getElementById('mid');
+  const near = document.getElementById('near');
+  addEventListener('pointermove', e => {
+    const dx = e.clientX / innerWidth - .5, dy = e.clientY / innerHeight - .5;
+    far.style.transform = `translate3d(${dx * 8}px,${dy * 6}px,0)`;
+    mid.style.transform = `translate3d(${dx * 20}px,${dy * 14}px,0)`;
+    near.style.transform = `translate3d(${dx * 34}px,${dy * 22}px,0)`;
+  }, {passive:true});
+}
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+P.mount({
+  renderMap: render,
+  onFilter: () => { if(P.tab === 'map') render(document.getElementById('stage')); counts(); },
+  onSelect: counts,
+});
+A.on(counts);
+</script>
+</body>
+</html>

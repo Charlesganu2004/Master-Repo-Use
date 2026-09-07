@@ -106,6 +106,13 @@ button{cursor:pointer}
   .field{overflow:auto}
   #viz{position:static;height:56dvh}
 }
+
+.otheros{margin-top:12px;border-radius:22px;padding:11px 15px;
+  background:color-mix(in oklab,#bff7de 7%,transparent)}
+.otheros summary{cursor:pointer;font-size:12px;color:var(--mb-dim);list-style:none}
+.otheros summary::-webkit-details-marker{display:none}
+.otheros summary::before{content:"+ ";color:#7fe8c2}
+.otheros[open] summary::before{content:"- "}
 </style>
 </head>
 <body>

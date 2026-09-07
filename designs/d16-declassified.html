@@ -138,6 +138,13 @@ button{cursor:pointer}
   .right{max-height:34dvh}
   .title{font-size:34px}
 }
+
+/* The other-platform disclosure, in this page's language: ruled, not rounded. */
+.otheros{margin-top:12px;border:1px solid var(--dc-ink);padding:9px 12px}
+.otheros summary{cursor:pointer;font-size:11px;letter-spacing:.14em;text-transform:uppercase;list-style:none}
+.otheros summary::-webkit-details-marker{display:none}
+.otheros summary::before{content:"[+] ";color:var(--stamp)}
+.otheros[open] summary::before{content:"[-] "}
 </style>
 </head>
 <body>

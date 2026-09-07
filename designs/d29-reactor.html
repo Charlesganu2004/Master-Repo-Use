@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Emissive geometry through a real threshold-and-merge SVG bloom filter.">
+<title>Reactor | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* ===========================================================================
+   REACTOR. Real HDR bloom, not a glow.
+
+   CSS filter: blur() on a pseudo-element blooms EVERYTHING equally, which is
+   why most "glowing" UI looks like a smear. A real bloom isolates only the
+   pixels above a brightness threshold, blurs those at two radii, and adds them
+   back over the untouched source. Bright things bleed and dark things stay
+   crisp, which is the entire difference.
+
+   The filter is applied to the emissive SVG geometry only. HTML text sits on
+   top of it, unfiltered, so it stays sharp. Filtering the type is the mistake
+   that makes bloom unreadable.
+   ========================================================================= */
+:root{
+  --rc-bg:#03050a; --rc-ink:#dfe8ff; --rc-dim:#7e8aa6;
+  --core:#7cc4ff; --hot:#ff9d5c;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--rc-bg);color:var(--rc-ink);font:14px/1.5 var(--sans);
+  height:100vh;height:100dvh;overflow:hidden;
+}
+button,input,select{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--hot);outline-offset:3px}
+
+.vessel{position:relative;height:100vh;height:100dvh;overflow:hidden}
+#core{position:absolute;inset:0;width:100%;height:100%}
+
+.hud{
+  position:absolute;inset:0;z-index:3;display:grid;
+  grid-template-columns:300px minmax(0,1fr) 330px;grid-template-rows:auto 1fr;
+  gap:0 24px;padding:4dvh 3vw;pointer-events:none;
+}
+.hud > *{pointer-events:auto;min-width:0;min-height:0}
+.top{grid-column:1/4;display:flex;align-items:baseline;gap:22px;flex-wrap:wrap;margin-bottom:18px}
+.top h1{margin:0;font-size:clamp(24px,3vw,42px);font-weight:200;letter-spacing:-.02em}
+.top .tabs{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.top .tab{padding:6px 13px;border-radius:20px;font-size:12.5px;color:var(--rc-dim);
+  background:color-mix(in srgb,var(--rc-ink) 5%,transparent)}
+.top .tab:hover{color:var(--rc-ink)}
+.top .tab[aria-selected="true"]{background:var(--core);color:#04121e;font-weight:600}
+
+.col{overflow:auto;padding-bottom:3dvh}
+.col h3{margin:0 0 8px;font:600 10px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--rc-dim)}
+.col section{margin-bottom:16px}
+.left{grid-column:1}
+.mid{grid-column:2}
+.right{grid-column:3}
+
+.grp{margin:16px 0 7px;font:600 10px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--rc-dim)}
+.grp:first-child{margin-top:0}
+.rod{
+  position:relative;display:grid;grid-template-columns:4px 1fr auto;gap:12px;align-items:center;
+  padding:9px 13px 9px 0;margin-bottom:5px;border-radius:0 10px 10px 0;
+  background:color-mix(in srgb,var(--rc-ink) 4%,transparent);
+  overflow:hidden;
+}
+.rod::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--kc,var(--core));
+  box-shadow:0 0 12px 1px var(--kc,var(--core))}
+.rod:hover{background:color-mix(in srgb,var(--rc-ink) 8%,transparent)}
+.rod.on{background:color-mix(in srgb,var(--core) 14%,transparent)}
+.rod b{font-weight:600;font-size:13.5px;overflow-wrap:anywhere}
+.rod small{display:block;color:var(--rc-dim);font-size:11.5px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rod .plus{width:24px;height:24px;border-radius:50%;font:400 13px/22px var(--mono);text-align:center;
+  background:color-mix(in srgb,var(--rc-ink) 8%,transparent)}
+.rod .plus.in{background:var(--hot);color:#170a02}
+.rod .plan-tag{font:600 9.5px/1 var(--mono);letter-spacing:.1em;color:var(--rc-dim)}
+
+.rd{display:flex;gap:16px;font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--rc-dim)}
+.rd b{color:var(--core);font-weight:700}
+#setup .os,#filters .chip{border-radius:20px;padding:4px 10px;font-size:11.5px;border:0;
+  background:color-mix(in srgb,var(--rc-ink) 6%,transparent);color:var(--rc-dim)}
+#setup .os.on,#filters .chip.on{background:var(--core);color:#04121e}
+#setup input{border-radius:10px;border:0;width:58px;padding:4px 8px;
+  background:color-mix(in srgb,var(--rc-ink) 8%,transparent);color:var(--rc-ink)}
+#setup .num{display:none}
+#setup,#filters,#side{font-size:12.5px}
+.pane{font-size:13px}
+
+@media (max-width:1080px){
+  .hud{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto;position:static;height:auto}
+  .vessel{overflow:auto}
+  #core{position:absolute;opacity:.5}
+  .top,.left,.mid,.right{grid-column:1}
+}
+
+.otheros{margin-top:12px;border-radius:12px;padding:11px 14px;
+  background:color-mix(in srgb,var(--rc-ink) 5%,transparent)}
+.otheros summary{cursor:pointer;font-size:12.5px;color:var(--rc-dim);list-style:none}
+.otheros summary::-webkit-details-marker{display:none}
+.otheros summary::before{content:"+ ";color:var(--core);font-weight:700}
+.otheros[open] summary::before{content:"- "}
+</style>
+</head>
+<body>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes, esc = P.esc;
+const KC = {instruction:'#ff7a7a',capability:'#ffab6b',knowledge:'#7cc4ff',
+  control:'#ffd479',model:'#c99bff',delivery:'#6fe4b0'};
+
+document.body.insertAdjacentHTML('beforeend', `
+<div class="vessel">
+  <svg id="core" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <!-- Threshold and merge. feColorMatrix pushes everything below the cut to
+           black, the result is blurred at two radii, and both are composited
+           back OVER the untouched source. That is what makes bright things
+           bleed while dark things stay crisp. -->
+      <filter id="bloom" x="-30%" y="-30%" width="160%" height="160%">
+        <feColorMatrix type="matrix" in="SourceGraphic" result="cut"
+          values="1.6 0 0 0 -0.35
+                  0 1.6 0 0 -0.35
+                  0 0 1.6 0 -0.35
+                  0 0 0 1 0"/>
+        <feGaussianBlur in="cut" stdDeviation="6" result="b1"/>
+        <feGaussianBlur in="cut" stdDeviation="20" result="b2"/>
+        <feMerge>
+          <feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+    <g id="emissive" filter="url(#bloom)"></g>
+  </svg>
+
+  <div class="hud">
+    <header class="top">
+      <h1>Reactor</h1>
+      <div class="rd"><span>rods <b data-visible-count>0</b></span><span>drawn <b data-basket-count>0</b></span></div>
+      <nav class="tabs" id="tabs" role="tablist" aria-label="Reactor views"></nav>
+    </header>
+    <aside class="col left">
+      <section><h3>Coolant</h3><div id="themehost"></div></section>
+      <section><h3>Machine</h3><div id="setup"></div></section>
+      <section><h3>Control</h3><div id="filters"></div></section>
+    </aside>
+    <main class="col mid" id="main-content"><div id="stage" tabindex="-1"></div></main>
+    <aside class="col right"><h3>Rod detail</h3><div id="side" aria-label="Component inspector"></div></aside>
+  </div>
+</div>`);
+
+/* Emissive geometry: one arc per lane on a ring, brightness by size. Only this
+   group is filtered; the HTML above it stays sharp. */
+function emissive(){
+  const g = document.getElementById('emissive');
+  if(!g) return;
+  const lanes = new Map();
+  A.visibleComponents().forEach(c => {
+    if(!lanes.has(c.lane)) lanes.set(c.lane, {n:0, kind:c.kind});
+    lanes.get(c.lane).n += 1;
+  });
+  const entries = [...lanes.entries()].sort((a,b) => b[1].n - a[1].n).slice(0, 46);
+  const peak = Math.max(...entries.map(e => e[1].n), 1);
+  const CX = 800, CY = 450;
+  g.innerHTML = entries.map(([lane, info], i) => {
+    const a0 = (i / entries.length) * Math.PI * 2 - Math.PI / 2;
+    const a1 = a0 + (Math.PI * 2 / entries.length) * .74;
+    const r = 190 + (info.n / peak) * 190;
+    const x0 = CX + Math.cos(a0) * 150, y0 = CY + Math.sin(a0) * 150;
+    const x1 = CX + Math.cos(a0) * r,   y1 = CY + Math.sin(a0) * r;
+    const w = 2 + (info.n / peak) * 7;
+    return `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}"
+      stroke="${KC[info.kind] || '#7cc4ff'}" stroke-width="${w.toFixed(1)}" stroke-linecap="round" opacity=".9"/>`;
+  }).join('') + `<circle cx="${CX}" cy="${CY}" r="96" fill="none" stroke="#9fd6ff" stroke-width="2.5" opacity=".95"/>
+    <circle cx="${CX}" cy="${CY}" r="52" fill="#bfe4ff" opacity=".9"/>`;
+}
+
+function render(stage){
+  const groups = new Map();
+  A.visibleComponents().forEach(c => {
+    if(!groups.has(c.family)) groups.set(c.family, []);
+    groups.get(c.family).push(c);
+  });
+  if(!groups.size){ stage.innerHTML = '<p style="color:var(--rc-dim)">Core is cold on this filter.</p>'; emissive(); return; }
+  const famName = id => (A.state.data.families.find(f => f.id === id) || {name:id}).name;
+  stage.innerHTML = [...groups.entries()].map(([fam, items]) => `
+    <p class="grp">${esc(famName(fam))} <span style="opacity:.65">${items.length}</span></p>
+    ${items.slice(0, 18).map(c => `<article class="rod${A.state.selected === c.id ? ' on' : ''}" data-node="1" data-comp="${esc(c.id)}" style="--kc:${KC[c.kind] || 'var(--core)'}">
+      <span></span><span><b>${esc(c.name)}</b><small>${esc(c.detail)}</small></span>${add(c)}
+    </article>`).join('')}`).join('');
+  wire(stage);
+  emissive();
+  counts();
+}
+
+function add(c){
+  if(!A.canBuild(c)){
+    const s = A.setupStateFor(c);
+    return `<span class="plan-tag">${esc(s.id === 'choose-platform' ? 'no rig' : s.id === 'review-required' ? 'review' : s.id === 'hosted' ? 'hosted' : 'no rod')}</span>`;
+  }
+  const inB = A.state.basket.includes(c.id);
+  return `<button class="plus${inB ? ' in' : ''}" data-add="${esc(c.id)}" aria-label="${inB?'Remove':'Add'} ${esc(c.name)}">${inB ? '✓' : '+'}</button>`;
+}
+
+function wire(stage){
+  stage.querySelectorAll('[data-node]').forEach(n => {
+    n.addEventListener('click', e => {
+      if(e.target.closest('[data-add]')) return;
+      A.select(n.dataset.comp);
+      P.popover(e.clientX, e.clientY, n.dataset.comp);
+      stage.querySelectorAll('.rod.on').forEach(a => a.classList.remove('on'));
+      n.classList.add('on');
+    });
+  });
+  stage.querySelectorAll('[data-add]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      if(A.state.basket.includes(id)) A.removeFromBasket(id); else A.addToBasket(id);
+      P.draw(); counts();
+    });
+  });
+}
+
+function counts(){
+  const c = A.counts();
+  document.querySelectorAll('[data-basket-count]').forEach(n => n.textContent = c.basket);
+  document.querySelectorAll('[data-visible-count]').forEach(n => n.textContent = c.visibleComponents);
+}
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+P.mount({
+  renderMap: render,
+  onFilter: () => { if(P.tab === 'map') render(document.getElementById('stage')); counts(); },
+  onSelect: counts,
+});
+A.on(counts);
+</script>
+</body>
+</html>

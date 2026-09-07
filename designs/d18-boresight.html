@@ -141,6 +141,12 @@ button{cursor:pointer}
   .hud{padding:16px;height:100dvh;overflow:auto;display:flex;flex-direction:column;gap:18px}
   .bl,.br{max-height:none;width:auto}
 }
+
+.otheros{margin-top:10px;border:1px solid var(--hud-faint);padding:8px 10px}
+.otheros summary{cursor:pointer;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--hud-dim);list-style:none}
+.otheros summary::-webkit-details-marker{display:none}
+.otheros summary::before{content:"> ";color:var(--hud)}
+.otheros[open] summary::before{content:"v "}
 </style>
 </head>
 <body>

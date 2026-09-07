@@ -178,6 +178,14 @@ button{cursor:pointer;background:none;border:0}
   .hdr,.nav{grid-column:1}
   .rail,.main,.insp{grid-row:auto;max-height:none}
 }
+
+.otheros{margin-top:12px;border-radius:16px;padding:11px 14px;
+  background:color-mix(in oklab,#ffffff 6%,transparent);
+  box-shadow:inset 0 1px 0 color-mix(in oklab,#ffffff 22%,transparent)}
+.otheros summary{cursor:pointer;font-size:12.5px;color:var(--sp-dim);list-style:none}
+.otheros summary::-webkit-details-marker{display:none}
+.otheros summary::before{content:"+ ";color:#9ecbff;font-weight:700}
+.otheros[open] summary::before{content:"- "}
 </style>
 </head>
 <body>

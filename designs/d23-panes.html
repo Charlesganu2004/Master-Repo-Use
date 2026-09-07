@@ -92,6 +92,12 @@ button{cursor:pointer}
 @media (max-width:1100px){
   .wm{grid-template-columns:minmax(0,1fr);grid-template-rows:18px auto auto auto 18px}
 }
+
+.otheros{margin-top:18px;border-left:1px solid var(--gutter);padding-left:1ch}
+.otheros summary{cursor:pointer;font-size:12px;color:var(--mute);list-style:none;line-height:18px}
+.otheros summary::-webkit-details-marker{display:none}
+.otheros summary::before{content:"[+] ";color:var(--am)}
+.otheros[open] summary::before{content:"[-] "}
 </style>
 </head>
 <body>

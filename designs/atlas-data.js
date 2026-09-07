@@ -1333,7 +1333,7 @@ window.__ATLAS_DATA__ = {
    "family": "validation",
    "kind": "control",
    "source": "tests/test_atlas_designs.py",
-   "description": "Twenty-eight designs share one data layer and palette layer. These stop them drifting.",
+   "description": "Twenty-eight designs share one data layer. These stop them drifting.",
    "count": 10,
    "catalog": false
   },
@@ -24449,79 +24449,69 @@ window.__ATLAS_DATA__ = {
    "detail": "A declassified paper dossier of the catalog: manila ground, redaction bars, and no easing anywhere."
   },
   {
-   "file": "designs/d16-patchbay.html",
-   "name": "Patchbay Atlas",
-   "detail": "A modular-patch Atlas roadmap with system scan and Build."
-  },
-  {
-   "file": "designs/d17-campaign.html",
-   "name": "Campaign Atlas",
-   "detail": "A campaign-board Atlas roadmap with system scan and Build."
-  },
-  {
    "file": "designs/d17-spatial.html",
    "name": "Spatial",
    "detail": "A spatial glass slab floating over a drifting chroma field, with depth carried by blur rather than by shadow."
   },
   {
-   "file": "designs/d18-stack-forge.html",
-   "name": "Stack Forge Atlas",
-   "detail": "A high-definition implementation-line Atlas roadmap with system scan and command-ready Build."
+   "file": "designs/d18-boresight.html",
+   "name": "Boresight",
+   "detail": "An aerospace head-up display: stroked phosphor geometry arranged radially around a central boresight."
   },
   {
-   "file": "designs/d19-code-cinema.html",
-   "name": "Code Cinema Atlas",
-   "detail": "A high-definition storyboard Atlas roadmap with system scan and command-ready Build."
+   "file": "designs/d19-vitrine.html",
+   "name": "Vitrine",
+   "detail": "A museum vitrine: one lit object on a warm wall, with most of the viewport deliberately empty."
   },
   {
-   "file": "designs/d20-repo-bridge.html",
-   "name": "Repo Bridge Atlas",
-   "detail": "A high-definition source-to-skill Atlas roadmap with system scan and command-ready Build."
+   "file": "designs/d20-tube.html",
+   "name": "Tube",
+   "detail": "A curved CRT in a plastic bezel: aperture grille, phosphor bloom and a rolling interference bar."
   },
   {
-   "file": "designs/d21-treemap.html",
-   "name": "Atlas Treemap",
-   "detail": "A squarified treemap where cell area is the number of catalogued components, with system scan and Build."
+   "file": "designs/d21-poster.html",
+   "name": "Poster",
+   "detail": "A Swiss grotesque poster on a rigid six by eight grid, with no depth of any kind."
   },
   {
-   "file": "designs/d22-matrix.html",
-   "name": "Atlas Matrix",
-   "detail": "A lane-by-kind adjacency matrix that makes cross-listing visible, with system scan and Build."
+   "file": "designs/d22-membrane.html",
+   "name": "Membrane",
+   "detail": "A biological membrane field: no straight lines anywhere, with cells breathing on a wet hue-shifting ground."
   },
   {
-   "file": "designs/d23-sunburst.html",
-   "name": "Atlas Sunburst",
-   "detail": "A two-ring radial sunburst of families and lanes, with system scan and Build."
+   "file": "designs/d23-panes.html",
+   "name": "Panes",
+   "detail": "A tiling pane grid snapped to a real character cell, with a one pixel gutter as the only border."
   },
   {
-   "file": "designs/d24-flow.html",
-   "name": "Atlas Flow",
-   "detail": "A Sankey flow from family to kind to setup readiness, with system scan and Build."
+   "file": "designs/d24-plate.html",
+   "name": "Plate",
+   "detail": "A long-exposure astronomical plate: point sources with Airy discs on photographic emulsion."
   },
   {
-   "file": "designs/d25-rail.html",
-   "name": "Atlas Rail",
-   "detail": "A setup-order timeline rail showing what has to happen before what, with system scan and Build."
+   "file": "designs/d25-riso.html",
+   "name": "Riso",
+   "detail": "A risograph print: two spot inks that miss registration, with the overlap making a third colour."
   },
   {
-   "file": "designs/d26-contact-sheet.html",
-   "name": "Atlas Contact Sheet",
-   "detail": "Every visible component at once in a dense contact sheet, with system scan and Build."
+   "file": "designs/d26-stage.html",
+   "name": "Stage",
+   "detail": "A dark stage lit by one volumetric cone from an emitter above the frame."
   },
   {
-   "file": "designs/d27-terrace.html",
-   "name": "Atlas Terrace",
-   "detail": "An isometric terrace of stacked family floors, with a flat fallback, system scan and Build."
+   "file": "designs/d27-machined.html",
+   "name": "Machined",
+   "detail": "A machined instrument face: anisotropic brushed metal with debossed type and engraved rules."
   },
   {
-   "file": "designs/d28-broadside.html",
-   "name": "Atlas Broadside",
-   "detail": "An editorial broadside with display typography and scroll-driven reveals, with system scan and Build."
+   "file": "designs/d28-depth.html",
+   "name": "Depth",
+   "detail": "Three planes separated by blur radius alone, so the viewport reads as a camera looking into a space."
   },
   {
-   "file": "designs/d29-ledger.html",
-   "name": "Atlas Ledger",
-   "detail": "A monospace terminal ledger that reads the active filters back as a command, with system scan and Build."
+   "file": "designs/d29-reactor.html",
+   "name": "Reactor",
+   "detail": "Emissive geometry through a real threshold-and-merge SVG bloom filter."
   },
   {
    "file": "designs/d3-console.html",
@@ -24529,9 +24519,9 @@ window.__ATLAS_DATA__ = {
    "detail": ""
   },
   {
-   "file": "designs/d30-bundle.html",
-   "name": "Atlas Bundle",
-   "detail": "A radial hierarchical edge bundle of the routes between lanes, with system scan and Build."
+   "file": "designs/d30-atrium.html",
+   "name": "Atrium",
+   "detail": "An oklch mesh ground crossed by god-ray slabs, with the content in the shaded quadrant."
   },
   {
    "file": "designs/d4-orbital.html",

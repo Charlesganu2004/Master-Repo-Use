@@ -132,6 +132,12 @@ button{cursor:pointer}
   .subject{align-self:start}
   .pool{display:none}
 }
+
+.otheros{margin-top:12px;border:1px solid color-mix(in srgb,var(--st-ink) 12%,transparent);padding:10px 13px}
+.otheros summary{cursor:pointer;font-size:12.5px;color:var(--st-dim);list-style:none}
+.otheros summary::-webkit-details-marker{display:none}
+.otheros summary::before{content:"+ ";color:var(--hot);font-weight:700}
+.otheros[open] summary::before{content:"- "}
 </style>
 </head>
 <body>

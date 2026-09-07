@@ -1,4 +1,4 @@
-"""Twenty-eight designs share one data layer and palette layer. These stop them drifting.
+"""Twenty-eight designs share one data layer. These stop them drifting.
 
 The data layer is generated from files that exist, so the most valuable checks
 are the ones that catch a lane pointing at something deleted, a component in a
@@ -18,28 +18,28 @@ from html.parser import HTMLParser
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / "atlas-data.json"
 DESIGNS = ROOT / "designs"
-INTERACTIVE = ["d3-console.html", "d4-orbital.html", "d5-blueprint.html",
-               "d6-graphite.html", "d7-material.html",
-               "d8-metro.html", "d9-workbench.html", "d10-journal.html",
-               "d11-command.html", "d12-index.html", "d13-skill-tree.html",
-               "d14-river.html", "d15-city.html", "d16-patchbay.html",
-               "d17-campaign.html", "d18-stack-forge.html",
-               "d19-code-cinema.html", "d20-repo-bridge.html",
-               # Ten analytical layers. Every design above is, underneath, a list
-               # of equal-sized cards: a lane holding four entries renders the
-               # same as one holding a hundred and eighty. These encode quantity
-               # and relationship in the geometry, which is what none of the
-               # first eighteen could do however they were styled.
-               "d21-treemap.html", "d22-matrix.html", "d23-sunburst.html",
-               "d24-flow.html", "d25-rail.html", "d26-contact-sheet.html",
-               "d27-terrace.html", "d28-broadside.html", "d29-ledger.html",
-               "d30-bundle.html"]
-
-AUTHORED_SOURCE_PAIRS = [
-    ("d18-stack-forge.html", "d18-stack-forge.ts", "d18-stack-forge.js"),
-    ("d19-code-cinema.html", "d19-code-cinema.jsx", "d19-code-cinema.js"),
-    ("d20-repo-bridge.html", "d20-repo-bridge.tsx", "d20-repo-bridge.js"),
+INTERACTIVE = [
+    # The first thirteen share the atlas-next runtime and its palette layer.
+    "d3-console.html", "d4-orbital.html", "d5-blueprint.html",
+    "d6-graphite.html", "d7-material.html",
+    "d8-metro.html", "d9-workbench.html", "d10-journal.html",
+    "d11-command.html", "d12-index.html", "d13-skill-tree.html",
+    "d14-river.html", "d15-city.html",
+    # The last fifteen share the DATA and the INSPECTOR and nothing else. Each
+    # owns its shell, palette, type system and motion law, because the previous
+    # set called one shared shell function and so read as a single design with a
+    # different chart dropped into the middle of it.
+    "d16-declassified.html", "d17-spatial.html", "d18-boresight.html",
+    "d19-vitrine.html", "d20-tube.html", "d21-poster.html",
+    "d22-membrane.html", "d23-panes.html", "d24-plate.html",
+    "d25-riso.html", "d26-stage.html", "d27-machined.html",
+    "d28-depth.html", "d29-reactor.html", "d30-atrium.html",
 ]
+
+# Retired with d18, d19 and d20. Those three shipped an authored .ts/.jsx/.tsx
+# beside a compiled .js; the fifteen that replaced them are single self-contained
+# files, so there is no compiled-from pair left to keep honest.
+AUTHORED_SOURCE_PAIRS = []
 
 # Charles asked for at least 120 lanes. Padding the count with invented names
 # would satisfy the number and defeat the point, so the generator grounds every
