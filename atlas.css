@@ -210,14 +210,133 @@ html[data-theme="light"] .map-node rect { fill: #fffefa; stroke: #b7b2a8; }html[
 .profile-summary{margin:0;color:var(--ink-3);font-size:14px;line-height:1.5}
 .profile-steps{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:13.5px;color:var(--ink-2)}
 .profile-best{margin:auto 0 0;font-size:12.5px;color:var(--ink-3);display:flex;flex-direction:column;gap:2px}
-.profile-best span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.profile-best span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--orange)}
 .setup-note{margin-top:20px;color:var(--ink-3);font-size:14px;line-height:1.55;max-width:74ch}
 .design-links{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:11px;margin-top:8px}
 .design-link{display:flex;flex-direction:column;gap:5px;padding:14px 15px;border:1px solid var(--line);
   border-radius:var(--radius);background:var(--panel-2);text-decoration:none;color:inherit;
   transition:border-color 140ms ease,transform 140ms ease}
-.design-link:hover{border-color:var(--accent);transform:translateY(-2px)}
+.design-link:hover{border-color:var(--orange);transform:translateY(-2px)}
 .design-link strong{font-size:.98rem}
 .design-link small{color:var(--ink-3);font-size:12.5px;line-height:1.45;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 @media (min-width:900px){.setup-picker{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------------------------------------------------------- surface picker
+
+   Three grouped checkbox fields over one config row. The local-model group can
+   hold two dozen tiles at 32 GB, so the tile is sized for scanning down a column
+   rather than reading across: name, then where it lands, then why. Same orange,
+   same two radii as the rest of the page. */
+
+.surface-config { margin-top: 24px; display: flex; flex-direction: column; gap: 34px; }
+
+.cfg-row {
+  display: grid; gap: 18px; padding: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2);
+}
+.cfg-field { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.cfg-label {
+  color: var(--ink-3); font: 700 10px/1 "Segoe UI", sans-serif;
+  letter-spacing: .1em; text-transform: uppercase;
+}
+.cfg-note { margin: 0; color: var(--ink-3); font-size: 12px; line-height: 1.45; }
+.ram-input {
+  display: flex; align-items: center; gap: 8px; padding: 0 13px; min-height: 42px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel);
+}
+.ram-input input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
+  color: var(--ink); font: 700 17px "Segoe UI", sans-serif;
+}
+.ram-input span { color: var(--ink-3); font: 700 11px monospace; }
+.cfg-field .segmented { flex-wrap: wrap; }
+
+.surface-group { display: flex; flex-direction: column; gap: 4px; }
+.group-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+  padding-bottom: 9px; border-bottom: 1px solid var(--line);
+}
+.group-head h3 { margin: 0; font-size: 1.02rem; letter-spacing: -.01em; }
+.group-count {
+  color: var(--orange); font: 700 10px monospace; letter-spacing: .08em;
+  white-space: nowrap;
+}
+.group-note { margin: 9px 0 13px; color: var(--ink-3); font-size: 13px; line-height: 1.5; max-width: 78ch; }
+.group-empty {
+  margin: 0; padding: 18px; border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm); color: var(--ink-3); font-size: 13px;
+}
+
+.surface-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: 9px; }
+.surface-pick {
+  display: flex; gap: 11px; padding: 13px 14px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel-2);
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.surface-pick:hover { border-color: var(--line-strong); }
+.surface-pick.on {
+  border-color: var(--orange);
+  background: color-mix(in srgb, var(--orange) 9%, var(--panel-2));
+}
+.surface-pick input { margin: 2px 0 0; width: 16px; height: 16px; flex: none; accent-color: var(--orange); }
+.surface-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.surface-name {
+  display: flex; align-items: baseline; gap: 8px;
+  font-size: 13.5px; font-weight: 650; color: var(--ink);
+}
+.surface-floor {
+  margin-left: auto; padding: 2px 6px; border-radius: 5px; flex: none;
+  background: var(--panel-3); color: var(--ink-3);
+  font: 700 9.5px monospace; font-style: normal; letter-spacing: .04em;
+}
+.surface-target { color: var(--ink-2); font: 600 11px "Cascadia Code", monospace; overflow-wrap: anywhere; }
+.surface-detail { color: var(--ink-3); font-size: 12px; line-height: 1.45; }
+
+/* ------------------------------------------------------------- the output */
+
+.setup-output { margin-top: 26px; display: flex; flex-direction: column; gap: 16px; }
+.setup-empty {
+  margin: 0; padding: 26px; border: 1px dashed var(--line-strong);
+  border-radius: var(--radius); color: var(--ink-3); font-size: 14px; text-align: center;
+}
+.out-block { padding: 20px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2); }
+.out-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+  margin-bottom: 13px;
+}
+.out-head h3 { margin: 0; font-size: 1.05rem; letter-spacing: -.01em; }
+.out-meta { color: var(--ink-3); font: 700 10px monospace; letter-spacing: .07em; white-space: nowrap; }
+.out-warn {
+  margin: 0 0 13px; padding: 11px 13px; border-left: 3px solid var(--yellow);
+  border-radius: 0 6px 6px 0; background: color-mix(in srgb, var(--yellow) 11%, transparent);
+  color: var(--ink-2); font-size: 12.5px; line-height: 1.5;
+}
+.out-lede { margin: 0 0 15px; color: var(--ink-2); font-size: 13.5px; line-height: 1.55; max-width: 78ch; }
+.out-code {
+  margin: 0; padding: 15px; max-height: 460px; overflow: auto;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: #090a0c;
+  color: #c8f8e0; font: 11.5px/1.75 "Cascadia Code", monospace;
+  font-variant-ligatures: none;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+  scrollbar-width: thin; scrollbar-color: #343944 #090a0c;
+}
+html[data-theme="light"] .out-code { background: #14161a; }
+.out-code code { color: inherit; font: inherit; }
+.out-block .quiet-button { margin-top: 13px; }
+
+.out-steps { margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.out-steps dt {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 12px 0 4px; border-top: 1px solid var(--line);
+  font-size: 13.5px; font-weight: 650;
+}
+.out-steps dt:first-child { border-top: 0; padding-top: 0; }
+.out-steps dt span { color: var(--ink-2); font: 600 11px "Cascadia Code", monospace; overflow-wrap: anywhere; }
+.out-steps dd { margin: 0 0 12px; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; max-width: 78ch; }
+
+@media (max-width: 640px) {
+  .group-head, .out-head { flex-direction: column; align-items: flex-start; gap: 5px; }
+  .surface-grid { grid-template-columns: 1fr; }
+}

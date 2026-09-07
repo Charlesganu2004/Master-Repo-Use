@@ -625,7 +625,7 @@ function assertRegistry() {
    the designs themselves, all read from the generated data rather than typed
    here where they would go stale. */
 
-const catalog = { data: null, client: 'all' };
+const catalog = { data: null, os: detectOs(), profile: 'software-developer' };
 
 async function loadCatalog() {
   try {
@@ -641,8 +641,9 @@ async function loadCatalog() {
     return;
   }
   renderCatalogMetrics();
-  renderClients();
-  renderProfiles();
+  renderSetupControls();
+  renderSurfaces();
+  renderSetupOutput();
   renderDesignLinks();
 }
 
@@ -662,53 +663,305 @@ function renderCatalogMetrics() {
   if (heroProfiles) heroProfiles.textContent = profiles + ' profiles';
 }
 
-function renderClients() {
-  const host = document.getElementById('clientRow');
-  if (!host) return;
-  host.innerHTML = (catalog.data.profileClients || []).map(function (client) {
-    const on = client.id === catalog.client;
-    return '<button type="button" class="route-chip' + (on ? ' active' : '') + '" data-client="' + client.id +
-      '" aria-pressed="' + on + '"><strong>' + escapeHtml(client.name) + '</strong><small>' +
-      escapeHtml(client.detail) + '</small></button>';
+/* --------------------------------------------------------- the surface picker
+
+   This replaced a single-select "which assistant" chip row, which could not say
+   the two things that actually matter.
+
+   First, Charles runs several at once, so it is multi-select.
+
+   Second, and this is the honest half: a shell command cannot reach a browser
+   product. Emitting a setup line for ChatGPT would look like configuration and
+   do nothing at all. So surfaces are grouped by what can genuinely be done to
+   them. A CLI on this machine gets a command. A browser surface gets the place
+   it actually reads its instructions from. A local model gets offered only if
+   the entered memory can hold it.
+
+   The division of labour between the two controls: the ticks decide WHAT gets
+   configured, the depth decides HOW MUCH scaffolding goes around it. The depth
+   profile supplies the step order, and this code expands its two tokens,
+   rules:{client} and the model tokens, from the ticks. */
+
+function detectOs() {
+  const ua = (navigator.userAgent || '').toLowerCase();
+  if (ua.indexOf('mac') > -1) return 'macos';
+  if (ua.indexOf('linux') > -1 && ua.indexOf('android') === -1) return 'linux';
+  return 'windows';
+}
+
+const picked = new Set(['claude-code']);
+
+function surfacesIn(group) {
+  return (catalog.data.surfaces || []).filter(function (s) { return s.group === group; });
+}
+
+function ramGb() {
+  const field = document.getElementById('setupRam');
+  const value = field ? parseInt(field.value, 10) : NaN;
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+/* A tag whose floor is above the entered memory is not listed at all. Listing it
+   greyed out is an invitation to override it, and the override is exactly the
+   mistake this control exists to prevent. */
+function modelsThatFit() {
+  const ram = ramGb();
+  if (!ram) return [];
+  return surfacesIn('local-model').filter(function (s) { return s.minRamGb <= ram; });
+}
+
+function pickedIn(group) {
+  return (group === 'local-model' ? modelsThatFit() : surfacesIn(group))
+    .filter(function (s) { return picked.has(s.id); });
+}
+
+function renderSurfaces() {
+  const host = document.getElementById('surfaceGroups');
+  if (!host || !catalog.data) return;
+  const ram = ramGb();
+  host.innerHTML = (catalog.data.surfaceGroups || []).map(function (group) {
+    const items = group.id === 'local-model' ? modelsThatFit() : surfacesIn(group.id);
+    let body;
+    if (group.id === 'local-model' && !ram) {
+      body = '<p class="group-empty">Enter your system memory above and the tags this machine can hold will appear here.</p>';
+    } else if (!items.length) {
+      body = '<p class="group-empty">Nothing in the vetted list fits ' + escapeHtml(String(ram)) +
+        ' GB. The smallest tag needs 4 GB.</p>';
+    } else {
+      body = '<div class="surface-grid">' + items.map(function (surface) {
+        const on = picked.has(surface.id);
+        const floor = surface.minRamGb
+          ? '<em class="surface-floor">' + surface.minRamGb + ' GB</em>' : '';
+        return '<label class="surface-pick' + (on ? ' on' : '') + '">' +
+          '<input type="checkbox" data-surface="' + escapeHtml(surface.id) + '"' +
+            (on ? ' checked' : '') + '>' +
+          '<span class="surface-body">' +
+            '<span class="surface-name">' + escapeHtml(surface.name) + floor + '</span>' +
+            '<span class="surface-target">' + escapeHtml(surface.target) + '</span>' +
+            '<span class="surface-detail">' + escapeHtml(surface.detail) + '</span>' +
+          '</span></label>';
+      }).join('') + '</div>';
+    }
+    const count = items.filter(function (s) { return picked.has(s.id); }).length;
+    return '<section class="surface-group">' +
+      '<header class="group-head"><h3>' + escapeHtml(group.name) + '</h3>' +
+      '<span class="group-count">' + count + ' of ' + items.length + '</span></header>' +
+      '<p class="group-note">' + escapeHtml(group.note) + '</p>' + body + '</section>';
   }).join('');
-  host.querySelectorAll('[data-client]').forEach(function (button) {
-    button.addEventListener('click', function () {
-      catalog.client = button.getAttribute('data-client');
-      renderClients();
-      renderProfiles();
+
+  host.querySelectorAll('[data-surface]').forEach(function (box) {
+    box.addEventListener('change', function () {
+      const id = box.getAttribute('data-surface');
+      if (box.checked) picked.add(id); else picked.delete(id);
+      renderSurfaces();
+      renderSetupOutput();
     });
   });
 }
 
-function renderProfiles() {
-  const host = document.getElementById('profileGrid');
-  if (!host) return;
-  const recipes = {};
-  (catalog.data.setupRecipes || []).forEach(function (recipe) { recipes[recipe.id] = recipe; });
-  host.innerHTML = (catalog.data.profiles || []).map(function (profile) {
-    /* Two of the steps are tokens the client resolves, not fixed ids. Showing
-       the token raw would read as a placeholder somebody forgot, so name what
-       it will become instead. */
-    const steps = (profile.steps || []).map(function (step) {
-      if (step === 'rules:{client}') return 'Global rules for ' + clientName(catalog.client);
-      if (step === 'model:{tier}') return 'Largest local model your memory can host';
-      if (step === 'model:{tier2}') return 'A second local model for routing';
-      if (step === 'ALL_MODEL_TAGS') return 'Every vetted model tag';
-      const recipe = recipes[step];
-      return recipe ? recipe.name : step;
+function renderSetupControls() {
+  const os = document.getElementById('setupOs');
+  if (os && !os.dataset.wired) {
+    os.innerHTML = [['windows', 'Windows'], ['macos', 'macOS'], ['linux', 'Linux'],
+                    ['wsl', 'WSL']].map(function (pair) {
+      return '<button type="button" data-setup-os="' + pair[0] + '" aria-pressed="' +
+        (pair[0] === catalog.os) + '">' + pair[1] + '</button>';
+    }).join('');
+    os.dataset.wired = '1';
+    os.addEventListener('click', function (event) {
+      const button = event.target.closest('[data-setup-os]');
+      if (!button) return;
+      catalog.os = button.getAttribute('data-setup-os');
+      os.querySelectorAll('[data-setup-os]').forEach(function (other) {
+        other.setAttribute('aria-pressed', other === button);
+      });
+      renderSetupOutput();
     });
-    return '<article class="profile-card"><h3>' + escapeHtml(profile.name) + '</h3>' +
-      '<p class="profile-summary">' + escapeHtml(profile.summary) + '</p>' +
-      '<ol class="profile-steps">' + steps.map(function (step) {
-        return '<li>' + escapeHtml(step) + '</li>';
-      }).join('') + '</ol>' +
-      '<p class="profile-best"><span>Best for</span>' + escapeHtml(profile.bestFor || '') + '</p></article>';
-  }).join('');
+  }
+
+  const depth = document.getElementById('setupProfile');
+  if (depth && !depth.dataset.wired) {
+    depth.innerHTML = (catalog.data.profiles || []).map(function (profile) {
+      return '<button type="button" data-profile="' + escapeHtml(profile.id) +
+        '" aria-pressed="' + (profile.id === catalog.profile) + '">' +
+        escapeHtml(profile.name) + '</button>';
+    }).join('');
+    depth.dataset.wired = '1';
+    depth.addEventListener('click', function (event) {
+      const button = event.target.closest('[data-profile]');
+      if (!button) return;
+      catalog.profile = button.getAttribute('data-profile');
+      depth.querySelectorAll('[data-profile]').forEach(function (other) {
+        other.setAttribute('aria-pressed', other === button);
+      });
+      renderProfileNote();
+      renderSetupOutput();
+    });
+  }
+  renderProfileNote();
+
+  const ram = document.getElementById('setupRam');
+  if (ram && !ram.dataset.wired) {
+    ram.dataset.wired = '1';
+    ram.addEventListener('input', function () {
+      /* Lowering the memory can un-fit a tag that is already ticked. Leaving the
+         tick would emit a pull for a model this machine cannot hold, so the tick
+         goes with the tag rather than surviving out of sight. */
+      const floor = ramGb() || 0;
+      surfacesIn('local-model').forEach(function (model) {
+        if (picked.has(model.id) && model.minRamGb > floor) picked.delete(model.id);
+      });
+      renderSurfaces();
+      renderSetupOutput();
+    });
+  }
 }
 
-function clientName(id) {
-  const found = (catalog.data.profileClients || []).filter(function (client) { return client.id === id; })[0];
-  return found ? found.name : id;
+function currentProfile() {
+  return (catalog.data.profiles || []).filter(function (p) {
+    return p.id === catalog.profile;
+  })[0] || null;
+}
+
+function renderProfileNote() {
+  const note = document.getElementById('setupProfileNote');
+  const profile = currentProfile();
+  if (note && profile) note.textContent = profile.summary;
+}
+
+function recipeById(id) {
+  return (catalog.data.setupRecipes || []).filter(function (r) { return r.id === id; })[0] || null;
+}
+
+function commandFor(id) {
+  const recipe = recipeById(id);
+  if (!recipe) return null;
+  const commands = recipe.commands || {};
+  return commands[catalog.os] || commands.other || null;
+}
+
+/* Walk the depth profile's own step list and expand its two token kinds from
+   the ticks. Keeping the order in the data rather than here means a new profile
+   is a data change, and means the order shown on this page is the same order the
+   catalog documents everywhere else. */
+function stepsForSelection() {
+  const profile = currentProfile();
+  if (!profile) return { ids: [], dropped: [] };
+  const clients = pickedIn('local-client');
+  const models = pickedIn('local-model');
+  const modelsAllowed = (profile.steps || []).some(function (step) {
+    return step.indexOf('model:') === 0 || step === 'ALL_MODEL_TAGS';
+  });
+  const useModels = modelsAllowed ? models : [];
+
+  const ids = [];
+  const seen = {};
+  function push(id) {
+    if (!id || seen[id]) return;
+    seen[id] = true;
+    ids.push(id);
+  }
+
+  (profile.steps || []).forEach(function (step) {
+    if (step === 'rules:{client}') {
+      clients.forEach(function (client) { push(client.setupRecipe); });
+      return;
+    }
+    /* Every model token resolves to the same thing now: the tags that were
+       actually ticked. The tier tokens made sense when a single dropdown had to
+       guess; a checkbox is a better answer than a guess, and push() keeps the
+       tier and tier2 tokens from emitting the same pull twice. */
+    if (step.indexOf('model:') === 0 || step === 'ALL_MODEL_TAGS') {
+      useModels.forEach(function (model) { push(model.setupRecipe); });
+      return;
+    }
+    if (step === 'setup-ollama-runtime' || step === 'setup-model-list-installed') {
+      if (useModels.length) push(step);
+      return;
+    }
+    push(step);
+  });
+
+  return { ids: ids, dropped: modelsAllowed ? [] : models };
+}
+
+function renderSetupOutput() {
+  const host = document.getElementById('setupOutput');
+  if (!host || !catalog.data) return;
+
+  const clients = pickedIn('local-client');
+  const models = pickedIn('local-model');
+  const web = pickedIn('web-chat');
+  if (!clients.length && !models.length && !web.length) {
+    host.innerHTML = '<p class="setup-empty">Nothing ticked. Choose at least one surface above and the commands appear here.</p>';
+    return;
+  }
+
+  const plan = stepsForSelection();
+  const lines = [];
+  plan.ids.forEach(function (id) {
+    const command = commandFor(id);
+    const recipe = recipeById(id);
+    if (!command) return;
+    lines.push('# ' + (recipe ? recipe.name : id));
+    lines.push(command);
+    lines.push('');
+  });
+  while (lines.length && lines[lines.length - 1] === '') lines.pop();
+  const script = lines.join('\n');
+
+  const blocks = [];
+
+  if (script) {
+    const shellCount = clients.length + models.length;
+    let warning = '';
+    if (plan.dropped.length) {
+      warning = '<p class="out-warn">' + escapeHtml(currentProfile().name) +
+        ' installs no models, so ' + plan.dropped.length + ' ticked tag' +
+        (plan.dropped.length === 1 ? ' is' : 's are') +
+        ' not in this script. Switch the depth to include them.</p>';
+    }
+    blocks.push('<article class="out-block"><header class="out-head">' +
+      '<h3>Run these, in this order</h3><span class="out-meta">' +
+      shellCount + ' surface' + (shellCount === 1 ? '' : 's') + ', ' +
+      escapeHtml(osLabel(catalog.os)) + '</span></header>' + warning +
+      '<pre class="out-code"><code>' + escapeHtml(script) + '</code></pre>' +
+      '<button type="button" class="quiet-button" id="copySetup">Copy the script</button>' +
+      '</article>');
+  }
+
+  if (web.length) {
+    blocks.push('<article class="out-block"><header class="out-head">' +
+      '<h3>These cannot take a command</h3><span class="out-meta">' +
+      web.length + ' browser surface' + (web.length === 1 ? '' : 's') + '</span></header>' +
+      '<p class="out-lede">A browser product has no shell on this machine to run against, ' +
+      'so it is configured where it actually reads from. Paste the block from ' +
+      'docs/auto-mode-block.txt into each target below.</p>' +
+      '<dl class="out-steps">' + web.map(function (surface) {
+        return '<dt>' + escapeHtml(surface.name) +
+          '<span>' + escapeHtml(surface.target) + '</span></dt>' +
+          '<dd>' + escapeHtml(surface.detail) + '</dd>';
+      }).join('') + '</dl></article>');
+  }
+
+  host.innerHTML = blocks.join('');
+
+  const copy = document.getElementById('copySetup');
+  if (copy) {
+    copy.addEventListener('click', function () {
+      navigator.clipboard.writeText(script).then(function () {
+        showToast('Setup script copied');
+      }, function () {
+        showToast('Select the script and copy it manually');
+      });
+    });
+  }
+}
+
+function osLabel(id) {
+  if (id === 'macos') return 'macOS';
+  if (id === 'wsl') return 'WSL';
+  return id.charAt(0).toUpperCase() + id.slice(1);
 }
 
 function renderDesignLinks() {

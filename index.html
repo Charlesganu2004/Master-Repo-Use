@@ -81,20 +81,36 @@
     </section>
     <section class="routes-section page-shell" id="setup" aria-labelledby="setupTitle">
       <div class="section-heading route-heading">
-        <div><p class="eyebrow">Easy setup</p><h2 id="setupTitle">Four answers to "new machine, what do I run?"</h2></div>
-        <p>Pick a profile and the assistant it should configure. Every profile installs the protected auto-mode block first, so the caveman rules and the token reducers are in place before anything else runs.</p>
+        <div><p class="eyebrow">Easy setup</p><h2 id="setupTitle">Tick what you use. It writes only those commands.</h2></div>
+        <p>A CLI on this machine gets a command. A browser product cannot receive one, so it gets the connect step instead of a command that would do nothing. Local models are filtered to what your memory can actually hold.</p>
       </div>
-      <div class="setup-picker">
-        <div>
-          <p class="eyebrow">01 - which assistant</p>
-          <div class="client-row" id="clientRow" role="toolbar" aria-label="Choose the client to configure"></div>
+
+      <div class="surface-config">
+        <div class="cfg-row">
+          <div class="cfg-field">
+            <span class="cfg-label" id="setupOsLabel">Operating system</span>
+            <div class="segmented" id="setupOs" role="group" aria-labelledby="setupOsLabel"></div>
+          </div>
+          <div class="cfg-field">
+            <label class="cfg-label" for="setupRam">System memory</label>
+            <div class="ram-input">
+              <input id="setupRam" type="number" min="4" max="256" step="2" value="16"
+                     aria-describedby="setupRamNote">
+              <span>GB</span>
+            </div>
+            <p class="cfg-note" id="setupRamNote">Decides which local models are offered.</p>
+          </div>
+          <div class="cfg-field">
+            <span class="cfg-label" id="setupDepthLabel">Depth</span>
+            <div class="segmented" id="setupProfile" role="group" aria-labelledby="setupDepthLabel"></div>
+            <p class="cfg-note" id="setupProfileNote"></p>
+          </div>
         </div>
-        <div>
-          <p class="eyebrow">02 - which profile</p>
-          <div class="profile-grid" id="profileGrid"></div>
-        </div>
+
+        <div id="surfaceGroups"></div>
       </div>
-      <p class="setup-note" id="setupNote">The full command builder, with your operating system and memory folded in, lives in any of the interactive designs below.</p>
+
+      <div class="setup-output" id="setupOutput" aria-live="polite"></div>
     </section>
     <section class="routes-section page-shell" id="designs" aria-labelledby="designsTitle">
       <div class="section-heading route-heading">

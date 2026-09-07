@@ -24601,6 +24601,465 @@ window.__ATLAS_DATA__ = {
    "detail": "An IDE-style Atlas roadmap with system scan and Build."
   }
  ],
+ "surfaces": [
+  {
+   "id": "claude-code",
+   "name": "Claude Code",
+   "group": "local-client",
+   "runs": "shell",
+   "setupRecipe": "setup-rules-claude",
+   "target": "~/.claude/CLAUDE.md",
+   "detail": "Terminal, desktop and IDE. Also gets the skills and both PreToolUse guards."
+  },
+  {
+   "id": "codex",
+   "name": "Codex (GPT)",
+   "group": "local-client",
+   "runs": "shell",
+   "setupRecipe": "setup-rules-codex",
+   "target": "~/.codex/AGENTS.md",
+   "detail": "The GPT coding surface. --client gpt is accepted as an alias."
+  },
+  {
+   "id": "copilot-cli",
+   "name": "GitHub Copilot CLI",
+   "group": "local-client",
+   "runs": "shell",
+   "setupRecipe": "setup-rules-copilot",
+   "target": "~/.copilot/copilot-instructions.md",
+   "detail": "Also sets COPILOT_CUSTOM_INSTRUCTIONS_DIRS so Copilot reads the repository."
+  },
+  {
+   "id": "gemini-cli",
+   "name": "Gemini CLI",
+   "group": "local-client",
+   "runs": "shell",
+   "setupRecipe": "setup-rules-gemini",
+   "target": "~/.gemini/GEMINI.md",
+   "detail": "Shares its rules file with Antigravity, which reads the same path."
+  },
+  {
+   "id": "antigravity",
+   "name": "Google Antigravity",
+   "group": "local-client",
+   "runs": "shell",
+   "setupRecipe": "setup-rules-antigravity",
+   "target": "~/.gemini/GEMINI.md + ~/.gemini/config/skills/",
+   "detail": "The rules file Gemini CLI uses, plus every skill and the PreInvocation hook."
+  },
+  {
+   "id": "chatgpt-web",
+   "name": "ChatGPT (web)",
+   "group": "web-chat",
+   "runs": "connect",
+   "setupRecipe": null,
+   "target": "Account and project instructions",
+   "detail": "No shell command reaches a browser product. Connect GitHub with access to Charlesganu2004/Master-Repo-Use, reference it for repository work, and put the auto-mode block in your account or project instructions. Never secrets."
+  },
+  {
+   "id": "claude-web",
+   "name": "Claude.ai (web)",
+   "group": "web-chat",
+   "runs": "connect",
+   "setupRecipe": null,
+   "target": "Project knowledge and preferences",
+   "detail": "Add the private repository to the relevant Claude project, or use Claude Code on the web against it. CLAUDE.md stays committed so repo-aware sessions get the same rules. Profile preferences carry the rest."
+  },
+  {
+   "id": "gemini-web",
+   "name": "Gemini (web)",
+   "group": "web-chat",
+   "runs": "connect",
+   "setupRecipe": null,
+   "target": "Saved info and Gems",
+   "detail": "Paste the auto-mode block into saved info, or into a Gem for work that should always carry it. The committed GEMINI.md covers the CLI, not this."
+  },
+  {
+   "id": "copilot-web",
+   "name": "GitHub Copilot (github.com)",
+   "group": "web-chat",
+   "runs": "connect",
+   "setupRecipe": null,
+   "target": ".github/copilot-instructions.md",
+   "detail": "Repository-aware Copilot reads the committed instructions file when it operates on this repository. Reach from other repositories depends on that session's permissions, so it is not something this setup can grant."
+  },
+  {
+   "id": "gemini-code-assist",
+   "name": "Gemini Code Assist",
+   "group": "web-chat",
+   "runs": "connect",
+   "setupRecipe": null,
+   "target": ".gemini/config.yaml + .gemini/styleguide.md",
+   "detail": "Automated pull request review reads the committed .gemini config rather than any home directory file. It reviews; it never approves."
+  },
+  {
+   "id": "model-nomic-embed-text",
+   "name": "nomic-embed-text",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-nomic-embed-text",
+   "target": "Ollama, 0.14B at fp16",
+   "minRamGb": 4,
+   "detail": "The default local RAG embedding model. Pairs with any chat model. Licence: Apache-2.0."
+  },
+  {
+   "id": "model-gemma3-270m",
+   "name": "gemma3:270m",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-gemma3-270m",
+   "target": "Google, 0.27B at q4",
+   "minRamGb": 4,
+   "detail": "Classification, tagging, keyword extraction. Not conversational. Licence: Gemma Terms of Use."
+  },
+  {
+   "id": "model-embeddinggemma",
+   "name": "embeddinggemma",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-embeddinggemma",
+   "target": "Google, 0.31B at q4",
+   "minRamGb": 4,
+   "detail": "Google's embedding model for local RAG. Runs alongside a chat model. Licence: Gemma Terms of Use."
+  },
+  {
+   "id": "model-smollm2-360m",
+   "name": "smollm2:360m",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-smollm2-360m",
+   "target": "Ollama, 0.36B at q4",
+   "minRamGb": 4,
+   "detail": "Tiny assistant for autocomplete and classification on 4 GB machines. Licence: Apache-2.0."
+  },
+  {
+   "id": "model-qwen3-0-6b",
+   "name": "qwen3:0.6b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-qwen3-0-6b",
+   "target": "Ollama, 0.6B at q4",
+   "minRamGb": 4,
+   "detail": "Smallest Qwen3. Surprisingly capable at structured extraction. Licence: Apache-2.0."
+  },
+  {
+   "id": "model-gemma3-1b",
+   "name": "gemma3:1b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-gemma3-1b",
+   "target": "Google, 1.0B at q4",
+   "minRamGb": 4,
+   "detail": "Short-form summarisation and structured extraction on very small machines. Licence: Gemma Terms of Use."
+  },
+  {
+   "id": "model-llama3-2-1b",
+   "name": "llama3.2:1b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-llama3-2-1b",
+   "target": "Ollama, 1.0B at q4",
+   "minRamGb": 4,
+   "detail": "Meta's smallest instruct model. Good summariser at 4 GB. Licence: Llama 3.2 Community."
+  },
+  {
+   "id": "model-qwen3-1-7b",
+   "name": "qwen3:1.7b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-qwen3-1-7b",
+   "target": "Ollama, 1.7B at q4",
+   "minRamGb": 6,
+   "detail": "Step up from 0.6b with real multi-turn ability. Licence: Apache-2.0."
+  },
+  {
+   "id": "model-gemma3n-e2b",
+   "name": "gemma3n:e2b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-gemma3n-e2b",
+   "target": "Google, 2.0B at q4",
+   "minRamGb": 6,
+   "detail": "On-device tuned; MatFormer architecture keeps active parameters low. Licence: Gemma Terms of Use."
+  },
+  {
+   "id": "model-llama3-2-3b",
+   "name": "llama3.2:3b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-llama3-2-3b",
+   "target": "Ollama, 3.0B at q4",
+   "minRamGb": 6,
+   "detail": "Solid general assistant at the 6 GB tier. Licence: Llama 3.2 Community."
+  },
+  {
+   "id": "model-phi3-5",
+   "name": "phi3.5",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-phi3-5",
+   "target": "Microsoft, 3.8B at q4",
+   "minRamGb": 6,
+   "detail": "Previous generation. Keep only if a workload is already tuned against it. Licence: MIT."
+  },
+  {
+   "id": "model-phi3-mini",
+   "name": "phi3:mini",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-phi3-mini",
+   "target": "Microsoft, 3.8B at q4",
+   "minRamGb": 6,
+   "detail": "Compact Phi-3. Useful when a workload is pinned to the Phi-3 generation. Licence: MIT."
+  },
+  {
+   "id": "model-phi4-mini",
+   "name": "phi4-mini",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-phi4-mini",
+   "target": "Microsoft, 3.8B at q4",
+   "minRamGb": 6,
+   "detail": "Reasoning-tuned small model with strong instruction following for its size. Licence: MIT."
+  },
+  {
+   "id": "model-phi4-mini-reasoning",
+   "name": "phi4-mini-reasoning",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-phi4-mini-reasoning",
+   "target": "Microsoft, 3.8B at q4",
+   "minRamGb": 6,
+   "detail": "Chain-of-thought tuned variant of Phi-4-mini. Slower, better at multi-step maths. Licence: MIT."
+  },
+  {
+   "id": "model-gemma3-4b",
+   "name": "gemma3:4b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-gemma3-4b",
+   "target": "Google, 4.0B at q4",
+   "minRamGb": 6,
+   "detail": "General assistant with vision input. The sensible default at 8 GB. Licence: Gemma Terms of Use."
+  },
+  {
+   "id": "model-gemma3n-e4b",
+   "name": "gemma3n:e4b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-gemma3n-e4b",
+   "target": "Google, 4.0B at q4",
+   "minRamGb": 6,
+   "detail": "Larger on-device Gemma 3n; better reasoning than e2b at similar footprint. Licence: Gemma Terms of Use."
+  },
+  {
+   "id": "model-qwen3-4b",
+   "name": "qwen3:4b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-qwen3-4b",
+   "target": "Ollama, 4.0B at q4",
+   "minRamGb": 6,
+   "detail": "Strong all-rounder; hybrid thinking mode for harder prompts. Licence: Apache-2.0."
+  },
+  {
+   "id": "model-codegemma-7b",
+   "name": "codegemma:7b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-codegemma-7b",
+   "target": "Google, 7.0B at q4",
+   "minRamGb": 8,
+   "detail": "Code completion and generation, fill-in-the-middle aware. Licence: Gemma Terms of Use."
+  },
+  {
+   "id": "model-deepseek-r1-7b",
+   "name": "deepseek-r1:7b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-deepseek-r1-7b",
+   "target": "Ollama, 7.0B at q4",
+   "minRamGb": 8,
+   "detail": "Distilled reasoning model; shows its working. Licence: MIT."
+  },
+  {
+   "id": "model-mistral",
+   "name": "mistral",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-mistral",
+   "target": "Ollama, 7.0B at q4",
+   "minRamGb": 8,
+   "detail": "Fast, permissive, well-understood baseline. Licence: Apache-2.0."
+  },
+  {
+   "id": "model-qwen2-5-coder-7b",
+   "name": "qwen2.5-coder:7b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-qwen2-5-coder-7b",
+   "target": "Ollama, 7.0B at q4",
+   "minRamGb": 8,
+   "detail": "Best small local coding model. Fill-in-the-middle and repo-level context. Licence: Apache-2.0."
+  },
+  {
+   "id": "model-qwen3-8b",
+   "name": "qwen3:8b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-qwen3-8b",
+   "target": "Ollama, 8.0B at q4",
+   "minRamGb": 12,
+   "detail": "The sweet spot for general local work once you have 12 GB. Licence: Apache-2.0."
+  },
+  {
+   "id": "model-gemma2-9b",
+   "name": "gemma2:9b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-gemma2-9b",
+   "target": "Google, 9.0B at q4",
+   "minRamGb": 12,
+   "detail": "Previous-generation Gemma; still strong general chat at mid size. Licence: Gemma Terms of Use."
+  },
+  {
+   "id": "model-gemma3-12b",
+   "name": "gemma3:12b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-gemma3-12b",
+   "target": "Google, 12.0B at q4",
+   "minRamGb": 12,
+   "detail": "Multi-step instructions and code review. Vision capable. Licence: Gemma Terms of Use."
+  },
+  {
+   "id": "model-deepseek-r1-14b",
+   "name": "deepseek-r1:14b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-deepseek-r1-14b",
+   "target": "Ollama, 14.0B at q4",
+   "minRamGb": 16,
+   "detail": "Reasoning at a size a 16 GB machine can actually hold. Licence: MIT."
+  },
+  {
+   "id": "model-phi3-medium",
+   "name": "phi3:medium",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-phi3-medium",
+   "target": "Microsoft, 14.0B at q4",
+   "minRamGb": 16,
+   "detail": "Phi-3 Medium. Older than Phi-4 but a genuine mid-size Microsoft option. Licence: MIT."
+  },
+  {
+   "id": "model-phi4",
+   "name": "phi4",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-phi4",
+   "target": "Microsoft, 14.0B at q4",
+   "minRamGb": 16,
+   "detail": "Best Microsoft open-weight general model for a 16 GB machine. Licence: MIT."
+  },
+  {
+   "id": "model-phi4-reasoning",
+   "name": "phi4-reasoning",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-phi4-reasoning",
+   "target": "Microsoft, 14.0B at q4",
+   "minRamGb": 16,
+   "detail": "Reasoning-tuned Phi-4. Competitive with much larger models on maths and logic. Licence: MIT."
+  },
+  {
+   "id": "model-qwen3-14b",
+   "name": "qwen3:14b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-qwen3-14b",
+   "target": "Ollama, 14.0B at q4",
+   "minRamGb": 16,
+   "detail": "Strong general + coding model at 16 GB. Licence: Apache-2.0."
+  },
+  {
+   "id": "model-mistral-small",
+   "name": "mistral-small",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-mistral-small",
+   "target": "Ollama, 24.0B at q4",
+   "minRamGb": 24,
+   "detail": "Near-frontier quality for a single consumer machine. Licence: Apache-2.0."
+  },
+  {
+   "id": "model-gemma2-27b",
+   "name": "gemma2:27b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-gemma2-27b",
+   "target": "Google, 27.0B at q4",
+   "minRamGb": 24,
+   "detail": "Previous-generation 27B. Alternative to Gemma 3 if a workload is already tuned to it. Licence: Gemma Terms of Use."
+  },
+  {
+   "id": "model-gemma3-27b",
+   "name": "gemma3:27b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-gemma3-27b",
+   "target": "Google, 27.0B at q4",
+   "minRamGb": 24,
+   "detail": "Largest Gemma that fits a consumer box. Genuine coding assistance. Licence: Gemma Terms of Use."
+  },
+  {
+   "id": "model-qwen3-30b-a3b",
+   "name": "qwen3:30b-a3b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-qwen3-30b-a3b",
+   "target": "Ollama, 30.0B at q4",
+   "minRamGb": 24,
+   "detail": "Mixture-of-experts: 30B total but ~3B active, so it runs far faster than its size implies. Licence: Apache-2.0."
+  },
+  {
+   "id": "model-qwen2-5-coder-32b",
+   "name": "qwen2.5-coder:32b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-qwen2-5-coder-32b",
+   "target": "Ollama, 32.0B at q4",
+   "minRamGb": 32,
+   "detail": "The strongest local coding model that fits 32 GB. Licence: Apache-2.0."
+  },
+  {
+   "id": "model-qwen3-32b",
+   "name": "qwen3:32b",
+   "group": "local-model",
+   "runs": "shell",
+   "setupRecipe": "setup-model-qwen3-32b",
+   "target": "Ollama, 32.0B at q4",
+   "minRamGb": 32,
+   "detail": "Largest dense Qwen3 for a 32 GB box. Licence: Apache-2.0."
+  }
+ ],
+ "surfaceGroups": [
+  {
+   "id": "local-client",
+   "name": "Local clients",
+   "note": "A CLI on this machine. One command configures each of these."
+  },
+  {
+   "id": "web-chat",
+   "name": "Web and chat only",
+   "note": "No shell command reaches a browser product. These get a connect or paste instruction instead, which is the honest answer rather than a command that would do nothing."
+  },
+  {
+   "id": "local-model",
+   "name": "Local models",
+   "note": "Filtered by the memory you enter above. A tag your machine cannot hold is not offered, because a model that swaps is worse than no model."
+  }
+ ],
  "profiles": [
   {
    "id": "rules-only",

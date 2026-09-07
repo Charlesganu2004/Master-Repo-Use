@@ -871,6 +871,94 @@ def skill_lanes() -> tuple[list, list]:
     return lanes, comps
 
 
+# Every surface a person might actually be sitting in front of, grouped by what
+# you can DO to it, which is the distinction the old single-select client picker
+# could not make.
+#
+# The honest split is not vendor, it is whether a shell command reaches it:
+#
+#   local-client  a CLI on this machine. A command configures it.
+#   web-chat      a browser product. NO command reaches it, and offering one
+#                 would be a lie. These get a connect-or-paste instruction, and
+#                 the instructions come from docs/GLOBAL-AI-SETUP.md rather than
+#                 being invented here.
+#   local-model   a model this machine can host. Gated by the RAM scan, because
+#                 offering `ollama pull` for a tag that will swap is worse than
+#                 offering nothing.
+#
+# Charles runs several of these at once, so the picker is multi-select and the
+# output is grouped by what each selection can actually receive.
+SURFACES = [
+    ("claude-code", "Claude Code", "local-client", "shell",
+     "setup-rules-claude", "~/.claude/CLAUDE.md",
+     "Terminal, desktop and IDE. Also gets the skills and both PreToolUse guards."),
+    ("codex", "Codex (GPT)", "local-client", "shell",
+     "setup-rules-codex", "~/.codex/AGENTS.md",
+     "The GPT coding surface. --client gpt is accepted as an alias."),
+    ("copilot-cli", "GitHub Copilot CLI", "local-client", "shell",
+     "setup-rules-copilot", "~/.copilot/copilot-instructions.md",
+     "Also sets COPILOT_CUSTOM_INSTRUCTIONS_DIRS so Copilot reads the repository."),
+    ("gemini-cli", "Gemini CLI", "local-client", "shell",
+     "setup-rules-gemini", "~/.gemini/GEMINI.md",
+     "Shares its rules file with Antigravity, which reads the same path."),
+    ("antigravity", "Google Antigravity", "local-client", "shell",
+     "setup-rules-antigravity", "~/.gemini/GEMINI.md + ~/.gemini/config/skills/",
+     "The rules file Gemini CLI uses, plus every skill and the PreInvocation hook."),
+
+    ("chatgpt-web", "ChatGPT (web)", "web-chat", "connect", None,
+     "Account and project instructions",
+     "No shell command reaches a browser product. Connect GitHub with access to "
+     "Charlesganu2004/Master-Repo-Use, reference it for repository work, and put "
+     "the auto-mode block in your account or project instructions. Never secrets."),
+    ("claude-web", "Claude.ai (web)", "web-chat", "connect", None,
+     "Project knowledge and preferences",
+     "Add the private repository to the relevant Claude project, or use Claude "
+     "Code on the web against it. CLAUDE.md stays committed so repo-aware "
+     "sessions get the same rules. Profile preferences carry the rest."),
+    ("gemini-web", "Gemini (web)", "web-chat", "connect", None,
+     "Saved info and Gems",
+     "Paste the auto-mode block into saved info, or into a Gem for work that "
+     "should always carry it. The committed GEMINI.md covers the CLI, not this."),
+    ("copilot-web", "GitHub Copilot (github.com)", "web-chat", "connect", None,
+     ".github/copilot-instructions.md",
+     "Repository-aware Copilot reads the committed instructions file when it "
+     "operates on this repository. Reach from other repositories depends on that "
+     "session's permissions, so it is not something this setup can grant."),
+    ("gemini-code-assist", "Gemini Code Assist", "web-chat", "connect", None,
+     ".gemini/config.yaml + .gemini/styleguide.md",
+     "Automated pull request review reads the committed .gemini config rather "
+     "than any home directory file. It reviews; it never approves."),
+]
+
+
+def surface_entries() -> list[dict]:
+    """The two fixed groups. Local models are added by the client after the scan."""
+    return [{
+        "id": ident, "name": name, "group": group, "runs": runs,
+        "setupRecipe": recipe, "target": target, "detail": detail,
+    } for ident, name, group, runs, recipe, target, detail in SURFACES]
+
+
+def local_model_surfaces() -> list[dict]:
+    """Every vetted ollama tag, carrying the RAM floor the client gates on.
+
+    Emitted in full and filtered in the browser rather than filtered here,
+    because the machine doing the build is not the machine being set up.
+    """
+    models = [m for m in HARDWARE_PROFILES["models"] if m.get("runtime") == "ollama"]
+    models.sort(key=lambda m: (m["min_ram_gb"], m["params_b"], m["tag"]))
+    return [{
+        "id": _model_slug(m["tag"]),
+        "name": m["tag"],
+        "group": "local-model",
+        "runs": "shell",
+        "setupRecipe": f"setup-{_model_slug(m['tag'])}",
+        "target": f"{m['vendor']}, {m['params_b']}B at {m['quant']}",
+        "minRamGb": m["min_ram_gb"],
+        "detail": f"{m['use']} Licence: {m['license']}.",
+    } for m in models]
+
+
 def design_pages() -> list[dict]:
     """Every interactive design, read from the files rather than listed by hand.
 
@@ -981,6 +1069,15 @@ def build() -> dict:
         "setupRecipes": ([MASTER_SETUP_RECIPE] + model_setup_recipes()
                      + global_rules_recipes() + antigravity_recipes()),
         "designs": design_pages(),
+        "surfaces": surface_entries() + local_model_surfaces(),
+        "surfaceGroups": [
+            {"id": "local-client", "name": "Local clients",
+             "note": "A CLI on this machine. One command configures each of these."},
+            {"id": "web-chat", "name": "Web and chat only",
+             "note": "No shell command reaches a browser product. These get a connect or paste instruction instead, which is the honest answer rather than a command that would do nothing."},
+            {"id": "local-model", "name": "Local models",
+             "note": "Filtered by the memory you enter above. A tag your machine cannot hold is not offered, because a model that swaps is worse than no model."},
+        ],
         "profiles": PROFILES,
         "profileClients": PROFILE_CLIENTS,
         "routes": routes,
