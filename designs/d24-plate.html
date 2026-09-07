@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A long-exposure astronomical plate: point sources with Airy discs on photographic emulsion.">
+<title>Plate | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* ===========================================================================
+   PLATE. A photographic plate rather than a screen. The ground is not flat
+   black: it is warm emulsion fog with silver-halide grain and a vignette from
+   the plate holder.
+
+   Every component is a POINT SOURCE with an Airy disc, sized by how much its
+   lane holds, so magnitude reads the way it does on a real plate: brighter and
+   larger means more, and the eye picks the bright ones out without a legend.
+
+   Drawn on canvas because 970 glows would be 970 composited layers in DOM, and
+   the whole page would stutter. The canvas is decorative; the same components
+   exist as a focusable list beside it, so nothing here is mouse-only.
+   ========================================================================= */
+:root{
+  --emul:#0b0906; --fog:#171208;
+  --pl-ink:#f0e6d2; --pl-dim:#9a8f7c;
+  --halo:#ffe9b8;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--emul);color:var(--pl-ink);font:14px/1.5 var(--serif);
+  height:100vh;height:100dvh;overflow:hidden;
+}
+button,input,select{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+:focus-visible{outline:1px solid var(--halo);outline-offset:2px}
+
+.plate{position:relative;height:100vh;height:100dvh;overflow:hidden}
+#sky{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* Emulsion: warm fog, then grain, then the holder vignette. Order matters, the
+   grain has to sit under the vignette or the corners look sprayed on. */
+.fog{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(70% 60% at 46% 40%,var(--fog),transparent 72%);mix-blend-mode:screen}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.3;mix-blend-mode:overlay;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E")}
+.vig{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 50%,transparent 52%,#000 96%)}
+
+/* Plate annotations, written on the emulsion in the corners. */
+.ann{position:absolute;z-index:3;font:400 11px/1.6 var(--mono);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--pl-dim)}
+.ann b{color:var(--pl-ink);font-weight:400}
+.a-tl{left:26px;top:22px}
+.a-tr{right:26px;top:22px;text-align:right}
+
+.log{
+  position:absolute;right:26px;top:74px;bottom:26px;width:min(30vw,380px);z-index:3;
+  overflow:auto;padding-right:4px;
+  border-left:1px solid color-mix(in srgb,var(--pl-ink) 14%,transparent);padding-left:18px;
+}
+.log h3{margin:0 0 8px;font:400 10px/1 var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--halo)}
+.log section{margin-bottom:18px}
+.ent{
+  position:relative;display:grid;grid-template-columns:14px 1fr auto;gap:9px;align-items:baseline;
+  padding:3px 0;border-bottom:1px solid color-mix(in srgb,var(--pl-ink) 7%,transparent);
+}
+.ent:hover,.ent.on{background:color-mix(in srgb,var(--halo) 12%,transparent)}
+.mag{width:7px;height:7px;border-radius:50%;background:var(--halo);align-self:center;
+  box-shadow:0 0 8px 2px color-mix(in srgb,var(--halo) 50%,transparent)}
+.ent b{font-weight:400;font-size:13px;overflow-wrap:anywhere}
+.ent .plus{border:1px solid color-mix(in srgb,var(--pl-ink) 26%,transparent);width:19px;height:19px;
+  line-height:17px;text-align:center;font:400 11px/17px var(--mono);border-radius:50%}
+.ent .plus.in{background:var(--halo);border-color:var(--halo);color:var(--emul)}
+.ent .plan-tag{font:400 9px/1 var(--mono);letter-spacing:.1em;color:var(--pl-dim)}
+
+.deck{
+  position:absolute;left:26px;top:74px;bottom:26px;width:min(26vw,320px);z-index:3;
+  overflow:auto;padding-right:14px;
+}
+.deck h3{margin:0 0 8px;font:400 10px/1 var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--halo)}
+.deck section{margin-bottom:18px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px}
+.tabs .tab{padding:3px 9px;font:400 11px/1.5 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--pl-dim);border:1px solid color-mix(in srgb,var(--pl-ink) 12%,transparent);border-radius:2px}
+.tabs .tab:hover{color:var(--pl-ink)}
+.tabs .tab[aria-selected="true"]{background:var(--halo);color:var(--emul);border-color:var(--halo)}
+#setup .os,#filters .chip{border:1px solid color-mix(in srgb,var(--pl-ink) 14%,transparent);
+  padding:2px 8px;font-size:11px;color:var(--pl-dim);border-radius:2px}
+#setup .os.on,#filters .chip.on{background:var(--halo);color:var(--emul);border-color:var(--halo)}
+#setup input{border:1px solid color-mix(in srgb,var(--pl-ink) 14%,transparent);width:56px;padding:2px 6px;color:var(--pl-ink)}
+#setup .num{display:none}
+#setup,#filters,#side{font-size:12.5px}
+.pane{font-size:13px}
+
+@media (max-width:1024px){
+  .deck,.log{position:static;width:auto;height:auto;border:0;padding:14px}
+  .plate{overflow:auto}
+  #sky{position:static;height:52dvh}
+}
+</style>
+</head>
+<body>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes, esc = P.esc;
+
+document.body.insertAdjacentHTML('beforeend', `
+<div class="plate">
+  <canvas id="sky"></canvas>
+  <div class="fog"></div><div class="grain"></div><div class="vig"></div>
+  <p class="ann a-tl">Plate <b>MR-970</b> / long exposure</p>
+  <p class="ann a-tr">Sources <b data-visible-count>0</b> / plates <b data-basket-count>0</b></p>
+  <div class="deck">
+    <section><h3>Exposure</h3><div class="tabs" id="tabs" role="tablist" aria-label="Plate views"></div></section>
+    <section><h3>Instrument</h3><div id="setup"></div></section>
+    <section><h3>Aperture</h3><div id="filters"></div></section>
+    <section><div id="themehost"></div></section>
+  </div>
+  <div class="log">
+    <h3>Plate log</h3>
+    <div id="stage" tabindex="-1"></div>
+    <h3 style="margin-top:20px">Source note</h3>
+    <div id="side" aria-label="Component inspector"></div>
+  </div>
+  <div id="main-content" style="position:absolute;left:-9999px" aria-hidden="true"></div>
+</div>`);
+
+/* One canvas, one pass. An Airy disc is a bright core plus a soft halo plus a
+   faint first ring; drawing all three with radial gradients is close enough to
+   the real point spread that it reads as a photograph rather than as dots. */
+function sky(){
+  const canvas = document.getElementById('sky');
+  if(!canvas) return;
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  const g = canvas.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+
+  const visible = A.visibleComponents();
+  const families = A.state.data.families.map(f => f.id);
+  const laneSize = new Map();
+  visible.forEach(c => laneSize.set(c.lane, (laneSize.get(c.lane) || 0) + 1));
+  const peak = Math.max(...laneSize.values(), 1);
+
+  visible.slice(0, 700).forEach((c, i) => {
+    /* Stereographic-ish projection: family sets the right ascension, the index
+       within the family sets declination. Position carries the grouping. */
+    const fi = families.indexOf(c.family);
+    const ra = (fi / Math.max(families.length, 1)) * Math.PI * 2 + (i % 17) * 0.031;
+    const dec = 0.16 + ((i * 37) % 100) / 100 * 0.78;
+    const x = w / 2 + Math.cos(ra) * dec * w * 0.46;
+    const y = h / 2 + Math.sin(ra) * dec * h * 0.46;
+    const mag = 1 + (laneSize.get(c.lane) || 1) / peak * 4.4;
+
+    const halo = g.createRadialGradient(x, y, 0, x, y, mag * 5.5);
+    halo.addColorStop(0, 'rgba(255,233,184,.95)');
+    halo.addColorStop(.22, 'rgba(255,220,150,.36)');
+    halo.addColorStop(1, 'rgba(255,210,140,0)');
+    g.fillStyle = halo;
+    g.beginPath(); g.arc(x, y, mag * 5.5, 0, Math.PI * 2); g.fill();
+
+    g.fillStyle = '#fff6e2';
+    g.beginPath(); g.arc(x, y, Math.max(mag * .58, .7), 0, Math.PI * 2); g.fill();
+  });
+}
+
+function render(stage){
+  const groups = new Map();
+  A.visibleComponents().forEach(c => {
+    if(!groups.has(c.family)) groups.set(c.family, []);
+    groups.get(c.family).push(c);
+  });
+  if(!groups.size){ stage.innerHTML = '<p style="color:var(--pl-dim)">Nothing on this plate.</p>'; sky(); return; }
+  const famName = id => (A.state.data.families.find(f => f.id === id) || {name:id}).name;
+  stage.innerHTML = [...groups.entries()].map(([fam, items]) => `
+    <section><h3>${esc(famName(fam))} <span style="color:var(--pl-dim)">${items.length}</span></h3>
+    ${items.slice(0, 20).map(c => `<article class="ent${A.state.selected === c.id ? ' on' : ''}" data-node="1" data-comp="${esc(c.id)}">
+      <span class="mag"></span><b>${esc(c.name)}</b>${add(c)}
+    </article>`).join('')}</section>`).join('');
+  wire(stage);
+  sky();
+  counts();
+}
+
+function add(c){
+  if(!A.canBuild(c)){
+    const s = A.setupStateFor(c);
+    return `<span class="plan-tag">${esc(s.id === 'choose-platform' ? 'no instr' : s.id === 'review-required' ? 'review' : s.id === 'hosted' ? 'hosted' : 'none')}</span>`;
+  }
+  const inB = A.state.basket.includes(c.id);
+  return `<button class="plus${inB ? ' in' : ''}" data-add="${esc(c.id)}" aria-label="${inB?'Remove':'Add'} ${esc(c.name)}">${inB ? '•' : '+'}</button>`;
+}
+
+function wire(stage){
+  stage.querySelectorAll('[data-node]').forEach(n => {
+    n.addEventListener('click', e => {
+      if(e.target.closest('[data-add]')) return;
+      A.select(n.dataset.comp);
+      P.popover(e.clientX, e.clientY, n.dataset.comp);
+      stage.querySelectorAll('.ent.on').forEach(a => a.classList.remove('on'));
+      n.classList.add('on');
+    });
+  });
+  stage.querySelectorAll('[data-add]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      if(A.state.basket.includes(id)) A.removeFromBasket(id); else A.addToBasket(id);
+      P.draw(); counts();
+    });
+  });
+}
+
+function counts(){
+  const c = A.counts();
+  document.querySelectorAll('[data-basket-count]').forEach(n => n.textContent = c.basket);
+  document.querySelectorAll('[data-visible-count]').forEach(n => n.textContent = c.visibleComponents);
+}
+
+addEventListener('resize', sky, {passive:true});
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+P.mount({
+  renderMap: render,
+  onFilter: () => { if(P.tab === 'map') render(document.getElementById('stage')); counts(); },
+  onSelect: counts,
+});
+A.on(counts);
+</script>
+</body>
+</html>

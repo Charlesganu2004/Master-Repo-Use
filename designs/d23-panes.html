@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A tiling pane grid snapped to a real character cell, with a one pixel gutter as the only border.">
+<title>Panes | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* ===========================================================================
+   PANES. Flat, crisp and dense, and explicitly NOT the CRT: no bloom, no
+   curvature, no scanline, no glass. This is a tmux session, not a monitor.
+
+   The structural rule is that everything snaps to a real character cell. Column
+   widths are in `ch` and heights are multiples of the line box, so nothing is
+   ever half a character wide. That is why it reads as a tiling window manager
+   rather than as a dark dashboard.
+
+   Pane borders are not drawn. The 1px gutter is the grid's own background
+   showing through, which is exactly how a tiler does it.
+   ========================================================================= */
+:root{
+  --pn-bg:#0d1117; --gutter:#232a33; --pane:#0d1117;
+  --fg:#c9d5e1; --mute:#6b7a8c;
+  --cy:#4fd6c9; --am:#e5b567; --mg:#d886c4; --gn:#8fd67a; --bl:#6aa9f0;
+  --mono:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--gutter);color:var(--fg);
+  font:13px/18px var(--mono);          /* 18px line box, every height a multiple */
+  height:100vh;height:100dvh;overflow:hidden;
+}
+button,input,select{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+:focus-visible{outline:1px solid var(--cy);outline-offset:-1px}
+
+.wm{
+  height:100vh;height:100dvh;display:grid;
+  grid-template-columns:34ch minmax(0,1fr) 46ch;
+  grid-template-rows:18px minmax(0,1fr) 18px;
+  gap:1px;background:var(--gutter);
+}
+.pane{background:var(--pane);overflow:auto;min-width:0;min-height:0}
+
+/* Tab line, in the shape a tiler actually uses. */
+.tabline{grid-column:1/4;background:var(--pane);display:flex;align-items:center;overflow-x:auto;white-space:nowrap}
+.tabline #tabs{display:flex}
+.tabline .tab{padding:0 1ch;font-size:12px;line-height:18px;color:var(--mute)}
+.tabline .tab::before{content:'[';color:var(--gutter)}
+.tabline .tab::after{content:']';color:var(--gutter)}
+.tabline .tab:hover{color:var(--fg)}
+.tabline .tab[aria-selected="true"]{background:var(--cy);color:var(--pn-bg)}
+.statusline{grid-column:1/4;background:var(--pane);display:flex;align-items:center;
+  font-size:11px;line-height:18px;color:var(--mute);gap:0}
+.statusline b{background:var(--cy);color:var(--pn-bg);padding:0 1ch;font-weight:700}
+.statusline span{padding:0 1ch;border-right:1px solid var(--gutter)}
+
+.ptitle{
+  position:sticky;top:0;z-index:2;background:var(--pn-bg);
+  padding:0 1ch;font-size:11px;line-height:18px;color:var(--pn-bg);
+  background:var(--mute);letter-spacing:.04em;
+}
+.left .ptitle{background:var(--bl)}
+.mid .ptitle{background:var(--cy)}
+.right .ptitle{background:var(--mg)}
+.pbody{padding:0 1ch 18px}
+
+/* Rows are character-aligned: a fixed-width index, then the name, then a mark.
+   padEnd does the alignment, not a grid, because ch units make it exact. */
+.row{display:block;white-space:pre;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.row:hover{background:#161c25}
+.row.on{background:var(--cy);color:var(--pn-bg)}
+.row .k{color:var(--am)}
+.row.on .k{color:var(--pn-bg)}
+.row .m{color:var(--mute)}
+.row.on .m{color:var(--pn-bg)}
+.grp{color:var(--gn);white-space:pre}
+.hint{color:var(--mute)}
+.add{color:var(--am);padding:0 .5ch}
+.add.in{background:var(--am);color:var(--pn-bg)}
+
+#setup .os,#filters .chip{border:0;background:#161c25;color:var(--mute);
+  padding:0 1ch;line-height:18px;font-size:12px;margin:0 1px 1px 0;display:inline-block}
+#setup .os.on,#filters .chip.on{background:var(--cy);color:var(--pn-bg)}
+#setup input{background:#161c25;border:0;padding:0 1ch;line-height:18px;width:8ch;color:var(--fg)}
+#setup .num{display:none}
+#setup .steplabel,#filters .flabel{color:var(--gn);font-size:11px}
+.pane .pane{background:none}
+
+@media (max-width:1100px){
+  .wm{grid-template-columns:minmax(0,1fr);grid-template-rows:18px auto auto auto 18px}
+}
+</style>
+</head>
+<body>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes, esc = P.esc;
+const SIG = {instruction:'i',capability:'c',knowledge:'k',control:'o',model:'m',delivery:'d'};
+
+document.body.insertAdjacentHTML('beforeend', `
+<div class="wm">
+  <nav class="tabline"><div id="tabs" role="tablist" aria-label="Panes"></div></nav>
+  <section class="pane left">
+    <p class="ptitle">1: machine</p>
+    <div class="pbody"><div id="setup"></div><p class="ptitle" style="margin-top:18px">2: filter</p><div id="filters"></div>
+      <div id="themehost" style="margin-top:18px"></div></div>
+  </section>
+  <main class="pane mid" id="main-content">
+    <p class="ptitle">3: catalog</p>
+    <div class="pbody"><div id="stage" tabindex="-1"></div></div>
+  </main>
+  <aside class="pane right">
+    <p class="ptitle">4: detail</p>
+    <div class="pbody"><div id="side" aria-label="Component inspector"></div></div>
+  </aside>
+  <footer class="statusline">
+    <b>NORMAL</b><span>catalog</span><span><i data-visible-count>0</i> visible</span>
+    <span><i data-basket-count>0</i> staged</span><span>ch-aligned</span>
+  </footer>
+</div>`);
+
+/* ch units mean every column lines up with no measuring code at all: pad to a
+   fixed character width and the browser does the rest. */
+function pad(text, width){
+  const value = String(text == null ? '' : text);
+  return value.length > width ? value.slice(0, width - 1) + '…' : value.padEnd(width);
+}
+
+function render(stage){
+  const groups = new Map();
+  A.visibleComponents().forEach(c => {
+    if(!groups.has(c.family)) groups.set(c.family, []);
+    groups.get(c.family).push(c);
+  });
+  if(!groups.size){ stage.innerHTML = '<p class="hint">no matches</p>'; return; }
+  const famName = id => (A.state.data.families.find(f => f.id === id) || {name:id}).name;
+  let n = 0;
+  stage.innerHTML = [...groups.entries()].map(([fam, items]) => {
+    const shown = items.slice(0, 50);
+    return `<div class="grp">── ${esc(pad(famName(fam), 30))} ${String(items.length).padStart(4)} ──</div>`
+      + shown.map(c => {
+        n += 1;
+        const inB = A.state.basket.includes(c.id);
+        const buildable = A.canBuild(c);
+        const mark = buildable ? (inB ? '[*]' : '[ ]') : '[-]';
+        return `<span class="row${A.state.selected === c.id ? ' on' : ''}" data-node="1" data-comp="${esc(c.id)}"
+          >${String(n).padStart(4,'0')} <span class="k">${esc(SIG[c.kind] || '?')}</span> ${esc(pad(c.name, 34))} <span class="m">${esc(pad(c.sub || '', 22))}</span><span class="add${inB ? ' in' : ''}" data-add="${esc(c.id)}" role="button" tabindex="0" aria-label="${inB?'Remove':'Add'} ${esc(c.name)}">${mark}</span></span>`;
+      }).join('')
+      + (items.length > shown.length ? `<div class="hint">     ${items.length - shown.length} more in this family</div>` : '');
+  }).join('');
+  wire(stage);
+  counts();
+}
+
+function wire(stage){
+  stage.querySelectorAll('[data-node]').forEach(n => {
+    n.addEventListener('click', e => {
+      if(e.target.closest('[data-add]')) return;
+      A.select(n.dataset.comp);
+      P.popover(e.clientX, e.clientY, n.dataset.comp);
+      stage.querySelectorAll('.row.on').forEach(a => a.classList.remove('on'));
+      n.classList.add('on');
+    });
+  });
+  stage.querySelectorAll('[data-add]').forEach(b => {
+    const fire = e => {
+      e.stopPropagation();
+      const id = b.dataset.add;
+      if(!A.canBuild({id, ...(A.state.data.components.find(c => c.id === id) || {})})) { /* fall through */ }
+      if(A.state.basket.includes(id)) A.removeFromBasket(id); else A.addToBasket(id);
+      P.draw(); counts();
+    };
+    b.addEventListener('click', fire);
+    b.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') fire(e); });
+  });
+}
+
+function counts(){
+  const c = A.counts();
+  document.querySelectorAll('[data-basket-count]').forEach(n => n.textContent = c.basket);
+  document.querySelectorAll('[data-visible-count]').forEach(n => n.textContent = c.visibleComponents);
+}
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+P.mount({
+  renderMap: render,
+  onFilter: () => { if(P.tab === 'map') render(document.getElementById('stage')); counts(); },
+  onSelect: counts,
+});
+A.on(counts);
+</script>
+</body>
+</html>
