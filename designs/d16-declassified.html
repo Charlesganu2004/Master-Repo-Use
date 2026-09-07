@@ -18,14 +18,14 @@
      nothing eases, ever. steps() only.
    ========================================================================= */
 :root{
-  --paper:#e8e4d9; --paper-2:#d8d2c2; --ink:#0f0f0d; --stamp:#c1121f;
-  --mid:color-mix(in srgb, var(--ink) 38%, var(--paper));
+  --paper:#e8e4d9; --paper-2:#d8d2c2; --dc-ink:#0f0f0d; --stamp:#c1121f;
+  --mid:color-mix(in srgb, var(--dc-ink) 38%, var(--paper));
   --mono:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"Liberation Mono",monospace;
 }
 *{box-sizing:border-box;border-radius:0!important;box-shadow:none}
 html,body{margin:0;height:100%}
 body{
-  background:var(--paper);color:var(--ink);font:13px/1.45 var(--mono);
+  background:var(--paper);color:var(--dc-ink);font:13px/1.45 var(--mono);
   height:100vh;height:100dvh;overflow:hidden;
   /* Pure #000 is reserved for redaction bars alone, so black reads as an
      action rather than as a colour. */
@@ -43,10 +43,10 @@ button{cursor:pointer}
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
 }
 .crop{position:fixed;width:24px;height:24px;z-index:80;pointer-events:none}
-.crop.tl{top:14px;left:14px;border-top:1px solid var(--ink);border-left:1px solid var(--ink)}
-.crop.tr{top:14px;right:14px;border-top:1px solid var(--ink);border-right:1px solid var(--ink)}
-.crop.bl{bottom:14px;left:14px;border-bottom:1px solid var(--ink);border-left:1px solid var(--ink)}
-.crop.br{bottom:14px;right:14px;border-bottom:1px solid var(--ink);border-right:1px solid var(--ink)}
+.crop.tl{top:14px;left:14px;border-top:1px solid var(--dc-ink);border-left:1px solid var(--dc-ink)}
+.crop.tr{top:14px;right:14px;border-top:1px solid var(--dc-ink);border-right:1px solid var(--dc-ink)}
+.crop.bl{bottom:14px;left:14px;border-bottom:1px solid var(--dc-ink);border-left:1px solid var(--dc-ink)}
+.crop.br{bottom:14px;right:14px;border-bottom:1px solid var(--dc-ink);border-right:1px solid var(--dc-ink)}
 
 /* The whole viewport is one ruled form. No sidebar concept: the inspector is a
    COLUMN of the same document, sharing identical ink rules. */
@@ -56,11 +56,11 @@ button{cursor:pointer}
   grid-template-rows:96px 38px 1fr 44px;
   padding:30px;gap:0;
 }
-.sheet > *{outline:1px solid var(--ink);outline-offset:-1px;min-width:0;min-height:0}
+.sheet > *{outline:1px solid var(--dc-ink);outline-offset:-1px;min-width:0;min-height:0}
 
 .head{grid-column:1/13;display:flex;align-items:stretch;overflow:hidden}
 .head-id{
-  padding:12px 16px;border-right:1px solid var(--ink);display:flex;flex-direction:column;
+  padding:12px 16px;border-right:1px solid var(--dc-ink);display:flex;flex-direction:column;
   justify-content:space-between;min-width:210px;overflow:hidden;
 }
 .classline{font-size:9px;letter-spacing:.34em;text-transform:uppercase}
@@ -73,11 +73,11 @@ button{cursor:pointer}
 .head-meta{flex:1;padding:12px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:0 18px;align-content:space-between}
 .tabstrip{grid-column:1/13;display:flex;align-items:stretch;overflow-x:auto;overflow-y:hidden}
 .tabstrip #tabs{display:flex}
-.tabstrip #themehost{margin-left:auto;display:flex;align-items:center;padding:0 12px;border-left:1px solid var(--ink)}
+.tabstrip #themehost{margin-left:auto;display:flex;align-items:center;padding:0 12px;border-left:1px solid var(--dc-ink)}
 .fld{display:flex;align-items:baseline;font-size:11px;text-transform:uppercase;letter-spacing:.14em}
-.fld::after{content:'';flex:1;border-bottom:1px dotted var(--ink);opacity:.5;margin:0 6px 4px}
+.fld::after{content:'';flex:1;border-bottom:1px dotted var(--dc-ink);opacity:.5;margin:0 6px 4px}
 .fld b{font-weight:700;letter-spacing:.06em}
-.head-stamp{display:grid;place-items:center;padding:0 22px;border-left:1px solid var(--ink)}
+.head-stamp{display:grid;place-items:center;padding:0 22px;border-left:1px solid var(--dc-ink)}
 .stamp{
   border:3px solid var(--stamp);color:var(--stamp);font-size:17px;letter-spacing:.28em;
   padding:5px 13px;transform:rotate(-8.5deg);opacity:.78;mix-blend-mode:multiply;font-weight:700;
@@ -87,9 +87,9 @@ button{cursor:pointer}
 .body{grid-column:4/10;grid-row:3;display:flex;flex-direction:column;overflow:hidden}
 .right{grid-column:10/13;grid-row:3;overflow:auto}
 .foot{grid-column:1/13;display:flex;align-items:center;gap:0;font-size:10px;letter-spacing:.2em;text-transform:uppercase}
-.foot > span{padding:0 14px;border-right:1px solid var(--ink);line-height:42px}
+.foot > span{padding:0 14px;border-right:1px solid var(--dc-ink);line-height:42px}
 
-.sec{padding:10px 14px;border-bottom:1px solid var(--ink);font-size:10px;letter-spacing:.24em;text-transform:uppercase;font-weight:700}
+.sec{padding:10px 14px;border-bottom:1px solid var(--dc-ink);font-size:10px;letter-spacing:.24em;text-transform:uppercase;font-weight:700}
 .scroll{overflow:auto;flex:1;padding:10px 14px}
 .left .scroll{padding:0}
 
@@ -97,10 +97,10 @@ button{cursor:pointer}
    list read as a printed form instead of as a table. */
 .row{
   position:relative;display:grid;grid-template-columns:52px 1fr auto;gap:10px;
-  padding:7px 14px;border-bottom:1px solid color-mix(in srgb,var(--ink) 24%,transparent);
+  padding:7px 14px;border-bottom:1px solid color-mix(in srgb,var(--dc-ink) 24%,transparent);
   align-items:baseline;
 }
-.row:hover,.row.on{background:var(--ink);color:var(--paper)}
+.row:hover,.row.on{background:var(--dc-ink);color:var(--paper)}
 .row:hover .num,.row.on .num{color:var(--paper)}
 .num{font-size:10px;letter-spacing:.06em;color:var(--mid);font-variant-numeric:tabular-nums slashed-zero}
 .nm{font-size:12.5px;overflow-wrap:anywhere}
@@ -115,17 +115,17 @@ button{cursor:pointer}
 .redact{background:#000;color:#0000;user-select:none;padding:0 .3em;box-decoration-break:clone}
 .row:hover .redact,.row.on .redact{background:#0000;color:inherit;transition:color 0s}
 
-.groupline{display:flex;align-items:center;gap:10px;padding:12px 14px 6px;border-bottom:3px double var(--ink)}
+.groupline{display:flex;align-items:center;gap:10px;padding:12px 14px 6px;border-bottom:3px double var(--dc-ink)}
 .groupline h2{font-size:13px;letter-spacing:.2em;text-transform:uppercase;margin:0}
 .groupline small{margin-left:auto;font-size:10px;color:var(--mid);font-variant-numeric:tabular-nums}
 
 /* Hatched bars, never solid fills. Density carries the number. */
-.bar{height:9px;border:1px solid var(--ink);position:relative;margin-top:5px}
-.bar i{display:block;height:100%;background:repeating-linear-gradient(45deg,var(--ink) 0 1px,transparent 1px 5px)}
+.bar{height:9px;border:1px solid var(--dc-ink);position:relative;margin-top:5px}
+.bar i{display:block;height:100%;background:repeating-linear-gradient(45deg,var(--dc-ink) 0 1px,transparent 1px 5px)}
 
 .tabs{display:flex;flex-wrap:wrap}
-.tabs .tab{padding:0 13px;line-height:36px;white-space:nowrap;border-right:1px solid var(--ink);border-bottom:1px solid var(--ink);font-size:10px;letter-spacing:.16em;text-transform:uppercase;background:none}
-.tabs .tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tabs .tab{padding:0 13px;line-height:36px;white-space:nowrap;border-right:1px solid var(--dc-ink);border-bottom:1px solid var(--dc-ink);font-size:10px;letter-spacing:.16em;text-transform:uppercase;background:none}
+.tabs .tab[aria-selected="true"]{background:var(--dc-ink);color:var(--paper)}
 #filters{padding:10px 14px;display:flex;flex-direction:column;gap:8px;font-size:11px}
 #setup{padding:10px 14px;font-size:11px}
 #side{font-size:12px}

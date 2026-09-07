@@ -25,21 +25,21 @@
   --hud:#7dfcb4;            /* one phosphor, no second hue anywhere */
   --hud-dim:color-mix(in srgb,var(--hud) 42%,transparent);
   --hud-faint:color-mix(in srgb,var(--hud) 16%,transparent);
-  --warn:#ffd166;
-  --bg:#03060a;
+  --bs-warn:#ffd166;
+  --bs-bg:#03060a;
   --mono:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 body{
-  background:var(--bg);color:var(--hud);
+  background:var(--bs-bg);color:var(--hud);
   font:12px/1.4 var(--mono);letter-spacing:.06em;
   height:100vh;height:100dvh;overflow:hidden;position:relative;
   text-shadow:0 0 6px color-mix(in srgb,var(--hud) 55%,transparent);
 }
 button,input,select{font:inherit;color:inherit;background:none;border:0}
 button{cursor:pointer}
-:focus-visible{outline:1px solid var(--warn);outline-offset:2px}
+:focus-visible{outline:1px solid var(--bs-warn);outline-offset:2px}
 
 /* Combiner glass: a faint grid and a vignette, both stroked, never filled. */
 .glassbed{
@@ -84,8 +84,8 @@ button{cursor:pointer}
   content:'';position:absolute;inset:3px;border:1px solid transparent;
 }
 .contact:hover,.contact.on{background:color-mix(in srgb,var(--hud) 28%,transparent)}
-.contact.on::after{border-color:var(--warn)}
-.contact.staged{border-color:var(--warn);border-width:2px}
+.contact.on::after{border-color:var(--bs-warn)}
+.contact.staged{border-color:var(--bs-warn);border-width:2px}
 .contact .lbl{
   position:absolute;left:18px;top:-3px;white-space:nowrap;font-size:10px;
   color:var(--hud);opacity:0;pointer-events:none;
@@ -112,7 +112,7 @@ button{cursor:pointer}
 .tabs .tab{padding:4px 9px;border:1px solid var(--hud-faint);margin:0 0 -1px -1px;
   font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--hud-dim)}
 .tabs .tab:hover{color:var(--hud);border-color:var(--hud-dim)}
-.tabs .tab[aria-selected="true"]{color:var(--bg);background:var(--hud);border-color:var(--hud)}
+.tabs .tab[aria-selected="true"]{color:var(--bs-bg);background:var(--hud);border-color:var(--hud)}
 
 /* Ladder: the selected family's contents, as a stroked list. */
 .ladder{display:flex;flex-direction:column}
@@ -124,12 +124,12 @@ button{cursor:pointer}
 .rung i{font-style:normal;font-size:9px;color:var(--hud-dim)}
 .rung b{font-weight:400;font-size:11.5px;overflow-wrap:anywhere}
 .rung .plus{border:1px solid var(--hud-dim);width:18px;height:18px;line-height:16px;text-align:center;font-size:11px}
-.rung .plus.in{background:var(--warn);border-color:var(--warn);color:var(--bg)}
+.rung .plus.in{background:var(--bs-warn);border-color:var(--bs-warn);color:var(--bs-bg)}
 .rung .plan-tag{font-size:9px;color:var(--hud-dim);letter-spacing:.1em}
 
 #setup,#filters{font-size:11px}
 #setup .os,#filters .chip{border:1px solid var(--hud-faint);padding:3px 7px;color:var(--hud-dim);background:none}
-#setup .os.on,#filters .chip.on{background:var(--hud);color:var(--bg);border-color:var(--hud)}
+#setup .os.on,#filters .chip.on{background:var(--hud);color:var(--bs-bg);border-color:var(--hud)}
 #setup input{border:1px solid var(--hud-faint);padding:3px 6px;width:64px;color:var(--hud)}
 #setup .num{display:none}
 #side{font-size:11.5px}

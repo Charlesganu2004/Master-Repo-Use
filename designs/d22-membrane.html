@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A biological membrane field: no straight lines anywhere, with cells breathing on a wet hue-shifting ground.">
+<title>Membrane | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<style>
+/* ===========================================================================
+   MEMBRANE. There is not a single 90 degree angle or straight line in the map.
+   Forms are membranes with irregular edges, connections are curves, and the
+   palette is wet and slowly hue-shifting.
+
+   The rule that enforces it: every cell is an SVG blob path generated from a
+   seeded radius function, never a div with border-radius. A rounded rectangle
+   still reads as a rectangle; a path with eight unequal control radii does not.
+
+   linear() is banned on this page. Everything is sine-eased and phase-offset,
+   so nothing pulses in time with anything else.
+   ========================================================================= */
+:root{
+  --mb-ink:#eafff6; --mb-dim:#7fb8a4;
+  --deep:#04100c;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--deep);color:var(--mb-ink);font:14px/1.5 var(--sans);
+  height:100vh;height:100dvh;overflow:hidden;
+}
+button,input,select{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+:focus-visible{outline:2px solid #6ff0c0;outline-offset:3px}
+
+/* Wet ground. Three plasma pools, each on its own prime-ish period so the
+   combined field never visibly repeats. */
+.plasma{position:fixed;inset:-20%;z-index:0;filter:blur(50px);opacity:.85}
+.pool{position:absolute;border-radius:50%;mix-blend-mode:screen}
+.p1{width:62vmax;height:56vmax;left:-6%;top:-12%;
+  background:radial-gradient(circle,oklch(58% .17 168 / .9),oklch(58% .17 168 / 0) 66%);
+  animation:sw1 41s cubic-bezier(.45,0,.55,1) infinite alternate}
+.p2{width:54vmax;height:58vmax;right:-8%;top:8%;
+  background:radial-gradient(circle,oklch(54% .19 196 / .82),oklch(54% .19 196 / 0) 66%);
+  animation:sw2 53s cubic-bezier(.45,0,.55,1) infinite alternate}
+.p3{width:58vmax;height:50vmax;left:20%;bottom:-18%;
+  background:radial-gradient(circle,oklch(50% .2 142 / .78),oklch(50% .2 142 / 0) 66%);
+  animation:sw3 37s cubic-bezier(.45,0,.55,1) infinite alternate}
+@keyframes sw1{to{transform:translate3d(9%,7%,0) scale(1.1)}}
+@keyframes sw2{to{transform:translate3d(-8%,10%,0) scale(1.06)}}
+@keyframes sw3{to{transform:translate3d(6%,-9%,0) scale(1.12)}}
+@media (prefers-reduced-motion:reduce){.pool{animation:none}}
+
+.field{position:relative;z-index:1;height:100vh;height:100dvh;overflow:hidden}
+#viz{position:absolute;inset:0;width:100%;height:100%}
+
+/* Membranes. Filled paths, stroked with a lighter rim so they read as wet. */
+.cell{cursor:pointer}
+.cell path{transition:opacity 700ms cubic-bezier(.45,0,.55,1)}
+.cell:hover path,.cell.on path{opacity:1}
+.cell .rim{fill:none;stroke:#bff7de;stroke-width:1.2;opacity:.5}
+.cell.on .rim{stroke-width:2.4;opacity:1}
+.cell text{font:500 11px/1 var(--sans);fill:#eafff6;pointer-events:none;paint-order:stroke;
+  stroke:#04100c;stroke-width:3px;stroke-linejoin:round}
+@media (prefers-reduced-motion:no-preference){
+  .cell{animation:breathe var(--dur,5s) cubic-bezier(.45,0,.55,1) infinite alternate;
+    animation-delay:var(--ph,0s);transform-box:fill-box;transform-origin:center}
+  @keyframes breathe{to{transform:scale(1.018)}}
+}
+
+/* The apparatus floats as its own soft-edged islands, never a panel. */
+.isle{
+  position:absolute;z-index:3;padding:16px 20px;max-width:min(300px,40vw);
+  background:color-mix(in oklab,#04100c 76%,transparent);
+  backdrop-filter:blur(14px) saturate(150%);
+  -webkit-backdrop-filter:blur(14px) saturate(150%);
+  border-radius:38% 62% 55% 45% / 48% 42% 58% 52%;
+  box-shadow:0 0 0 1px #bff7de24, 0 22px 50px -30px #000;
+}
+.isle h3{margin:0 0 8px;font:600 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:#7fe8c2}
+.tl{left:26px;top:24px}
+.bl{left:26px;bottom:24px;max-height:42dvh;overflow:auto}
+.tr{right:26px;top:24px;max-height:46dvh;overflow:auto}
+.br{right:26px;bottom:24px;max-height:34dvh;overflow:auto;max-width:min(340px,44vw)}
+
+.tabs{display:flex;flex-wrap:wrap;gap:5px}
+.tabs .tab{padding:5px 11px;border-radius:999px;font-size:11.5px;color:var(--mb-dim);
+  background:color-mix(in oklab,#bff7de 8%,transparent)}
+.tabs .tab:hover{color:var(--mb-ink)}
+.tabs .tab[aria-selected="true"]{background:#7fe8c2;color:#04100c;font-weight:600}
+.rd{display:flex;gap:14px;font:600 11px/1 var(--mono);color:var(--mb-dim);margin-top:8px}
+.rd b{color:#9ff5d0;font-weight:600}
+#setup .os,#filters .chip{border-radius:999px;padding:4px 10px;font-size:11px;
+  background:color-mix(in oklab,#bff7de 8%,transparent);color:var(--mb-dim);border:0}
+#setup .os.on,#filters .chip.on{background:#7fe8c2;color:#04100c}
+#setup input{border-radius:12px;border:0;padding:5px 8px;width:60px;
+  background:color-mix(in oklab,#bff7de 10%,transparent);color:var(--mb-ink)}
+#setup .num{display:none}
+#setup,#filters,#side{font-size:12.5px}
+.pane{font-size:12.5px}
+
+@media (max-width:900px){
+  .isle{position:static;max-width:none;border-radius:26px;margin:10px}
+  .field{overflow:auto}
+  #viz{position:static;height:56dvh}
+}
+</style>
+</head>
+<body>
+<div class="plasma"><div class="pool p1"></div><div class="pool p2"></div><div class="pool p3"></div></div>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, P = AtlasPanes, esc = P.esc;
+const HUE = {instruction:8, capability:34, knowledge:196, control:78, model:300, delivery:158};
+
+document.body.insertAdjacentHTML('beforeend', `
+<div class="field">
+  <svg id="viz" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" role="img"
+       aria-label="Component membranes grouped by family"></svg>
+  <div class="isle tl">
+    <h3>Membrane</h3>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Membrane views"></div>
+    <div class="rd"><span>live <b data-visible-count>0</b></span><span>held <b data-basket-count>0</b></span></div>
+    <div id="themehost" style="margin-top:8px"></div>
+  </div>
+  <div class="isle bl"><h3>Machine</h3><div id="setup"></div></div>
+  <div class="isle tr"><h3>Selection</h3><div id="filters"></div></div>
+  <div class="isle br" id="side" aria-label="Component inspector"></div>
+  <div id="stage" tabindex="-1" style="position:absolute;left:-9999px" aria-hidden="true"></div>
+</div>`);
+
+/* A membrane outline: eight control radii jittered by a seeded hash, closed
+   with a smooth cubic through each. A div with border-radius still reads as a
+   rectangle; this does not. */
+function blob(cx, cy, r, seed){
+  const pts = [];
+  for(let i = 0; i < 8; i += 1){
+    const a = (i / 8) * Math.PI * 2;
+    /* Deterministic jitter: the same component always gets the same shape, so
+       the field does not reshuffle on every filter change. */
+    const h = Math.sin(seed * 12.9898 + i * 78.233) * 43758.5453;
+    const jitter = 0.78 + (h - Math.floor(h)) * 0.42;
+    pts.push([cx + Math.cos(a) * r * jitter, cy + Math.sin(a) * r * jitter]);
+  }
+  let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for(let i = 0; i < 8; i += 1){
+    const p0 = pts[i], p1 = pts[(i + 1) % 8], p2 = pts[(i + 2) % 8];
+    const c1 = [p0[0] + (p1[0] - pts[(i + 7) % 8][0]) / 6, p0[1] + (p1[1] - pts[(i + 7) % 8][1]) / 6];
+    const c2 = [p1[0] - (p2[0] - p0[0]) / 6, p1[1] - (p2[1] - p0[1]) / 6];
+    d += `C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`;
+  }
+  return d + 'Z';
+}
+
+function hash(text){
+  let h = 0;
+  for(let i = 0; i < text.length; i += 1) h = (h * 31 + text.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function render(){
+  const svg = document.getElementById('viz');
+  const visible = A.visibleComponents().slice(0, 150);
+  if(!visible.length){ svg.innerHTML = '<text x="800" y="450" text-anchor="middle" fill="#7fb8a4">Nothing alive on this filter</text>'; return; }
+
+  const families = [...new Set(visible.map(c => c.family))];
+  const parts = [];
+  const byFam = new Map();
+  visible.forEach(c => {
+    if(!byFam.has(c.family)) byFam.set(c.family, []);
+    byFam.get(c.family).push(c);
+  });
+
+  /* Colonies sit on a slow spiral, so nothing aligns to a row or an axis. */
+  families.forEach((fam, fi) => {
+    const items = byFam.get(fam);
+    const ang = (fi / families.length) * Math.PI * 2;
+    const rad = 200 + (fi % 3) * 92;
+    const fx = 800 + Math.cos(ang) * rad * 1.5;
+    const fy = 450 + Math.sin(ang) * rad * 0.82;
+    const hue = HUE[(items[0] || {}).kind] || 168;
+
+    items.slice(0, 14).forEach((c, i) => {
+      const seed = hash(c.id);
+      const spin = (i / 14) * Math.PI * 2 + seed % 7;
+      const spread = 46 + (seed % 60);
+      const cx = fx + Math.cos(spin) * spread;
+      const cy = fy + Math.sin(spin) * spread * 0.8;
+      const r = 20 + (seed % 13);
+      const on = A.state.selected === c.id;
+      parts.push(`<g class="cell${on ? ' on' : ''}" data-node="1" data-comp="${esc(c.id)}"
+        style="--dur:${(4 + (seed % 30) / 10).toFixed(1)}s;--ph:${((seed % 40) / 10).toFixed(1)}s">
+        <path d="${blob(cx, cy, r, seed)}" fill="oklch(62% .16 ${hue} / .5)" opacity=".8"/>
+        <path class="rim" d="${blob(cx, cy, r, seed)}"/>
+        <title>${esc(c.name)}</title>
+      </g>`);
+    });
+    parts.push(`<text x="${fx.toFixed(0)}" y="${(fy - 96).toFixed(0)}" text-anchor="middle"
+      style="font-size:13px;font-weight:600">${esc((A.state.data.families.find(f => f.id === fam) || {name:fam}).name)}</text>`);
+  });
+
+  svg.innerHTML = parts.join('');
+  svg.querySelectorAll('[data-node]').forEach(n => {
+    n.addEventListener('click', e => {
+      A.select(n.dataset.comp);
+      P.popover(e.clientX, e.clientY, n.dataset.comp);
+      svg.querySelectorAll('.cell.on').forEach(a => a.classList.remove('on'));
+      n.classList.add('on');
+    });
+  });
+  counts();
+}
+
+function counts(){
+  const c = A.counts();
+  document.querySelectorAll('[data-basket-count]').forEach(n => n.textContent = c.basket);
+  document.querySelectorAll('[data-visible-count]').forEach(n => n.textContent = c.visibleComponents);
+}
+
+AtlasTheme.mount(document.getElementById('themehost'), 'ember');
+P.mount({
+  renderMap: () => render(),
+  onFilter: () => { render(); },
+  onSelect: counts,
+});
+A.on(counts);
+</script>
+</body>
+</html>
