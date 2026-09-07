@@ -30,6 +30,11 @@ PROTECTED = (
     ".mcp.json", "mcp.json",
     "repo-lists/", "docs/auto-mode-block.txt",
     "skills/", "AGENTS.md", "CLAUDE.md", "GEMINI.md",
+    # The guards themselves, and the standing pipeline. Charles asked for the
+    # pipeline to be a rule that cannot be deleted, and a guard that protects
+    # every capability except its own source is one `rm` from protecting
+    # nothing. hooks.json is Antigravity's registration of the same pipeline.
+    "scripts/hooks/", "hooks.json",
 )
 
 # Destructive verbs, anchored so 'formatter' never matches 'rm'.

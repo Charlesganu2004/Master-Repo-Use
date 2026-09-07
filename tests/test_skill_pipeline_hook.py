@@ -44,11 +44,12 @@ def run(prompt: str) -> str:
 
 
 class ItFiresOnEveryOrdinaryPrompt(unittest.TestCase):
-    MANDATORY = ("PLAN first", "CAVEMAN", "DESIGN", "ANTI-SLOP",
-                 "FULL OUTPUT", "NEVER COMPACT", "VERIFY")
+    MANDATORY = ("CAVEMAN", "FULL OUTPUT", "ANTI-SLOP", "PLAN", "DESIGN",
+                 "CAPABILITIES", "AGENTS AND ACTIONS", "RE-APPLY LAYER 1",
+                 "NEVER COMPACT", "VERIFY")
 
     def test_a_plain_prompt_gets_every_mandatory_rule(self):
-        """All seven, unconditionally. Charles asked for these on every prompt
+        """All ten, unconditionally. Charles asked for these on every prompt
         and every conversation across chat, cowork and code, was told the
         per-turn cost, and confirmed. Nothing here is allowed to be conditional
         on the prompt looking like the right kind of work."""
@@ -63,6 +64,33 @@ class ItFiresOnEveryOrdinaryPrompt(unittest.TestCase):
         out = run("what time is it")
         for rule in self.MANDATORY:
             self.assertIn(rule, out, f"{rule} dropped out on an unrelated prompt")
+
+    def test_it_arrives_as_three_named_layers(self):
+        """Charles asked for layers, not a list, and the shape is the point:
+        one pass before the request is read, one before anything is produced,
+        and a third while acting."""
+        out = run("do some work")
+        for layer in ("LAYER 1, before reading the request",
+                      "LAYER 2, before producing anything",
+                      "LAYER 3, while acting and again before answering"):
+            self.assertIn(layer, out, f"missing: {layer}")
+        self.assertLess(out.index("LAYER 1"), out.index("LAYER 2"))
+        self.assertLess(out.index("LAYER 2"), out.index("LAYER 3"))
+
+    def test_layer_three_reapplies_layer_one(self):
+        """A rule read once at the top of a long turn has stopped applying by
+        the end of it, and the end is where the skeleton gets written."""
+        out = run("build something long")
+        self.assertIn("RE-APPLY LAYER 1", out)
+        self.assertIn("caveman, full output, anti-slop, again", out)
+
+    def test_layer_three_forces_capability_selection(self):
+        """The difference between having a catalog and using one."""
+        out = run("do some work")
+        self.assertIn("CAPABILITIES", out)
+        for word in ("skills", "tools", "plugins", "MCP servers"):
+            self.assertIn(word, out, f"{word} is not in the forced selection")
+        self.assertIn("name what you picked", out)
 
     def test_the_event_name_is_the_one_the_client_expects(self):
         event = json.dumps({"input": {"prompt": "hello"}})
@@ -110,8 +138,8 @@ class TheLanesAttachOnlyWhenRelevant(unittest.TestCase):
         replacing, and name the aesthetic rather than defaulting."""
         out = run("redo the landing page css and make the layout cooler")
         self.assertIn("audit the existing surface", out)
-        self.assertIn("DESIGN.", out)            # from the core, not the lane
-        self.assertIn("No em dashes anywhere", out)
+        self.assertIn("DESIGN.", out)            # from layer 2, not the lane
+        self.assertIn("No em dashes.", out)      # from layer 1
 
     def test_adding_a_dependency_pulls_in_the_audit_rule(self):
         out = run("add this npm package to the project")
@@ -127,7 +155,7 @@ class TheLanesAttachOnlyWhenRelevant(unittest.TestCase):
 
     def test_an_unrelated_prompt_gets_no_lane_line(self):
         out = run("rename this variable")
-        self.assertNotIn("8.", out, "a lane attached to a prompt it does not fit")
+        self.assertNotIn("11.", out, "a lane attached to a prompt it does not fit")
 
     def test_only_one_lane_ever_attaches(self):
         """Stacking them would defeat the budget on any broad prompt."""
@@ -151,10 +179,11 @@ class TheInjectedBlockStaysCheap(unittest.TestCase):
     """Charged on every prompt of every session, so it needs a ceiling."""
 
     def test_the_core_is_tracked_not_unbounded(self):
-        """Seven mandatory rules is roughly 1.2 kB, call it 290 tokens a prompt.
+        """Ten mandatory rules in three layers is roughly 1.6 kB, call it 400
+        tokens a prompt.
         That price was quoted and accepted. The ceiling exists so the next
         addition is a decision rather than a drift."""
-        self.assertLess(len(pipeline.CORE.encode("utf-8")), 1400,
+        self.assertLess(len(pipeline.CORE.encode("utf-8")), 1900,
                         "the always-injected core grew past what was agreed")
 
     def test_the_worst_case_stays_bounded(self):
@@ -162,7 +191,7 @@ class TheInjectedBlockStaysCheap(unittest.TestCase):
             "redo the css landing page design " + "x " * 400,
             "install an npm package and also scan it, plus update docs",
         ))
-        self.assertLess(worst, 1900, "the worst-case injection is too large per turn")
+        self.assertLess(worst, 2400, "the worst-case injection is too large per turn")
 
 
 class ItServesAntigravityToo(unittest.TestCase):
@@ -192,7 +221,7 @@ class ItServesAntigravityToo(unittest.TestCase):
         recorded as something the user said."""
         step = self.ag({"input": {"prompt": "build a thing"}})["injectSteps"][0]
         self.assertIn("ephemeralMessage", step)
-        self.assertIn("PLAN first", step["ephemeralMessage"])
+        self.assertIn("LAYER 1, before reading the request", step["ephemeralMessage"])
 
     def test_it_reads_the_last_user_message_from_a_trajectory(self):
         """PreInvocation hands over a trajectory, not a single prompt field."""

@@ -25,6 +25,7 @@ HOOK = ROOT / "scripts" / "hooks" / "no_prune_guard.py"
 #   355 tokens   inheritance for new capabilities, and every build/command/lane
 #   434 tokens   the exemption stated as global, and the one override that lifts it
 #   538 tokens   plan, design, anti-slop, full output and verify, on every prompt
+#   648 tokens   restated as three layers, with layer 1 re-applied at the end
 #
 # This number only moves when a rule is added, never on its own. Each rule has to
 # sit in the always-loaded block because a rule consulted only when something
@@ -46,12 +47,20 @@ HOOK = ROOT / "scripts" / "hooks" / "no_prune_guard.py"
 # caveman, design, anti-slop and full output, plus verify. Charles asked for
 # these on every prompt and conversation, for every model, and was told the cost.
 #
-# For Claude Code and Antigravity they are ALSO enforced outside the model, by
-# scripts/hooks/skill_pipeline.py on UserPromptSubmit and PreInvocation. They are
+# The second 2026-09-07 rise, 2300 to 2800, restated those as THREE LAYERS and
+# added the two things a flat list could not express: that layer 3 re-applies
+# layer 1 to what was produced, and that layer 3 forces the model to pick and
+# name the skills, tools, plugins and MCP servers that fit. The repetition is the
+# feature. A rule read once at the top of a long turn has stopped applying by the
+# end of it, and the end is where the skeleton and the em dash get written.
+#
+# For Claude Code and Antigravity these are ALSO enforced outside the model, by
+# scripts/hooks/skill_pipeline.py on UserPromptSubmit and PreInvocation, and that
+# file is itself protected from deletion and compression by both guards. They are
 # still written here because Codex, the Gemini CLI and Copilot have no verified
 # hook mechanism: for those three this block is not a reminder of the rule, it is
 # the entire enforcement.
-BLOCK_BUDGET_BYTES = 2300
+BLOCK_BUDGET_BYTES = 2800
 
 
 class TheAlwaysLoadedBlock(unittest.TestCase):
@@ -69,6 +78,28 @@ class TheAlwaysLoadedBlock(unittest.TestCase):
     def test_carries_the_no_pruning_rule(self):
         # Must be known before any lookup, or a tool is gone before the skill loads.
         self.assertIn("Never remove, disable", self.text)
+
+    def test_the_three_layers_are_named_in_order(self):
+        """The clients with no hook get their enforcement from this text alone,
+        so the layer structure has to survive here as well as in the hook."""
+        body = " ".join(self.text.split())
+        self.assertIn("THREE LAYERS on every prompt and every command", body)
+        for layer in ("Layer 1, before reading the request",
+                      "Layer 2, before producing", "Layer 3, while acting"):
+            self.assertIn(layer, body, f"missing: {layer}")
+        self.assertLess(body.index("Layer 1"), body.index("Layer 2"))
+        self.assertLess(body.index("Layer 2"), body.index("Layer 3"))
+
+    def test_layer_three_reapplies_layer_one_and_says_why(self):
+        body = " ".join(self.text.split())
+        self.assertIn("RE-APPLY LAYER 1", body)
+        self.assertIn("repeats layer 1 on purpose", body)
+
+    def test_layer_three_forces_naming_the_capabilities_used(self):
+        body = " ".join(self.text.split())
+        self.assertIn("pick and NAME the skills", body)
+        for word in ("tools", "plugins", "MCP servers"):
+            self.assertIn(word, body, f"{word} missing from the forced selection")
 
     def test_carries_the_multiple_command_rule(self):
         self.assertIn("Run every slash command", self.text)

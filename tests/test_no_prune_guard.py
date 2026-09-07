@@ -120,5 +120,32 @@ class DataIsNotAnInstruction(unittest.TestCase):
         self.assertEqual(run(HEREDOC_THEN_DELETE), 2)
 
 
+class ThePipelineCannotBeDeleted(unittest.TestCase):
+    """Same reasoning as the compression guard, for the destructive verbs.
+
+    A standing rule that one `rm` can remove is not a standing rule.
+    """
+
+    def test_the_pipeline_hook_cannot_be_removed(self):
+        self.assertEqual(run("rm scripts/hooks/skill_pipeline.py"), 2)
+
+    def test_the_whole_hooks_directory_cannot_be_removed(self):
+        self.assertEqual(run("rm -rf scripts/hooks/"), 2)
+
+    def test_the_antigravity_registration_cannot_be_removed(self):
+        self.assertEqual(run("rm ~/.gemini/config/hooks.json"), 2)
+
+    def test_the_guards_cannot_remove_each_other(self):
+        for guard in ("no_prune_guard", "no_compress_guard"):
+            self.assertEqual(run(f"rm scripts/hooks/{guard}.py"), 2, guard)
+
+    def test_staging_and_reading_are_still_allowed(self):
+        self.assertEqual(run("git add scripts/hooks/skill_pipeline.py"), 0)
+        self.assertEqual(run("cat scripts/hooks/skill_pipeline.py"), 0)
+
+    def test_the_override_still_lifts_it(self):
+        self.assertEqual(run("rm scripts/hooks/skill_pipeline.py  # APPROVED PRUNE"), 0)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -95,9 +95,16 @@ CAPABILITY_PATTERNS = (
     "AGENTS.md", "CLAUDE.md", "GEMINI.md",
     "copilot-instructions.md",
     "installed_plugins.json", "known_marketplaces.json",
+    # Antigravity registers the standing pipeline here, the way settings.json
+    # does for Claude Code.
+    "hooks.json",
 )
+# scripts/hooks/ holds the guards and the standing pipeline. Compressing the
+# pipeline is the one edit that would silently switch every rule off while
+# leaving a file that still looks present, so it is protected by the same
+# mechanism it enforces.
 CAPABILITY_DIRS = (".claude/skills", ".claude/agents", ".claude/commands",
-                   ".claude/plugins", "skills/", "agents/")
+                   ".claude/plugins", "skills/", "agents/", "scripts/hooks/")
 
 
 def is_capability_path(text: str) -> list[str]:

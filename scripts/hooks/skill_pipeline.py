@@ -21,14 +21,32 @@ fires on EVERY prompt before the model reads it, and its `additionalContext` is
 injected into that turn. Nothing is left to judgement: the rule arrives with the
 prompt whether the model would have thought of it or not.
 
+THREE LAYERS, not a list. Charles asked for it in this shape and the shape is
+the point:
+
+  layer 1, before the request is read   caveman, full output, anti-slop
+  layer 2, before anything is produced  plan, design
+  layer 3, while acting and at the end  capabilities, agents, THEN layer 1 again
+
+Layer 3 repeating layer 1 is deliberate. A rule read once at the top of a long
+turn has stopped applying by the end of it, and the end is exactly where the
+skeleton and the em dash get written.
+
+Layer 3 also forces capability selection rather than leaving it to notice:
+whatever skills, tools, plugins and MCP servers fit the task get picked and
+named. That is the difference between having a catalog and using one.
+
 COST, stated because it is real and was accepted rather than hidden. This rides
-on every turn of every session forever. Seven mandatory rules is about 1.2 kB,
-call it 290 tokens per prompt. Charles asked for plan, caveman, design,
-anti-slop and full-output to fire on every prompt and conversation across chat,
-cowork and code, was told the price, and confirmed. So the core is unconditional
-and the budget test tracks the number rather than arguing with the decision.
-The four LANES stay conditional on top of it, because a lane that fires on a
-prompt it does not fit is noise rather than enforcement.
+on every turn of every session forever, roughly 1.6 kB or 400 tokens a prompt.
+Charles was told the price and asked for it anyway, so the budget test tracks
+the number rather than arguing with the decision. The four LANES stay
+conditional on top, because a lane firing on a prompt it does not fit is noise
+rather than enforcement.
+
+IT CANNOT BE DELETED. scripts/hooks/ is protected by both guards, so this file
+cannot be removed, truncated or compressed without the explicit override. A
+guard that protects every capability except its own source is one command from
+protecting nothing.
 
 Slash commands get the pipeline too. An earlier version skipped them on the
 reasoning that the user had already named what they wanted, which was wrong for
@@ -44,18 +62,30 @@ import json
 import re
 import sys
 
-# MANDATORY, every prompt, no condition. Charles asked for these five to run on
-# every prompt and conversation across chat, cowork and code, was told what the
-# per-turn cost of that is, and confirmed. So they are unconditional and the
-# budget test below tracks the price rather than arguing with it.
-CORE = """Standing pipeline. Run these before anything else, every prompt, no exceptions:
-1. PLAN first. State the read and the approach before producing anything. On more than a couple of steps, write the plan down and work it.
-2. CAVEMAN. Compress repeatedly-loaded prose with the caveman skills; route commands through rtk. Retrieve matching entries only, never a whole catalog, file tree or log.
-3. DESIGN. Any user-visible output goes through the design taste skills: state the design read and the dials, then build.
-4. ANTI-SLOP. No em dashes anywhere. One theme, one accent, one radius scale per surface. No AI-purple, no three-equal-cards, no generic names, no invented precision, no filler verbs, no fake screenshots.
-5. FULL OUTPUT. No "rest of code", no "similar to above", no skeleton where an implementation was asked for. Out of room means stop at a clean break and say exactly what remains.
-6. NEVER COMPACT a skill, tool, agent, plugin, MCP server or catalog entry. Global, every conversation and every command. Only Charles asking in that message lifts it.
-7. VERIFY before claiming. Run the check, quote the real output, report a failure first."""
+# MANDATORY, every prompt, no condition, no slash. Charles asked for this as
+# LAYERS rather than a list: one pass before reading the request, one before
+# producing anything, and a third while acting that RE-APPLIES the first.
+#
+# The repetition in layer 3 is deliberate and was asked for. A rule read once at
+# the top of a long turn has stopped applying by the end of it, which is exactly
+# where the skeleton and the em dash get written.
+CORE = """Standing pipeline. Three layers, every prompt and every command, no slash and no exception.
+
+LAYER 1, before reading the request:
+1. CAVEMAN. Compress repeatedly-loaded prose with the caveman skills; route commands through rtk. Retrieve matching entries only, never a whole catalog, file tree or log.
+2. FULL OUTPUT. No "rest of code", no "similar to above", no skeleton where an implementation was asked for. Out of room means stop at a clean break and say exactly what remains.
+3. ANTI-SLOP. No em dashes. One theme, one accent, one radius scale per surface. No AI-purple, no three-equal-cards, no generic names, no invented precision, no filler verbs, no fake screenshots.
+
+LAYER 2, before producing anything:
+4. PLAN. State the read and the approach first. More than a couple of steps means write the plan down and work it.
+5. DESIGN. Anything a person will see goes through the design taste skills: state the design read and the dials, then build.
+
+LAYER 3, while acting and again before answering:
+6. CAPABILITIES. Pick and apply whatever skills, tools, plugins and MCP servers fit this task. Do not ask when the catalog already answers it, and name what you picked.
+7. AGENTS AND ACTIONS. Independent pieces of work fan out, then get verified adversarially rather than trusted on the first pass.
+8. RE-APPLY LAYER 1 to what you produced: caveman, full output, anti-slop, again.
+9. NEVER COMPACT a skill, tool, agent, plugin, MCP server or catalog entry. Global, every conversation and command. Only Charles asking in that message lifts it.
+10. VERIFY. Run the check, quote real output, report a failure first."""
 
 # Conditional. Each costs nothing on the turns it does not apply to.
 #
@@ -70,22 +100,22 @@ CORE = """Standing pipeline. Run these before anything else, every prompt, no ex
 LANES = (
     (r"\b(secur|vulnerab|exploit|secret|credential|token|auth|malware|scan|"
      r"inject|breach|leak)\w*",
-     "8. Security-relevant: findings need evidence that can be quoted. A pattern match is a reason to look, never a reason to delete."),
+     "11. Security-relevant: findings need evidence that can be quoted. A pattern match is a reason to look, never a reason to delete."),
 
     (r"\b(ui|ux|design|css|html|page|site|website|layout|theme|palette|"
      r"typograph|figma|landing|frontend|front-end|visual|mockup|style)\w*",
-     "8. UI work specifically: audit the existing surface before replacing it, and name the aesthetic family you are reaching for rather than defaulting."),
+     "11. UI work specifically: audit the existing surface before replacing it, and name the aesthetic family you are reaching for rather than defaulting."),
 
     (r"\b(install|clone|dependenc|package|npm|pip|repositor|third.?party|"
      r"skill pack|marketplace|mcp server)\w*",
-     "8. Adding anything third-party: run the dep-audit path first. Catalogued is not vetted, and scripts/install_catalog_skill.py is the reviewed route into a skill root."),
+     "11. Adding anything third-party: run the dep-audit path first. Catalogued is not vetted, and scripts/install_catalog_skill.py is the reviewed route into a skill root."),
 
     (r"\b(pricing|version|latest|current|today|release|changelog|"
      r"model name|quota)\w*",
-     "8. This asks for something that changes: retrieve it, do not recall it. Cite what you read."),
+     "11. This asks for something that changes: retrieve it, do not recall it. Cite what you read."),
 )
 
-ORCHESTRATION = ("9. More than about three independent pieces of work here: fan them out, "
+ORCHESTRATION = ("12. More than about three independent pieces of work here: fan them out, "
                  "then verify the results adversarially rather than trusting the first pass.")
 
 # A prompt long enough to hold several asks usually does.

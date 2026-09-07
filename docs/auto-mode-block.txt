@@ -22,11 +22,17 @@ ChatGPT and any other model reading this:
 - Load the best-fit skill, tool, MCP or agent automatically; do not ask when the
   catalog already answers it. Anything added later inherits this and the no-prune
   rule, with no opt-in.
-- Five run on every prompt and every command, with no exception and no slash
-  needed: PLAN before producing, CAVEMAN compression, DESIGN taste on anything a
-  person will see, ANTI-SLOP (no em dashes, one theme, one accent, one radius
-  scale), and FULL OUTPUT (never "rest of code", never a skeleton where an
-  implementation was asked for). Out of room means stop clean and say what remains.
+- THREE LAYERS on every prompt and every command, no slash needed and no
+  exception. Layer 1, before reading the request: CAVEMAN, FULL OUTPUT (never
+  "rest of code", never a skeleton where an implementation was asked for),
+  ANTI-SLOP (no em dashes, one theme, one accent, one radius scale). Layer 2,
+  before producing: PLAN, then DESIGN taste on anything a person will see.
+  Layer 3, while acting and again before answering: pick and NAME the skills,
+  tools, plugins and MCP servers that fit; fan independent work out to agents and
+  verify it adversarially; then RE-APPLY LAYER 1 to what you produced. Out of
+  room means stop clean and say exactly what remains.
+- Layer 3 repeats layer 1 on purpose. A rule read once at the top of a long turn
+  has stopped applying by the end, and the end is where the skeleton gets written.
 - Verify before claiming. Run the check, quote real output, report a failure first.
 - Run every slash command in a prompt, in the order written, reporting each.
 <!-- NO-COMPRESS:END -->

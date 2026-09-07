@@ -206,12 +206,15 @@ GLOBAL_RULES_SETUPS = [
 
     ("rules-guards", "Standing pipeline and guards", "instructions",
      "The one command that makes the rules hold outside the model. Installs every "
-     "skill into Claude Code and Antigravity, the two PreToolUse guards that stop a "
-     "skill being pruned or compressed, and the standing pipeline hook: plan, caveman, "
-     "design, anti-slop, full output, no-compaction and verify, injected into every "
-     "prompt and every command with no slash needed. Claude Code gets it on "
-     "UserPromptSubmit and Antigravity on PreInvocation, which are the only two "
-     "clients with a verified hook mechanism.",
+     "skill into Claude Code and Antigravity, the two PreToolUse guards, and the "
+     "standing pipeline hook, which injects three layers into every prompt and every "
+     "command with no slash needed. Layer 1 before the request is read: caveman, full "
+     "output, anti-slop. Layer 2 before anything is produced: plan, design. Layer 3 "
+     "while acting: pick and name the skills, tools, plugins and MCP servers that fit, "
+     "fan independent work out to agents, then re-apply layer 1 to what came back. "
+     "Claude Code gets it on UserPromptSubmit and Antigravity on PreInvocation, the "
+     "only two clients with a verified hook mechanism. The hook file is itself "
+     "protected from deletion and compression, so the rule cannot be removed.",
      _with_clone(_GUARD_BODIES)),
 
     ("rules-pipeline-check", "Show the pipeline that fires", "instructions",

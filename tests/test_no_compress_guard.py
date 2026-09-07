@@ -194,6 +194,47 @@ class CapabilityDefinitionsAreProtected(unittest.TestCase):
             run("truncate -s 200 skills/x/SKILL.md  # APPROVED RECOMPRESS"), 0)
 
 
+class ThePipelineCannotBeCompressedAway(unittest.TestCase):
+    """The guards and the standing pipeline protect their own source.
+
+    Charles asked for the pipeline to be a rule that cannot be deleted.
+    Compressing scripts/hooks/skill_pipeline.py is the one edit that would
+    silently switch every standing rule off while leaving a file that still
+    looks present on disk, so it is protected by the same mechanism it enforces.
+    A guard that protects every capability except its own source is one command
+    away from protecting nothing.
+    """
+
+    def test_the_pipeline_hook_cannot_be_compressed(self):
+        self.assertEqual(run("python -m caveman scripts/hooks/skill_pipeline.py"), 2)
+
+    def test_the_pipeline_hook_cannot_be_truncated(self):
+        self.assertEqual(run("truncate -s 0 scripts/hooks/skill_pipeline.py"), 2)
+
+    def test_the_pipeline_hook_cannot_be_overwritten(self):
+        self.assertEqual(run("echo x > scripts/hooks/skill_pipeline.py"), 2)
+
+    def test_the_guards_protect_themselves_too(self):
+        for guard in ("no_prune_guard", "no_compress_guard"):
+            self.assertEqual(run(f"python -m caveman scripts/hooks/{guard}.py"), 2, guard)
+
+    def test_antigravity_hook_registration_is_protected(self):
+        """hooks.json is where Antigravity registers the same pipeline."""
+        self.assertEqual(run("llmlingua --input ~/.gemini/config/hooks.json"), 2)
+
+    def test_the_hook_is_still_runnable(self):
+        """Protecting it must not stop it being executed, which is its whole job."""
+        self.assertEqual(run("python scripts/hooks/skill_pipeline.py --antigravity"), 0)
+
+    def test_the_hook_is_still_readable(self):
+        self.assertEqual(run("cat scripts/hooks/skill_pipeline.py"), 0)
+        self.assertEqual(run("grep -n CAVEMAN scripts/hooks/skill_pipeline.py"), 0)
+
+    def test_the_override_still_lifts_it(self):
+        self.assertEqual(
+            run("truncate -s 0 scripts/hooks/skill_pipeline.py  # APPROVED RECOMPRESS"), 0)
+
+
 class AVerbOnlyCountsWhereACommandGoes(unittest.TestCase):
     """A compressor's NAME in a path is not the compressor being run.
 
