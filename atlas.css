@@ -340,3 +340,96 @@ html[data-theme="light"] .out-code { background: #14161a; }
   .group-head, .out-head { flex-direction: column; align-items: flex-start; gap: 5px; }
   .surface-grid { grid-template-columns: 1fr; }
 }
+
+/* ------------------------------------------------------------- the store
+
+   An explainer inside a working tool, so it reads at document density rather
+   than landing-page density: two unequal columns, the document narrow because a
+   field list is short lines, the index list wide because the question leads and
+   questions are sentences. Same orange, same two radii, no new type scale. */
+
+.store-grid {
+  margin-top: 24px; display: grid; gap: 16px; align-items: start;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+}
+.store-doc, .store-indexes, .store-block {
+  padding: 20px; border: 1px solid var(--line);
+  border-radius: var(--radius); background: var(--panel-2);
+}
+.store-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+  padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid var(--line);
+}
+.store-head h3 { margin: 0; font-size: 1.05rem; letter-spacing: -.01em; }
+.store-meta { color: var(--orange); font: 700 10px monospace; letter-spacing: .07em; white-space: nowrap; }
+.store-lede { margin: 0 0 15px; color: var(--ink-2); font-size: 13px; line-height: 1.55; max-width: 74ch; }
+
+.doc-fields { margin: 0; display: flex; flex-direction: column; }
+.doc-fields dt {
+  display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap;
+  padding-top: 11px; border-top: 1px solid var(--line);
+}
+.doc-fields dt:first-child { border-top: 0; padding-top: 0; }
+.doc-fields dt code {
+  color: var(--ink); font: 700 12px "Cascadia Code", monospace;
+  font-variant-ligatures: none;
+}
+.doc-type {
+  padding: 2px 6px; border-radius: 5px; background: var(--panel-3);
+  color: var(--ink-3); font: 700 9.5px monospace; letter-spacing: .04em;
+}
+.doc-fields dd { margin: 4px 0 11px; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; }
+
+.index-list { margin: 0; padding: 0; list-style: none; counter-reset: idx; }
+.index-row {
+  counter-increment: idx; position: relative;
+  padding: 14px 0 14px 34px; border-top: 1px solid var(--line);
+}
+.index-row:first-child { border-top: 0; }
+.index-row::before {
+  content: counter(idx); position: absolute; left: 0; top: 14px;
+  width: 22px; height: 22px; display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 6px;
+  color: var(--ink-3); font: 700 10px monospace;
+}
+.index-question {
+  margin: 0 0 6px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  color: var(--ink); font-size: 14px; font-weight: 650; line-height: 1.4;
+}
+.index-tag {
+  padding: 2px 7px; border-radius: 5px;
+  font: 700 9.5px monospace; letter-spacing: .06em; text-transform: uppercase;
+}
+.index-tag.unique { background: color-mix(in srgb, var(--orange) 20%, transparent); color: var(--orange); }
+.index-tag.ttl { background: color-mix(in srgb, var(--yellow) 20%, transparent); color: var(--yellow); }
+.index-spec {
+  margin: 0 0 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font: 600 11px "Cascadia Code", monospace; font-variant-ligatures: none;
+}
+.index-coll { color: var(--ink-3); }
+.index-coll::after { content: "."; }
+.index-spec code {
+  padding: 3px 8px; border-radius: 6px; background: #090a0c; color: #c8f8e0;
+  font: inherit; overflow-wrap: anywhere;
+}
+html[data-theme="light"] .index-spec code { background: #14161a; }
+.index-name { color: var(--ink-3); }
+.index-name::before { content: "name "; color: var(--line-strong); }
+.index-why { margin: 0; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; max-width: 76ch; }
+
+.store-foot { margin-top: 16px; display: grid; gap: 16px; align-items: start; grid-template-columns: minmax(0, 6fr) minmax(0, 4fr); }
+.store-block h3 { margin: 0 0 10px; font-size: 1.05rem; letter-spacing: -.01em; }
+.search-modes { margin: 0; display: flex; flex-direction: column; }
+.search-modes dt {
+  padding-top: 11px; border-top: 1px solid var(--line);
+  font-size: 13px; font-weight: 650; color: var(--ink);
+}
+.search-modes dt:first-child { border-top: 0; padding-top: 0; }
+.search-modes dd { margin: 4px 0 11px; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; }
+.store-run .out-code { max-height: none; }
+.store-source { margin: 12px 0 0; color: var(--ink-3); font-size: 12px; line-height: 1.5; }
+.store-source code { color: var(--ink-2); font: 600 11px "Cascadia Code", monospace; font-variant-ligatures: none; }
+
+@media (max-width: 980px) {
+  .store-grid, .store-foot { grid-template-columns: 1fr; }
+}

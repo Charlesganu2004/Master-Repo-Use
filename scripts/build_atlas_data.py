@@ -959,6 +959,127 @@ def local_model_surfaces() -> list[dict]:
     } for m in models]
 
 
+# --------------------------------------------------------------- the store
+#
+# Charles asked to be shown what "indexed" and "the MongoDB store" actually
+# mean, rather than told. The honest way to show it is to render the index
+# definitions that scripts/monitor-indexes.js really creates, so the page cannot
+# drift into describing a store that does not exist. This parses that file
+# instead of restating it: change the file and the page follows.
+
+STORE_INDEX_FILE = ROOT / "scripts" / "monitor-indexes.js"
+
+_CREATE_RE = re.compile(
+    r"db\.(\w+)\.createIndex\(\s*(\{.*?\})\s*,\s*(\{.*?\})\s*\)\s*;",
+    re.DOTALL)
+
+# What each index is FOR, in the words of the question it answers. The comments
+# in the .js file say this too, but a comment is prose above a statement and this
+# has to survive as a field. Keyed by index name so a renamed index fails loudly
+# in the test rather than rendering an empty cell.
+INDEX_QUESTIONS = {
+    "actor_recent": (
+        "What did this person do in the last hour?",
+        "Walks one actor's events newest first. Without it, answering for one "
+        "person reads every event ever captured and sorts the lot in memory."),
+    "project_recent": (
+        "What happened on this repository today?",
+        "The same walk keyed by project, which is the query behind a standup "
+        "rollup for a team rather than a person."),
+    "source_unique": (
+        "Has this capture already been ingested?",
+        "Unique, so a restarted capture agent re-ingesting a window is a no-op. "
+        "Without it the day silently doubles and every count built on it is wrong."),
+    "events_ttl": (
+        "What is old enough to delete?",
+        "expireAfterSeconds: 0 means expire at the moment stored in expires_at, "
+        "so retention is a property of the document. A shorter window for one "
+        "person needs no index change. The field must be a Date and the index "
+        "must stay single-field; MongoDB silently never expires anything if "
+        "either is wrong."),
+    "scope_period": (
+        "Which summary covers last week for this scope?",
+        "Summaries deliberately have no TTL. They outlive the events they were "
+        "built from, which is the entire reason for summarising."),
+    "project_period": (
+        "Which summaries mention this project?",
+        "projects is an array field, so this is a multikey index: one document "
+        "with four projects gets four index entries and matches any of them."),
+    "consent_lookup": (
+        "Is capture currently permitted for this person and scope?",
+        "One indexed lookup. A permission check that costs a collection scan "
+        "becomes a permission check somebody caches, and then it is an "
+        "assumption rather than a check."),
+}
+
+# One captured event, with the fields that make the indexes above work. Shown as
+# the shape rather than described, because "a document store" means nothing until
+# you have seen a document.
+STORE_DOCUMENT = {
+    "collection": "events",
+    "fields": [
+        ("_id", "ObjectId", "Assigned by MongoDB."),
+        ("source_id", "string",
+         "Stable id from the capture agent: machine, stream and frame. The unique index is on this."),
+        ("actor", "string", "Who was at the keyboard. Indexed with ts."),
+        ("project", "string", "Repository or working directory. Indexed with ts."),
+        ("ts", "Date", "When it happened. The -1 half of both compound indexes."),
+        ("kind", "string", "chat, commit, terminal, window or ocr."),
+        ("text", "string", "The transcribed or captured text. This is the part that needs redaction."),
+        ("expires_at", "Date",
+         "When this document deletes itself. Must be a Date; a string or an epoch number "
+         "means the TTL index quietly never fires."),
+    ],
+}
+
+# Search is the question that gets answered wrong most often, so the two facts
+# that actually decide the architecture are recorded with their date.
+STORE_SEARCH = [
+    ("Regular queries and the indexes above",
+     "Every MongoDB edition, including a single local mongod. This is what the "
+     "monitor needs for summaries, rollups and retention."),
+    ("$search, full text",
+     "Was Atlas only. Self-managed from MongoDB 8.2, which runs a separate mongot "
+     "binary alongside mongod and requires a replica set, even a single-node one. "
+     "Checked 2026-09-04."),
+    ("$vectorSearch, semantic",
+     "Same mechanism and the same mongot requirement. Wanted only if summaries "
+     "should be searchable by meaning rather than by actor, project and time."),
+]
+
+
+def store_indexes() -> list[dict]:
+    """Parse the real createIndex calls so the page cannot drift from the file."""
+    text = STORE_INDEX_FILE.read_text(encoding="utf-8")
+    out = []
+    for collection, keys, options in _CREATE_RE.findall(text):
+        name = re.search(r'name:\s*"([^"]+)"', options)
+        name = name.group(1) if name else "unnamed"
+        keys = " ".join(keys.split())
+        question, why = INDEX_QUESTIONS.get(name, ("", ""))
+        out.append({
+            "collection": collection,
+            "name": name,
+            "keys": keys,
+            "unique": "unique: true" in options,
+            "ttl": "expireAfterSeconds" in options,
+            "question": question,
+            "why": why,
+        })
+    return out
+
+
+def store_payload() -> dict:
+    return {
+        "file": "scripts/monitor-indexes.js",
+        "doc": "docs/CHAT-CODE-MONITOR.md",
+        "command": "mongosh monitor --file scripts/monitor-indexes.js",
+        "document": STORE_DOCUMENT,
+        "indexes": store_indexes(),
+        "search": [{"mode": m, "detail": d} for m, d in STORE_SEARCH],
+    }
+
+
 def design_pages() -> list[dict]:
     """Every interactive design, read from the files rather than listed by hand.
 
@@ -1069,6 +1190,7 @@ def build() -> dict:
         "setupRecipes": ([MASTER_SETUP_RECIPE] + model_setup_recipes()
                      + global_rules_recipes() + antigravity_recipes()),
         "designs": design_pages(),
+        "store": store_payload(),
         "surfaces": surface_entries() + local_model_surfaces(),
         "surfaceGroups": [
             {"id": "local-client", "name": "Local clients",

@@ -22,7 +22,7 @@
       <span><strong>Graphite Atlas</strong><small>Master Repo Use</small></span>
     </a>
     <nav class="primary-nav" aria-label="Primary navigation">
-      <a href="#atlas">Atlas</a><a href="#routes">Routes</a><a href="#setup">Setup</a><a href="#designs">Designs</a><a href="#hardware">Hardware</a><a href="#health">Health</a>
+      <a href="#atlas">Atlas</a><a href="#routes">Routes</a><a href="#setup">Setup</a><a href="#store">Store</a><a href="#designs">Designs</a><a href="#hardware">Hardware</a><a href="#health">Health</a>
     </nav>
     <div class="mast-actions">
       <span class="live-pill"><i></i> System current</span>
@@ -111,6 +111,47 @@
       </div>
 
       <div class="setup-output" id="setupOutput" aria-live="polite"></div>
+    </section>
+    <section class="routes-section page-shell" id="store" aria-labelledby="storeTitle">
+      <div class="section-heading route-heading">
+        <div><p class="eyebrow">The store, shown rather than claimed</p><h2 id="storeTitle">What indexed actually means here.</h2></div>
+        <p>The monitor lane writes captured chat, commits, terminal and window activity into MongoDB. Below is the document it writes and the seven indexes it creates, read from the real file, not a description of one. Change that file and this page changes with it.</p>
+      </div>
+
+      <div class="store-grid">
+        <article class="store-doc">
+          <header class="store-head">
+            <h3>One captured event</h3>
+            <span class="store-meta" id="storeCollection">events</span>
+          </header>
+          <p class="store-lede">A document store means the row is the shape below, nested and self-describing, rather than a fixed table you migrate to change. This is one event.</p>
+          <dl class="doc-fields" id="storeDocument"></dl>
+        </article>
+
+        <article class="store-indexes">
+          <header class="store-head">
+            <h3>The question each index answers</h3>
+            <span class="store-meta" id="storeIndexCount"></span>
+          </header>
+          <p class="store-lede">An index is not a setting. It is the difference between answering a question by reading the one branch that holds it and answering it by reading every event ever captured. Each row below leads with the question, because that is what the index is for.</p>
+          <ol class="index-list" id="storeIndexList"></ol>
+        </article>
+      </div>
+
+      <div class="store-foot">
+        <article class="store-block">
+          <h3>Searching it</h3>
+          <p class="store-lede">Three different mechanisms get called search, and only the first is free.</p>
+          <dl class="search-modes" id="storeSearch"></dl>
+        </article>
+        <article class="store-block store-run">
+          <h3>Creating all of it</h3>
+          <p class="store-lede">Idempotent, so it is the step you repeat on every new machine rather than one you have to remember not to repeat.</p>
+          <pre class="out-code"><code id="storeCommand"></code></pre>
+          <button type="button" class="quiet-button" id="copyStore">Copy the command</button>
+          <p class="store-source" id="storeSource"></p>
+        </article>
+      </div>
     </section>
     <section class="routes-section page-shell" id="designs" aria-labelledby="designsTitle">
       <div class="section-heading route-heading">

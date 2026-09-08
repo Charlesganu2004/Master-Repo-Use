@@ -644,6 +644,7 @@ async function loadCatalog() {
   renderSetupControls();
   renderSurfaces();
   renderSetupOutput();
+  renderStore();
   renderDesignLinks();
 }
 
@@ -962,6 +963,85 @@ function osLabel(id) {
   if (id === 'macos') return 'macOS';
   if (id === 'wsl') return 'WSL';
   return id.charAt(0).toUpperCase() + id.slice(1);
+}
+
+/* ------------------------------------------------------------------ the store
+
+   Charles asked to be shown what indexing and the MongoDB store mean here,
+   rather than told. So none of this is written prose about a store: every index
+   below is parsed out of scripts/monitor-indexes.js by the build, and the page
+   renders what that file actually creates. If somebody adds an index and does
+   not explain it, the build has no question to show and the test fails. */
+
+function renderStore() {
+  const store = catalog.data.store;
+  if (!store) return;
+
+  const collection = document.getElementById('storeCollection');
+  if (collection) collection.textContent = store.document.collection;
+
+  const fields = document.getElementById('storeDocument');
+  if (fields) {
+    fields.innerHTML = store.document.fields.map(function (field) {
+      return '<dt><code>' + escapeHtml(field[0]) + '</code>' +
+        '<span class="doc-type">' + escapeHtml(field[1]) + '</span></dt>' +
+        '<dd>' + escapeHtml(field[2]) + '</dd>';
+    }).join('');
+  }
+
+  const count = document.getElementById('storeIndexCount');
+  if (count) {
+    const collections = store.indexes.map(function (index) { return index.collection; });
+    const unique = collections.filter(function (name, at) {
+      return collections.indexOf(name) === at;
+    });
+    count.textContent = store.indexes.length + ' indexes, ' + unique.length + ' collections';
+  }
+
+  const list = document.getElementById('storeIndexList');
+  if (list) {
+    list.innerHTML = store.indexes.map(function (index) {
+      /* The badges are the two properties that change what the index DOES rather
+         than what it covers, so they are the only two worth calling out. */
+      let tags = '';
+      if (index.unique) tags += '<span class="index-tag unique">unique</span>';
+      if (index.ttl) tags += '<span class="index-tag ttl">TTL</span>';
+      return '<li class="index-row">' +
+        '<p class="index-question">' + escapeHtml(index.question) + tags + '</p>' +
+        '<p class="index-spec"><span class="index-coll">' + escapeHtml(index.collection) +
+          '</span><code>' + escapeHtml(index.keys) + '</code>' +
+          '<span class="index-name">' + escapeHtml(index.name) + '</span></p>' +
+        '<p class="index-why">' + escapeHtml(index.why) + '</p></li>';
+    }).join('');
+  }
+
+  const search = document.getElementById('storeSearch');
+  if (search) {
+    search.innerHTML = store.search.map(function (mode) {
+      return '<dt>' + escapeHtml(mode.mode) + '</dt><dd>' + escapeHtml(mode.detail) + '</dd>';
+    }).join('');
+  }
+
+  const command = document.getElementById('storeCommand');
+  if (command) command.textContent = store.command;
+
+  const source = document.getElementById('storeSource');
+  if (source) {
+    source.innerHTML = 'Read from <code>' + escapeHtml(store.file) +
+      '</code>. The design behind it is <code>' + escapeHtml(store.doc) + '</code>.';
+  }
+
+  const copy = document.getElementById('copyStore');
+  if (copy && !copy.dataset.wired) {
+    copy.dataset.wired = '1';
+    copy.addEventListener('click', function () {
+      navigator.clipboard.writeText(store.command).then(function () {
+        showToast('Index command copied');
+      }, function () {
+        showToast('Select the command and copy it manually');
+      });
+    });
+  }
 }
 
 function renderDesignLinks() {
