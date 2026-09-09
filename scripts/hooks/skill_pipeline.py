@@ -16,10 +16,11 @@ for "use the pdf skill when there is a pdf" and useless for "always run these
 first", because the one time it matters is the time the model does not think to
 look.
 
-This hook is mechanism 3, and it is the only deterministic one. UserPromptSubmit
-fires on EVERY prompt before the model reads it, and its `additionalContext` is
-injected into that turn. Nothing is left to judgement: the rule arrives with the
-prompt whether the model would have thought of it or not.
+This hook is mechanism 3. Claude Code's UserPromptSubmit and Antigravity's
+PreInvocation inject the pipeline on each turn. GitHub Copilot's
+userPromptTransformed rewrites the model-facing prompt on each turn. Cursor
+does not expose a prompt-rewrite output, so its alwaysApply rule carries the
+per-prompt layer and sessionStart reinforces the initial system context.
 
 THREE LAYERS, not a list. Charles asked for it in this shape and the shape is
 the point:
@@ -170,17 +171,53 @@ def find_prompt(event: dict) -> str:
 
 
 def main() -> int:
-    # One source for the rules, two output shapes. Writing the pipeline into a
-    # second file for Antigravity would guarantee the two drift, and the whole
-    # point is that every client gets the SAME standing rules.
+    # One source for the rules, several verified client output shapes. Writing
+    # separate rule bodies would guarantee drift, which is exactly what this
+    # shared hook is designed to prevent.
     antigravity = "--antigravity" in sys.argv
+    cursor = "--cursor" in sys.argv
+    gemini = "--gemini" in sys.argv
+    copilot_session = "--copilot-session" in sys.argv
+    copilot_transform = "--copilot-transform" in sys.argv
 
     try:
         event = json.load(sys.stdin)
     except Exception:
         return 0                      # never break a session over a bad event
 
+    if cursor:
+        print(json.dumps({"additional_context": CORE}))
+        return 0
+
+    if copilot_session:
+        initial = event.get("initialPrompt") or event.get("initial_prompt") or ""
+        context = context_for(initial) if isinstance(initial, str) and initial.strip() else CORE
+        print(json.dumps({"additionalContext": context}))
+        return 0
+
+    if copilot_transform:
+        transformed = event.get("transformedPrompt")
+        if not isinstance(transformed, str) or not transformed.strip():
+            print("{}")
+            return 0
+        # Copilot replays rewritten history through this event. Keep the rewrite
+        # idempotent so a long session does not stack another copy each turn.
+        if transformed.startswith("MASTER REPO AUTO MODE APPLIED\n"):
+            print("{}")
+            return 0
+        prompt = event.get("prompt") if isinstance(event.get("prompt"), str) else transformed
+        rewritten = ("MASTER REPO AUTO MODE APPLIED\n" + context_for(prompt) +
+                     "\n\nCURRENT REQUEST\n" + transformed)
+        print(json.dumps({"modifiedTransformedPrompt": rewritten}))
+        return 0
+
     prompt = find_prompt(event)
+    if gemini:
+        print(json.dumps({"hookSpecificOutput": {
+            "hookEventName": "BeforeAgent",
+            "additionalContext": context_for(prompt) if prompt.strip() else CORE,
+        }}))
+        return 0
     if not prompt.strip():
         return 0
     context = context_for(prompt)

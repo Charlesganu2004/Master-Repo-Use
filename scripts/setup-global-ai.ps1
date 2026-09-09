@@ -3,10 +3,10 @@ param(
   # Which client instruction files to write. 'all' is the default because a rule
   # that lives in only one client is a rule the other clients will contradict.
   # 'gpt' is accepted as an alias for codex, which is the GPT surface.
-  [ValidateSet('all','claude','codex','gemini','copilot','antigravity','gpt','chatgpt','openai','ag','google-antigravity')]
+  [ValidateSet('all','claude','codex','gemini','copilot','antigravity','cursor','gpt','chatgpt','openai','ag','google-antigravity')]
   [string]$Client = 'all',
   [switch]$CopilotOnly,
-  [switch]$AutoSkills
+  [switch]$AutoSkills = $true
 )
 
 if ($CopilotOnly) { $Client = 'copilot' }
@@ -77,8 +77,12 @@ if (Test-Writes 'antigravity') {
   Get-ChildItem -Path (Join-Path $RepoPath 'skills') -Directory | Sort-Object Name | ForEach-Object {
     if (Test-Path (Join-Path $_.FullName 'SKILL.md')) {
       $destination = Join-Path $skillRoot $_.Name
-      if (Test-Path $destination) { Remove-Item -Recurse -Force $destination }
-      Copy-Item -Recurse -Path $_.FullName -Destination $destination
+      New-Item -ItemType Directory -Force -Path $destination | Out-Null
+      # Merge every shipped file into the existing skill. Extra files already
+      # present remain in place, so refreshing auto mode never prunes a skill.
+      Get-ChildItem -LiteralPath $_.FullName -Force | ForEach-Object {
+        Copy-Item -LiteralPath $_.FullName -Destination $destination -Recurse -Force
+      }
       $installed += $_.Name
     }
   }
@@ -88,6 +92,11 @@ if (Test-Writes 'antigravity') {
 if (Test-Writes 'copilot') {
   Set-MasterRepoBlock "$HOME\.copilot\copilot-instructions.md" ($common + "`nCopilot-specific guide: $RepoPath\docs\COPILOT-SETUP.md")
 }
+
+# Every client setup includes its discoverable skills and supported hooks.
+# The compatibility -AutoSkills switch remains accepted; auto mode is default.
+& python (Join-Path $RepoPath 'scripts/install_auto_mode.py') --repo $RepoPath --home $HOME --client $Client
+if ($LASTEXITCODE -ne 0) { throw 'Automatic skill and hook setup failed.' }
 
 [Environment]::SetEnvironmentVariable('COPILOT_CUSTOM_INSTRUCTIONS_DIRS',$RepoPath,'User')
 $env:COPILOT_CUSTOM_INSTRUCTIONS_DIRS = $RepoPath
@@ -129,5 +138,4 @@ Write-Host "Watermark command: & '$bin\master-watermark.ps1' <input> <output-fol
 Write-Host 'GitHub audit: gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use'
 Write-Host "Optional AI request: python '$RepoPath\scripts\maintenance_request.py' --auto"
 Write-Host "Token budget remains opt-in: $RepoPath\docs\TOKEN-BUDGET.md"
-if ($AutoSkills) { Write-Host 'Auto mode written to every client instruction file.' -ForegroundColor Green }
-else { Write-Host 'Auto mode not enabled. Re-run with -AutoSkills to turn it on.' }
+Write-Host 'Auto mode, discoverable skills and supported hooks installed for the selected client(s).' -ForegroundColor Green

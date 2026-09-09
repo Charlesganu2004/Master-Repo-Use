@@ -5,16 +5,16 @@ REPO_PATH="${1:-$HOME/Master-Repo-Use}"
 # Which client instruction files to write. "all" is the default because a rule
 # that lives in only one client is a rule the other clients will contradict.
 CLIENT="all"
-AUTO=0
+AUTO=1
 prev=""
 for arg in "$@"; do
   case "$prev" in
     --client)
       case "$arg" in
-        all|claude|codex|gemini|copilot|antigravity) CLIENT="$arg" ;;
+        all|claude|codex|gemini|copilot|antigravity|cursor) CLIENT="$arg" ;;
         gpt|chatgpt|openai) CLIENT="codex" ;;   # Codex is the GPT surface
         ag|google-antigravity) CLIENT="antigravity" ;;
-        *) echo "Unknown --client '$arg'. Use all|claude|codex|gemini|copilot|antigravity." >&2; exit 2 ;;
+        *) echo "Unknown --client '$arg'. Use all|claude|codex|gemini|copilot|antigravity|cursor." >&2; exit 2 ;;
       esac ;;
   esac
   case "$arg" in
@@ -113,11 +113,12 @@ for skill in sorted(p for p in source.iterdir() if p.is_dir()):
     if not (skill / "SKILL.md").is_file():
         continue                      # a directory without SKILL.md is not a skill
     destination = target / skill.name
-    if destination.exists():
-        shutil.rmtree(destination)
-    shutil.copytree(skill, destination)
+    # Merge in place. Refreshing one managed skill must not delete files another
+    # client or the owner deliberately placed in that capability directory.
+    shutil.copytree(skill, destination, dirs_exist_ok=True)
     installed.append(skill.name)
-print("Antigravity skills installed: " + (", ".join(installed) or "none found"))
+print("Antigravity skills merged without deleting existing files: "
+      + (", ".join(installed) or "none found"))
 PY
 fi
 
@@ -126,6 +127,9 @@ if writes copilot; then
   upsert_block "$HOME/.copilot/copilot-instructions.md" "$common
 Copilot-specific guide: $REPO_PATH/docs/COPILOT-SETUP.md"
 fi
+
+# Auto mode includes skills and supported hooks, even for a per-client command.
+"$PY_BIN" "$REPO_PATH/scripts/install_auto_mode.py" --repo "$REPO_PATH" --home "$HOME" --client "$CLIENT"
 
 for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
   touch "$rc"
@@ -175,8 +179,4 @@ echo "Watermark command: master-watermark <input> <output-folder>"
 echo "GitHub audit: gh workflow run catalog-guardian.yml -R Charlesganu2004/Master-Repo-Use"
 echo "Optional AI request: python $REPO_PATH/scripts/maintenance_request.py --auto"
 echo "Token budget remains opt-in: $REPO_PATH/docs/TOKEN-BUDGET.md"
-if [ "$AUTO" = "1" ]; then
-  echo "Auto mode written to every client instruction file."
-else
-  echo "Auto mode not enabled. Re-run with --auto-skills to turn it on."
-fi
+echo "Auto mode, discoverable skills and supported hooks installed for the selected client(s)."

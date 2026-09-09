@@ -33,6 +33,13 @@ sys.path.insert(0, str(ROOT / "scripts" / "hooks"))
 import skill_pipeline as pipeline  # noqa: E402
 
 
+def installer_function(name: str) -> str:
+    """Return one installer function, without accidentally scanning later ones."""
+    body = INSTALLER[INSTALLER.index(f"def {name}("):]
+    stop = body.find("\n\ndef ", 1)
+    return body if stop < 0 else body[:stop]
+
+
 def run(prompt: str) -> str:
     """The hook's additionalContext for a prompt, or '' when it stays silent."""
     event = json.dumps({"input": {"prompt": prompt}})
@@ -242,6 +249,75 @@ class ItServesAntigravityToo(unittest.TestCase):
         self.assertEqual(claude, antigravity, "the two clients drifted apart")
 
 
+class ItServesCursorAndCopilotToo(unittest.TestCase):
+    def mode(self, flag: str, event: dict) -> dict:
+        proc = subprocess.run([sys.executable, str(HOOK), flag],
+                              input=json.dumps(event), capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertTrue(proc.stdout.strip(), f"{flag} emitted no context")
+        return json.loads(proc.stdout)
+
+    def test_cursor_uses_its_documented_additional_context_key(self):
+        prompt = "refactor the parser"
+        out = self.mode("--cursor", {"prompt": prompt})
+        self.assertEqual(set(out), {"additional_context"})
+        self.assertEqual(out["additional_context"], run(prompt))
+
+    def test_copilot_session_uses_camel_case_additional_context(self):
+        out = self.mode("--copilot-session", {})
+        self.assertEqual(set(out), {"additionalContext"})
+        self.assertIn("LAYER 1, before reading the request", out["additionalContext"])
+        self.assertIn("LAYER 3, while acting", out["additionalContext"])
+
+    def test_copilot_session_does_not_need_a_user_prompt_to_fire(self):
+        out = self.mode("--copilot-session", {"source": "startup"})
+        self.assertIn("CAVEMAN", out["additionalContext"])
+
+    def test_copilot_transform_uses_prompt_and_preserves_transformed_prompt(self):
+        original = "Refactor the parser and keep its public API."
+        out = self.mode("--copilot-transform", {
+            "prompt": "redo the landing page css",
+            "transformedPrompt": original,
+        })
+        self.assertEqual(set(out), {"modifiedTransformedPrompt"})
+        transformed = out["modifiedTransformedPrompt"]
+        self.assertTrue(
+            transformed.startswith("MASTER REPO AUTO MODE APPLIED\n"),
+            "the idempotency marker must be the first line",
+        )
+        self.assertIn("LAYER 1, before reading the request", transformed)
+        self.assertIn("LAYER 3, while acting", transformed)
+        self.assertIn("audit the existing surface", transformed,
+                      "the original prompt did not select its UI lane")
+        self.assertIn(original, transformed,
+                      "the already-transformed user request was discarded")
+
+    def test_copilot_transform_does_not_stack_the_pipeline(self):
+        first = self.mode("--copilot-transform", {
+            "prompt": "build it", "transformedPrompt": "build it"
+        })[
+            "modifiedTransformedPrompt"
+        ]
+        second = self.mode("--copilot-transform", {
+            "prompt": "build it", "transformedPrompt": first,
+        })
+        self.assertEqual(second, {}, "an already-marked prompt was rewritten again")
+        self.assertEqual(first.count("MASTER REPO AUTO MODE APPLIED\n"), 1)
+
+    def test_gemini_uses_before_agent_additional_context(self):
+        out = self.mode("--gemini", {"prompt": "redo the landing page css"})
+        self.assertEqual(set(out), {"hookSpecificOutput"})
+        hook = out["hookSpecificOutput"]
+        self.assertEqual(hook.get("hookEventName"), "BeforeAgent")
+        self.assertIn("LAYER 1, before reading the request", hook["additionalContext"])
+        self.assertIn("audit the existing surface", hook["additionalContext"])
+
+    def test_gemini_empty_session_still_receives_the_mandatory_core(self):
+        out = self.mode("--gemini", {})["hookSpecificOutput"]
+        self.assertEqual(out.get("hookEventName"), "BeforeAgent")
+        self.assertIn("CAVEMAN", out["additionalContext"])
+
+
 class TheInstallerRegistersAntigravity(unittest.TestCase):
     """Every one of these was read from the vendor docs, not assumed."""
 
@@ -254,8 +330,7 @@ class TheInstallerRegistersAntigravity(unittest.TestCase):
 
     def test_preinvocation_carries_no_matcher(self):
         """The docs are explicit that the matcher is ignored for this event."""
-        block = INSTALLER[INSTALLER.index("def register_antigravity_hook"):]
-        block = block[:block.index("def main")]
+        block = installer_function("register_antigravity_hook")
         self.assertNotIn('"matcher"', block)
 
     def test_the_entry_is_keyed_by_hook_name_at_the_top_level(self):
@@ -265,12 +340,12 @@ class TheInstallerRegistersAntigravity(unittest.TestCase):
         self.assertIn("--antigravity", INSTALLER)
 
     def test_it_backs_up_before_overwriting(self):
-        block = INSTALLER[INSTALLER.index("def register_antigravity_hook"):]
-        self.assertIn('with_suffix(".json.bak")', block[:block.index("def main")])
+        block = installer_function("register_antigravity_hook")
+        self.assertIn('with_suffix(".json.bak")', block)
 
     def test_it_refuses_rather_than_clobber_unreadable_json(self):
-        block = INSTALLER[INSTALLER.index("def register_antigravity_hook"):]
-        self.assertIn("REFUSED", block[:block.index("def main")])
+        block = installer_function("register_antigravity_hook")
+        self.assertIn("REFUSED", block)
 
 
 class TheInstallerRegistersIt(unittest.TestCase):

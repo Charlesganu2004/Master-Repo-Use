@@ -25,6 +25,8 @@ import json
 import pathlib
 import re
 
+from sync_project_skills import sync_project_skills
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 # Written to both places on purpose. The designs fetch it relative to themselves,
 # and a hand-copied second file is exactly the kind of thing that drifts silently.
@@ -151,12 +153,29 @@ def _rules_bodies(client: str) -> dict:
           f"-Client {client} -AutoSkills")
     sh = f'bash "$p/scripts/setup-global-ai.sh" "$p" --client {client} --auto-skills'
     return {"windows": ps, "wsl": sh, "macos": sh, "linux": sh,
-            "other": sh.replace('bash "$p', 'sh "$p')}
+            "other": sh}
 
 
 def _with_clone(bodies: dict) -> dict:
     """A standalone command: clone-or-refresh, then the body."""
     return {key: _CLONE_PREAMBLE[key] + body for key, body in bodies.items()}
+
+
+LOCAL_HARNESS_RECIPE = {
+    "id": "setup-local-model-harness",
+    "name": "Verify the local-model auto-mode harness",
+    "kind": "setup",
+    "state": "ready",
+    "trust": "owner-repository",
+    "detail": "Clones or refreshes Master-Repo-Use and checks that all three standing layers are prepended before a raw Ollama request.",
+    "commands": _with_clone({
+        "windows": "python (Join-Path $p 'scripts/auto_mode_harness.py') --check",
+        "wsl": 'python3 "$p/scripts/auto_mode_harness.py" --check',
+        "macos": 'python3 "$p/scripts/auto_mode_harness.py" --check',
+        "linux": 'python3 "$p/scripts/auto_mode_harness.py" --check',
+        "other": 'python3 "$p/scripts/auto_mode_harness.py" --check',
+    }),
+}
 
 
 def _rules_commands(client: str) -> dict:
@@ -174,7 +193,7 @@ _GUARD_BODIES = {
 GLOBAL_RULES_SETUPS = [
     ("rules-all-clients", "Global rules - every client", "instructions",
      "Writes the Master Repo contract and the protected auto-mode block to Claude, "
-     "Codex, Gemini and Copilot at once. The default: one rule set, no client left "
+     "Codex, Gemini, Antigravity, Cursor and Copilot at once. The default: one rule set, no client left "
      "holding a contradicting copy.",
      _rules_commands("all")),
 
@@ -204,17 +223,23 @@ GLOBAL_RULES_SETUPS = [
      "environment variable that makes Copilot read the repository.",
      _rules_commands("copilot")),
 
+    ("rules-cursor", "Global rules - Cursor", "instructions",
+     "Installs an always-applied rule into ~/.cursor/rules/master-repo-auto.mdc, "
+     "skills into ~/.cursor/skills, and session context plus shell guards into ~/.cursor/hooks.json.",
+     _rules_commands("cursor")),
+
     ("rules-guards", "Standing pipeline and guards", "instructions",
      "The one command that makes the rules hold outside the model. Installs every "
-     "skill into Claude Code and Antigravity, the two PreToolUse guards, and the "
+     "skill into Claude Code, Codex, Antigravity, Cursor and Copilot, the two PreToolUse guards, and the "
      "standing pipeline hook, which injects three layers into every prompt and every "
      "command with no slash needed. Layer 1 before the request is read: caveman, full "
      "output, anti-slop. Layer 2 before anything is produced: plan, design. Layer 3 "
      "while acting: pick and name the skills, tools, plugins and MCP servers that fit, "
      "fan independent work out to agents, then re-apply layer 1 to what came back. "
-     "Claude Code gets it on UserPromptSubmit and Antigravity on PreInvocation, the "
-     "only two clients with a verified hook mechanism. The hook file is itself "
-     "protected from deletion and compression, so the rule cannot be removed.",
+     "Claude Code and Codex use UserPromptSubmit, Antigravity uses PreInvocation, "
+     "Copilot uses userPromptTransformed, and Cursor combines an always rule with sessionStart. "
+     "Codex hooks require one-time client trust. Guards protect matching shell commands; "
+     "they cannot prevent owner or administrator changes or host-managed context compaction.",
      _with_clone(_GUARD_BODIES)),
 
     ("rules-pipeline-check", "Show the pipeline that fires", "instructions",
@@ -234,11 +259,11 @@ GLOBAL_RULES_SETUPS = [
      "Lists the client files carrying the block, then the skill folders each client "
      "can actually see. A setup that wrote the rules and quietly failed to copy the "
      "skills looks complete until you check the second one.",
-     {"windows": "Get-ChildItem $HOME\.claude\CLAUDE.md,$HOME\.codex\AGENTS.md,$HOME\.gemini\GEMINI.md,$HOME\.copilot\copilot-instructions.md -ErrorAction SilentlyContinue | Select-String -Pattern 'MASTER-REPO-USE:BEGIN'; Get-ChildItem $HOME\.claude\skills,$HOME\.gemini\config\skills -Directory -ErrorAction SilentlyContinue | Select-Object FullName",
-      "wsl": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null",
-      "macos": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null",
-      "linux": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null",
-      "other": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null"}),
+     {"windows": "Get-ChildItem $HOME\.claude\CLAUDE.md,$HOME\.codex\AGENTS.md,$HOME\.gemini\GEMINI.md,$HOME\.copilot\copilot-instructions.md -ErrorAction SilentlyContinue | Select-String -Pattern 'MASTER-REPO-USE:BEGIN'; Get-ChildItem $HOME\.claude\skills,$HOME\.codex\skills,$HOME\.gemini\config\skills -Directory -ErrorAction SilentlyContinue | Select-Object FullName",
+      "wsl": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.codex/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null",
+      "macos": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.codex/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null",
+      "linux": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.codex/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null",
+      "other": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.codex/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null"}),
 ]
 
 
@@ -347,11 +372,12 @@ PROFILES = [
 # The client picker's options, in the order they are offered.
 PROFILE_CLIENTS = [
     {"id": "all", "name": "All clients",
-     "detail": "Claude, Codex, Gemini, Copilot and Antigravity together."},
+     "detail": "Claude, Codex, Gemini, Copilot, Antigravity and Cursor together."},
     {"id": "claude", "name": "Claude", "detail": "~/.claude/CLAUDE.md"},
     {"id": "codex", "name": "Codex (GPT)", "detail": "~/.codex/AGENTS.md"},
     {"id": "gemini", "name": "Gemini", "detail": "~/.gemini/GEMINI.md"},
     {"id": "copilot", "name": "Copilot", "detail": "~/.copilot/copilot-instructions.md"},
+    {"id": "cursor", "name": "Cursor", "detail": "~/.cursor/rules/master-repo-auto.mdc + ~/.cursor/hooks.json"},
     # Same rules file as Gemini, plus the skills tree. Listed separately because
     # picking it does more than picking Gemini does, not less.
     {"id": "antigravity", "name": "Google Antigravity",
@@ -901,34 +927,112 @@ SURFACES = [
     ("gemini-cli", "Gemini CLI", "local-client", "shell",
      "setup-rules-gemini", "~/.gemini/GEMINI.md",
      "Shares its rules file with Antigravity, which reads the same path."),
-    ("antigravity", "Google Antigravity", "local-client", "shell",
+    ("antigravity", "Google Antigravity, local or paid model", "local-client", "shell",
      "setup-rules-antigravity", "~/.gemini/GEMINI.md + ~/.gemini/config/skills/",
-     "The rules file Gemini CLI uses, plus every skill and the PreInvocation hook."),
+     "The same client setup covers a paid Google model or a local model. It installs "
+     "the shared rules, every skill and the PreInvocation prompt hook."),
+    ("cursor", "Cursor, desktop and CLI", "local-client", "shell",
+     "setup-rules-cursor", "~/.cursor/rules/ + ~/.cursor/skills/ + ~/.cursor/hooks.json",
+     "Agent chat and code share the always-applied rules and skills. Session context and shell guards reinforce them."),
 
-    ("chatgpt-web", "ChatGPT (web)", "web-chat", "connect", None,
+    ("chatgpt-web", "ChatGPT, web and app chat", "web-chat", "connect", None,
      "Account and project instructions",
      "No shell command reaches a browser product. Connect GitHub with access to "
      "Charlesganu2004/Master-Repo-Use, reference it for repository work, and put "
      "the auto-mode block in your account or project instructions. Never secrets."),
-    ("claude-web", "Claude.ai (web)", "web-chat", "connect", None,
+    ("claude-web", "Claude, web chat and Cowork", "web-chat", "connect", None,
      "Project knowledge and preferences",
      "Add the private repository to the relevant Claude project, or use Claude "
      "Code on the web against it. CLAUDE.md stays committed so repo-aware "
      "sessions get the same rules. Profile preferences carry the rest."),
-    ("gemini-web", "Gemini (web)", "web-chat", "connect", None,
+    ("gemini-web", "Gemini, web and app chat", "web-chat", "connect", None,
      "Saved info and Gems",
      "Paste the auto-mode block into saved info, or into a Gem for work that "
      "should always carry it. The committed GEMINI.md covers the CLI, not this."),
-    ("copilot-web", "GitHub Copilot (github.com)", "web-chat", "connect", None,
+    ("copilot-web", "GitHub Copilot, web and IDE chat", "web-code", "connect", None,
      ".github/copilot-instructions.md",
      "Repository-aware Copilot reads the committed instructions file when it "
      "operates on this repository. Reach from other repositories depends on that "
      "session's permissions, so it is not something this setup can grant."),
-    ("gemini-code-assist", "Gemini Code Assist", "web-chat", "connect", None,
+    ("copilot-agent", "GitHub Copilot coding agent", "web-code", "connect", None,
+     ".github/hooks/master-repo-auto.json + .github/copilot-instructions.md",
+     "Repository hooks inject the pipeline and check shell calls in the coding agent's Linux job. Requires this repository in scope."),
+    ("cursor-web", "Cursor Cloud Agents", "web-code", "connect", None,
+     ".cursor/rules/master-repo-auto.mdc + .cursor/hooks.json",
+     "Tracked rules and guards travel with the repository. Enable Sync Skills for Cloud Agents in Cursor settings to carry personal skills too."),
+    ("codex-web", "Codex web", "web-code", "connect", None,
+     "AGENTS.md + project skills",
+     "Connect this repository to the cloud task. Its committed instructions apply; local home-directory hooks do not transfer to a hosted worker."),
+    ("gemini-code-assist", "Gemini Code Assist", "web-code", "connect", None,
      ".gemini/config.yaml + .gemini/styleguide.md",
      "Automated pull request review reads the committed .gemini config rather "
      "than any home directory file. It reviews; it never approves."),
 ]
+
+
+# Say what can truly be enforced for each surface. A global instructions file is
+# persistent, but it is not the same mechanism as a native per-prompt hook. The
+# web UI exposes this distinction so it never promises a hook a product lacks.
+SURFACE_ENFORCEMENT = {
+    "claude-code": {
+        "kind": "native-hook", "label": "Every-prompt hook",
+        "detail": "UserPromptSubmit injects the standing pipeline before every prompt and slash command.",
+    },
+    "antigravity": {
+        "kind": "native-hook", "label": "Every-prompt hook",
+        "detail": "PreInvocation injects the same pipeline before local-model and paid-model calls.",
+    },
+    "codex": {
+        "kind": "native-hook", "label": "Prompt hook, trust required",
+        "detail": "AGENTS.md persists globally. Review installed UserPromptSubmit and PreToolUse definitions in Codex's Hooks UI before they execute.",
+    },
+    "copilot-cli": {
+        "kind": "native-hook", "label": "Every-prompt hook",
+        "detail": "userPromptTransformed prepends the pipeline, sessionStart reinforces it, and PreToolUse guards matching shell commands.",
+    },
+    "cursor": {
+        "kind": "session-hook-rules", "label": "Always rule + session hook",
+        "detail": "The alwaysApply rule covers Agent chat and code. sessionStart injects context; preToolUse guards shell commands. Cursor Tab is separate.",
+    },
+    "gemini-cli": {
+        "kind": "global-rules", "label": "Global instructions",
+        "detail": "GEMINI.md carries the standing rules for every CLI session.",
+    },
+    "chatgpt-web": {
+        "kind": "web-instructions", "label": "Account or project rules",
+        "detail": "Paste the exact protected block into account or project instructions.",
+    },
+    "claude-web": {
+        "kind": "web-instructions", "label": "Project rules",
+        "detail": "Project knowledge and preferences carry the block in hosted chat.",
+    },
+    "gemini-web": {
+        "kind": "web-instructions", "label": "Saved info or Gem",
+        "detail": "Saved info or a dedicated Gem carries the block in hosted chat.",
+    },
+    "copilot-web": {
+        "kind": "repo-instructions", "label": "Repository rules",
+        "detail": "The committed Copilot instructions apply when this repository is in scope.",
+    },
+    "copilot-agent": {
+        "kind": "native-hook", "label": "Repository hooks",
+        "detail": "The coding agent loads committed prompt and tool hooks for this repository; ordinary web chat does not run them.",
+    },
+    "cursor-web": {
+        "kind": "repo-instructions", "label": "Project rule + tool guards",
+        "detail": "The cloud worker loads tracked always rules and preToolUse guards, plus project skills or explicitly synced personal skills.",
+    },
+    "codex-web": {
+        "kind": "repo-instructions", "label": "Repository instructions",
+        "detail": "The connected repository supplies AGENTS.md and project skills; local user hooks remain on the local machine.",
+    },
+    "gemini-code-assist": {
+        "kind": "repo-instructions", "label": "Repository rules",
+        "detail": "Committed Gemini configuration applies to repository review work.",
+    },
+}
+
+AUTO_MODE_FILE = ROOT / "docs" / "auto-mode-block.txt"
 
 
 def surface_entries() -> list[dict]:
@@ -936,6 +1040,7 @@ def surface_entries() -> list[dict]:
     return [{
         "id": ident, "name": name, "group": group, "runs": runs,
         "setupRecipe": recipe, "target": target, "detail": detail,
+        "enforcement": SURFACE_ENFORCEMENT[ident],
     } for ident, name, group, runs, recipe, target, detail in SURFACES]
 
 
@@ -956,6 +1061,22 @@ def local_model_surfaces() -> list[dict]:
         "target": f"{m['vendor']}, {m['params_b']}B at {m['quant']}",
         "minRamGb": m["min_ram_gb"],
         "detail": f"{m['use']} Licence: {m['license']}.",
+        "launchCommands": {
+            "windows": (f"$prompt=Read-Host 'Prompt'; $prompt | python "
+                        f"(Join-Path $HOME 'Master-Repo-Use/scripts/auto_mode_harness.py') --model {m['tag']}"),
+            "wsl": (f"read -r -p 'Prompt: ' prompt; printf '%s' \"$prompt\" | python3 "
+                    f"\"$HOME/Master-Repo-Use/scripts/auto_mode_harness.py\" --model {m['tag']}"),
+            "macos": (f"read -r -p 'Prompt: ' prompt; printf '%s' \"$prompt\" | python3 "
+                      f"\"$HOME/Master-Repo-Use/scripts/auto_mode_harness.py\" --model {m['tag']}"),
+            "linux": (f"read -r -p 'Prompt: ' prompt; printf '%s' \"$prompt\" | python3 "
+                      f"\"$HOME/Master-Repo-Use/scripts/auto_mode_harness.py\" --model {m['tag']}"),
+            "other": (f"printf '%s' \"$PROMPT\" | python3 "
+                      f"\"$HOME/Master-Repo-Use/scripts/auto_mode_harness.py\" --model {m['tag']}"),
+        },
+        "enforcement": {
+            "kind": "runtime-command", "label": "RAM-gated runtime",
+            "detail": "The generated command installs this vetted Ollama tag. Tick Antigravity separately when it is the client that will use it.",
+        },
     } for m in models]
 
 
@@ -1187,16 +1308,23 @@ def build() -> dict:
         "families": [{"id": f, "name": n, "kind": k} for f, n, k in FAMILIES],
         "lanes": lanes,
         "components": comps,
-        "setupRecipes": ([MASTER_SETUP_RECIPE] + model_setup_recipes()
+        "setupRecipes": ([MASTER_SETUP_RECIPE] + model_setup_recipes() + [LOCAL_HARNESS_RECIPE]
                      + global_rules_recipes() + antigravity_recipes()),
         "designs": design_pages(),
         "store": store_payload(),
+        "autoMode": {
+            "source": "docs/auto-mode-block.txt",
+            "summary": "The exact protected rules used by installers and hosted-web setup.",
+            "text": AUTO_MODE_FILE.read_text(encoding="utf-8"),
+        },
         "surfaces": surface_entries() + local_model_surfaces(),
         "surfaceGroups": [
-            {"id": "local-client", "name": "Local clients",
-             "note": "A CLI on this machine. One command configures each of these."},
-            {"id": "web-chat", "name": "Web and chat only",
-             "note": "No shell command reaches a browser product. These get a connect or paste instruction instead, which is the honest answer rather than a command that would do nothing."},
+            {"id": "local-client", "name": "Code, CLI and desktop agents",
+             "note": "Select every client you use. Setup commands install its rules, skills and supported hooks for chat and code."},
+            {"id": "web-chat", "name": "Web and app chat",
+             "note": "Configure account or project instructions once in each product. Local shell commands cannot change a hosted chat account."},
+            {"id": "web-code", "name": "Web coding and IDE assistants",
+             "note": "Connect the repository so committed rules and supported cloud hooks apply. Personal skills may need a separate sync."},
             {"id": "local-model", "name": "Local models",
              "note": "Filtered by the memory you enter above. A tag your machine cannot hold is not offered, because a model that swaps is worse than no model."},
         ],
@@ -1209,6 +1337,7 @@ def build() -> dict:
 
 
 def main() -> int:
+    mirrored_skills = sync_project_skills(ROOT)
     data = build()
     payload = json.dumps(data, indent=1)
     OUT.write_text(payload, encoding="utf-8")
@@ -1223,6 +1352,7 @@ def main() -> int:
             banner + "window.__ATLAS_DATA__ = " + payload + ";\n", encoding="utf-8")
     m = data["meta"]
     print("atlas-data.json written to root and designs/")
+    print(f"  project skills {len(mirrored_skills)} mirrored into .agents/skills")
     for key in ("lanes", "components", "routes", "families"):
         print(f"  {key:<11}{m[key]}")
     families: dict[str, int] = {}

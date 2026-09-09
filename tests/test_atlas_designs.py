@@ -36,6 +36,24 @@ INTERACTIVE = [
     "d28-depth.html", "d29-reactor.html", "d30-atrium.html",
 ]
 
+EXHIBITION_SCENES = {
+    "d16-declassified.html": "declassified",
+    "d17-spatial.html": "spatial",
+    "d18-boresight.html": "boresight",
+    "d19-vitrine.html": "vitrine",
+    "d20-tube.html": "tube",
+    "d21-poster.html": "poster",
+    "d22-membrane.html": "membrane",
+    "d23-panes.html": "panes",
+    "d24-plate.html": "plate",
+    "d25-riso.html": "riso",
+    "d26-stage.html": "stage",
+    "d27-machined.html": "machined",
+    "d28-depth.html": "depth",
+    "d29-reactor.html": "reactor",
+    "d30-atrium.html": "atrium",
+}
+
 # Retired with d18, d19 and d20. Those three shipped an authored .ts/.jsx/.tsx
 # beside a compiled .js; the fifteen that replaced them are single self-contained
 # files, so there is no compiled-from pair left to keep honest.
@@ -280,6 +298,25 @@ class TheDesigns(unittest.TestCase):
             body = (DESIGNS / name).read_text(encoding="utf-8")
             self.assertIn("atlas-core.js", body, f"{name} does not load the core")
             self.assertIn("atlas-panes.js", body, f"{name} does not load the shared panes")
+
+    def test_last_fifteen_load_their_expected_exhibition_scene(self):
+        self.assertTrue((DESIGNS / "atlas-exhibition.css").is_file())
+        self.assertTrue((DESIGNS / "atlas-exhibition.js").is_file())
+        for name, scene in EXHIBITION_SCENES.items():
+            body = (DESIGNS / name).read_text(encoding="utf-8")
+            self.assertIn('href="atlas-exhibition.css"', body,
+                          f"{name} does not load the exhibition styles")
+            self.assertIn('src="atlas-exhibition.js"', body,
+                          f"{name} does not load the exhibition runtime")
+            self.assertIn(f"AtlasExhibition.mount('{scene}')", body,
+                          f"{name} does not mount its {scene!r} scene")
+
+    def test_pages_redeploys_when_a_design_changes(self):
+        workflow = (ROOT / ".github" / "workflows" / "pages.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertRegex(workflow, r"(?m)^\s*-\s*['\"]designs/\*\*['\"]\s*$",
+                         "Pages ignores design-only commits")
 
     def test_no_design_reimplements_the_shared_panes(self):
         """Duplicated pane code is exactly how five designs stop agreeing."""

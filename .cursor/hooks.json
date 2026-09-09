@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {"command": "python scripts/hooks/no_prune_guard.py", "matcher": "Shell"},
+      {"command": "python scripts/hooks/no_compress_guard.py", "matcher": "Shell"}
+    ]
+  }
+}

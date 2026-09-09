@@ -148,6 +148,7 @@ button{cursor:pointer}
 .otheros summary::before{content:"> ";color:var(--hud)}
 .otheros[open] summary::before{content:"v "}
 </style>
+<link rel="stylesheet" href="atlas-exhibition.css">
 </head>
 <body>
 <div class="glassbed"></div><div class="scan"></div>
@@ -294,5 +295,7 @@ P.mount({
 });
 A.on(counts);
 </script>
+<script src="atlas-exhibition.js"></script>
+<script>AtlasExhibition.mount('boresight');</script>
 </body>
 </html>

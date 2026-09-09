@@ -1,0 +1,14 @@
+---
+description: Master Repo automatic three-layer workflow
+alwaysApply: true
+---
+
+Apply the Master Repo standing workflow to every chat and code request.
+Load these canonical instructions before acting:
+
+@AGENTS.md
+@docs/auto-mode-block.txt
+
+The rules select capabilities automatically. Slash commands are optional.
+Read the matching first-class skill in `skills/` and use available tools, plugins,
+MCP servers and agents that fit the task. Preserve capability definitions intact.

@@ -139,6 +139,7 @@ button{cursor:pointer}
 .otheros summary::before{content:"+ ";color:var(--hot);font-weight:700}
 .otheros[open] summary::before{content:"- "}
 </style>
+<link rel="stylesheet" href="atlas-exhibition.css">
 </head>
 <body>
 <div class="beam"></div><div class="pool"></div><div class="dust"></div>
@@ -239,5 +240,7 @@ P.mount({
 });
 A.on(counts);
 </script>
+<script src="atlas-exhibition.js"></script>
+<script>AtlasExhibition.mount('stage');</script>
 </body>
 </html>

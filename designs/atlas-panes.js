@@ -19,6 +19,21 @@ const AtlasPanes = (() => {
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
     m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
   const val = id => (document.getElementById(id) || {}).value || '';
+  const KIND_NOTES = {
+    instruction: 'Rules and written guidance that tell an assistant how to work.',
+    capability: 'Tools, agents and integrations that perform a task.',
+    knowledge: 'Reference material and searchable information used to answer questions.',
+    control: 'Policy, safety and verification checks around actions.',
+    model: 'Inference runtimes and model choices, sized for your hardware.',
+    delivery: 'Build, publish and handoff workflows for finished work.',
+  };
+
+  function familyDescription(family) {
+    if (family.description) return family.description;
+    const lanes = A.state.lanes.filter(l => l.family === family.id);
+    return lanes.length ? lanes.slice(0, 3).map(l => l.description || l.name).join(' ')
+      : 'A group of related catalog lanes. No entries are available in this data file.';
+  }
 
   /* ------------------------------------------------------- setup bar */
 
@@ -103,6 +118,7 @@ const AtlasPanes = (() => {
             ? `<b>${esc(t.label)}</b> · ${esc(t.verdict)}`
             : 'Enter RAM to see what this machine can host.';
         }
+        if (tab !== 'map') renderStage();
       };
     });
   }
@@ -135,7 +151,7 @@ const AtlasPanes = (() => {
 
     host.innerHTML = `
       <div class="frow">
-        <span class="flabel">Search</span>
+        <label class="flabel" for="fq">Search</label>
         <input class="fsearch" id="fq" type="text" placeholder="name, owner, lane or description"
           value="${esc(A.state.query)}">
         <span class="fcount">${c.visibleComponents} of ${c.components}</span>
@@ -145,7 +161,8 @@ const AtlasPanes = (() => {
         <span class="flabel">Family</span>
         <span class="chips">${A.state.data.families.map(f =>
           `<button class="chip${A.state.activeFamilies.has(f.id) ? ' on' : ''}"
-            data-fam="${esc(f.id)}">${esc(f.name)}</button>`).join('')}</span>
+            data-fam="${esc(f.id)}" aria-pressed="${A.state.activeFamilies.has(f.id)}"
+            title="${esc(familyDescription(f))}">${esc(f.name)}</button>`).join('')}</span>
       </div>
       <div class="frow">
         <span class="flabel">Kind</span>
@@ -161,21 +178,25 @@ const AtlasPanes = (() => {
             >${esc(s.id)} <i>${s.count}</i></button>`).join('')
           || '<span class="fcount">none in the current selection</span>'}</span>
       </div>
-      ${subNotes(subs)}`;
+      ${subNotes(subs)}
+      <div class="filter-explanations" aria-live="polite">${A.state.data.families
+        .filter(f => A.state.activeFamilies.has(f.id))
+        .map(f => `<p><b>${esc(f.name)}:</b> ${esc(familyDescription(f))}</p>`).join('')}
+      ${[...A.state.activeKinds].map(k => `<p><b>${esc(k)}:</b> ${esc(KIND_NOTES[k] || '')}</p>`).join('')}</div>`;
 
     const q = document.getElementById('fq');
     if (q) {
-      q.oninput = () => { A.setQuery(q.value); refreshFilterCounts(); if (hooks.onFilter) hooks.onFilter(); };
+      q.oninput = () => { A.setQuery(q.value); refreshFilterCounts(); renderStage(); };
       q.onkeydown = e => { if (e.key === 'Escape') { q.value = ''; q.oninput(); } };
     }
     const clear = document.getElementById('fclear');
     if (clear) clear.onclick = () => { A.clearFilters(); draw(); if (hooks.onFilter) hooks.onFilter(); };
     host.querySelectorAll('[data-fam]').forEach(b =>
-      b.onclick = () => { A.toggleFamily(b.dataset.fam); filtersUI(); if (hooks.onFilter) hooks.onFilter(); });
+      b.onclick = () => { A.toggleFamily(b.dataset.fam); filtersUI(); renderStage(); });
     host.querySelectorAll('[data-kind]').forEach(b =>
-      b.onclick = () => { A.toggleKind(b.dataset.kind); filtersUI(); if (hooks.onFilter) hooks.onFilter(); });
+      b.onclick = () => { A.toggleKind(b.dataset.kind); filtersUI(); renderStage(); });
     host.querySelectorAll('[data-sub]').forEach(b =>
-      b.onclick = () => { A.toggleSub(b.dataset.sub); filtersUI(); if (hooks.onFilter) hooks.onFilter(); });
+      b.onclick = () => { A.toggleSub(b.dataset.sub); filtersUI(); renderStage(); });
   }
 
   function refreshFilterCounts() {
@@ -209,6 +230,20 @@ const AtlasPanes = (() => {
   function detailUI() {
     const side = document.getElementById('side');
     if (!side) return;
+    const lane = A.laneDetailFor(A.state.selectedLane);
+    if (lane) {
+      side.innerHTML = `<div class="sec">Lane overview</div><h2>${esc(lane.name)}</h2>
+        <p class="ddesc">${esc(lane.description || 'A user-defined catalog lane.')}</p>
+        <p class="meta">Family: ${esc(lane.family)} · Kind: ${esc(lane.kind)}<br>
+        Source: ${esc(lane.source || 'Saved in this browser')}<br>${lane.components.length} indexed entries</p>
+        <div class="conn">${lane.components.map(c => `<button data-lane-component="${esc(c.id)}">
+          ${esc(c.name)}<small>${esc(c.detail || c.sub || c.kind)}</small></button>`).join('')
+          || '<p class="empty">No entries yet. Add a suggestion from the Suggest tab.</p>'}</div>`;
+      side.querySelectorAll('[data-lane-component]').forEach(b => {
+        b.onclick = () => A.select(b.dataset.laneComponent);
+      });
+      return;
+    }
     const d = A.state.selected ? A.detailFor(A.state.selected) : null;
     if (!d) {
       side.innerHTML = `<div class="sec">Component detail</div>
@@ -233,7 +268,9 @@ const AtlasPanes = (() => {
       ${d.sub ? `<span class="dkind sub">${esc(d.sub)}</span>` : ''}
       <p class="ddesc">${esc(d.detail)}</p>
       <div class="meta">
-        Lane: <b>${esc(d.lane)}</b><br>
+        Family: <b>${esc(d.family)}</b><br>
+        Lane: <button class="text-link" data-detail-lane="${esc(d.laneId)}">${esc(d.lane)}</button><br>
+        ${esc(d.laneDescription)}<br>
         ${d.laneSource ? `Source: <code>${esc(d.laneSource)}</code><br>` : ''}
         ${d.siblings} sibling component${d.siblings === 1 ? '' : 's'} in this lane
       </div>
@@ -249,7 +286,10 @@ const AtlasPanes = (() => {
             <span class="tag">best for ${esc(r.bestFor)} · needs ${esc(r.requires)}</span></div>`).join('')
         : '<p class="empty">Not part of a hybrid route.</p>'}`;
 
-    wireCopy(side, setup);
+    wireCopy(side, setup || d.command);
+    side.querySelectorAll('[data-detail-lane]').forEach(b => {
+      b.onclick = () => A.selectLane(b.dataset.detailLane);
+    });
     const plus = document.getElementById('plus');
     if (plus) plus.onclick = () => {
       d.inBasket ? A.removeFromBasket(d.id) : A.addToBasket(d.id);
@@ -269,7 +309,10 @@ const AtlasPanes = (() => {
     if (!d.setupCommand) {
       return `<div class="sec">Computer setup</div>
         <p class="empty"><b>${esc(d.setupState.label)}.</b> A GitHub source, test, workflow, or run
-        command is not treated as installation. Only a complete reviewed recipe can enter Build.</p>`;
+        command is not treated as installation. Only a complete reviewed recipe can enter Build.</p>
+        ${d.command ? `<div class="sec">Action or reference command</div>
+          <p class="sub">Review prerequisites and permissions before running. This page does not execute commands.</p>
+          <div class="cmd wrap"><button class="copy" data-copy>copy</button>${esc(d.command)}</div>` : ''}`;
     }
     return `<div class="sec">Setup for ${esc(A.platform().label)}</div>
       <div class="cmd"><button class="copy" data-copy>copy</button>${esc(d.setupCommand)}</div>`;
@@ -305,6 +348,54 @@ const AtlasPanes = (() => {
 
   /* -------------------------------------------------------- panes */
 
+  function indexHTML() {
+    const needle = A.state.query.trim().toLowerCase();
+    const visible = A.visibleComponents();
+    const lanes = A.visibleLanes().filter(l => !needle ||
+      `${l.name} ${l.description || ''}`.toLowerCase().includes(needle) || visible.some(c => c.lane === l.id));
+    const store = A.state.data.store;
+    return `<h2>Find what you need</h2><p class="sub">An index is a directory of names, descriptions and metadata.
+      Search above, combine Family, Kind and Sub-category, then click a lane for its purpose and entries.</p>
+      <p class="sub">Start with Easy setup for a new machine. Use Commands for actions, Build for a combined installation,
+      and Hybrid routes to see how agents and models work together. No credentials are requested or stored here.</p>
+      <div class="grid">${lanes.map(l => `<button class="lane-card index-lane" data-open-lane="${esc(l.id)}">
+        <b>${esc(l.name)}</b><p>${esc(l.description || 'Custom catalog lane.')}</p>
+        <span class="src">${esc(l.family)} · ${esc(l.kind)} · ${visible.filter(c => c.lane === l.id).length} matching entries</span>
+      </button>`).join('') || '<p class="empty">No lanes match. Clear filters or try a shorter search.</p>'}</div>
+      ${store ? `<details class="store-guide"><summary>What does the MongoDB store mean?</summary>
+        <p>The optional backend saves redacted activity records in MongoDB. The browser only displays its schema,
+        never the live records or database credentials. Database indexes are lookup structures: they help find a
+        person, project or time period without scanning every record. They are different from this catalog directory.</p>
+        <div class="grid">${store.indexes.map(i => `<article class="lane-card"><b>${esc(i.name)}</b>
+          <p>${esc(i.question)}</p><code>${esc(i.collection)} ${esc(i.keys)}</code><p>${esc(i.why)}</p></article>`).join('')}</div>
+        <p>Run from the repository on the backend after configuring MongoDB and consent. Keep connection secrets in server-side environment variables.</p>
+        <pre class="cmd wrap">${esc(store.command)}</pre>
+      </details>` : ''}`;
+  }
+
+  function commandsHTML() {
+    const items = A.visibleComponents().filter(c => c.cmd || c.setupRecipe);
+    return `<h2>Command directory</h2><p class="sub">Every indexed command is reachable here. Setup and action commands
+      are labeled separately. Click an entry for the complete command, description, source and dependencies.</p>
+      ${automaticNotice()}
+      ${!A.platform() ? '<p class="empty">Choose an operating system above to reveal its exact commands.</p>' : ''}
+      <div class="grid">${items.map(c => `<button class="lane-card" data-comp="${esc(c.id)}">
+        <b>${esc(c.name)}</b><p>${esc(c.detail)}</p><span class="src">${esc(A.setupStateFor(c).label)} ·
+        ${esc(A.laneName(c.lane))} · ${esc(c.sub || c.kind)}</span></button>`).join('')
+        || '<p class="empty">No commands match. Clear filters or browse the Index.</p>'}</div>`;
+  }
+
+  function automaticNotice() {
+    return `<details class="auto-mode-guide"><summary>Automatic skills and enforcement</summary>
+      <p>Configure each client once in Easy setup. Supported hooks then inject the workflow without a slash:
+      caveman, full output, anti-slop; plan and design; suitable tools and agents, verification, then the first layer again.</p>
+      <p>Rules apply to model requests, not to arbitrary terminal programs. Shell actions still require review.
+      Web chat needs saved instructions; local models must use the harness launch command. Hooks cannot prevent
+      manual file deletion or control a product's internal context compaction.</p>
+      <button class="btn" data-copy-auto>Copy exact protected instructions</button>
+      <pre class="cmd wrap">${esc(A.autoModeText())}</pre></details>`;
+  }
+
   function lanesHTML(id) {
     const meta = A.TABS.find(t => t.id === id) || { label: id, hint: '' };
     const lanes = A.lanesForTab(id);
@@ -315,7 +406,7 @@ const AtlasPanes = (() => {
       ${items.length} entr${items.length === 1 ? 'y' : 'ies'} after filters.</p>
       <div class="grid">${items.map(c => {
         const ready = A.canBuild(c);
-        return `<div class="lane-card" data-comp="${esc(c.id)}" data-kind="${esc(c.kind)}">
+        return `<div class="lane-card" role="button" tabindex="0" data-comp="${esc(c.id)}" data-kind="${esc(c.kind)}">
           ${ready ? `<button class="plus mini${A.state.basket.includes(c.id) ? ' in' : ''}"
             data-add="${esc(c.id)}" title="Add setup to combination">
             ${A.state.basket.includes(c.id) ? '&#10003;' : '+'}</button>`
@@ -336,8 +427,8 @@ const AtlasPanes = (() => {
       ${routes.map(r => `<div class="route">
         <b>${esc(r.name)}</b><p>${esc(r.detail)}</p>
         <span class="tag${r.ok ? '' : ' no'}">${esc(r.verdict)} · best for ${esc(r.bestFor)}</span>
-        <p class="path">Path: ${r.members.map(m =>
-          esc(A.state.byId.has(m) ? A.state.byId.get(m).name : m)).join(' → ')}</p>
+        <p class="path">Path: ${r.members.map(m => A.state.byId.has(m)
+          ? `<button class="text-link" data-comp="${esc(m)}">${esc(A.state.byId.get(m).name)}</button>` : esc(m)).join(' → ')}</p>
       </div>`).join('')}`;
   }
 
@@ -371,6 +462,7 @@ const AtlasPanes = (() => {
       <p class="sub">${ready.length} setup-ready component${ready.length === 1 ? '' : 's'} produce
       ${combined.commandCount || 0} deduplicated command line${combined.commandCount === 1 ? '' : 's'}.
       The copy block contains commands only.</p>
+      ${automaticNotice()}
       ${items.length ? `<div class="grid">${items.map(c => `
         <div class="lane-card">
           <button class="plus mini in" data-drop="${esc(c.id)}" title="Remove">&times;</button>
@@ -449,10 +541,12 @@ const AtlasPanes = (() => {
 
   function easyHTML() {
     const profiles = A.profiles();
-    const clients = A.profileClients();
-    const client = A.state.profileClient || 'all';
     const chosen = A.platform();
     const tier = A.currentTier();
+    // An empty checkbox state is deliberate: web-only users must not install all clients.
+    if (!Array.isArray(A.state.surfaceIds)) A.state.surfaceIds = [];
+    const available = A.availableSurfaces();
+    const selected = A.selectedSurfaces();
 
     if (!profiles.length) {
       return `<h2>Easy setup</h2>
@@ -460,15 +554,24 @@ const AtlasPanes = (() => {
     }
 
     return `<h2>Easy setup</h2>
-      <p class="sub">Pick a profile and the client that should receive the rules. The script
+      <p class="sub">Select every chat or coding client you use, then a profile. The script
       is the same reviewed recipes the Build tab uses, ordered so each step has what the
       next one needs.</p>
 
-      <div class="sec">Which assistant gets the rules?</div>
-      <div class="easyclients">${clients.map(c =>
-        `<button class="chip${c.id === client ? ' on' : ''}" data-client="${esc(c.id)}"
-          title="${esc(c.detail)}">${esc(c.name)}</button>`).join('')}</div>
-      <p class="sub">${esc((clients.find(c => c.id === client) || {}).detail || '')}</p>
+      <div class="surface-groups">${(A.state.data.surfaceGroups || []).map(group => `<fieldset>
+        <legend>${esc(group.name)}</legend><p class="sub">${esc(group.note)}</p>
+        ${available.filter(s => s.group === group.id).map(s => `<label class="surface-choice">
+          <input type="checkbox" data-surface="${esc(s.id)}" ${A.state.surfaceIds.includes(s.id) ? 'checked' : ''}>
+          <span><b>${esc(s.name)}</b><small>${esc(s.detail)}</small>
+          <small>${esc((s.enforcement || {}).label)}: ${esc((s.enforcement || {}).detail)}</small></span></label>`).join('')
+          || '<p class="empty">Enter scan results above. Only models within the recorded RAM requirement are offered.</p>'}</fieldset>`).join('')}</div>
+      ${selected.filter(s => s.runs === 'connect').map(s => `<article class="surface-instructions"><h3>${esc(s.name)}</h3>
+        <p>${esc(s.detail)}</p><p>Save the protected instructions in <b>${esc(s.target)}</b>.</p></article>`).join('')}
+      ${selected.filter(s => s.launchCommands && chosen).map(s => `<article><h3>Launch ${esc(s.name)} with automatic rules</h3>
+        <p>Use after its install profile below. Direct Ollama calls do not receive these instructions.</p>
+        <div class="cmd wrap"><button class="copy" data-copy-launch="${esc(s.id)}">copy</button>
+        ${esc(s.launchCommands[chosen.id])}</div></article>`).join('')}
+      ${automaticNotice()}
 
       ${chosen ? '' : `<p class="empty">Choose your operating system in step 1 first. Every
         profile writes a different script for each system, so there is nothing to show until
@@ -562,6 +665,24 @@ const AtlasPanes = (() => {
         if (e.target.closest('[data-add]')) return;
         A.select(card.dataset.comp);
         if (hooks.onSelect) hooks.onSelect(card.dataset.comp);
+      };
+      if (card.tagName !== 'BUTTON') card.onkeydown = e => {
+        if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); card.click(); }
+      };
+    });
+    document.querySelectorAll('[data-open-lane]').forEach(b => {
+      b.onclick = () => A.selectLane(b.dataset.openLane);
+    });
+    document.querySelectorAll('[data-surface]').forEach(input => {
+      input.onchange = () => { A.toggleSurface(input.dataset.surface); renderStage(); };
+    });
+    document.querySelectorAll('[data-copy-auto]').forEach(b => {
+      b.onclick = async () => { b.textContent = await A.copy(A.autoModeText()) ? 'Copied exact instructions' : 'Select the instructions below to copy'; };
+    });
+    document.querySelectorAll('[data-copy-launch]').forEach(b => {
+      b.onclick = async () => {
+        const surface = A.selectedSurfaces().find(s => s.id === b.dataset.copyLaunch);
+        if (surface && A.platform()) b.textContent = await A.copy(surface.launchCommands[A.state.platform]) ? 'copied' : 'select it';
       };
     });
     document.querySelectorAll('[data-add]').forEach(b => {
@@ -662,11 +783,7 @@ const AtlasPanes = (() => {
       </div>
       <p class="popdesc">${esc(d.detail)}</p>
       <div class="popmeta">${esc(d.lane)}${d.laneSource ? ` · <code>${esc(d.laneSource)}</code>` : ''}</div>
-      ${d.setupCommand
-        ? `<div class="cmd"><button class="copy" data-copy>copy</button>${esc(d.setupCommand)}</div>`
-        : A.state.platform
-          ? `<p class="popempty">${esc(d.setupState.label)}. Source and action metadata stay outside Build.</p>`
-          : '<p class="popempty">Choose your operating system in step 1 to see setup availability.</p>'}
+      ${commandBlock(d)}
       ${d.connections.length
         ? `<div class="popsec">Connects to ${d.connections.length}</div>
            <div class="popconn">${d.connections.slice(0, 6).map(c =>
@@ -688,7 +805,7 @@ const AtlasPanes = (() => {
     node.style.left = `${left}px`;
     node.style.top = `${top}px`;
 
-    wireCopy(node, d.setupCommand);
+    wireCopy(node, d.setupCommand || d.command);
     node.querySelector('[data-pop-close]').onclick = closePopover;
     const add = node.querySelector('[data-pop-add]');
     if (add) add.onclick = () => {
@@ -735,6 +852,35 @@ const AtlasPanes = (() => {
    */
   const BASE_STYLE_ID = 'atlas-panes-base';
   const BASE_STYLE = `
+    *{scrollbar-width:thin;scrollbar-color:var(--accent,#b65039) var(--bg,#181818)}
+    *::-webkit-scrollbar{width:10px;height:10px}
+    *::-webkit-scrollbar-track{background:var(--bg,#181818)}
+    *::-webkit-scrollbar-thumb{background:var(--accent,#b65039);border:2px solid var(--bg,#181818);border-radius:8px}
+    #tabs{overflow-x:auto;flex-wrap:wrap}
+    #tabs .tab,.pane button,#filters .chip,.conn button{min-height:44px}
+    .pane{font-size:14px;line-height:1.55;min-width:0}
+    .pane :is(h2,h3,p){text-wrap:pretty}
+    .pane .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px}
+    .pane .lane-card{color:var(--ink,#eee);background:var(--panel,var(--bg,#181818));text-align:left;font:inherit;min-width:0;overflow-wrap:anywhere}
+    .pane .lane-card p{line-height:1.55}
+    .pane .lane-card b{display:block}
+    .pane .lane-card[data-comp],.index-lane{cursor:pointer}
+    .text-link{font:inherit;color:var(--accent,#b65039);background:transparent;border:0;text-align:left;text-decoration:underline;cursor:pointer;min-height:44px}
+    :is(#side,#stage,#filters) :focus-visible{outline:2px solid var(--accent,#b65039);outline-offset:3px}
+    .filter-explanations{max-width:90ch;font-size:14px;line-height:1.55}
+    .filter-explanations p{margin:8px 0}
+    .surface-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin:20px 0}
+    .surface-groups fieldset{border:1px solid var(--line,#555);border-radius:8px;padding:16px;min-width:0}
+    .surface-groups legend{font-weight:700;padding:0 8px}
+    .surface-choice{display:flex;gap:12px;align-items:flex-start;padding:12px 0;cursor:pointer;border-bottom:1px solid var(--line,#555)}
+    .surface-choice input{width:20px;height:20px;accent-color:var(--accent,#b65039);flex-shrink:0;margin:4px 0}
+    .surface-choice small{display:block;line-height:1.5;margin-top:6px;font-size:13px}
+    .surface-instructions{padding:16px;border:1px solid var(--line,#555);margin:12px 0}
+    .store-guide,.auto-mode-guide{margin:20px 0;padding:16px;border:1px solid var(--line,#555);border-radius:8px}
+    .store-guide summary,.auto-mode-guide summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:700}
+    .auto-mode-guide pre{max-height:320px;overflow:auto}
+    .pane .cmd,.pop .cmd,#side .cmd{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
+    #side .conn small{white-space:normal;line-height:1.45}
     .easyclients{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 6px}
     .easyclients .chip{min-height:30px;padding:5px 12px;font-size:13px;line-height:1.3;
       border:1px solid var(--line,#3a3a3a);border-radius:999px;background:transparent;
@@ -768,6 +914,11 @@ const AtlasPanes = (() => {
     setupUI();
     tabsUI();
     filtersUI();
+    renderStage();
+    detailUI();
+  }
+
+  function renderStage() {
     const stage = document.getElementById('stage');
     if (stage) {
       if (tab === 'map') {
@@ -776,6 +927,8 @@ const AtlasPanes = (() => {
         const pane = document.createElement('div');
         pane.className = 'pane';
         pane.innerHTML =
+          tab === 'index' ? indexHTML() :
+          tab === 'commands' ? commandsHTML() :
           tab === 'routes' ? routesHTML() :
           tab === 'hardware' ? hardwareHTML() :
           tab === 'basket' ? basketHTML() :
@@ -788,7 +941,6 @@ const AtlasPanes = (() => {
         wirePane();
       }
     }
-    detailUI();
   }
 
   function fail(err) {

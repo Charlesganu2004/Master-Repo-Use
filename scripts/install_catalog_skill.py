@@ -230,10 +230,11 @@ def main() -> int:
             if args.dry_run:
                 print(f"  would install {name:<40} -> {target}")
                 continue
-            if target.exists():
-                shutil.rmtree(target)          # only ever a previous install of ours
             target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(folder, target,
+            # Refresh by merging. The marker proves this script created the
+            # destination, but it does not grant permission to delete files a
+            # person or another client added there afterward.
+            shutil.copytree(folder, target, dirs_exist_ok=True,
                             ignore=shutil.ignore_patterns(*SKIP_DIRS))
             (target / ".installed-from").write_text(
                 f"{slug}\nlane: repo-lists/{catalog[slug]}\n", encoding="utf-8")

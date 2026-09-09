@@ -26,8 +26,8 @@ const AtlasCore = (() => {
       note: 'Apple silicon shares memory between CPU and GPU, so usable model size sits below the headline RAM.' },
     { id: 'linux', label: 'Linux', shell: 'bash',
       note: 'Commands assume a Debian-family distribution; adjust the package manager if yours differs.' },
-    { id: 'other', label: 'Other', shell: 'POSIX sh',
-      note: 'Falling back to POSIX commands. Anything platform-specific is marked as such rather than guessed.' },
+    { id: 'other', label: 'Other', shell: 'bash',
+      note: 'Portable setup requires Bash, Git and Python 3. Platform-specific packages still require review.' },
   ];
 
   /* Scan commands. Each reports the four numbers that actually decide what a
@@ -53,12 +53,14 @@ const AtlasCore = (() => {
     activeSubs: new Set(),
     query: '',
     selected: null,
+    selectedLane: null,
     basket: load('atlas.basket', []),
     platform: load('atlas.platform', null),
     hw: load('atlas.hw', { ram: null, vram: null, storage: null, cpu: null }),
     customLanes: load('atlas.customLanes', []),
     suggestions: load('atlas.suggestions', []),
     profileClient: load('atlas.profileClient', 'all'),
+    surfaceIds: load('atlas.surfaceIds', null),
   };
 
   function load(key, fallback) {
@@ -316,6 +318,7 @@ const AtlasCore = (() => {
       name: component.name,
       owner: component.owner || '',
       kind: component.kind,
+      family: lane ? lane.family : '',
       sub: component.sub || '',
       detail: component.detail || 'No description recorded.',
       lane: lane ? lane.name : component.lane,
@@ -340,7 +343,20 @@ const AtlasCore = (() => {
     return lane ? lane.name : id;
   }
 
-  function select(componentId) { state.selected = componentId; emit(); }
+  function select(componentId) { state.selected = componentId; state.selectedLane = null; emit(); }
+
+  function selectLane(id) {
+    if (!state.lanesById.has(id)) return;
+    state.selected = null;
+    state.selectedLane = id;
+    emit();
+  }
+
+  function laneDetailFor(id) {
+    const lane = state.lanesById.get(id);
+    if (!lane) return null;
+    return { ...lane, components: state.components.filter(c => c.lane === id) };
+  }
 
   /* ----------------------------------------------------- build basket */
 
@@ -450,6 +466,8 @@ const AtlasCore = (() => {
 
   function setProfileClient(id) {
     state.profileClient = id;
+    state.surfaceIds = null;
+    save('atlas.surfaceIds', null);
     save('atlas.profileClient', id);
     emit();
   }
@@ -478,6 +496,30 @@ const AtlasCore = (() => {
       r => r.id.indexOf('setup-model-') === 0 && r.id !== 'setup-model-list-installed');
   }
 
+  function availableSurfaces() {
+    const ram = Number(state.hw.ram) || 0;
+    return ((state.data && state.data.surfaces) || []).filter(s =>
+      s.group !== 'local-model' || (ram > 0 && ram >= s.minRamGb));
+  }
+
+  function selectedSurfaces() {
+    if (!Array.isArray(state.surfaceIds)) return [];
+    return availableSurfaces().filter(s => state.surfaceIds.includes(s.id));
+  }
+
+  function toggleSurface(id) {
+    if (!availableSurfaces().some(s => s.id === id)) return;
+    if (!Array.isArray(state.surfaceIds)) state.surfaceIds = [];
+    state.surfaceIds = state.surfaceIds.includes(id)
+      ? state.surfaceIds.filter(value => value !== id) : [...state.surfaceIds, id];
+    save('atlas.surfaceIds', state.surfaceIds);
+    emit();
+  }
+
+  function autoModeText() {
+    return (state.data && state.data.autoMode && state.data.autoMode.text) || '';
+  }
+
   /** Steps to recipes, with every failure to resolve recorded rather than hidden. */
   function resolveProfile(profile) {
     const recipes = [];
@@ -485,8 +527,22 @@ const AtlasCore = (() => {
     const push = recipe => {
       if (recipe && !recipes.some(r => r.id === recipe.id)) recipes.push(recipe);
     };
+    const multi = Array.isArray(state.surfaceIds);
+    const selected = selectedSurfaces();
+    const clients = selected.filter(s => s.group === 'local-client');
+    const models = selected.filter(s => s.group === 'local-model');
+    if (multi && !clients.length && !models.length) {
+      notes.push(selected.length ? 'Web-only selection: use the saved-instruction steps below. No local install is required.'
+        : 'Select at least one client or compatible local model. No installs are selected by default.');
+      return { recipes, notes };
+    }
     (profile.steps || []).forEach(step => {
       if (step === 'rules:{client}') {
+        if (multi) {
+          clients.forEach(s => push(recipeById(s.setupRecipe)));
+          if (models.length) push(recipeById('setup-local-model-harness'));
+          return;
+        }
         const client = state.profileClient || 'all';
         const id = client === 'all' ? 'setup-rules-all-clients' : `setup-rules-${client}`;
         const recipe = recipeById(id);
@@ -495,6 +551,7 @@ const AtlasCore = (() => {
         return;
       }
       if (step === 'model:{tier}' || step === 'model:{tier2}') {
+        if (multi) { models.forEach(s => push(recipeById(s.setupRecipe))); return; }
         const tiered = modelRecipesForTier();
         if (!tiered.length) {
           notes.push('No model chosen: enter the RAM of this machine in step 3, and the '
@@ -509,11 +566,15 @@ const AtlasCore = (() => {
         return;
       }
       if (step === 'ALL_MODEL_TAGS') {
-        const all = allModelRecipes();
+        const all = multi ? models.map(s => recipeById(s.setupRecipe)).filter(Boolean)
+          : availableSurfaces().filter(s => s.group === 'local-model').map(s => recipeById(s.setupRecipe)).filter(Boolean);
         if (!all.length) notes.push('No model recipes are present in this data file.');
         all.forEach(push);
         return;
       }
+      if (step === 'setup-rules-guards' && multi) return; // selected installers already include their own hooks
+      if (step === 'setup-ollama-runtime' && multi && !models.length) return;
+      if (step === 'setup-model-list-installed' && multi && !models.length) return;
       const recipe = recipeById(step);
       if (recipe) push(recipe);
       else notes.push(`Step "${step}" names a recipe that is not in this data file.`);
@@ -617,6 +678,8 @@ const AtlasCore = (() => {
 
   const TABS = [
     { id: 'map', label: 'Map', hint: 'The whole system as lanes and connections.' },
+    { id: 'index', label: 'Index', hint: 'Searchable directory. Click a lane to learn what it is and browse its entries.' },
+    { id: 'commands', label: 'Commands', hint: 'Setup, actions and reference commands, separated by purpose.' },
     { id: 'agents', label: 'Agents', hint: 'Agent contracts and the jobs that act on them.',
       match: l => l.family === 'agents' || /agent/i.test(l.name) },
     { id: 'skills', label: 'Skills', hint: 'Instruction packs loaded on demand.',
@@ -629,7 +692,7 @@ const AtlasCore = (() => {
       match: l => l.family === 'mcp' },
     { id: 'routes', label: 'Hybrid routes', hint: 'How work is split across models.' },
     { id: 'hardware', label: 'Hardware', hint: 'What this machine can actually host.' },
-    { id: 'easy', label: 'Easy setup', hint: 'Four profiles for a new machine, with a client picker.' },
+    { id: 'easy', label: 'Easy setup', hint: 'Choose multiple chat, coding and local-model surfaces, then configure automatic skills.' },
     { id: 'basket', label: 'Build', hint: 'Components you combined, and the script for them.' },
     { id: 'custom', label: 'Custom lanes', hint: 'Lanes you add yourself.' },
     { id: 'suggest', label: 'Suggest', hint: 'Propose a lane or a feed.' },
@@ -677,9 +740,10 @@ const AtlasCore = (() => {
     setupRecipeFor, setupCommandFor, setupStateFor, canBuild,
     setHardware, usableMemory, tierFor, currentTier, routesForMachine,
     profiles, profileClients, setProfileClient, resolveProfile, profileScriptFor,
+    availableSurfaces, selectedSurfaces, toggleSurface, autoModeText,
     visibleLanes, visibleComponents, subcategories, subDescription, lanesForTab,
     toggleFamily, toggleKind, toggleSub, setQuery, clearFilters, activeFilterCount,
-    detailFor, select, laneName,
+    detailFor, select, laneName, selectLane, laneDetailFor,
     addToBasket, removeFromBasket, clearBasket, basketItems,
     combinedCommand, combinedCommandFor, combinedCommandAll,
     addCustomLane, removeCustomLane, addSuggestion, exportSuggestions,

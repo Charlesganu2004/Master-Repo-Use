@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A living capability index rooted in the complete local Master Repo Atlas workspace.">
+<title>Mycelium | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<link rel="stylesheet" href="atlas-exhibition.css">
+<style>
+:root{
+  --ws-bg:#07110a;--ws-panel:#0d1a11;--ws-ink:#edf4e2;--ws-dim:#aab7a3;
+  --ws-accent:#d8ff6a;--ws-line:#d8ff6a38;--ws-radius:18px;
+  --ws-font:Georgia,"Times New Roman",serif;--ws-mono:ui-monospace,"Cascadia Mono",monospace;
+  --ws-backdrop:radial-gradient(circle at 78% 22%,#29452d 0,transparent 34%),radial-gradient(circle at 9% 82%,#17341f 0,transparent 29%),#07110a;
+}
+/* Scoped to .ex-mycelium, which is the hook the exhibition shell actually emits.
+   These rules were first written against [data-atlas-shell="mycelium"] and
+   .atlas-workspace-*, and not one of the six matched anything: the attribute is
+   never set and those class names are not in the shell. The page rendered, so
+   nothing looked broken, it just came out as the plain shell with none of this
+   skin on it. Checked in the browser, every selector below matches. */
+.ex-mycelium > header{padding:26px 30px 20px;border-radius:36px 18px 0 0;background:#0d1a11e8}
+.ex-mycelium > header h1{font-family:var(--ws-font);letter-spacing:-.02em}
+.ex-mycelium > header p{color:var(--ws-accent);font:700 10px/1 var(--ws-mono);letter-spacing:.16em;text-transform:uppercase}
+.ex-mycelium > header span{color:var(--ws-dim)}
+.ex-mycelium .ex-root-field{background:linear-gradient(145deg,#101f15,#09120c);border-radius:var(--ws-radius)}
+.ex-mycelium .ex-root-lines{opacity:.5}
+.ex-mycelium .ex-root-heart{background:#122019;border:1px solid var(--ws-line);border-radius:50%}
+.ex-mycelium .ex-root-heart b{color:var(--ws-accent);font-family:var(--ws-mono)}
+.ex-mycelium .ex-root-node{background:#122019;border:1px solid var(--ws-line);border-radius:13px;color:var(--ws-ink)}
+.ex-mycelium .ex-root-node:hover,.ex-mycelium .ex-root-node:focus-visible{border-color:var(--ws-accent);background:#17301f}
+.ex-mycelium .ex-root-node span{color:var(--ws-accent);font:700 9px var(--ws-mono)}
+.ex-mycelium .ex-readout{background:#0d1a11e8;border:1px solid var(--ws-line);border-radius:var(--ws-radius)}
+@media(max-width:720px){.ex-mycelium > header{border-radius:18px 18px 0 0;padding:20px}}
+</style>
+</head>
+<body>
+<noscript>This interactive Atlas requires JavaScript. All data remains local to this page.</noscript>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script src="atlas-exhibition.js"></script>
+<script>
+AtlasExhibition.workspace({
+  skin:'mycelium',
+  title:'Mycelium Atlas',
+  eyebrow:'Living full workspace',
+  note:'Trace agents, tools, skills, plugins, MCP routes and hardware through one local capability root system.',
+  theme:'forest'
+});
+AtlasExhibition.mount('mycelium');
+</script>
+</body>
+</html>

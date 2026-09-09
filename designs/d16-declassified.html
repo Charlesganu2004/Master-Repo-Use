@@ -146,6 +146,7 @@ button{cursor:pointer}
 .otheros summary::before{content:"[+] ";color:var(--stamp)}
 .otheros[open] summary::before{content:"[-] "}
 </style>
+<link rel="stylesheet" href="atlas-exhibition.css">
 </head>
 <body>
 <div class="crop tl"></div><div class="crop tr"></div><div class="crop bl"></div><div class="crop br"></div>
@@ -275,5 +276,7 @@ P.mount({
 });
 A.on(counts);
 </script>
+<script src="atlas-exhibition.js"></script>
+<script>AtlasExhibition.mount('declassified');</script>
 </body>
 </html>

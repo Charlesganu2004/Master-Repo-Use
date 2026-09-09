@@ -126,7 +126,7 @@ class TheGlobalRulesHaveSetupCommands(unittest.TestCase):
 
     def test_every_client_can_be_set_up_on_its_own(self):
         names = {c["id"] for c in components_in(self.LANE)}
-        for client in ("claude", "codex", "gemini", "copilot"):
+        for client in ("claude", "codex", "gemini", "copilot", "cursor"):
             self.assertIn(f"rules-{client}", names, f"{client} has no standalone setup")
 
     def test_all_clients_at_once_is_offered_first(self):
@@ -135,10 +135,20 @@ class TheGlobalRulesHaveSetupCommands(unittest.TestCase):
 
     def test_the_rules_commands_enable_auto_mode(self):
         """Charles asked for auto mode always on, so the recipe must pass the flag."""
-        for client in ("all-clients", "claude", "codex", "gemini", "copilot"):
+        for client in ("all-clients", "claude", "codex", "gemini", "copilot", "cursor"):
             recipe = RECIPES[f"setup-rules-{client}"]
             self.assertIn("-AutoSkills", recipe["commands"]["windows"], client)
             self.assertIn("--auto-skills", recipe["commands"]["linux"], client)
+
+    def test_cursor_recipe_selects_cursor_on_every_shell_family(self):
+        recipe = RECIPES["setup-rules-cursor"]
+        self.assertIn("-Client cursor", recipe["commands"]["windows"])
+        for platform in ("wsl", "macos", "linux", "other"):
+            self.assertIn("--client cursor", recipe["commands"][platform], platform)
+
+    def test_cursor_is_available_in_easy_setup(self):
+        clients = {client["id"] for client in DATA.get("profileClients", [])}
+        self.assertIn("cursor", clients)
 
     def test_the_guards_are_installable(self):
         recipe = RECIPES["setup-rules-guards"]

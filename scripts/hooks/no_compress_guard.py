@@ -79,6 +79,51 @@ TRUNCATING = re.compile(
 REDIRECT_TARGET = re.compile(r">>?\s*(\"[^\"]*\"|'[^']*'|[^\s|;&>]+)")
 
 
+# Every client sends a different shape for "a tool is about to run", and a guard
+# that reads only one shape silently passes everything on the others. Checked
+# against vendor documentation on 2026-09-08:
+#
+#   Claude Code   PreToolUse             tool_name / tool_input.command
+#   Cursor        preToolUse             tool_name / tool_input.command, exit 2 denies
+#   Cursor        beforeShellExecution   command at the top level, no tool name
+#   Gemini CLI    PreToolUse             tool_name / tool_input.command
+#   Copilot CLI   preToolUse             toolName  / toolArgs
+#
+# Copilot was the one that differed, and it differed in the direction that costs
+# nothing to notice: tool_name is simply absent, so the guard returned 0 and
+# every rm and every compressor ran unguarded under Copilot.
+#
+# Duplicated in both guards rather than imported. A hook script has to be
+# self-contained: an ImportError here exits non-zero, and a non-zero exit from a
+# PreToolUse hook BLOCKS the call, so a shared module that fails to resolve would
+# not degrade the guard, it would wedge the session.
+_SHELL_TOOLS = {
+    "bash", "shell", "runshellcommand", "terminal", "execute",
+    "runcommand", "shellexecution", "beforeshellexecution", "run",
+}
+
+
+def shell_command(event: dict) -> str:
+    """The shell command this event would run, or "" if it is not a shell event."""
+    name = event.get("tool_name") or event.get("toolName") or ""
+    args = event.get("tool_input")
+    if not isinstance(args, dict):
+        args = event.get("toolArgs")
+    if not isinstance(args, dict):
+        args = {}
+
+    command = args.get("command") or args.get("cmd") or event.get("command") or ""
+    if not isinstance(command, str) or not command:
+        return ""
+
+    # Cursor's beforeShellExecution carries the command at the top level and
+    # sends no tool name, so the command itself identifies the event.
+    if not name:
+        return command
+    flat = str(name).replace("-", "").replace("_", "").lower()
+    return command if flat in _SHELL_TOOLS else ""
+
+
 def redirect_targets(command: str) -> list[str]:
     """Only the paths a redirect actually writes to."""
     return [m.group(1).strip("\"'").replace("\\", "/") for m in REDIRECT_TARGET.finditer(command)]
@@ -187,10 +232,7 @@ def main() -> int:
     except (ValueError, OSError):
         return 0   # never break a session over a malformed event
 
-    if event.get("tool_name") not in ("Bash", "Shell", "run_shell_command"):
-        return 0
-
-    command = str((event.get("tool_input") or {}).get("command") or "")
+    command = shell_command(event)
     if not command or OVERRIDE in command:
         return 0
 

@@ -733,12 +733,18 @@ function renderSurfaces() {
         const on = picked.has(surface.id);
         const floor = surface.minRamGb
           ? '<em class="surface-floor">' + surface.minRamGb + ' GB</em>' : '';
+        const enforcement = surface.enforcement || {};
+        const enforcementBadge = enforcement.label
+          ? '<span class="surface-enforcement" data-kind="' +
+              escapeHtml(enforcement.kind || 'rules') + '">' +
+              escapeHtml(enforcement.label) + '</span>' : '';
         return '<label class="surface-pick' + (on ? ' on' : '') + '">' +
           '<input type="checkbox" data-surface="' + escapeHtml(surface.id) + '"' +
             (on ? ' checked' : '') + '>' +
           '<span class="surface-body">' +
             '<span class="surface-name">' + escapeHtml(surface.name) + floor + '</span>' +
             '<span class="surface-target">' + escapeHtml(surface.target) + '</span>' +
+            enforcementBadge +
             '<span class="surface-detail">' + escapeHtml(surface.detail) + '</span>' +
           '</span></label>';
       }).join('') + '</div>';
@@ -854,6 +860,7 @@ function stepsForSelection() {
     return step.indexOf('model:') === 0 || step === 'ALL_MODEL_TAGS';
   });
   const useModels = modelsAllowed ? models : [];
+  if (!clients.length && !useModels.length) return { ids: [], dropped: modelsAllowed ? [] : models };
 
   const ids = [];
   const seen = {};
@@ -864,6 +871,9 @@ function stepsForSelection() {
   }
 
   (profile.steps || []).forEach(function (step) {
+    // Per-client setup already installs its hooks and skills. Running the
+    // all-client installer here would silently undo the checkbox selection.
+    if (step === 'setup-rules-guards') return;
     if (step === 'rules:{client}') {
       clients.forEach(function (client) { push(client.setupRecipe); });
       return;
@@ -877,7 +887,10 @@ function stepsForSelection() {
       return;
     }
     if (step === 'setup-ollama-runtime' || step === 'setup-model-list-installed') {
-      if (useModels.length) push(step);
+      if (useModels.length) {
+        if (step === 'setup-ollama-runtime') push('setup-local-model-harness');
+        push(step);
+      }
       return;
     }
     push(step);
@@ -892,7 +905,7 @@ function renderSetupOutput() {
 
   const clients = pickedIn('local-client');
   const models = pickedIn('local-model');
-  const web = pickedIn('web-chat');
+  const web = pickedIn('web-chat').concat(pickedIn('web-code'));
   if (!clients.length && !models.length && !web.length) {
     host.innerHTML = '<p class="setup-empty">Nothing ticked. Choose at least one surface above and the commands appear here.</p>';
     return;
@@ -913,6 +926,25 @@ function renderSetupOutput() {
 
   const blocks = [];
 
+  const selected = clients.concat(web, models);
+  blocks.push('<article class="out-block enforcement-block"><header class="out-head">' +
+    '<h3>What enforces each selection</h3><span class="out-meta">' + selected.length +
+    ' selected</span></header><p class="out-lede">A native hook can inject rules into every ' +
+    'prompt. Global and repository instructions persist, but the model client controls when ' +
+    'they are loaded. Hosted web chats must be configured inside that product.</p>' +
+    '<div class="enforcement-grid">' + selected.map(function (surface) {
+      const enforcement = surface.enforcement || {};
+      const launch = surface.launchCommands
+        ? (surface.launchCommands[catalog.os] || surface.launchCommands.other) : '';
+      return '<section class="enforcement-row" data-kind="' +
+        escapeHtml(enforcement.kind || 'rules') + '"><div><strong>' +
+        escapeHtml(surface.name) + '</strong><span>' +
+        escapeHtml(enforcement.label || 'Instructions') + '</span></div><p>' +
+        escapeHtml(enforcement.detail || surface.detail) + '</p>' +
+        (launch ? '<code class="enforcement-command">' + escapeHtml(launch) + '</code>' : '') +
+        '</section>';
+    }).join('') + '</div></article>');
+
   if (script) {
     const shellCount = clients.length + models.length;
     let warning = '';
@@ -932,6 +964,8 @@ function renderSetupOutput() {
   }
 
   if (web.length) {
+    const rules = catalog.data.autoMode && catalog.data.autoMode.text
+      ? catalog.data.autoMode.text : '';
     blocks.push('<article class="out-block"><header class="out-head">' +
       '<h3>These cannot take a command</h3><span class="out-meta">' +
       web.length + ' browser surface' + (web.length === 1 ? '' : 's') + '</span></header>' +
@@ -942,7 +976,11 @@ function renderSetupOutput() {
         return '<dt>' + escapeHtml(surface.name) +
           '<span>' + escapeHtml(surface.target) + '</span></dt>' +
           '<dd>' + escapeHtml(surface.detail) + '</dd>';
-      }).join('') + '</dl></article>');
+      }).join('') + '</dl>' + (rules ?
+        '<details class="web-rule"><summary>Show the exact protected block</summary>' +
+        '<pre class="out-code"><code>' + escapeHtml(rules) + '</code></pre></details>' +
+        '<button type="button" class="quiet-button" id="copyWebRules">Copy the protected block</button>'
+        : '') + '</article>');
   }
 
   host.innerHTML = blocks.join('');
@@ -954,6 +992,17 @@ function renderSetupOutput() {
         showToast('Setup script copied');
       }, function () {
         showToast('Select the script and copy it manually');
+      });
+    });
+  }
+
+  const copyRules = document.getElementById('copyWebRules');
+  if (copyRules) {
+    copyRules.addEventListener('click', function () {
+      navigator.clipboard.writeText(catalog.data.autoMode.text).then(function () {
+        showToast('Protected auto-mode block copied');
+      }, function () {
+        showToast('Open the block and copy it manually');
       });
     });
   }

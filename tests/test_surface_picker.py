@@ -58,6 +58,14 @@ class TheSurfaceData(unittest.TestCase):
             self.assertTrue([s for s in SURFACES if s["group"] == group],
                             f"nothing in the {group} group")
 
+    def test_cursor_is_a_local_client_with_a_real_setup_recipe(self):
+        cursor = BY_ID.get("cursor")
+        self.assertIsNotNone(cursor, "Cursor is missing from the local client picker")
+        self.assertEqual(cursor["group"], "local-client")
+        self.assertEqual(cursor["runs"], "shell")
+        self.assertEqual(cursor["setupRecipe"], "setup-rules-cursor")
+        self.assertIn(cursor["setupRecipe"], RECIPES)
+
     def test_a_surface_runs_either_a_shell_command_or_a_connect_step(self):
         for surface in SURFACES:
             self.assertIn(surface["runs"], ("shell", "connect"),
@@ -205,7 +213,13 @@ class ThePickerScript(unittest.TestCase):
         self.assertIn("if (!id || seen[id]) return;", SCRIPT)
 
     def test_the_ollama_runtime_is_skipped_when_no_model_is_ticked(self):
-        self.assertIn("if (useModels.length) push(step);", SCRIPT)
+        window = SCRIPT[SCRIPT.index("function stepsForSelection"):]
+        window = window[:window.index("function renderSetupOutput")]
+        runtime = window[window.index("if (step === 'setup-ollama-runtime'"):]
+        runtime = runtime[:runtime.index("return;")]
+        self.assertIn("if (useModels.length)", runtime)
+        self.assertIn("push(step);", runtime)
+        self.assertLess(runtime.index("if (useModels.length)"), runtime.index("push(step);"))
 
     def test_a_depth_that_installs_no_models_says_so_rather_than_dropping_them(self):
         self.assertIn("plan.dropped", SCRIPT)

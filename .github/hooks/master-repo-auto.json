@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "python3 scripts/hooks/skill_pipeline.py --copilot-session",
+        "powershell": "python scripts/hooks/skill_pipeline.py --copilot-session",
+        "timeoutSec": 15
+      }
+    ],
+    "userPromptTransformed": [
+      {
+        "type": "command",
+        "bash": "python3 scripts/hooks/skill_pipeline.py --copilot-transform",
+        "powershell": "python scripts/hooks/skill_pipeline.py --copilot-transform",
+        "timeoutSec": 15
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "matcher": "Bash",
+        "bash": "python3 scripts/hooks/no_prune_guard.py",
+        "powershell": "python scripts/hooks/no_prune_guard.py",
+        "timeoutSec": 15
+      },
+      {
+        "type": "command",
+        "matcher": "Bash",
+        "bash": "python3 scripts/hooks/no_compress_guard.py",
+        "powershell": "python scripts/hooks/no_compress_guard.py",
+        "timeoutSec": 15
+      }
+    ]
+  }
+}

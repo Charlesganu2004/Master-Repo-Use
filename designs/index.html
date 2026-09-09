@@ -13,36 +13,137 @@
   --control:#ffd166; --model:#c77dff; --delivery:#5cd6a0;
   --font:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --display:"Arial Black","Helvetica Neue",Helvetica,sans-serif;
+  --radius:18px;
+  --ease:cubic-bezier(.23,1,.32,1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;
-  line-height:1.6;padding:34px 20px 70px}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;
+  line-height:1.6;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.24;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:48px 48px}
 button,a{font:inherit;color:inherit}
-.shell{max-width:1280px;margin:0 auto}
-h1{font-size:32px;letter-spacing:-.025em;margin-bottom:8px}
-h1 span{color:var(--accent)}
-.lede{color:var(--dim);max-width:74ch;margin-bottom:10px}
-.counts{font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:8px}
+.skip-link{position:fixed;left:16px;top:16px;z-index:20;padding:10px 14px;background:var(--accent);
+  color:var(--bg);font-weight:800;text-decoration:none;transform:translateY(-160%)}
+.skip-link:focus{transform:translateY(0)}
+.shell{width:min(1440px,100%);margin:0 auto;padding:0 clamp(18px,3vw,48px) 80px}
+.intro{min-height:min(620px,70svh);display:flex;flex-direction:column;justify-content:space-between;
+  padding:28px 0 40px;border-bottom:1px solid var(--line)}
+.mastline{display:flex;align-items:center;justify-content:space-between;gap:16px;font:700 11px/1.2 var(--mono);
+  letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.mastline a{min-height:44px;display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
+.mastline a::before{content:"\2190";margin-right:8px;color:var(--accent)}
+h1{max-width:12ch;font:900 clamp(56px,9.4vw,138px)/.82 var(--display);letter-spacing:-.075em;
+  text-transform:uppercase;text-wrap:balance;margin:clamp(40px,7vh,84px) 0 28px}
+h1 span{display:block;color:var(--accent)}
+.intro-copy{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);gap:clamp(24px,6vw,88px);
+  align-items:end}
+.lede{font-size:clamp(18px,1.75vw,25px);line-height:1.35;color:var(--ink);max-width:54ch;text-wrap:pretty}
+.counts{font-family:var(--mono);font-size:12px;color:var(--dim);padding-left:20px;
+  border-left:2px solid var(--accent);font-variant-numeric:tabular-nums}
 .counts b{color:var(--accent)}
 
 .palettebar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;
-  border:1px solid var(--line);border-radius:12px;padding:12px 15px;margin:20px 0 8px;
-  background:var(--panel)}
+  border:1px solid var(--line);border-radius:var(--radius);padding:12px 15px;margin:24px 0 8px;
+  background:var(--panel);position:sticky;top:12px;z-index:10;
+  box-shadow:0 12px 34px rgba(0,0,0,.28)}
 .palettebar .lab{font-size:11px;letter-spacing:.11em;text-transform:uppercase;
   color:var(--dim)}
 .pchip{display:flex;align-items:center;gap:7px;border:1px solid var(--line);
-  border-radius:999px;padding:5px 12px 5px 6px;font-size:12.5px;color:var(--dim);
-  cursor:pointer;transition:.15s}
-.pchip:hover{color:var(--ink);border-color:var(--accent)}
+  border-radius:999px;padding:5px 12px 5px 6px;min-height:44px;font-size:12.5px;color:var(--dim);
+  cursor:pointer;transition:color 120ms var(--ease),border-color 120ms var(--ease),transform 120ms var(--ease)}
 .pchip.on{color:var(--ink);border-color:var(--accent);background:rgba(255,59,59,.08)}
+.pchip:active{transform:scale(.97)}
 .pdot{width:17px;height:17px;border-radius:50%;border:1px solid rgba(255,255,255,.16)}
-.hint{font-size:12px;color:var(--dim);margin-bottom:26px}
+.hint{font-size:12px;color:var(--dim);margin:0 0 56px;max-width:76ch}
 .hint code{font-family:var(--mono);font-size:11.5px;color:var(--accent2)}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(348px,1fr));gap:15px}
+.collection{scroll-margin-top:92px}
+.collection-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,.42fr);gap:32px;
+  align-items:end;margin-bottom:24px}
+.section-kicker{font:700 11px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:12px}
+.collection h2{font:900 clamp(42px,6.3vw,92px)/.9 var(--display);letter-spacing:-.055em;
+  text-transform:uppercase;max-width:13ch;text-wrap:balance}
+.collection-intro{color:var(--dim);max-width:48ch;text-wrap:pretty}
+.collection-intro strong{display:block;color:var(--ink);font:800 clamp(34px,4vw,58px)/1 var(--display);
+  letter-spacing:-.04em;margin-bottom:8px;font-variant-numeric:tabular-nums}
+.remix-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-flow:dense;
+  gap:16px;align-items:start}
+.remix-card{grid-column:span 4;position:relative;overflow:hidden;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--panel);box-shadow:0 18px 48px rgba(0,0,0,.24)}
+.remix-card:nth-child(1){grid-column:span 8}
+.remix-card:nth-child(2){grid-column:span 4;margin-top:64px}
+.remix-card:nth-child(3){grid-column:span 5}
+.remix-card:nth-child(4){grid-column:span 7;margin-top:-26px}
+.remix-card:nth-child(5){grid-column:span 4}
+.remix-card:nth-child(6){grid-column:span 4;margin-top:54px}
+.remix-card:nth-child(7){grid-column:span 4}
+.remix-card:nth-child(8){grid-column:span 8}
+.remix-card:nth-child(9){grid-column:span 4;margin-top:42px}
+.remix-card:nth-child(10){grid-column:span 6}
+.remix-card:nth-child(11){grid-column:span 6;margin-top:-32px}
+.remix-card:nth-child(12){grid-column:span 4}
+.remix-card:nth-child(13){grid-column:span 8;margin-top:24px}
+.remix-card:nth-child(14){grid-column:span 5}
+.remix-card:nth-child(15){grid-column:span 7;margin-top:-28px}
+.remix-card:nth-child(16){grid-column:span 4;margin-top:36px}
+.remix-card:nth-child(17){grid-column:span 8}
+.remix-card:nth-child(18){grid-column:span 7;margin-top:-18px}
+.remix-card:nth-child(19){grid-column:span 5;margin-top:34px}
+.remix-card:nth-child(20){grid-column:span 12}
+.remix-frame{display:grid;min-height:100%}
+.remix-card:nth-child(1) .remix-frame,.remix-card:nth-child(4) .remix-frame,
+.remix-card:nth-child(8) .remix-frame,.remix-card:nth-child(13) .remix-frame,
+.remix-card:nth-child(15) .remix-frame,.remix-card:nth-child(17) .remix-frame,
+.remix-card:nth-child(20) .remix-frame{grid-template-columns:minmax(0,1.12fr) minmax(280px,.88fr)}
+.remix-card:nth-child(4) .remix-art,.remix-card:nth-child(13) .remix-art,
+.remix-card:nth-child(20) .remix-art{order:2}
+.remix-art{display:block;min-height:230px;border:0;border-bottom:1px solid var(--line);
+  text-decoration:none;isolation:isolate;transition:filter 180ms var(--ease),transform 180ms var(--ease)}
+.remix-card:nth-child(1) .remix-art,.remix-card:nth-child(4) .remix-art,
+.remix-card:nth-child(8) .remix-art,.remix-card:nth-child(13) .remix-art,
+.remix-card:nth-child(15) .remix-art,.remix-card:nth-child(17) .remix-art,
+.remix-card:nth-child(20) .remix-art{min-height:420px;border-bottom:0}
+.remix-card:nth-child(3) .remix-art,.remix-card:nth-child(6) .remix-art,
+.remix-card:nth-child(10) .remix-art{min-height:300px}
+.remix-art::marker{display:none}
+.remix-no{position:absolute;z-index:3;left:16px;top:14px;min-width:44px;min-height:44px;
+  display:grid;place-items:center;background:var(--bg);color:var(--ink);border:1px solid rgba(255,255,255,.2);
+  border-radius:50%;font:700 11px/1 var(--mono);font-variant-numeric:tabular-nums}
+.remix-enter{position:absolute;z-index:3;right:14px;bottom:14px;padding:8px 10px;background:var(--bg);
+  color:var(--ink);font:700 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.remix-copy{padding:clamp(20px,2.4vw,34px);display:flex;flex-direction:column;align-items:flex-start}
+.remix-name{font:900 clamp(27px,3.2vw,52px)/.95 var(--display);letter-spacing:-.05em;
+  text-transform:uppercase;text-wrap:balance}
+.remix-tagline{margin-top:8px;color:var(--accent);font:700 11px/1.4 var(--mono);
+  letter-spacing:.08em;text-transform:uppercase}
+.remix-copy .what{margin-top:18px;font-size:14px;line-height:1.55;color:var(--dim);text-wrap:pretty}
+.remix-copy .what b{color:var(--ink)}
+.remix-copy .from{margin-top:18px;padding-top:12px;border-top:1px solid var(--line);font:11px/1.5 var(--mono);
+  color:var(--dim)}
+.remix-actions{width:100%;display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;margin-top:auto;padding-top:22px}
+.remix-open{min-height:44px;display:inline-flex;align-items:center;justify-content:space-between;gap:22px;
+  padding:0 14px;background:var(--accent);color:var(--bg);font-weight:800;text-decoration:none;flex:1}
+.palette-menu{position:relative;flex:1;min-width:168px}
+.palette-menu summary{min-height:44px;display:flex;align-items:center;padding:0 13px;border:1px solid var(--line);
+  cursor:pointer;color:var(--dim);font-size:12px;list-style:none}
+.palette-menu summary::-webkit-details-marker{display:none}
+.palette-menu summary::after{content:"+";margin-left:auto;color:var(--accent);font:700 16px/1 var(--mono)}
+.palette-menu[open] summary::after{content:"\2212"}
+.palette-links{display:flex;gap:6px;flex-wrap:wrap;padding-top:8px}
+.palette-links .tlink{flex:1 1 calc(50% - 3px)}
+
+.archive{margin-top:clamp(80px,12vw,160px);padding-top:32px;border-top:1px solid var(--line)}
+.archive-head{display:flex;justify-content:space-between;gap:28px;align-items:end;margin-bottom:24px}
+.archive h2{font:900 clamp(34px,4vw,58px)/.95 var(--display);letter-spacing:-.045em;text-transform:uppercase}
+.archive-head p{max-width:52ch;color:var(--dim);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:15px}
 .card{border:1px solid var(--line);border-radius:15px;overflow:hidden;
-  background:var(--panel);display:flex;flex-direction:column;transition:.18s}
-.card:hover{border-color:var(--accent);transform:translateY(-3px)}
+  background:var(--panel);display:flex;flex-direction:column;transition:border-color 120ms var(--ease),transform 120ms var(--ease)}
 .card.pick{border-color:var(--accent)}
 .preview{height:118px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
 .body{padding:16px 17px 18px;display:flex;flex-direction:column;flex:1}
@@ -57,13 +158,11 @@ h1 span{color:var(--accent)}
   border-top:1px solid var(--line);padding-top:9px}
 .from a{color:var(--accent2)}
 .links{display:flex;gap:6px;flex-wrap:wrap;margin-top:13px}
-.open{padding:9px 15px;border-radius:9px;background:var(--accent);color:var(--bg);
-  font-weight:700;font-size:13px;text-decoration:none}
-.open:hover{filter:brightness(1.1)}
-.tlink{padding:7px 10px;border-radius:9px;border:1px solid var(--line);
+.open{padding:9px 15px;min-height:44px;border-radius:9px;background:var(--accent);color:var(--bg);
+  font-weight:700;font-size:13px;text-decoration:none;display:inline-flex;align-items:center}
+.tlink{padding:7px 10px;min-height:44px;border-radius:9px;border:1px solid var(--line);
   font-size:11.5px;color:var(--dim);text-decoration:none;display:flex;align-items:center;
   gap:6px}
-.tlink:hover{color:var(--ink);border-color:var(--accent)}
 .tlink i{width:11px;height:11px;border-radius:50%;display:block}
 
 .note{margin-top:32px;border:1px solid var(--line);border-radius:13px;padding:19px;
@@ -75,7 +174,45 @@ h1 span{color:var(--accent)}
 .note ul{margin:9px 0 0 18px;font-size:13.5px;color:var(--dim)}
 .note li{margin-bottom:6px}
 
-/* Each swatch previews that design's actual layout, in the current palette. */
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media (hover:hover) and (pointer:fine){
+  .pchip:hover{color:var(--ink);border-color:var(--accent)}
+  .card:hover{border-color:var(--accent);transform:translateY(-3px)}
+  .open:hover,.remix-open:hover{filter:brightness(1.1)}
+  .tlink:hover,.palette-menu summary:hover{color:var(--ink);border-color:var(--accent)}
+  .remix-art:hover{filter:saturate(1.18) contrast(1.06);transform:scale(1.012)}
+}
+@media (max-width:1050px){
+  .remix-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .remix-card{grid-column:auto!important;margin-top:0!important}
+  .remix-card:nth-child(1),.remix-card:nth-child(4),.remix-card:nth-child(8),
+  .remix-card:nth-child(13),.remix-card:nth-child(15),.remix-card:nth-child(17),
+  .remix-card:nth-child(20){grid-column:span 2!important}
+}
+@media (max-width:720px){
+  .shell{padding-inline:16px}
+  .intro{min-height:auto;padding-bottom:32px}
+  .intro-copy,.collection-head{grid-template-columns:1fr}
+  .counts{padding-left:0;padding-top:14px;border-left:0;border-top:2px solid var(--accent)}
+  .palettebar{position:relative;top:auto}
+  .remix-grid{grid-template-columns:1fr}
+  .remix-card,.remix-card:nth-child(1),.remix-card:nth-child(4),.remix-card:nth-child(8),
+  .remix-card:nth-child(13),.remix-card:nth-child(15),.remix-card:nth-child(17),
+  .remix-card:nth-child(20){grid-column:1!important}
+  .remix-card .remix-frame{grid-template-columns:1fr!important}
+  .remix-card:nth-child(4) .remix-art,.remix-card:nth-child(13) .remix-art,
+  .remix-card:nth-child(20) .remix-art{order:0}
+  .remix-card .remix-art{min-height:250px!important;border-bottom:1px solid var(--line)!important}
+  .archive-head{display:block}
+  .archive-head p{margin-top:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* Each swatch previews that design's actual layout. The immersive editions keep
+   their own art direction while the selected palette configures full Atlas. */
 .s-graphite{background:var(--panel)}
 .s-graphite::after{content:"";position:absolute;left:14px;right:14px;top:16px;height:15px;
   border-radius:4px;background:var(--accent);
@@ -121,9 +258,6 @@ h1 span{color:var(--accent)}
 .s-city{background:var(--bg);background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);background-size:18px 18px}
 .s-city::after{content:"";position:absolute;inset:18px;background:linear-gradient(90deg,var(--accent) 0 19%,transparent 19% 25%,var(--capability) 25% 58%,transparent 58% 64%,var(--knowledge) 64%);clip-path:polygon(0 0,100% 0,100% 47%,77% 47%,77% 100%,36% 100%,36% 65%,0 65%)}
 .s-cinema::before,.s-cinema::after{content:"";position:absolute;left:8px;right:8px;height:8px;background:repeating-linear-gradient(90deg,#eee8da 0 12px,transparent 12px 23px)}.s-cinema::before{top:8px}.s-cinema::after{bottom:8px}.s-cinema{background-image:linear-gradient(90deg,transparent 0 7%,#eee8da 7% 31%,transparent 31% 36%,#eee8da 36% 64%,transparent 64% 69%,#eee8da 69% 93%,transparent 93%)}
-
-/* Added with the ten analytical layers. Each previews its own map grammar rather
-   than a generic pattern, so the card says what the page will look like. */
 
 /* Swatches for the fifteen rebuilt designs. Each previews its own visual system
    rather than a generic pattern, so the card says what the page will look like. */
@@ -200,29 +334,74 @@ h1 span{color:var(--accent)}
   background:repeating-linear-gradient(102deg,transparent 0 14px,rgba(207,224,255,.16) 14px 23px,transparent 23px 39px);
   -webkit-mask-image:radial-gradient(70% 60% at 24% 0%,#000 8%,transparent 74%);
   mask-image:radial-gradient(70% 60% at 24% 0%,#000 8%,transparent 74%)}
+.s-mycelium{background:radial-gradient(circle at 58% 52%,#28472e,#07110a 68%)}
+.s-mycelium::before{content:"";position:absolute;inset:10px;background:repeating-conic-gradient(from 8deg at 58% 52%,transparent 0 19deg,#d8ff6a55 20deg 20.6deg,transparent 21deg 39deg)}
+.s-mycelium::after{content:"";position:absolute;left:58%;top:52%;width:40px;height:40px;transform:translate(-50%,-50%);border:1px solid #d8ff6a;border-radius:48% 52% 44% 56%;background:#0d1b11;box-shadow:-72px -21px 0 -13px #d8ff6a,62px -30px 0 -13px #d8ff6a,74px 31px 0 -13px #d8ff6a,-60px 34px 0 -13px #d8ff6a}
+.s-broadsheet{background:#eee9db}
+.s-broadsheet::before{content:"BROADSHEET";position:absolute;left:12px;right:12px;top:12px;padding-bottom:7px;border-block:1px solid #161512;color:#161512;font:800 25px/1 Georgia,serif;text-align:center}
+.s-broadsheet::after{content:"";position:absolute;left:12px;right:12px;top:55px;bottom:12px;background:repeating-linear-gradient(90deg,#161512 0 1px,transparent 1px 32%);border-top:3px double #161512}
+.s-switchboard{background:linear-gradient(145deg,#263843,#0d171d)}
+.s-switchboard::before{content:"";position:absolute;inset:14px;border:2px solid #080e12;border-radius:4px;background:radial-gradient(circle,#f08b32 0 3px,#111 4px 8px,transparent 9px);background-size:54px 36px}
+.s-switchboard::after{content:"";position:absolute;left:20%;top:28%;width:55%;height:48%;border:4px solid #f08b32;border-top-color:transparent;border-left-color:transparent;border-radius:50%;opacity:.55;transform:rotate(14deg)}
+.s-bathysphere{background:linear-gradient(#0a5863,#06333f 34%,#031923 68%,#020a0f)}
+.s-bathysphere::before{content:"";position:absolute;right:18px;top:20px;width:74px;height:74px;border:8px solid #152c33;border-radius:50%;box-shadow:inset 0 0 0 1px #68e3df77}
+.s-bathysphere::after{content:"";position:absolute;left:18px;top:18px;bottom:18px;width:1px;background:#68e3df88;box-shadow:44px 19px 0 2px #68e3df,72px 51px 0 1px #68e3df,27px 77px 0 2px #68e3df}
+.s-prism{background:#100a1c}
+.s-prism::after{content:"";position:absolute;inset:12px;background:linear-gradient(116deg,transparent 0 10%,#38215f 10% 21%,transparent 21% 24%,#55327d 24% 38%,transparent 38% 41%,#754596 41% 58%,transparent 58% 61%,#9761ae 61% 77%,transparent 77% 80%,#bd86c6 80% 100%);clip-path:polygon(8% 0,100% 8%,92% 100%,0 92%)}
 </style>
 </head>
 <body>
+<a class="skip-link" href="#immersive">Skip to immersive collection</a>
 <div class="shell">
 
-<h1>Atlas <span>designs</span></h1>
-<p class="lede">Twenty-eight ways through the same system. They share one data layer and one engine, so a
-lane added anywhere appears in all of them and a click means the same thing everywhere. What
-differs is how the map is drawn and how you move through it.</p>
-<p class="counts" id="counts">Reading the atlas data…</p>
+<header class="intro">
+  <div class="mastline">
+    <a href="../index.html">Master Repo Atlas</a>
+    <span>Interactive design collection</span>
+  </div>
+  <h1>One engine. <span>Many worlds.</span></h1>
+  <div class="intro-copy">
+    <p class="lede">Every page reads the same live system. The newest twenty reject the shared dashboard
+    silhouette and rebuild the first view as an exhibition, instrument, document, organism, or place.</p>
+    <p class="counts" id="counts">Reading the atlas data...</p>
+  </div>
+</header>
 
 <div class="palettebar" id="pbar">
   <span class="lab">Palette</span>
 </div>
-<p class="hint">Switching here recolours this page and every link below, so you compare the design
-rather than the paint. Each card also has direct links per palette. A palette travels in the URL as
-<code>?theme=ember</code>, and every design has its own switcher.</p>
+<p class="hint">Switching here recolours the collection and stages that palette for the complete Atlas
+workspace behind every first view. Each exhibition keeps its own art direction. A palette travels in
+the URL as <code>?theme=ember</code>, and full Atlas controls include their own switcher.</p>
 
-<div class="grid" id="grid"></div>
+<main>
+  <section class="collection" id="immersive" aria-labelledby="immersive-title">
+    <div class="collection-head">
+      <div>
+        <p class="section-kicker">The immersive collection / D16 to D35</p>
+        <h2 id="immersive-title">Twenty distinct first views</h2>
+      </div>
+      <p class="collection-intro"><strong>20</strong>Full-viewport concepts with different spatial rules,
+      interaction grammar, typography, and atmosphere. Open them at normal browser zoom.</p>
+    </div>
+    <div class="remix-grid" id="remix-grid"></div>
+  </section>
 
-<div class="note">
-  <h2>What every design carries</h2>
-  <p>The differences are visual and navigational. These are identical in all twenty-eight, by design:</p>
+  <section class="archive" aria-labelledby="archive-title">
+    <div class="archive-head">
+      <div>
+        <p class="section-kicker">The working archive</p>
+        <h2 id="archive-title">Earlier ways through Atlas</h2>
+      </div>
+      <p>These views keep the same system useful through terminals, diagrams, field guides,
+      workbenches, transit maps, and planning surfaces.</p>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+<div class="note" aria-labelledby="shared-title">
+  <h2 id="shared-title">What every design carries</h2>
+  <p>The differences are visual and navigational. These capabilities stay identical across the collection:</p>
   <ul>
     <li><b>Your system first.</b> Windows, Ubuntu/WSL, macOS, Linux or Other. That choice decides
       the scan command and every command shown afterwards. Nothing is guessed from the browser.</li>
@@ -241,6 +420,7 @@ rather than the paint. Each card also has direct links per palette. A palette tr
   as a script rather than a fetch, because browsers block <code>fetch()</code> over
   <code>file://</code>.</p>
 </div>
+</main>
 
 </div>
 
@@ -259,7 +439,7 @@ const DESIGNS = [
 
   { file: 'd3-console.html', name: 'Console', swatch: 's-console', pick: true,
     tagline: 'keyboard-first · type to filter',
-    what: '<b>The other one you picked.</b> No mouse required: one prompt over all 777 components, arrows to move, enter to open. A fast option when you already know roughly what you want and need the command out of it.',
+    what: '<b>The other one you picked.</b> No mouse required: one prompt over the live component index, arrows to move, enter to open. A fast option when you already know roughly what you want and need the command out of it.',
     from: 'Terminal conventions. The prompt drives the shared filter, so counts never disagree.' },
 
   { file: 'd7-material.html', name: 'Tonal', swatch: 's-tonal',
@@ -318,11 +498,8 @@ const DESIGNS = [
     from: 'Urban planning maps and block layouts.' },
 
 
-  /* Ten analytical layers. The eighteen above are all, underneath, a list of
-     equal-sized cards in some arrangement: a lane holding four entries looks
-     exactly like one holding a hundred and eighty. These ten encode quantity and
-     relationship in the geometry itself, which is the thing the first eighteen
-     could not do however they were styled. */
+  /* Twenty immersive editions. They share the same data and full Atlas controls,
+     but their first views use independent spatial rules and interaction grammars. */
 
   { file: 'd16-declassified.html', name: 'Declassified', swatch: 's-declass',
     tagline: 'manila ground · steps only',
@@ -367,7 +544,7 @@ const DESIGNS = [
   { file: 'd24-plate.html', name: 'Plate', swatch: 's-plate',
     tagline: 'emulsion · Airy discs',
     what: '<b>A photograph rather than a screen.</b> Warm fog, silver-halide grain and a holder vignette. Every component is a point source with an Airy disc sized by what its lane holds, so magnitude reads without a legend. The spiral arms are the families.',
-    from: 'Long-exposure astronomical plates. Canvas, because 970 glows in DOM would stutter.' },
+    from: 'Long-exposure astronomical plates. Canvas, because one DOM glow per component would stutter.' },
 
   { file: 'd25-riso.html', name: 'Riso', swatch: 's-riso',
     tagline: 'two inks · misregistered',
@@ -398,15 +575,80 @@ const DESIGNS = [
     tagline: 'mesh ground · god rays',
     what: '<b>Light through a louvre.</b> Every mesh blob fades to a tinted transparent rather than CSS transparent, which is what stops the dirty grey halo. The rays need plus-lighter or they are invisible on a dark ground at any sane alpha.',
     from: 'Architectural daylighting. Content sits in the shade, never in the brightest slabs.' },
+
+  { file: 'd31-mycelium.html', name: 'Mycelium', swatch: 's-mycelium',
+    tagline: 'living roots · capability nodes',
+    what: '<b>The catalog behaves like a root system.</b> Live lanes orbit one shared index and branch into selectable nodes. Choosing a root replaces the specimen note with the real lane description and component count.',
+    from: 'Fungal networks and botanical field plates, drawn locally with CSS rather than image assets.' },
+
+  { file: 'd32-broadsheet.html', name: 'Broadsheet', swatch: 's-broadsheet',
+    tagline: 'front page · live edition',
+    what: '<b>A newspaper instead of a dashboard.</b> The active lane becomes the lead story, supporting lanes become briefs, and the current generated index becomes the edition count. Every headline is a working control.',
+    from: 'Large-format editorial grids, double rules, compact briefs, and one red press accent.' },
+
+  { file: 'd33-switchboard.html', name: 'Switchboard', swatch: 's-switchboard',
+    tagline: 'patch panel · signal monitor',
+    what: '<b>Route the catalog like a physical signal.</b> Twelve tactile jacks select real lanes while the isolated monitor reports their descriptions and counts. Patch cables are decoration; every jack remains a keyboard button.',
+    from: 'Telephone exchanges and studio patch bays, with a single amber signal color.' },
+
+  { file: 'd34-bathysphere.html', name: 'Bathysphere', swatch: 's-bathysphere',
+    tagline: 'water column · depth survey',
+    what: '<b>The index becomes a descent.</b> Lane contacts hang at measured depths in a full-height water column. The porthole keeps the selected description readable while the scene stays quiet and cinematic.',
+    from: 'Oceanographic survey diagrams and early submersible viewports, rendered without external media.' },
+
+  { file: 'd35-prism.html', name: 'Prism', swatch: 's-prism',
+    tagline: 'refracted bands · bold index',
+    what: '<b>One source splits into a spectrum of routes.</b> Each faceted band is a live lane control, using scale and angle instead of another card grid. Focus and selection pull the chosen band forward.',
+    from: 'Optical dispersion reduced to ultraviolet tonal bands with one yellow focus accent.' },
 ];
 
+function themeLinks(design){
+  return AtlasTheme.THEMES.map(t =>
+    `<a class="tlink" href="${design.file}?theme=${t.id}" title="${t.label}: ${t.note}">
+      <i style="background:${t.accent}" aria-hidden="true"></i>${t.label}</a>`).join('');
+}
+
 function render(theme){
-  document.getElementById('grid').innerHTML = DESIGNS.map(d => `
-    <div class="card${d.pick ? ' pick' : ''}">
-      <div class="preview ${d.swatch}"></div>
+  const firstImmersive = DESIGNS.findIndex(d => d.file === 'd16-declassified.html');
+  const archive = DESIGNS.slice(0, firstImmersive);
+  const immersive = DESIGNS.slice(firstImmersive);
+
+  document.getElementById('remix-grid').innerHTML = immersive.map((d, index) => {
+    const number = String(16 + index).padStart(2, '0');
+    const titleId = `remix-title-${number}`;
+    return `
+      <article class="remix-card" aria-labelledby="${titleId}">
+        <div class="remix-frame">
+          <a class="remix-art preview ${d.swatch}" href="${d.file}?theme=${theme}"
+            aria-label="Open ${d.name}; ${theme} palette applies to its full Atlas workspace">
+            <span class="remix-no" aria-hidden="true">D${number}</span>
+            <span class="remix-enter" aria-hidden="true">Enter first view</span>
+          </a>
+          <div class="remix-copy">
+            <h3 class="remix-name" id="${titleId}">${d.name}</h3>
+            <p class="remix-tagline">${d.tagline}</p>
+            <p class="what">${d.what}</p>
+            <p class="from">${d.from}</p>
+            <div class="remix-actions">
+              <a class="remix-open" href="${d.file}?theme=${theme}">
+                Open ${d.name}<span aria-hidden="true">&#8599;</span>
+              </a>
+              <details class="palette-menu">
+                <summary>Full Atlas palette</summary>
+                <div class="palette-links">${themeLinks(d)}</div>
+              </details>
+            </div>
+          </div>
+        </div>
+      </article>`;
+  }).join('');
+
+  document.getElementById('grid').innerHTML = archive.map(d => `
+    <article class="card${d.pick ? ' pick' : ''}">
+      <div class="preview ${d.swatch}" aria-hidden="true"></div>
       <div class="body">
         <div class="nameline">
-          <span class="name">${d.name}</span>
+          <h3 class="name">${d.name}</h3>
           ${d.pick ? '<span class="picked">your pick</span>' : ''}
         </div>
         <div class="tagline">${d.tagline}</div>
@@ -414,12 +656,10 @@ function render(theme){
         <p class="from">${d.from}</p>
         <div class="links">
           <a class="open" href="${d.file}?theme=${theme}">Open</a>
-          ${AtlasTheme.THEMES.map(t =>
-            `<a class="tlink" href="${d.file}?theme=${t.id}" title="${t.label}: ${t.note}"
-              ><i style="background:${t.accent}"></i>${t.label}</a>`).join('')}
+          ${themeLinks(d)}
         </div>
       </div>
-    </div>`).join('');
+    </article>`).join('');
 }
 
 function bar(current){
@@ -445,7 +685,7 @@ function counts(){
   const subs = new Set((window.__ATLAS_DATA__.components || [])
     .map(c => c.sub || 'Catalog')).size;
   el.innerHTML =
-    `All twenty-eight read <b>${meta.lanes}</b> lanes · <b>${meta.components}</b> components · ` +
+    `All <b>${DESIGNS.length}</b> designs read <b>${meta.lanes}</b> lanes · <b>${meta.components}</b> components · ` +
     `<b>${meta.routes}</b> hybrid routes · <b>${(window.__ATLAS_DATA__.families || []).length}</b> ` +
     `families · <b>${subs}</b> sub-categories, generated from files in this repository.` +
     (meta.redacted

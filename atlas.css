@@ -292,6 +292,15 @@ html[data-theme="light"] .map-node rect { fill: #fffefa; stroke: #b7b2a8; }html[
   font: 700 9.5px monospace; font-style: normal; letter-spacing: .04em;
 }
 .surface-target { color: var(--ink-2); font: 600 11px "Cascadia Code", monospace; overflow-wrap: anywhere; }
+.surface-enforcement {
+  align-self: flex-start; margin: 3px 0 2px; padding: 3px 7px;
+  border: 1px solid var(--line-strong); border-radius: 5px;
+  color: var(--ink-2); background: var(--panel-3);
+  font: 700 9px/1.2 "Cascadia Code", monospace; letter-spacing: .04em; text-transform: uppercase;
+}
+.surface-enforcement[data-kind="native-hook"] {
+  border-color: color-mix(in srgb, var(--orange) 62%, var(--line)); color: var(--orange);
+}
 .surface-detail { color: var(--ink-3); font-size: 12px; line-height: 1.45; }
 
 /* ------------------------------------------------------------- the output */
@@ -325,6 +334,29 @@ html[data-theme="light"] .map-node rect { fill: #fffefa; stroke: #b7b2a8; }html[
 html[data-theme="light"] .out-code { background: #14161a; }
 .out-code code { color: inherit; font: inherit; }
 .out-block .quiet-button { margin-top: 13px; }
+
+.enforcement-block { background: color-mix(in srgb, var(--panel-2) 90%, var(--orange)); }
+.enforcement-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; }
+.enforcement-row {
+  padding: 13px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel);
+}
+.enforcement-row > div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.enforcement-row strong { font-size: 13px; }
+.enforcement-row span {
+  color: var(--ink-3); font: 700 9px "Cascadia Code", monospace; letter-spacing: .05em; text-transform: uppercase;
+}
+.enforcement-row[data-kind="native-hook"] { border-color: color-mix(in srgb, var(--orange) 55%, var(--line)); }
+.enforcement-row[data-kind="native-hook"] span { color: var(--orange); }
+.enforcement-row p { margin: 8px 0 0; color: var(--ink-3); font-size: 12px; line-height: 1.5; }
+.enforcement-command {
+  display: block; margin-top: 10px; padding: 9px 10px; overflow-wrap: anywhere;
+  border-radius: 5px; background: #090a0c; color: #c8f8e0;
+  font: 10.5px/1.5 "Cascadia Code", monospace;
+}
+
+.web-rule { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 13px; }
+.web-rule summary { cursor: pointer; color: var(--ink-2); font-size: 13px; font-weight: 650; }
+.web-rule[open] summary { margin-bottom: 12px; }
 
 .out-steps { margin: 0; display: flex; flex-direction: column; gap: 2px; }
 .out-steps dt {

@@ -94,7 +94,7 @@ class TheClientIsAcceptedEverywhere(unittest.TestCase):
 
     def test_the_error_message_lists_it(self):
         """A client the script accepts but does not advertise gets used by nobody."""
-        self.assertIn("Use all|claude|codex|gemini|copilot|antigravity.", SH)
+        self.assertIn("Use all|claude|codex|gemini|copilot|antigravity|cursor.", SH)
 
     def test_the_picker_offers_it_and_a_recipe_stands_behind_it(self):
         self.assertIn("antigravity", CLIENTS)

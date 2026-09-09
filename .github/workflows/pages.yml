@@ -9,6 +9,10 @@ on:
       - 'index.html'
       - 'atlas.css'
       - 'atlas.js'
+      # The gallery is published by build_public_site.py. Without this path a
+      # design-only commit reaches main but leaves Pages serving the old gallery.
+      - 'designs/**'
+      - 'atlas-data.json'
       - 'design-options.html'
       - 'design-options.js'
       - 'design-options.ts'
@@ -22,6 +26,10 @@ on:
       - 'scripts/catalog_guardian_legacy.py'
       - 'scripts/catalog_security.py'
       - 'scripts/build_public_site.py'
+      - 'scripts/build_atlas_data.py'
+      - 'scripts/monitor-indexes.js'
+      - 'docs/CHAT-CODE-MONITOR.md'
+      - 'docs/auto-mode-block.txt'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 

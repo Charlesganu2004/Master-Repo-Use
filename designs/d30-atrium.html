@@ -139,6 +139,7 @@ button{cursor:pointer}
 .otheros summary::before{content:"+ ";color:var(--gold);font-weight:700}
 .otheros[open] summary::before{content:"- "}
 </style>
+<link rel="stylesheet" href="atlas-exhibition.css">
 </head>
 <body>
 <div class="mesh"></div><div class="rays"></div><div class="grain"></div>
@@ -227,5 +228,7 @@ P.mount({
 });
 A.on(counts);
 </script>
+<script src="atlas-exhibition.js"></script>
+<script>AtlasExhibition.mount('atrium');</script>
 </body>
 </html>

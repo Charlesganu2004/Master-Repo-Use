@@ -97,28 +97,55 @@ repo_path="$HOME/Master-Repo-Use"; gh repo clone Charlesganu2004/Master-Repo-Use
 
 ## Global AI setup
 
-The global bootstrap installs a small instruction/pointer layer. It **does not install the entire third-party catalog into every machine or every prompt**.
+The global bootstrap installs the standing instruction layer, the repository's
+first-class skills and each selected client's supported hooks. It **does not
+install the entire third-party catalog into every machine or every prompt**.
 
 ### Windows one-liner
 
 ```powershell
-$p="$HOME\Master-Repo-Use"; if (Test-Path "$p\.git") { git -C $p pull --ff-only } else { gh repo clone Charlesganu2004/Master-Repo-Use $p }; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p
+$p="$HOME\Master-Repo-Use"; if (Test-Path "$p\.git") { git -C $p pull --ff-only } else { gh repo clone Charlesganu2004/Master-Repo-Use $p }; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -AutoSkills
 ```
 
 ### Bash / WSL / macOS / Linux one-liner
 
 ```bash
-p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull --ff-only; else gh repo clone Charlesganu2004/Master-Repo-Use "$p"; fi; bash "$p/scripts/setup-global-ai.sh" "$p"
+p="$HOME/Master-Repo-Use"; if [ -d "$p/.git" ]; then git -C "$p" pull --ff-only; else gh repo clone Charlesganu2004/Master-Repo-Use "$p"; fi; bash "$p/scripts/setup-global-ai.sh" "$p" --auto-skills
 ```
 
 The bootstrap configures:
 
-- **GitHub Copilot CLI:** global/user instructions + `COPILOT_CUSTOM_INSTRUCTIONS_DIRS`.
-- **Claude Code:** `~/.claude/CLAUDE.md` pointer + repo `CLAUDE.md`.
-- **Codex:** `~/.codex/AGENTS.md` pointer + repo `AGENTS.md`.
+- **Claude Code:** global and repository instructions, skills, a per-prompt injector, and pre-tool guards.
+- **Codex:** global and repository `AGENTS.md`, skills in `~/.agents/skills/` plus the compatible `~/.codex/skills/`, a per-prompt hook, and pre-tool guards. New or changed unmanaged hooks require one-time trust in the Codex Hooks UI.
+- **Cursor local:** an always-applied global rule, user skills, session-start reinforcement, and pre-tool guards.
+- **Cursor project and cloud:** tracked `.cursor/rules/master-repo-auto.mdc` and `.cursor/hooks.json`, plus root `AGENTS.md`.
+- **GitHub Copilot CLI:** per-prompt user instructions and native prompt rewrite, skills, `COPILOT_CUSTOM_INSTRUCTIONS_DIRS`, session-start reinforcement, and pre-tool guards.
+- **GitHub Copilot web and coding agent:** tracked repository instructions; the coding agent also runs the per-turn rewrite, session and pre-tool entries in `.github/hooks/master-repo-auto.json` inside its cloud job.
+- **Gemini CLI and Antigravity:** shared global instructions and native per-turn hooks. Gemini CLI gets user skills plus shell-tool guards; Antigravity gets its own skills path and per-invocation hook.
 - **Optional AI maintenance request:** `scripts/maintenance_request.py --auto` can create one owner-approval prompt when a task genuinely needs model judgment.
 - **Global watermark command:** `master-watermark` on Bash platforms or `$HOME\bin\master-watermark.ps1` on Windows. The upstream tool is installed on first use, not during bootstrap.
 - Existing personal instruction files are preserved; only the marked Master Repo block is managed.
+
+`skills/` is the canonical internal skill source. The generated
+`.agents/skills/` mirror makes all current internal skills discoverable to
+repository-aware Codex, Copilot, Cursor and Gemini CLI sessions, including
+supported cloud coding agents. Refresh that additive mirror without pruning
+destination extras:
+
+```bash
+python scripts/sync_project_skills.py
+```
+
+The standing three-layer workflow needs no slash command. Global instructions
+carry it in supported client contexts. Claude Code, Codex, Gemini CLI and
+Antigravity inject it as each user turn enters the agent loop. Copilot CLI and
+the coding agent use a native per-turn prompt rewrite, with session-start
+reinforcement. Cursor supplies an always-applied Agent Chat rule plus local
+session-start reinforcement. Conditional skills may still be invoked
+explicitly, but ordinary matching is automatic. Codex requires one review of a
+new or changed unmanaged hook in its Hooks UI before that hook can run. See
+[Auto mode](docs/AUTO-MODE.md) for the exact chat, code, local and cloud
+enforcement matrix.
 
 Watermark removal is for media you own or are authorized to modify. Do not remove third-party attribution or rights-management marks without permission.
 
@@ -126,27 +153,63 @@ Full guide: [docs/GLOBAL-AI-SETUP.md](docs/GLOBAL-AI-SETUP.md).
 
 ## GitHub Copilot setup
 
-The repository includes `.github/copilot-instructions.md`, so repo-aware Copilot sessions receive the Master Repo rules automatically.
+The repository includes `.github/copilot-instructions.md`, so repo-aware Copilot
+chat, CLI and coding-agent sessions receive the Master Repo rules automatically.
+Copilot CLI additionally loads the user instructions and hooks under
+`~/.copilot/`. The cloud coding agent runs the tracked
+`.github/hooks/master-repo-auto.json`, including the per-turn model-prompt
+rewrite; ordinary web and IDE Chat do not run the local CLI hooks.
 
 PowerShell:
 
 ```powershell
-$p="$HOME\Master-Repo-Use"; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -CopilotOnly
+$p="$HOME\Master-Repo-Use"; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -CopilotOnly -AutoSkills
 ```
 
 Bash:
 
 ```bash
-bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --copilot-only
+bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --copilot-only --auto-skills
 ```
 
-Verify in Copilot CLI:
+Verify discovered instructions in Copilot CLI:
 
 ```text
 /instructions
 ```
 
+`/instructions` is a diagnostic command. It is not required to activate auto
+mode. The standing workflow is supplied without a slash by global instructions,
+the native per-turn prompt rewrite and session-start reinforcement.
+
 Full guide: [docs/COPILOT-SETUP.md](docs/COPILOT-SETUP.md).
+
+## Cursor setup
+
+Cursor local Agent Chat receives the standing workflow from the always-applied
+global rule. Session-start and pre-tool hooks reinforce and guard local agent
+work. Project files provide the repository copy used in trusted workspaces and
+by Cursor Cloud Agent; local `~/.cursor/*` files do not travel to managed cloud
+workers.
+
+PowerShell:
+
+```powershell
+$p="$HOME\Master-Repo-Use"; & "$p\scripts\setup-global-ai.ps1" -RepoPath $p -Client cursor -AutoSkills
+```
+
+Bash:
+
+```bash
+bash "$HOME/Master-Repo-Use/scripts/setup-global-ai.sh" "$HOME/Master-Repo-Use" --client cursor --auto-skills
+```
+
+Cursor User Rules apply to Agent Chat, not Cmd+K Inline Edit or Cursor Tab.
+Agent hooks can cover Cmd+K, but Tab has a separate completion and hook surface.
+Cursor Cloud Agent uses the tracked project rule and cloud-supported project
+hooks; it does not load the local user hook or run the local `sessionStart`
+path. See
+[Auto mode](docs/AUTO-MODE.md) for the full distinction.
 
 ## Interactive command center
 
@@ -316,22 +379,46 @@ Full detail: [docs/COST-CONTROL.md](docs/COST-CONTROL.md).
 
 ## Cross-client compatibility
 
-| Client | Default Master Repo path | Integration path |
+| Client and mode | Default Master Repo path | Automatic behavior |
 |---|---|---|
-| GitHub Copilot IDE/GitHub | `.github/copilot-instructions.md` | MCP → skills/instructions → CLI/API → library |
-| GitHub Copilot CLI | repo instructions + `~/.copilot/` | MCP → skills/plugins → CLI/API → library |
-| Claude Code local | `CLAUDE.md` + `~/.claude/CLAUDE.md` | MCP → skills/plugins/hooks → CLI/API → library |
-| Claude Code web | committed repo instructions | supported repo/cloud tools |
-| Codex local | `AGENTS.md` + `~/.codex/AGENTS.md` | skills → MCP → CLI/API → library |
-| Gemini CLI | `GEMINI.md` + `~/.gemini/GEMINI.md` | MCP → skills/extensions → CLI/API → library |
-| Gemini Code Assist | `.gemini/config.yaml` + `.gemini/styleguide.md` | automated PR review only |
-| Codex cloud / ChatGPT coding | committed `AGENTS.md` when repo selected | supported connected-repo tools |
-| ChatGPT web | connect/select private GitHub repo | GitHub connector + supported tools |
-| Claude.ai | connect/add private repo/project | GitHub integration + supported tools |
+| Claude Code local chat/code | `CLAUDE.md` + `~/.claude/CLAUDE.md` | Per-prompt native injection, skills, MCP/plugins and pre-tool guards |
+| Claude Code web | committed repository instructions | Repository and supported cloud tools only |
+| Codex local chat/code | `AGENTS.md` + `~/.codex/AGENTS.md` + `~/.codex/hooks.json` | Native per-prompt injection and pre-tool guards after one-time hook trust; skills in `~/.agents/skills/` and `~/.codex/skills/` |
+| Cursor local Agent Chat | `~/.cursor/rules/master-repo-auto.mdc` + `~/.cursor/hooks.json` | Per-prompt rule, session-start reinforcement, skills and pre-tool guards |
+| Cursor local project | `.cursor/rules/master-repo-auto.mdc` + `.cursor/hooks.json` | Tracked project rule and agent hooks in a trusted workspace |
+| Cursor Cmd+K and Inline Edit | local Agent-hook surface | Session and pre-tool hooks can run, but the global User Rule is documented for Agent Chat |
+| Cursor Tab | separate completion surface | Not the same rule and Agent-hook path as Agent Chat or Cmd+K |
+| Cursor Cloud Agent | tracked `.cursor/` files + `.agents/skills/` + root `AGENTS.md` | Project rule, project skills and cloud-supported project hooks; no local user hooks |
+| GitHub Copilot CLI chat/code | repository instructions + `~/.copilot/` | Native per-prompt rewrite, instructions, skills, session-start reinforcement and pre-tool guards |
+| GitHub Copilot web or IDE Chat | `.github/copilot-instructions.md` | Repository instructions when this repository is in scope; no local CLI hooks |
+| GitHub Copilot coding agent | `.github/copilot-instructions.md` + `.github/hooks/master-repo-auto.json` + `.agents/skills/` | Repository instructions, project skills, native per-prompt rewrite, session-start context and pre-tool guards in the cloud job |
+| Gemini CLI chat/code | `GEMINI.md` + `~/.gemini/GEMINI.md` + `~/.gemini/settings.json` | Native `BeforeAgent` per-prompt injection, `BeforeTool` shell guards, skills, MCP and extensions |
+| Gemini Code Assist | `.gemini/config.yaml` + `.gemini/styleguide.md` | Automated pull-request review only |
+| Codex cloud / ChatGPT coding | committed `AGENTS.md` + `.agents/skills/` when repo selected | Repository instructions, project skills and supported connected-repository tools |
+| ChatGPT web | connect/select private GitHub repo | Account/project instructions plus supported connectors |
+| Claude.ai | connect/add private repo/project | Project instructions plus supported integrations |
 
 A catalog repo is not automatically a native plugin for every client. The preferred compatibility order is **MCP → skill/plugin/instructions → CLI/API wrapper → direct library**.
 
-Browser-hosted ChatGPT/Claude/Copilot cannot be forced by a shell script to execute every private-repo tool globally. Connect/select this repo so they can use the committed instructions and approved maintenance workflow.
+The standing workflow itself needs no slash. Claude Code, Codex, Gemini CLI and
+Antigravity receive it as each user turn enters the agent loop. Copilot CLI and
+coding agent use `userPromptTransformed` to rewrite the model-facing prompt on
+each turn. The `userPromptSubmitted` configuration hook does not provide that
+same rewrite.
+Cursor combines an always-applied rule with session-start reinforcement because
+`beforeSubmitPrompt` is not a context-injection hook. Pre-tool hooks enforce the
+matching command guards separately.
+
+Codex's one-time unmanaged-hook trust review is a setup safety gate. It does not
+turn the standing workflow into a slash command, but a registered hook that has
+not been trusted is skipped rather than executed.
+
+Browser-hosted ChatGPT, Claude, Gemini and ordinary Copilot Chat cannot be
+forced by a shell script to execute every private-repository tool globally.
+Connect or select this repository so they can use the committed instructions
+and approved maintenance workflow. Copilot coding agent and Cursor Cloud Agent
+are code-execution surfaces with tracked repository rules and hooks, not the
+same thing as ordinary hosted chat.
 
 ## Core cross-agent additions
 
@@ -797,4 +884,6 @@ Then ask your preferred client:
 What Master Repo instructions are loaded, and which catalog lane would you use for this task?
 ```
 
-Copilot CLI: `/instructions` · Claude Code: `/memory` · Codex: root `AGENTS.md`.
+Those checks are diagnostics, not activation commands. Copilot CLI exposes
+`/instructions`; Claude Code exposes `/memory`. For Codex, inspect the root
+`AGENTS.md`, `~/.codex/hooks.json` and the Hooks UI trust status.

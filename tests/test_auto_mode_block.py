@@ -174,6 +174,28 @@ class TheInstaller(unittest.TestCase):
         for fragment in ("install_skill", "register_hook", "upsert_block"):
             self.assertIn(fragment, body)
 
+    def test_repo_skills_install_for_codex_too(self):
+        body = (ROOT / "scripts" / "install_auto_mode.py").read_text(encoding="utf-8")
+        self.assertIn('"Codex": ".codex/skills"', body)
+
+    def test_named_core_capabilities_are_real_discoverable_skills(self):
+        expected = {
+            "master-caveman", "master-token-reducer", "master-plan",
+            "master-design-taste", "master-full-output", "master-anti-slop",
+        }
+        for name in expected:
+            definition = ROOT / "skills" / name / "SKILL.md"
+            self.assertTrue(definition.is_file(), name)
+            body = definition.read_text(encoding="utf-8")
+            self.assertTrue(body.startswith("---\n"), name)
+            self.assertIn(f"name: {name}\n", body, name)
+            self.assertIn("description:", body, name)
+
+    def test_catalog_skill_refresh_is_non_destructive(self):
+        body = (ROOT / "scripts" / "install_catalog_skill.py").read_text(encoding="utf-8")
+        self.assertNotIn("shutil.rmtree(target)", body)
+        self.assertIn("dirs_exist_ok=True", body)
+
     def test_installer_backs_up_settings_before_touching_them(self):
         body = (ROOT / "scripts" / "install_auto_mode.py").read_text(encoding="utf-8")
         self.assertIn(".json.bak", body)
