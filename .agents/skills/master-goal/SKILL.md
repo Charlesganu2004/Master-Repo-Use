@@ -47,20 +47,40 @@ a long session, a token budget, a compaction pass, a subagent that was not told
 about it, or another model's instructions. A summariser that reaches this text
 skips it and says so.
 
-## Invoking it
+## Nothing is invoked. The goal is captured.
 
-Both spellings reach the same thing, because people type both and a rule that
-depends on remembering a slash is not a rule:
+No slash, no command, nothing typed. The first substantive prompt of a session
+becomes the standing goal, and it rides every turn after that until the work is
+finished or it is lifted. That is the whole design: a rule that depends on
+remembering to invoke it is not a rule, and the turn you forget is the turn it
+would have mattered.
 
-    /goal <text>        set the goal for this session
+Capture is deliberately conservative, because a wrong guess sits in front of
+every prompt for the rest of the session. It skips anything under 25 characters,
+every continuation ("continue", "ok", "do it", "thanks"), and any question about
+the state of things that ends in a question mark. Those serve the goal already
+standing; they are not a new one.
+
+Once a goal is captured, nothing later in the same session replaces it. A goal
+that moved every turn would just be the last message with extra steps, and the
+drift this exists to catch is exactly an objective that quietly changed. A new
+session captures fresh.
+
+## Setting one deliberately
+
+The spellings are the override, not the route. All of them work, because people
+type all of them:
+
+    /goal <text>        set the goal for this session, deliberately
     \goal <text>        the same
+    /mastergoal <text>  the same
     goal: <text>        the same
 
-No form is required. Once a goal is set it applies to every prompt in the
-session without being invoked again, which is the entire point. The commands
-exist so a goal can be stated deliberately, not so it can be requested.
+A goal set this way is marked explicit, and an explicit goal is never replaced by
+capture, in this session or a later one. Only the person who set it lifts it:
 
-    /goal clear         end the goal early, which only the person who set it does
+    /goal clear         end the goal early
+    goal clear          the same, no slash
 
 ## What it does not do
 
@@ -76,5 +96,10 @@ at the end, not a section with headings.
 
     python scripts/harness_goal.py --check
 
-That prints the goal, the layers it will enforce and where the goal is stored. It
-contacts nothing.
+That prints the goal, the layers it will enforce, and where the goal is stored.
+It contacts nothing.
+
+The store is `.auto-mode/goal.json`, which is not tracked, because capture writes
+on the first prompt of every session and a tracked path would dirty the working
+tree constantly. `docs/auto-mode-goal.json` is the committed seed, read when no
+runtime state exists yet and never written by a hook.

@@ -125,6 +125,18 @@ def show_list() -> int:
 
 
 def check() -> int:
+    """Verify without changing what is being verified.
+
+    Rendering the pipeline captures a goal from the fixture prompt, so a check
+    run against the real store would leave "Plan and design a small interface."
+    standing as this session's objective. It happened once; this is why it
+    cannot happen again.
+    """
+    with skill_pipeline.isolated_store():
+        return _check_isolated()
+
+
+def _check_isolated() -> int:
     failures = []
     prompt = "Plan and design a settings page."
 

@@ -726,10 +726,26 @@ const AtlasCore = (() => {
              commandCount: commands.length, text: commands.join('\n') };
   }
 
-  /** The four harnesses, in the order they were built, which is also the order
+  /** The five harnesses, in the order they were built, which is also the order
       from least to most reach. */
   function harnesses() {
     return (state.data && state.data.harnesses) || [];
+  }
+
+  /** The standing pipeline: the layers, their rules, the lanes and the commands.
+
+      Parsed by the builder straight out of scripts/hooks/skill_pipeline.py, so
+      what the page shows is the text the hook injects rather than a description
+      of it. A page that restated the rules said ten while the hook injected
+      eleven, which is the whole reason this is read rather than written. */
+  function pipeline() {
+    return (state.data && state.data.pipeline) || null;
+  }
+
+  /** How the goal is set. Captured with nothing typed; the spellings override. */
+  function goalPolicy() {
+    const p = pipeline();
+    return (p && p.goal) || null;
   }
 
   function profiles() { return (state.data && state.data.profiles) || []; }
@@ -798,7 +814,7 @@ const AtlasCore = (() => {
       match: l => l.family === 'plugins' },
     { id: 'mcp', label: 'MCP', hint: 'Model Context Protocol servers and connectors.',
       match: l => l.family === 'mcp' },
-    { id: 'harness', label: 'Harness', hint: 'The four harnesses, what each one can enforce, and the command that checks it.' },
+    { id: 'harness', label: 'Harness', hint: 'The three layers on every prompt, the five harnesses that deliver them, and every command that runs one.' },
     { id: 'routes', label: 'Hybrid routes', hint: 'How work is split across models.' },
     { id: 'hardware', label: 'Hardware', hint: 'What this machine can actually host.' },
     { id: 'easy', label: 'Easy setup', hint: 'Choose multiple chat, coding and local-model surfaces, then configure automatic skills.' },
@@ -853,7 +869,8 @@ const AtlasCore = (() => {
     setHardware, usableMemory, tierFor, currentTier, routesForMachine,
     profiles, profileClients, setProfileClient, resolveProfile, profileScriptFor,
     availableSurfaces, selectedSurfaces, toggleSurface, autoModeText,
-    harnesses, visibleLanes, visibleComponents, subcategories, subDescription, lanesForTab,
+    harnesses, pipeline, goalPolicy,
+    visibleLanes, visibleComponents, subcategories, subDescription, lanesForTab,
     toggleFamily, toggleKind, toggleSub, setQuery, clearFilters, activeFilterCount,
     detailFor, select, laneName, selectLane, laneDetailFor,
     addToBasket, removeFromBasket, clearBasket, basketItems,

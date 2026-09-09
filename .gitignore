@@ -20,3 +20,7 @@ layout-options.html
 # Prompt text saved to a file by accident. These are scratch, not repository
 # content, and one reached a commit on 2026-09-09.
 /finish all of this*.txt
+
+# Runtime goal state. Captured from the first task of each session, so it
+# changes constantly; docs/auto-mode-goal.json is the committed seed.
+.auto-mode/

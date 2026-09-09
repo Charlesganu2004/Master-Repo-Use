@@ -526,3 +526,64 @@ html[data-theme="light"] .harness-check code { background: #14161a; }
   .harness-card header { flex-direction: column; gap: 4px; }
   .harness-check { flex-direction: column; align-items: stretch; }
 }
+
+/* The standing pipeline, shown rather than described.
+   Same accent, same radius scale and same spacing steps as the harness cards
+   directly above it; the numbered rail is the only thing this section adds. */
+.pipeline-panel {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+}
+.pipeline-head h3 { margin: 0 0 6px; font-size: 1.05rem; letter-spacing: -.01em; }
+.pipeline-head p { margin: 0; color: var(--ink-2); font-size: 13px; line-height: 1.6; max-width: 84ch; }
+.pipeline-layers { margin-top: 18px; display: flex; flex-direction: column; gap: 16px; }
+.pipeline-layer { padding-top: 16px; border-top: 1px solid var(--line); }
+.pipeline-layer:first-child { padding-top: 0; border-top: 0; }
+.pipeline-layer header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.pipeline-layer header b { font-size: 13.5px; }
+.pipeline-layer-num {
+  flex: none;
+  color: var(--orange);
+  font: 700 10px ui-monospace, monospace;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.pipeline-plain { margin: 6px 0 0; color: var(--ink-2); font-size: 12.5px; line-height: 1.55; max-width: 80ch; }
+.pipeline-rules {
+  list-style: none; margin: 10px 0 0; padding: 0;
+  display: grid; gap: 9px 28px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr));
+}
+.pipeline-rules li {
+  display: grid; grid-template-columns: 26px 1fr; gap: 2px 8px;
+  align-items: baseline;
+  /* Without this the two-column grid stretches each item to the tallest in
+     its row, and a one-line rule beside a three-line one shows a gap
+     between its own name and body that reads as a missing paragraph. */
+  align-content: start;
+}
+.pipeline-rule-num {
+  grid-row: span 2;
+  color: var(--ink-3);
+  font: 700 11px ui-monospace, monospace;
+  text-align: right;
+}
+.pipeline-rules b { font: 700 11px ui-monospace, monospace; letter-spacing: .06em; }
+.pipeline-rule-body { grid-column: 2; color: var(--ink-2); font-size: 12.5px; line-height: 1.55; max-width: 82ch; }
+.pipeline-lanes { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.pipeline-lanes h4 { margin: 0 0 4px; font-size: .95rem; }
+.pipeline-lede { margin: 0; color: var(--ink-2); font-size: 12.5px; line-height: 1.55; max-width: 84ch; }
+.pipeline-lanes ul {
+  list-style: none; margin: 12px 0 0; padding: 0;
+  display: grid; gap: 12px 28px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr));
+}
+.pipeline-lanes li { display: flex; flex-direction: column; gap: 2px; padding-left: 12px; border-left: 2px solid var(--line); }
+.pipeline-lanes li b { font-size: 12.5px; }
+.pipeline-lanes li span { color: var(--ink-2); font-size: 12px; line-height: 1.55; max-width: 82ch; }
+.harness-grid-title { margin: 28px 0 4px; font-size: 1.05rem; letter-spacing: -.01em; }
+.harness-grid-lede { margin: 0; color: var(--ink-2); font-size: 13px; line-height: 1.6; max-width: 84ch; }
+.harness-capture { color: var(--ink-2); font-size: 13.5px; line-height: 1.6; max-width: 84ch; }

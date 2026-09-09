@@ -67,6 +67,8 @@ ENFORCED_SKILLS = (
     "master-plan",
     "master-design-taste",
     "master-computer-control",
+    "master-refactor",
+    "master-refactor-ui",
 )
 
 HOOK, GATEWAY, BUNDLE, REPO_FILE = "hook", "gateway", "bundle", "repo-file"
@@ -271,6 +273,18 @@ def install_surfaces(ids: list[str], dry: bool) -> int:
 
 
 def check() -> int:
+    """Verify without changing what is being verified.
+
+    Rendering the pipeline captures a goal from the fixture prompt, so a check
+    run against the real store would leave "Plan and design a small interface."
+    standing as this session's objective. It happened once; this is why it
+    cannot happen again.
+    """
+    with skill_pipeline.isolated_store():
+        return _check_isolated()
+
+
+def _check_isolated() -> int:
     """Prove the pipeline is reachable for every mechanism, and say what is not."""
     failures = []
 

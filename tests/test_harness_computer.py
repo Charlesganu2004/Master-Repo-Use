@@ -164,6 +164,18 @@ class TheRouterIsReadOnly(unittest.TestCase):
 class EveryPromptHarnessSharesTheRoute(unittest.TestCase):
     PROMPT = "Use Playwright browser automation to verify this page."
 
+    def setUp(self):
+        """Rendering the pipeline captures a goal, so isolate the store.
+
+        Without this the suite left this class's fixture prompt standing as the
+        repository's real goal. Found by checking .auto-mode/goal.json after a
+        green run rather than by any assertion, which is the point: a test that
+        writes real state fails silently somewhere else.
+        """
+        store = surface.skill_pipeline.isolated_store()
+        store.__enter__()
+        self.addCleanup(store.__exit__, None, None, None)
+
     def test_the_skill_travels_with_the_surface_harness(self):
         self.assertIn("master-computer-control", surface.ENFORCED_SKILLS)
         self.assertIn("### master-computer-control", surface.build_bundle("chatgpt"))

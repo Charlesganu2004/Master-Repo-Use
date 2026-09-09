@@ -26,7 +26,7 @@ python scripts/harness_computer.py --route browser-rust --repo PATH
 Add `--json` for machine-readable evidence. Every route response includes
 `actionTaken: false`.
 
-## Four harnesses, one conditional route
+## Five harnesses, one conditional route
 
 The surface, proxy, wrapper and goal harnesses all call the shared prompt
 pipeline. A computer-control lane in that pipeline tells the model to load

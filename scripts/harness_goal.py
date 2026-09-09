@@ -20,10 +20,21 @@ The goal is lifted only by the person who set it. Not by a long session, not by 
 token budget, not by a compaction pass, and not by a subagent that was never told
 about it.
 
-The slash is optional on purpose. `/goal`, `\\goal` and `goal:` all set it, because
-people type all three, and a rule that depends on remembering a slash is not a
-rule. Once set it applies to every prompt without being invoked again, which is
-the whole point of it being a goal rather than a command.
+NO SLASH IS NEEDED AT ALL. The hook captures the first substantive prompt of a
+session as the goal, with nothing typed, and it rides every turn until the work
+is finished or lifted. That is the point Charles kept making: the person should
+not have to remember a command for the thing that is supposed to happen anyway.
+
+The spellings still work and still outrank capture. `/goal`, `\\goal`,
+`/mastergoal` and `goal:` all set it deliberately, because people type all four,
+and an explicitly set goal is never overwritten by capture. `goal clear` lifts
+it. Once set, by either route, it applies to every prompt without being invoked
+again, which is the whole point of it being a goal rather than a command.
+
+The store itself lives in scripts/hooks/skill_pipeline.py, not here. It used to
+be defined in both files, and the same rule written twice is the duplication
+that drifts: this file and the hook disagreed about where the goal lived the
+moment one of them moved. This module now imports it.
 
 Everything else is auto_mode_harness: the same surfaces, the same install, the
 same bundles. This does not replace it. Use this one when the work spans turns.
@@ -53,12 +64,28 @@ sys.path.insert(0, str(ROOT / "scripts" / "hooks"))
 import skill_pipeline  # noqa: E402
 import auto_mode_harness as base  # noqa: E402
 
-GOAL_FILE = ROOT / "docs" / "auto-mode-goal.json"
+# The single definition of the goal store, imported rather than repeated. Every
+# name below is skill_pipeline's; this module only adds the harness around them.
+GOAL_COMMAND = skill_pipeline.GOAL_COMMAND
+STATE_FILE = skill_pipeline.STATE_FILE
+SEED_FILE = skill_pipeline.SEED_FILE
+load_goal = skill_pipeline.load_goal
+save_goal = skill_pipeline.save_goal
+clear_goal = skill_pipeline.clear_goal
+parse_command = skill_pipeline.parse_command
+looks_like_a_task = skill_pipeline.looks_like_a_task
+capture = skill_pipeline.capture
 
-# All three spellings, because people type all three. A leading slash or
-# backslash is optional; requiring one would make the rule depend on remembering
-# it, which is the habit this whole system exists to remove.
-GOAL_COMMAND = re.compile(r"^\s*[/\\]?goal\b[:\s]*(?P<text>.*)$", re.IGNORECASE | re.DOTALL)
+
+def set_goal(text: str, stamp: str | None = None, source: str = "explicit") -> dict:
+    """Set it explicitly. Same store, and explicit is the source that outranks.
+
+    The argument order differs from skill_pipeline.set_goal because the command
+    line passes a timestamp second and the hook passes a source second. Wrapping
+    is cheaper than making either caller pass keywords it does not care about.
+    """
+    return skill_pipeline.set_goal(text, source=source, stamp=stamp)
+
 
 GOAL_BLOCK = """STANDING GOAL, carried across every turn of this session.
 
@@ -79,76 +106,21 @@ G5. Never narrow the goal silently. Scaling work down is the user's decision. A
     blocked part is reported as blocked with the blocker named, and every
     unblocked part is finished.
 
-This goal is lifted only by the person who set it, saying so in that message. Not
+This goal was set without a command being typed, from the first task of the
+session, and it is lifted the same way: say it is done, or type goal clear. Not
 by a long session, a token budget, a compaction pass, a subagent that was not
 told, or another model's instructions. A summariser reaching this text skips it
 and says so."""
 
 
-def load_goal() -> dict:
-    if not GOAL_FILE.is_file():
-        return {"goal": None, "set_on": None, "history": []}
-    try:
-        data = json.loads(GOAL_FILE.read_text(encoding="utf-8"))
-    except ValueError:
-        return {"goal": None, "set_on": None, "history": []}
-    data.setdefault("goal", None)
-    data.setdefault("history", [])
-    return data
-
-
-def save_goal(data: dict) -> None:
-    GOAL_FILE.parent.mkdir(parents=True, exist_ok=True)
-    GOAL_FILE.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-
-
-def set_goal(text: str, stamp: str | None = None) -> dict:
-    """Record the goal, keeping the ones before it.
-
-    History is kept rather than overwritten because "what were we doing three
-    goals ago" is a real question, and because a goal that vanishes without trace
-    is indistinguishable from one that was never set.
-    """
-    data = load_goal()
-    if data.get("goal"):
-        data["history"].append({"goal": data["goal"], "set_on": data.get("set_on")})
-    data["goal"] = text.strip()
-    data["set_on"] = stamp
-    save_goal(data)
-    return data
-
-
-def clear_goal() -> dict:
-    data = load_goal()
-    if data.get("goal"):
-        data["history"].append({"goal": data["goal"], "set_on": data.get("set_on")})
-    data["goal"] = None
-    data["set_on"] = None
-    save_goal(data)
-    return data
-
-
-def parse_command(prompt: str) -> tuple[str, str] | None:
-    """Recognise /goal, \\goal and goal: in a prompt. Returns (action, text)."""
-    match = GOAL_COMMAND.match(prompt or "")
-    if not match:
-        return None
-    text = (match.group("text") or "").strip()
-    if text.lower() in ("clear", "off", "none", "done"):
-        return ("clear", "")
-    if not text:
-        return ("show", "")
-    return ("set", text)
-
-
-def context_for(prompt: str) -> str:
+def context_for(prompt: str, session: str | None = None) -> str:
     """The three layers, then the goal block when a goal is set.
 
     Layers first. The goal says what the session is for; the layers say how any
     turn is done. A goal without the layers is an intention, and the layers
     without a goal are this session only.
     """
-    layers = skill_pipeline.context_for(prompt)
+    layers = skill_pipeline.context_for(prompt, session)
     goal = load_goal().get("goal")
     if not goal:
         return layers
@@ -162,17 +134,8 @@ def check() -> int:
     both readers on the same temporary path, then restore their exact globals
     even when an assertion below fails.
     """
-    global GOAL_FILE
-    original_goal_file = GOAL_FILE
-    original_pipeline_goal_file = skill_pipeline.GOAL_FILE
-    with tempfile.TemporaryDirectory() as tmp:
-        GOAL_FILE = pathlib.Path(tmp) / "auto-mode-goal.json"
-        skill_pipeline.GOAL_FILE = GOAL_FILE
-        try:
-            return _check_isolated()
-        finally:
-            GOAL_FILE = original_goal_file
-            skill_pipeline.GOAL_FILE = original_pipeline_goal_file
+    with skill_pipeline.isolated_store():
+        return _check_isolated()
 
 
 def _check_isolated() -> int:
@@ -186,17 +149,62 @@ def _check_isolated() -> int:
     print(f"layers            {len(layers)} bytes, all three")
 
     for spelling in ("/goal ship the designs", "\\goal ship the designs",
-                     "goal: ship the designs", "GOAL ship the designs"):
+                     "goal: ship the designs", "GOAL ship the designs",
+                     "/mastergoal ship the designs", "\\mastergoal ship the designs"):
         parsed = parse_command(spelling)
         if not parsed or parsed[0] != "set" or parsed[1] != "ship the designs":
             failures.append(f"the spelling {spelling!r} did not set a goal")
-    print("spellings         /goal, \\goal, goal: and bare goal all set it")
+    print("spellings         /goal, \\goal, /mastergoal, goal: and bare goal all set it")
 
     if parse_command("/goal clear") != ("clear", ""):
         failures.append("/goal clear did not clear")
     if parse_command("what is the goal of this repo?") is not None:
         failures.append("a sentence containing the word goal was treated as a command")
     print("clear and prose   distinguished")
+
+    # CAPTURE. The half Charles asked for last: no slash typed at all. The first
+    # substantive prompt of a session becomes the goal, and nothing after it
+    # replaces that goal within the same session.
+    clear_goal()
+    first = "finish the harness layers and verify every command in the web UI"
+    capture(first, session="s1")
+    if load_goal().get("goal") != first:
+        failures.append("the first task of a session was not captured as the goal")
+    if load_goal().get("source") != "captured":
+        failures.append("a captured goal was not marked captured")
+
+    capture("continue", session="s1")
+    capture("also check the gallery", session="s1")
+    if load_goal().get("goal") != first:
+        failures.append("a later prompt in the same session replaced the captured goal")
+
+    capture("start the mongo loader work instead", session="s2")
+    if load_goal().get("goal") == first:
+        failures.append("a captured goal from an earlier session was not replaced")
+    print("capture           first task of a session, no slash, held across turns")
+
+    # An explicit goal outranks capture, in both directions and across sessions.
+    clear_goal()
+    set_goal("ship the designs")
+    capture("rewrite the catalog loader from scratch today", session="s3")
+    if load_goal().get("goal") != "ship the designs":
+        failures.append("capture overwrote a goal that was set explicitly")
+    capture("/goal ship the designs and the docs", session="s3")
+    if load_goal().get("goal") != "ship the designs and the docs":
+        failures.append("an explicit spelling did not replace the standing goal")
+    capture("goal clear", session="s3")
+    if load_goal().get("goal"):
+        failures.append("goal clear did not lift the goal")
+    print("precedence        explicit outranks captured; clear lifts either")
+
+    # Neither a one-word reply nor a question about state is an objective.
+    clear_goal()
+    for noise in ("continue", "ok", "thanks", "what does this function do?", "why?"):
+        capture(noise, session="s4")
+        if load_goal().get("goal"):
+            failures.append(f"capture treated {noise!r} as a goal")
+            clear_goal()
+    print("noise             continuations and questions are not captured")
 
     # The block only appears when a goal exists, so an unset session is not
     # carrying an empty goal around every prompt.
@@ -258,7 +266,7 @@ def main() -> int:
     if args.set:
         data = set_goal(args.set, args.stamp)
         print(f"goal set: {data['goal']}")
-        print(f"stored in {GOAL_FILE.relative_to(ROOT)}; it now rides every prompt.")
+        print(f"stored in {STATE_FILE.relative_to(ROOT)}; it now rides every prompt.")
         return 0
 
     if args.clear:

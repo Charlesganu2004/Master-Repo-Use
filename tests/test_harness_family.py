@@ -202,18 +202,25 @@ class TheWrapperIsTransparent(unittest.TestCase):
 
 class TheGoalSurvivesTheTurn(unittest.TestCase):
     def setUp(self):
+        """Isolate BOTH paths.
+
+        The store has two: the runtime state it writes, and the committed seed
+        it falls back to. Redirecting only the first would leave every test
+        reading the repository's real goal as its starting state, which passes
+        or fails depending on what Charles happened to be working on.
+        """
         self.goal_store = tempfile.TemporaryDirectory()
         self.addCleanup(self.goal_store.cleanup)
-        self.original_goal_file = goal.GOAL_FILE
-        self.original_pipeline_goal_file = pipeline.GOAL_FILE
-        isolated = pathlib.Path(self.goal_store.name) / "auto-mode-goal.json"
-        goal.GOAL_FILE = isolated
-        pipeline.GOAL_FILE = isolated
+        self.original_state = pipeline.STATE_FILE
+        self.original_seed = pipeline.SEED_FILE
+        store = pathlib.Path(self.goal_store.name)
+        pipeline.STATE_FILE = store / "goal.json"
+        pipeline.SEED_FILE = store / "seed.json"     # deliberately absent
         self.addCleanup(self.restore_goal_paths)
 
     def restore_goal_paths(self):
-        goal.GOAL_FILE = self.original_goal_file
-        pipeline.GOAL_FILE = self.original_pipeline_goal_file
+        pipeline.STATE_FILE = self.original_state
+        pipeline.SEED_FILE = self.original_seed
 
     def test_every_spelling_sets_it(self):
         """People type all three. A rule that depends on remembering a slash is
@@ -257,22 +264,94 @@ class TheGoalSurvivesTheTurn(unittest.TestCase):
     def test_the_hook_survives_a_missing_or_broken_goal_file(self):
         """This runs on every prompt of every client. A half-written save must
         cost the turn nothing."""
-        original = goal.GOAL_FILE.read_text(encoding="utf-8") if goal.GOAL_FILE.is_file() else None
-        try:
-            goal.GOAL_FILE.write_text("{ not json", encoding="utf-8")
-            self.assertEqual(pipeline.standing_goal(), "")
-            self.assertIn("LAYER 1", pipeline.context_for("x"))
-        finally:
-            if original is not None:
-                goal.GOAL_FILE.write_text(original, encoding="utf-8")
+        pipeline.STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        pipeline.STATE_FILE.write_text("{ not json", encoding="utf-8")
+        self.assertEqual(pipeline.standing_goal(), "")
+        self.assertIn("LAYER 1", pipeline.context_for("x"))
+
+    def test_the_seed_is_read_when_no_runtime_state_exists_yet(self):
+        """A fresh checkout has the committed goal and no runtime file. It must
+        still carry the goal on the first prompt rather than starting blank."""
+        self.assertFalse(pipeline.STATE_FILE.exists())
+        pipeline.SEED_FILE.write_text(
+            '{"goal": "seeded objective", "history": []}', encoding="utf-8")
+        self.assertIn("seeded objective", pipeline.standing_goal())
+
+    def test_a_hook_write_never_touches_the_committed_seed(self):
+        """Capture writes on the first prompt of every session. Writing that to
+        a tracked file would dirty the working tree constantly, which is how the
+        old store reached 168 kB of fixture goals."""
+        pipeline.SEED_FILE.write_text(
+            '{"goal": null, "history": []}', encoding="utf-8")
+        before = pipeline.SEED_FILE.read_text(encoding="utf-8")
+        pipeline.capture("rebuild the atlas payload and verify it", session="s")
+        self.assertEqual(pipeline.SEED_FILE.read_text(encoding="utf-8"), before)
+        self.assertTrue(pipeline.STATE_FILE.exists())
+
+    def test_the_first_task_of_a_session_becomes_the_goal_with_no_slash(self):
+        """The ask, in one test. Charles should not have to type anything for
+        the goal to be standing; the first real task is the goal."""
+        pipeline.clear_goal()
+        first = "finish the harness layers and verify the web UI commands"
+        context = pipeline.context_for(first, session="s1")
+        self.assertIn("STANDING GOAL", context)
+        self.assertIn(first, context)
+        self.assertEqual(pipeline.load_goal()["source"], "captured")
+
+    def test_a_captured_goal_holds_across_the_turns_after_it(self):
+        """Otherwise the goal is just the last message with extra steps, and the
+        drift it exists to catch is exactly an objective that quietly changed."""
+        pipeline.clear_goal()
+        first = "finish the harness layers and verify the web UI commands"
+        pipeline.capture(first, session="s1")
+        for later in ("continue", "also fix the gallery links",
+                      "now rebuild the payload and push it"):
+            pipeline.capture(later, session="s1")
+        self.assertEqual(pipeline.load_goal()["goal"], first)
+
+    def test_a_new_session_replaces_a_captured_goal(self):
+        """A goal captured yesterday must not bind today's work."""
+        pipeline.clear_goal()
+        pipeline.capture("finish the harness layers and verify them", session="s1")
+        pipeline.capture("load the catalog into mongo and check the indexes",
+                         session="s2")
+        self.assertIn("mongo", pipeline.load_goal()["goal"])
+
+    def test_an_explicit_goal_is_never_overwritten_by_capture(self):
+        """Someone typed it on purpose. Only they lift it."""
+        pipeline.clear_goal()
+        pipeline.set_goal("ship the designs", source="explicit", session="s1")
+        pipeline.capture("rewrite the catalog loader from scratch", session="s2")
+        self.assertEqual(pipeline.load_goal()["goal"], "ship the designs")
+
+    def test_capture_ignores_continuations_and_questions(self):
+        """A wrong yes rides in front of every prompt for the rest of the
+        session, so this side of the trade is the conservative one."""
+        for noise in ("continue", "ok", "thanks", "yes", "do it",
+                      "what does this function do?", "why is it slow?"):
+            pipeline.clear_goal()
+            pipeline.capture(noise, session="s")
+            self.assertIsNone(pipeline.load_goal()["goal"], noise)
+
+    def test_the_history_is_capped_so_the_store_cannot_grow_without_bound(self):
+        """The old store reached 168 kB because history was unbounded and every
+        --check run appended to it. That file is read on every prompt."""
+        pipeline.clear_goal()
+        for index in range(60):
+            pipeline.set_goal(f"objective number {index}", source="explicit")
+        self.assertLessEqual(len(pipeline.load_goal()["history"]),
+                             pipeline.HISTORY_LIMIT)
 
     def test_a_very_long_goal_is_bounded(self):
         goal.set_goal("x" * 5000)
         block = pipeline.standing_goal()
-        # The template is about 530 bytes and the goal is capped at 400, so a
-        # bounded block lands near 930. The number matters less than the fact
-        # that a 5000 character goal cannot ride every prompt unbounded.
-        self.assertLess(len(block), 1000)
+        # The template is about 650 bytes and the goal is capped at 400, so a
+        # bounded block lands near 1050. It was near 930 until the template
+        # gained the two sentences that say the goal was captured rather than
+        # commanded, which is the behaviour Charles asked for and worth the
+        # bytes. The number matters less than the fact that a 5000 character
+        # goal cannot ride every prompt unbounded.
+        self.assertLess(len(block), 1100)
         self.assertLess(len(block), len("x" * 5000))
         self.assertIn("truncated", block)
 
@@ -287,11 +366,66 @@ class TheGoalSurvivesTheTurn(unittest.TestCase):
         self.assertIn("/goal", skill)
         self.assertIn("\\goal", skill)
         self.assertIn("goal:", skill)
+        self.assertIn("/mastergoal", skill)
+
+    def test_the_skill_documents_that_no_command_is_needed(self):
+        """The spellings are the fallback now, not the route."""
+        skill = (ROOT / "skills" / "master-goal" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("captured", skill.lower())
+        self.assertIn("no slash", skill.lower())
 
     def test_only_the_person_who_set_it_lifts_it(self):
         for source in (goal.GOAL_BLOCK, pipeline.GOAL_TEMPLATE):
             self.assertIn("compaction pass", source)
             self.assertIn("token budget", source)
+
+
+class NoCheckWritesTheRealGoal(unittest.TestCase):
+    """A verifier must not change the thing it verifies.
+
+    Capture made every --check a writer: rendering the pipeline for a fixture
+    prompt sets that prompt as the standing goal. The first run after capture
+    landed left "Plan and design a small interface." as the repository's
+    objective, and a full test run left "Use Playwright browser automation to
+    verify this page." Neither failed anything. Both were found by reading
+    .auto-mode/goal.json after a green run.
+
+    So the guard is static and cheap: every harness that renders the pipeline in
+    its check has to go through the shared isolation.
+    """
+
+    HARNESSES = ("auto_mode_harness", "harness_proxy", "harness_wrap",
+                 "harness_goal")
+
+    def test_every_harness_check_isolates_the_goal_store(self):
+        for name in self.HARNESSES:
+            source = (ROOT / "scripts" / f"{name}.py").read_text(encoding="utf-8")
+            self.assertIn("isolated_store()", source,
+                          f"{name} --check can write the real goal store")
+
+    def test_the_isolation_restores_both_paths_even_when_the_body_raises(self):
+        """A check that fails must not leave the store pointed at a deleted
+        temporary directory, which would make every later prompt goalless."""
+        before = (pipeline.STATE_FILE, pipeline.SEED_FILE)
+        with self.assertRaises(RuntimeError):
+            with pipeline.isolated_store():
+                self.assertNotEqual(pipeline.STATE_FILE, before[0])
+                raise RuntimeError("the check failed")
+        self.assertEqual((pipeline.STATE_FILE, pipeline.SEED_FILE), before)
+
+    def test_the_env_override_redirects_both_paths(self):
+        """The lever a subprocess needs. Without it every hook invocation in a
+        test run captures a fixture goal into the real store."""
+        source = (ROOT / "scripts" / "hooks" / "skill_pipeline.py").read_text(
+            encoding="utf-8")
+        self.assertIn("MASTER_REPO_GOAL_DIR", source)
+
+    def test_the_runtime_store_is_not_tracked(self):
+        """Capture writes on the first prompt of every session. A tracked path
+        would dirty the working tree constantly, and did: the old store reached
+        168 kB of fixture goals before it was noticed."""
+        ignored = (ROOT / ".gitignore").read_text(encoding="utf-8")
+        self.assertIn(".auto-mode/", ignored)
 
 
 class TheHarnessIsReachableInEveryDesign(unittest.TestCase):

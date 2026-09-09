@@ -114,17 +114,33 @@
     </section>
     <section class="routes-section page-shell" id="harness" aria-labelledby="harnessTitle">
       <div class="section-heading route-heading">
-        <div><p class="eyebrow">The harness</p><h2 id="harnessTitle">Four places to stand.</h2></div>
-        <p>A harness is what makes the standing rules arrive without anyone remembering to ask. There are four because there are four different places to stand, and where a harness stands decides what it can reach. Each one below says what it enforces, when it is the right choice, and what it cannot do.</p>
+        <div><p class="eyebrow">The harness</p><h2 id="harnessTitle">The rules arrive on their own.</h2></div>
+        <p>A harness is what makes the standing rules arrive without anyone remembering to ask. The rules are identical wherever you are working; what changes is how they get there. The layers below are read out of the hook itself, so this page cannot describe a rule the hook no longer injects.</p>
       </div>
 
+      <article class="pipeline-panel" id="pipelinePanel">
+        <header class="pipeline-head">
+          <h3>What arrives on every prompt</h3>
+          <p id="pipelineSummary"></p>
+        </header>
+        <div class="pipeline-layers" id="pipelineLayers"></div>
+        <div class="pipeline-lanes">
+          <h4>Added only when the prompt calls for it</h4>
+          <p class="pipeline-lede">One lane at a time, chosen by how many of its terms the prompt matched. They cost nothing on the turns they do not apply to.</p>
+          <ul id="pipelineLanes"></ul>
+        </div>
+      </article>
+
+      <h3 class="harness-grid-title" id="harnessGridTitle">Where each one stands</h3>
+      <p class="harness-grid-lede">Each says what it enforces, when it is the right choice, and what it cannot do.</p>
       <div class="harness-grid" id="harnessGrid"></div>
 
       <article class="harness-note">
         <h3>The part that survives the turn</h3>
-        <p>The first three carry the same three layers. They differ only in how the rules arrive. The fourth adds the thing none of the others can do: a goal that outlives the turn it was set in.</p>
+        <p>Every harness carries the same layers. They differ only in how the rules arrive. The goal harness adds the thing none of the others can do: an objective that outlives the turn it was set in.</p>
         <p>A long session forgets what it was for. The first prompt states the objective, the next twenty say "continue", and by the end the model is answering the last message rather than serving the goal. Nothing errors, so nothing surfaces it. The goal harness restates the goal before reading each request, checks the answer against the goal rather than the last message, and reports what is left.</p>
-        <p class="harness-forms">Set it with <code>/goal</code>, <code>\goal</code> or <code>goal:</code>. All three work, because people type all three and a rule that depends on remembering a slash is not a rule. Once set it applies to every prompt without being invoked again, and only the person who set it lifts it.</p>
+        <p class="harness-capture" id="goalCapture"></p>
+        <p class="harness-forms">You can still set one deliberately with <code>/goal</code>, <code>\goal</code>, <code>/mastergoal</code> or <code>goal:</code>. All of them work, because people type all of them. A goal set that way is marked explicit and is never replaced by capture; only the person who set it lifts it, with <code>goal clear</code>.</p>
         <pre class="out-code"><code id="goalExample"></code></pre>
         <button type="button" class="quiet-button" id="copyGoal">Copy the goal commands</button>
       </article>

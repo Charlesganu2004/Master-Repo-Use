@@ -537,6 +537,91 @@ const AtlasPanes = (() => {
      different place, and the place decides what it can enforce, so every card
      leads with the mechanism and carries the limit next to the capability. A
      list of four similar tools would hide the only thing worth knowing. */
+  function layersHTML() {
+    const p = A.pipeline();
+    if (!p) {
+      return `<p class="empty">No pipeline data in this payload.
+        Run <code>python scripts/build_atlas_data.py</code> to regenerate it.</p>`;
+    }
+    const say = (plain, technical) => A.say ? A.say(plain, technical) : technical;
+    return `<section class="layers" aria-label="The standing pipeline">
+      <h3>What arrives on every prompt</h3>
+      <p class="sub">${esc(say(
+        'Every time you send a message, the model is handed this list first. You do not type anything. It is the same list in every app on the list below.',
+        `${p.ruleCount} rules in three layers, injected ahead of every prompt and every command, with no slash and no exception. ${p.byteCount} bytes a turn, read from ${p.source}.`))}</p>
+      ${(p.layers || []).map(layer => `<article class="layer" data-layer="${layer.number}">
+        <header class="layer-head">
+          <span class="layer-num">Layer ${layer.number}</span>
+          <b>${esc(say(layer.plain || layer.when, layer.when))}</b>
+        </header>
+        ${layer.simple ? `<p class="layer-plain">${esc(layer.simple)}</p>` : ''}
+        <ol class="layer-rules">${(layer.rules || []).map(rule => `<li>
+          <span class="rule-num">${rule.number}</span>
+          <b class="rule-name">${esc(rule.name)}</b>
+          <span class="rule-body">${esc(rule.body)}</span>
+        </li>`).join('')}</ol>
+      </article>`).join('')}
+      <p class="sub layer-note">${esc(say(
+        'Layer 3 repeats layer 1 on purpose. A rule read at the start of a long answer has stopped applying by the end, and the end is where the shortcuts get written.',
+        'Layer 3 re-applies layer 1 deliberately. A rule read once at the top of a long turn has stopped applying by the end of it, and the end is where the skeleton and the em dash get written.'))}</p>
+    </section>
+
+    <section class="layers lanes-extra" aria-label="Conditional lanes">
+      <h3>Added only when the prompt calls for it</h3>
+      <p class="sub">${esc(say(
+        'A few extra rules switch on by themselves when your message is about that kind of work. They cost nothing the rest of the time.',
+        `One lane at a time, chosen by how many of its terms the prompt matched. ${(p.lanes || []).length} exist; stacking them would defeat the per-turn budget.`))}</p>
+      <ul class="lane-lines">${(p.lanes || []).map(lane => `<li>
+        <b>${esc(lane.line)}</b><span>${esc(lane.detail)}</span>
+      </li>`).join('')}</ul>
+    </section>
+
+    ${goalHTML(p.goal, say)}`;
+  }
+
+  function goalHTML(goal, say) {
+    if (!goal) return '';
+    return `<section class="layers goal-policy" aria-label="How the goal is set">
+      <h3>The goal, set without a command</h3>
+      <p class="sub">${esc(say(
+        'The first real thing you ask for becomes the goal. Nothing to type. It stays in front of every message after that until the work is done or you say to drop it.',
+        goal.detail))}</p>
+      <div class="goal-grid">
+        <div>
+          <dt>Setting one deliberately</dt>
+          <dd>${(goal.spellings || []).map(s => `<code>${esc(s)}</code>`).join(' ')}</dd>
+          <p class="sub">${esc(goal.override || '')}</p>
+        </div>
+        <div>
+          <dt>Lifting it</dt>
+          <dd><code>${esc(goal.clear || 'goal clear')}</code></dd>
+          <p class="sub">Only the person who set it lifts it. Not a long session, a
+          token budget, a compaction pass, or a subagent that was not told.</p>
+        </div>
+        <div>
+          <dt>Where it is kept</dt>
+          <dd>${esc(goal.store || '')}</dd>
+        </div>
+      </div>
+    </section>`;
+  }
+
+  function pipelineCommandsHTML() {
+    const p = A.pipeline();
+    if (!p || !(p.commands || []).length) return '';
+    return `<section class="layers pipeline-commands" aria-label="Commands that run the pipeline">
+      <h3>Every command, in full</h3>
+      <p class="sub">Each one exists in this repository and passes its own check.
+        Copy it as written; nothing here is an abbreviation.</p>
+      ${p.commands.map(c => `<div class="cmd-line cmd-action">
+        <span class="cmd-tag">${esc(c.label)}</span>
+        <code>${esc(c.command)}</code>
+        <button type="button" class="cmd-copy" data-copy-cmd="${esc(c.command)}"
+          aria-label="Copy: ${esc(c.label)}">Copy</button>
+      </div>`).join('')}
+    </section>`;
+  }
+
   function harnessHTML() {
     const items = A.harnesses();
     if (!items.length) {
@@ -545,9 +630,12 @@ const AtlasPanes = (() => {
     }
     return `<h2>The harness</h2>
       <p class="sub">A harness is the thing that makes the standing rules arrive without anyone
-        remembering to ask for them. There are four, because there are four different places to
-        stand, and where a harness stands decides what it can reach. Each card says what it
-        enforces, when it is the right one, and what it cannot do.</p>
+        remembering to ask for them. The rules are the same everywhere; what differs is how they
+        get there. Read the layers first, then pick the harness that fits where you are standing.</p>
+      ${layersHTML()}
+      <h3 class="harness-heading">The ${items.length} harnesses</h3>
+      <p class="sub">Each stands in a different place, and where it stands decides what it can
+        reach. Every card says what it enforces, when it is the right one, and what it cannot do.</p>
       <div class="harness-list">${items.map((h, index) => `<article class="harness-card">
         <header>
           <span class="harness-num">${String(index + 1).padStart(2, '0')}</span>
@@ -565,16 +653,17 @@ const AtlasPanes = (() => {
             aria-label="Copy the check command for ${esc(h.name)}">Copy</button>
         </div>
       </article>`).join('')}</div>
+      ${pipelineCommandsHTML()}
       <aside class="harness-safety-note" role="note" aria-label="Computer control safety">
         <strong>Computer control is read-only by default.</strong>
-        <p>The four harnesses may inspect visible state and report what they find. Clicking, typing,
+        <p>The harnesses may inspect visible state and report what they find. Clicking, typing,
         submitting, installing, deleting, or changing settings begins only when that action is in the
         request and still passes the normal permission and safety checks.</p>
       </aside>
-      <p class="sub harness-foot">All four inject the same three layers, so nothing here changes
-        what the rules say. They differ only in how the rules arrive. The goal harness adds one
-        thing on top: a goal that survives the turn, set with <code>/goal</code>,
-        <code>\\goal</code> or <code>goal:</code>, and lifted only by the person who set it.</p>`;
+      <p class="sub harness-foot">All ${items.length} inject the same layers, so nothing here
+        changes what the rules say. They differ only in how the rules arrive. The goal harness adds
+        one thing on top: a goal that survives the turn, captured from the first task of the session
+        with nothing typed, and lifted only by the person it belongs to.</p>`;
   }
 
   function routesHTML() {
@@ -1083,6 +1172,42 @@ const AtlasPanes = (() => {
       background:transparent;color:inherit;font:inherit;font-size:11px;cursor:pointer}
     .cmd-copy:hover{border-color:var(--accent,#b65039)}
     .cmd-none{margin:6px 0 0;color:var(--dim,#9aa);font-size:12px;font-style:italic}
+    .layers{margin:0 0 22px;padding:16px;border:1px solid var(--line,#555);border-radius:12px}
+    .layers h3{margin:0 0 6px;font-size:14px}
+    .layer{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line,#555)}
+    .layer:first-of-type{border-top:0;padding-top:0}
+    .layer-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+    .layer-num{flex:none;color:var(--accent,#b65039);font:700 10px ui-monospace,monospace;
+      letter-spacing:.1em;text-transform:uppercase}
+    .layer-head b{font-size:13.5px}
+    .layer-plain{margin:5px 0 0;color:var(--dim,#9aa);font-size:12.5px;line-height:1.55;max-width:78ch}
+    .layer-rules{list-style:none;margin:9px 0 0;padding:0;display:grid;gap:8px 24px;
+      grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr))}
+    .layer-rules li{display:grid;grid-template-columns:26px 1fr;gap:2px 8px;align-items:baseline;align-content:start}
+    .rule-num{grid-row:span 2;color:var(--dim,#9aa);font:700 11px ui-monospace,monospace;
+      text-align:right}
+    .rule-name{font:700 11px ui-monospace,monospace;letter-spacing:.06em}
+    .rule-body{grid-column:2;font-size:12.5px;line-height:1.55;max-width:80ch}
+    .layer-note{margin:14px 0 0}
+    .lane-lines{list-style:none;margin:9px 0 0;padding:0;display:grid;gap:11px 24px;
+      grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr))}
+    .lane-lines li{display:flex;flex-direction:column;gap:2px;padding-left:11px;
+      border-left:2px solid var(--line,#555)}
+    .lane-lines b{font-size:12.5px}
+    .lane-lines span{color:var(--dim,#9aa);font-size:12px;line-height:1.55;max-width:80ch}
+    .goal-grid{display:grid;gap:14px;margin-top:11px;
+      grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+    .goal-grid dt{color:var(--dim,#9aa);font:700 9.5px ui-monospace,monospace;
+      letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+    .goal-grid dd{margin:0;font-size:12.5px;line-height:1.6}
+    .goal-grid code{display:inline-block;margin:0 4px 4px 0;padding:2px 6px;border-radius:4px;
+      background:var(--panel-2,#222);font:600 11.5px ui-monospace,monospace;
+      font-variant-ligatures:none}
+    .goal-grid .sub{margin:5px 0 0;font-size:11.5px}
+    .goal-policy{border-left:4px solid var(--accent,#b65039)}
+    .lanes-extra{margin-top:0}
+    .pipeline-commands{margin-top:18px}
+    .harness-heading{margin:20px 0 4px;font-size:14px}
     .harness-list{display:flex;flex-direction:column;gap:12px}
     .harness-card{padding:16px;border:1px solid var(--line,#555);border-radius:12px;min-width:0}
     .harness-card header{display:flex;align-items:baseline;gap:12px;margin-bottom:9px}

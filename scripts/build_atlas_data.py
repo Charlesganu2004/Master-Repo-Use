@@ -30,7 +30,9 @@ from sync_project_skills import sync_project_skills
 from capability_definitions import owned_agents
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts" / "hooks"))
 import catalog_index_spec  # noqa: E402
+import skill_pipeline  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 # Written to both places on purpose. The designs fetch it relative to themselves,
@@ -566,7 +568,7 @@ FAMILIES = [
 
 # --------------------------------------------------------- the harness family
 #
-# Four harnesses, and the differences are not cosmetic: each one stands in a
+# Five harnesses, and the differences are not cosmetic: each one stands in a
 # different place, and the place decides what it can enforce. A page that listed
 # them as four similar tools would hide the only thing worth knowing about them.
 HARNESSES = [
@@ -626,6 +628,125 @@ HARNESSES = [
 ]
 
 
+# ------------------------------------------------------------------ the layers
+#
+# Parsed from skill_pipeline.CORE, never restated. The page showed the layers as
+# hand-written prose once, and the prose said ten rules while the hook injected
+# eleven the same afternoon. A page that describes a rule it does not read is a
+# page that will eventually describe a rule that no longer exists.
+#
+# The same reasoning as catalog_index_spec: one source, parsed by everyone who
+# needs it, so a change lands everywhere at once or nowhere.
+LAYER_HEADER = re.compile(r"^LAYER (?P<number>\d), (?P<when>[^:]+):$")
+
+# The rule name is the leading run of capitals; everything after it is the body.
+# Three shapes exist and the first version of this pattern only read one:
+#
+#   "1. CAVEMAN. Compress ..."          name, full stop, body
+#   "3. ANTI-SLOP. No em dashes ..."    a HYPHEN in the name
+#   "10. NEVER COMPACT a skill ..."     no separator; the name is the sentence
+#
+# It matched nine of eleven rules and looked right, because nine rules rendered
+# and nobody counts. The count assertion below is the part that actually guards
+# this: a rule the hook injects and the page does not show is drift that no
+# amount of reading the page reveals.
+LAYER_RULE = re.compile(
+    r"^(?P<number>\d+)\. (?P<name>[A-Z][A-Z0-9 \-]*[A-Z0-9])[.:]?\s+(?P<body>.+)$")
+
+LAYER_PLAIN = {
+    1: ("Before it reads what you asked",
+        "Say it short, say all of it, and do not dress it up."),
+    2: ("Before it makes anything",
+        "Think it through first, and make it look like someone chose how it looks."),
+    3: ("While it works, and again before it answers",
+        "Pick the right tools, tidy what it wrote, then check the first layer again."),
+}
+
+
+def layer_rules() -> list[dict]:
+    """Every layer and every rule inside it, read from the hook's own text."""
+    layers, current = [], None
+    for line in skill_pipeline.CORE.splitlines():
+        line = line.strip()
+        header = LAYER_HEADER.match(line)
+        if header:
+            number = int(header.group("number"))
+            plain, simple = LAYER_PLAIN.get(number, ("", ""))
+            current = {"number": number, "when": header.group("when").strip(),
+                       "plain": plain, "simple": simple, "rules": []}
+            layers.append(current)
+            continue
+        rule = LAYER_RULE.match(line)
+        if rule and current is not None:
+            current["rules"].append({
+                "number": int(rule.group("number")),
+                "name": rule.group("name").strip(),
+                "body": rule.group("body").strip(),
+            })
+    # Count what the source has, then insist the parse found all of it. Nine of
+    # eleven rules parsed cleanly and silently before this line existed.
+    expected = len([line for line in skill_pipeline.CORE.splitlines()
+                    if re.match(r"^\d+\. ", line.strip())])
+    found = sum(len(layer["rules"]) for layer in layers)
+    if found != expected:
+        raise SystemExit(f"the layer parser read {found} of {expected} rules in "
+                         f"skill_pipeline.CORE; the page would show fewer rules "
+                         f"than the hook injects")
+    return layers
+
+
+def layer_payload() -> dict:
+    """The layers, the lanes that attach on top, and the commands that run them.
+
+    Every command here is one that exists and passes its own check. A page that
+    prints a command nobody ran is the failure this repository keeps hitting.
+    """
+    layers = layer_rules()
+    total = sum(len(layer["rules"]) for layer in layers)
+    return {
+        "layers": layers,
+        "ruleCount": total,
+        "byteCount": len(skill_pipeline.CORE.encode("utf-8")),
+        "source": "scripts/hooks/skill_pipeline.py",
+        "note": "Parsed from the hook's own text. Nothing on this page restates a rule.",
+        "goal": {
+            "captured": True,
+            "detail": "The first substantive prompt of a session becomes the standing "
+                      "goal with nothing typed, and rides every turn until the work is "
+                      "finished or it is lifted. Continuations, one-word replies and "
+                      "questions ending in a question mark are skipped, because they "
+                      "serve the goal already standing rather than replacing it.",
+            "spellings": ["/goal <text>", "\\goal <text>", "/mastergoal <text>",
+                          "goal: <text>"],
+            "clear": "goal clear",
+            "override": "A goal set with one of those spellings is marked explicit, and "
+                        "an explicit goal is never replaced by capture.",
+            "store": ".auto-mode/goal.json, which is not tracked. "
+                     "docs/auto-mode-goal.json is the committed seed.",
+        },
+        "lanes": [{"line": line.split(": ", 1)[0].split(". ", 1)[-1],
+                   "detail": line.split(": ", 1)[1] if ": " in line else line}
+                  for _pattern, line in skill_pipeline.LANES],
+        "commands": [
+            {"label": "See exactly what a prompt would inject",
+             "command": "python scripts/harness_goal.py --context \"refactor the retry module\""},
+            {"label": "Check the hook end to end",
+             "command": "echo '{\"input\": {\"prompt\": \"plan a page\"}}' | "
+                        "python scripts/hooks/skill_pipeline.py"},
+            {"label": "Show the standing goal",
+             "command": "python scripts/harness_goal.py --show"},
+            {"label": "Set one deliberately",
+             "command": "python scripts/harness_goal.py --set \"finish the designs\""},
+            {"label": "Lift it",
+             "command": "python scripts/harness_goal.py --clear"},
+            {"label": "Install every surface",
+             "command": "python scripts/auto_mode_harness.py --install all"},
+            {"label": "Verify the install",
+             "command": "python scripts/verify_auto_mode.py"},
+        ],
+    }
+
+
 def harness_entries() -> list[dict]:
     return [{"id": h[0], "name": h[1], "file": h[2], "detail": h[3],
              "useWhen": h[4], "limit": h[5], "check": h[6],
@@ -634,7 +755,7 @@ def harness_entries() -> list[dict]:
                  "file": "scripts/harness_computer.py",
                  "check": "python scripts/harness_computer.py --check",
                  "routes": ["native", "browser-js", "browser-rust"],
-                 "detail": "All four harnesses route screen and browser requests through "
+                 "detail": "All five harnesses route screen and browser requests through "
                            "the same capability skill. The check reads local evidence; "
                            "it does not grant tools, install packages or control an app.",
              }} for h in HARNESSES]
@@ -993,6 +1114,16 @@ def catalog_lanes() -> tuple[list, list]:
                 # further down is describing the entry above it instead.
                 if awaiting_blurb:
                     blurbs.setdefault(awaiting_blurb, []).append(text.lstrip("# ").strip())
+                # An entry whose slug is too long for the note column has its
+                # note on the NEXT line instead, and it was being dropped: the
+                # page showed "Catalogued in <file>" where a measurement was
+                # written. Seven entries across the catalog were in that state,
+                # and the shape is invisible in the file because the note is
+                # right there, one line down. Only the first such line is taken,
+                # matching the inline convention where the rest is continuation.
+                elif entries and not entries[-1][2]:
+                    slug, sub, _empty = entries[-1]
+                    entries[-1] = (slug, sub, text.lstrip("# ").strip())
                 continue
             candidate = text.split("#")[0].strip()
             if not SLUG_RE.fullmatch(candidate):
@@ -1841,7 +1972,7 @@ TAB_PLAIN = {
     "mcp": ("Connectors to other programs.",
             "Model Context Protocol servers and connectors."),
     "harness": ("How the rules get applied automatically.",
-                "The four harnesses, what each can enforce, and its check command."),
+                "The three layers, the five harnesses that deliver them, and every check command."),
     "routes": ("Ways to split work between models.",
                "Hybrid routes with their conditions and hardware floors."),
     "hardware": ("What your computer can run.",
@@ -2061,6 +2192,7 @@ def build() -> dict:
         "designs": design_pages(),
         "store": store_payload(),
         "harnesses": harness_entries(),
+        "pipeline": layer_payload(),
         "plain": plain_payload(),
         "catalogStore": catalog_store_payload({
             "components": len(comps), "lanes": len(lanes), "routes": len(routes),

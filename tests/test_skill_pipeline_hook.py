@@ -20,8 +20,10 @@ does not fit is noise rather than enforcement.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import subprocess
+import tempfile
 import sys
 import unittest
 
@@ -40,11 +42,23 @@ def installer_function(name: str) -> str:
     return body if stop < 0 else body[:stop]
 
 
+# The hook now CAPTURES a goal from the prompt, so running it writes state.
+# Without this every test run would append a fixture goal to the real store,
+# which is exactly how the previous store reached 168 kB of test goals.
+GOAL_STORE = tempfile.mkdtemp(prefix="pipeline-goal-")
+
+
+def hook_env() -> dict:
+    env = dict(os.environ)
+    env["MASTER_REPO_GOAL_DIR"] = GOAL_STORE
+    return env
+
+
 def run(prompt: str) -> str:
     """The hook's additionalContext for a prompt, or '' when it stays silent."""
     event = json.dumps({"input": {"prompt": prompt}})
     proc = subprocess.run([sys.executable, str(HOOK)], input=event,
-                          capture_output=True, text=True)
+                          capture_output=True, text=True, env=hook_env())
     if proc.returncode != 0 or not proc.stdout.strip():
         return ""
     return json.loads(proc.stdout)["hookSpecificOutput"]["additionalContext"]
@@ -102,7 +116,7 @@ class ItFiresOnEveryOrdinaryPrompt(unittest.TestCase):
     def test_the_event_name_is_the_one_the_client_expects(self):
         event = json.dumps({"input": {"prompt": "hello"}})
         proc = subprocess.run([sys.executable, str(HOOK)], input=event,
-                              capture_output=True, text=True)
+                              capture_output=True, text=True, env=hook_env())
         payload = json.loads(proc.stdout)["hookSpecificOutput"]
         self.assertEqual(payload["hookEventName"], "UserPromptSubmit")
 
@@ -110,7 +124,7 @@ class ItFiresOnEveryOrdinaryPrompt(unittest.TestCase):
         """Clients have shipped both shapes; accepting one only is a silent no-op."""
         for event in ({"input": {"prompt": "build a thing"}}, {"prompt": "build a thing"}):
             proc = subprocess.run([sys.executable, str(HOOK)], input=json.dumps(event),
-                                  capture_output=True, text=True)
+                                  capture_output=True, text=True, env=hook_env())
             self.assertTrue(proc.stdout.strip(), f"no output for {event}")
 
 
@@ -131,7 +145,7 @@ class ItFiresOnCommandsToo(unittest.TestCase):
 
     def test_a_malformed_event_never_breaks_the_session(self):
         proc = subprocess.run([sys.executable, str(HOOK)], input="not json",
-                              capture_output=True, text=True)
+                              capture_output=True, text=True, env=hook_env())
         self.assertEqual(proc.returncode, 0)
         self.assertEqual(proc.stdout.strip(), "")
 
@@ -161,8 +175,13 @@ class TheLanesAttachOnlyWhenRelevant(unittest.TestCase):
         self.assertIn("evidence that can be quoted", out)
 
     def test_an_unrelated_prompt_gets_no_lane_line(self):
-        out = run("rename this variable")
-        self.assertNotIn("11.", out, "a lane attached to a prompt it does not fit")
+        """12, not 11. Layer 3 gained REFACTOR as rule 8 when the refactor
+        skills went in, so the mandatory core now runs to 11 and the conditional
+        lane line is 12. Asserting the old number would have passed forever
+        while testing nothing, since 11 is now always present."""
+        out = run("say hello")
+        self.assertIn("11. VERIFY", out, "the core should still end at 11")
+        self.assertNotIn("12.", out, "a lane attached to a prompt it does not fit")
 
     def test_only_one_lane_ever_attaches(self):
         """Stacking them would defeat the budget on any broad prompt."""
@@ -186,11 +205,18 @@ class TheInjectedBlockStaysCheap(unittest.TestCase):
     """Charged on every prompt of every session, so it needs a ceiling."""
 
     def test_the_core_is_tracked_not_unbounded(self):
-        """Ten mandatory rules in three layers is roughly 1.6 kB, call it 400
-        tokens a prompt.
-        That price was quoted and accepted. The ceiling exists so the next
-        addition is a decision rather than a drift."""
-        self.assertLess(len(pipeline.CORE.encode("utf-8")), 1900,
+        """Eleven mandatory rules in three layers is roughly 1.9 kB, call it 480
+        tokens a prompt. That price was quoted and accepted. The ceiling exists
+        so the next addition is a decision rather than a drift, and this is the
+        ledger of the decisions:
+
+            1900 bytes   ten rules, the original three layers
+            2000 bytes   2026-09-09: rule 8, REFACTOR, in layer 3. About 300
+                         bytes. Asked for directly, and placed in layer 3
+                         because a refactor is something done to what was just
+                         written rather than something planned in advance.
+        """
+        self.assertLess(len(pipeline.CORE.encode("utf-8")), 2000,
                         "the always-injected core grew past what was agreed")
 
     def test_the_worst_case_stays_bounded(self):
@@ -198,6 +224,9 @@ class TheInjectedBlockStaysCheap(unittest.TestCase):
 
             2400 bytes   core, one lane, and the orchestration line
             2600 bytes   2026-09-08: the standing goal block, about 544 bytes
+            3000 bytes   2026-09-09: REFACTOR in the core, about 300 bytes, and
+                         the two sentences in the goal block saying the goal was
+                         captured rather than commanded, about 120 bytes
 
         The goal block rides only while a goal is set, so an ordinary session
         pays nothing for it. It is counted in the worst case anyway, because a
@@ -208,7 +237,7 @@ class TheInjectedBlockStaysCheap(unittest.TestCase):
             "redo the css landing page design " + "x " * 400,
             "install an npm package and also scan it, plus update docs",
         ))
-        self.assertLess(worst, 2600, "the worst-case injection is too large per turn")
+        self.assertLess(worst, 3000, "the worst-case injection is too large per turn")
 
 
 class ItServesAntigravityToo(unittest.TestCase):
@@ -224,7 +253,7 @@ class ItServesAntigravityToo(unittest.TestCase):
 
     def ag(self, event: dict) -> dict:
         proc = subprocess.run([sys.executable, str(HOOK), "--antigravity"],
-                              input=json.dumps(event), capture_output=True, text=True)
+                              input=json.dumps(event), capture_output=True, text=True, env=hook_env())
         self.assertEqual(proc.returncode, 0)
         return json.loads(proc.stdout) if proc.stdout.strip() else {}
 
@@ -262,7 +291,7 @@ class ItServesAntigravityToo(unittest.TestCase):
 class ItServesCursorAndCopilotToo(unittest.TestCase):
     def mode(self, flag: str, event: dict) -> dict:
         proc = subprocess.run([sys.executable, str(HOOK), flag],
-                              input=json.dumps(event), capture_output=True, text=True)
+                              input=json.dumps(event), capture_output=True, text=True, env=hook_env())
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertTrue(proc.stdout.strip(), f"{flag} emitted no context")
         return json.loads(proc.stdout)

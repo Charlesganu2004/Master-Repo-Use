@@ -1059,22 +1059,30 @@ function renderHarness() {
     });
   });
 
-  /* Shown as a real transcript rather than described. The three spellings are
-     the part people get wrong, so they are on screen rather than in prose. */
+  renderPipeline();
+
+  /* Shown as a real transcript rather than described. The spellings are the part
+     people get wrong, so they are on screen rather than in prose. Nothing here
+     is required: the first line of the session already set the goal. */
   const example = [
-    '# set the goal once; it then rides every prompt',
-    'python scripts/harness_goal.py --set "finish the designs and verify each one"',
+    '# nothing typed. The first real request of a session becomes the goal.',
+    'finish the designs and verify each one',
     '',
-    '# the same thing, typed into any client that has the hook',
+    '# set one deliberately instead, in any client that has the hook',
     '/goal finish the designs and verify each one',
     '\\goal finish the designs and verify each one',
+    '/mastergoal finish the designs and verify each one',
     'goal: finish the designs and verify each one',
+    '',
+    '# or from the shell, which writes the same store',
+    'python scripts/harness_goal.py --set "finish the designs and verify each one"',
     '',
     '# see what is carried, and what a prompt would actually receive',
     'python scripts/harness_goal.py --show',
-    'python scripts/harness_goal.py --context "add a settings page"',
+    'python scripts/harness_goal.py --context "refactor the retry module"',
     '',
     '# end it. Only the person who set it does this.',
+    'goal clear',
     'python scripts/harness_goal.py --clear',
   ].join('\n');
 
@@ -1090,6 +1098,50 @@ function renderHarness() {
         function () { showToast('Select the block and copy it manually'); });
     });
   }
+}
+
+
+/* The standing pipeline, rendered from what the builder read out of
+   scripts/hooks/skill_pipeline.py. The page used to describe the layers in
+   prose, and the prose said ten rules on an afternoon when the hook injected
+   eleven. Reading beats restating. */
+function renderPipeline() {
+  const pipeline = catalog.data.pipeline;
+  if (!pipeline) return;
+
+  const summary = document.getElementById('pipelineSummary');
+  if (summary) {
+    summary.textContent = pipeline.ruleCount + ' rules in ' +
+      (pipeline.layers || []).length + ' layers, injected ahead of every prompt and ' +
+      'every command, with no slash and no exception. ' + pipeline.byteCount +
+      ' bytes a turn, read from ' + pipeline.source + '.';
+  }
+
+  const layers = document.getElementById('pipelineLayers');
+  if (layers) {
+    layers.innerHTML = (pipeline.layers || []).map(function (layer) {
+      return '<section class="pipeline-layer">' +
+        '<header><span class="pipeline-layer-num">Layer ' + layer.number + '</span>' +
+        '<b>' + escapeHtml(layer.when) + '</b></header>' +
+        (layer.simple ? '<p class="pipeline-plain">' + escapeHtml(layer.simple) + '</p>' : '') +
+        '<ol class="pipeline-rules">' + (layer.rules || []).map(function (rule) {
+          return '<li><span class="pipeline-rule-num">' + rule.number + '</span>' +
+            '<b>' + escapeHtml(rule.name) + '</b>' +
+            '<span class="pipeline-rule-body">' + escapeHtml(rule.body) + '</span></li>';
+        }).join('') + '</ol></section>';
+    }).join('');
+  }
+
+  const lanes = document.getElementById('pipelineLanes');
+  if (lanes) {
+    lanes.innerHTML = (pipeline.lanes || []).map(function (lane) {
+      return '<li><b>' + escapeHtml(lane.line) + '</b>' +
+        '<span>' + escapeHtml(lane.detail) + '</span></li>';
+    }).join('');
+  }
+
+  const capture = document.getElementById('goalCapture');
+  if (capture && pipeline.goal) capture.textContent = pipeline.goal.detail;
 }
 
 function renderStore() {
