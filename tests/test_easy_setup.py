@@ -71,7 +71,8 @@ class TheFourProfilesExist(unittest.TestCase):
 class TheClientPicker(unittest.TestCase):
     def test_it_offers_every_client_plus_all_at_once(self):
         self.assertEqual(set(CLIENTS),
-                         {"all", "claude", "codex", "gemini", "copilot", "antigravity"})
+                         {"all", "claude", "codex", "gemini", "copilot",
+                          "antigravity", "cursor"})
 
     def test_antigravity_and_gemini_are_separate_options_despite_one_rules_file(self):
         """They share ~/.gemini/GEMINI.md, so the temptation is to merge them.
@@ -118,7 +119,14 @@ class UnresolvableStepsFailVisibly(unittest.TestCase):
         self.assertIn("return;", window)
 
     def test_an_unknown_recipe_id_is_named_rather_than_skipped_silently(self):
-        window = CORE[CORE.index("function resolveProfile("):][:2600]
+        """Scoped to the function, not to its first 2600 characters.
+
+        resolveProfile grew to 2881 characters when the picker became
+        multi-select, and the note moved past the window. The behaviour was
+        never lost; the proxy for it was.
+        """
+        start = CORE.index("function resolveProfile(")
+        window = CORE[start:CORE.index("\n  }", start)]
         self.assertIn("names a recipe that is not in this data file", window)
 
     def test_a_recipe_with_no_command_for_this_platform_is_listed_as_blocked(self):
@@ -220,10 +228,18 @@ class TheInterfaceIsWired(unittest.TestCase):
         self.assertIn("data-copy-profile", PANES)
 
     def test_the_styles_beat_an_element_reset(self):
-        """:where() lost to the plain button{} several designs carry."""
-        window = PANES[PANES.index("const BASE_STYLE = `"):][:1800]
-        self.assertIn(".easyclients .chip{", window)
-        self.assertNotIn(":where(.easyclients)", window)
+        """:where() lost to the plain button{} several designs carry.
+
+        Scoped to the whole style block rather than its first 1800 characters.
+        The picker was rebuilt as a multi-select and its class names changed from
+        .easyclients to .surface-*, which a fixed-size window could not follow.
+        The invariant is unchanged: a plain class selector, never :where().
+        """
+        style = PANES[PANES.index("const BASE_STYLE = `"):]
+        style = style[:style.index("`", style.index("`") + 1)]
+        self.assertIn(".surface-choice{", style)
+        self.assertNotIn(":where(", style,
+                         ":where() is zero-specificity and loses to button{}")
 
     def test_the_injected_styles_go_in_before_a_design_stylesheet(self):
         self.assertIn("document.head.insertBefore(style, document.head.firstChild)", PANES)

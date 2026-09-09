@@ -106,6 +106,17 @@ class TheGuardBlocks(unittest.TestCase):
     def test_llmlingua_on_the_protected_file(self):
         self.assertEqual(run("llmlingua --input docs/auto-mode-block.txt"), 2)
 
+    def test_cursor_shell_tool_is_guarded(self):
+        self.assertEqual(
+            run("python compress.py docs/auto-mode-block.txt", tool="Shell"), 2
+        )
+
+    def test_gemini_shell_tool_is_guarded(self):
+        self.assertEqual(
+            run("python compress.py docs/auto-mode-block.txt",
+                tool="run_shell_command"), 2
+        )
+
 
 class TheGuardAllows(unittest.TestCase):
     def test_compressing_a_file_with_no_protected_block(self):
@@ -124,6 +135,12 @@ class TheGuardAllows(unittest.TestCase):
     def test_ordinary_commands(self):
         self.assertEqual(run("git status --short"), 0)
         self.assertEqual(run("rtk git status"), 0)
+
+    def test_cursor_shell_allows_an_ordinary_command(self):
+        self.assertEqual(run("git status --short", tool="Shell"), 0)
+
+    def test_gemini_shell_allows_an_ordinary_command(self):
+        self.assertEqual(run("git status --short", tool="run_shell_command"), 0)
 
     def test_non_bash_tools_are_ignored(self):
         self.assertEqual(run("truncate -s 0 docs/auto-mode-block.txt", tool="Read"), 0)
@@ -207,6 +224,9 @@ class ThePipelineCannotBeCompressedAway(unittest.TestCase):
 
     def test_the_pipeline_hook_cannot_be_compressed(self):
         self.assertEqual(run("python -m caveman scripts/hooks/skill_pipeline.py"), 2)
+
+    def test_the_local_model_harness_cannot_be_compressed(self):
+        self.assertEqual(run("python -m caveman scripts/auto_mode_harness.py"), 2)
 
     def test_the_pipeline_hook_cannot_be_truncated(self):
         self.assertEqual(run("truncate -s 0 scripts/hooks/skill_pipeline.py"), 2)

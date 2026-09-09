@@ -45,7 +45,11 @@ _LAUNCHER = (r"(?:sudo\s+|\w+=\S+\s+)*"
              # name still has to follow immediately for this to match.
              r"|(?:python3?|py)\s+"
              r"|npx\s+(?:-y\s+)?|uvx\s+|pipx\s+run\s+"
-             r"|node\s+|bash\s+-c\s+|sh\s+-c\s+)?")
+             r"|node\s+|bash\s+-c\s+|sh\s+-c\s+)?"
+             # `sh -c 'llmlingua ...'` puts a quote between the launcher and the
+             # tool. executable_part now keeps a `-c` body precisely so it can be
+             # scanned, and without this the quote it kept blocked the match.
+             r"['\"]?")
 _COMPRESSOR_NAMES = (r"caveman[\w-]*"
                      r"|token-compact|compress\.py"
                      r"|llmlingua|LLMLingua"
@@ -72,15 +76,16 @@ TRUNCATING = re.compile(
 # `python security_trail.py --scope "...SECURITY-TRAIL.md..." >/dev/null` was
 # refused: the redirect went to /dev/null and the filename was an argument.
 # Blocking a tool from writing its own audit row is the opposite of the point.
-REDIRECT_TARGET = re.compile(r">>?\s*([^\s|;&>]+)")
+REDIRECT_TARGET = re.compile(r">>?\s*(\"[^\"]*\"|'[^']*'|[^\s|;&>]+)")
 
 
 def redirect_targets(command: str) -> list[str]:
     """Only the paths a redirect actually writes to."""
-    return [m.group(1).replace("\\", "/") for m in REDIRECT_TARGET.finditer(command)]
+    return [m.group(1).strip("\"'").replace("\\", "/") for m in REDIRECT_TARGET.finditer(command)]
 
 HEREDOC_START = re.compile(r"<<-?\s*(?P<quote>['\"]?)(?P<tag>\w+)(?P=quote)")
-SINGLE_QUOTED = re.compile(r"'[^']*'")
+QUOTED = re.compile(r"'[^']*'|\"[^\"]*\"")
+DASH_C = re.compile(r"-c\s*$")
 
 
 # Capability definitions. A skill, MCP server, tool or agent that has been
@@ -93,18 +98,22 @@ CAPABILITY_PATTERNS = (
     ".mcp.json", "mcp.json", "mcp_servers.json",
     "settings.json", "settings.local.json",
     "AGENTS.md", "CLAUDE.md", "GEMINI.md",
-    "copilot-instructions.md",
+    "copilot-instructions.md", "master-repo-auto.mdc", "master-repo-auto.json",
     "installed_plugins.json", "known_marketplaces.json",
     # Antigravity registers the standing pipeline here, the way settings.json
     # does for Claude Code.
     "hooks.json",
+    # The source poller. Compressing it out is the same loss as deleting it:
+    # the monitoring stops and nothing says so.
+    "watch_sources.py", "watch-sources.yml", "auto_mode_harness.py",
 )
 # scripts/hooks/ holds the guards and the standing pipeline. Compressing the
 # pipeline is the one edit that would silently switch every rule off while
 # leaving a file that still looks present, so it is protected by the same
 # mechanism it enforces.
 CAPABILITY_DIRS = (".claude/skills", ".claude/agents", ".claude/commands",
-                   ".claude/plugins", "skills/", "agents/", "scripts/hooks/")
+                   ".claude/plugins", ".cursor/skills", ".copilot/skills",
+                   ".github/hooks/", "skills/", "agents/", "scripts/hooks/")
 
 
 def is_capability_path(text: str) -> list[str]:
@@ -149,7 +158,27 @@ def strip_heredocs(command: str) -> str:
 
 
 def executable_part(command: str) -> str:
-    return SINGLE_QUOTED.sub(" ", strip_heredocs(command))
+    """Drop quoted spans, which are arguments, and keep the one kind that is not.
+
+    `grep "llmlingua" file` searches for a word. `bash -c "llmlingua file"` runs
+    one. So a quoted span is dropped unless `-c` immediately precedes it, where
+    the quotes hold the command itself.
+
+    Two bugs fixed here at once, both found by the guard misfiring on this
+    session's own commands. Only single quotes were stripped, so a double-quoted
+    grep alternation containing "\\|llmlingua" read as a pipe into a compressor
+    and blocked a read. And single quotes were stripped unconditionally, so
+    `sh -c 'llmlingua ~/.claude/skills/x/SKILL.md'` walked straight past.
+    """
+    text = strip_heredocs(command)
+    out, last = [], 0
+    for match in QUOTED.finditer(text):
+        before = text[last:match.start()]
+        out.append(before)
+        out.append(match.group(0) if DASH_C.search(before) else " ")
+        last = match.end()
+    out.append(text[last:])
+    return "".join(out)
 
 
 def main() -> int:
@@ -158,7 +187,7 @@ def main() -> int:
     except (ValueError, OSError):
         return 0   # never break a session over a malformed event
 
-    if event.get("tool_name") != "Bash":
+    if event.get("tool_name") not in ("Bash", "Shell", "run_shell_command"):
         return 0
 
     command = str((event.get("tool_input") or {}).get("command") or "")
@@ -168,7 +197,17 @@ def main() -> int:
     scanned = executable_part(command)
     compressing = COMPRESSORS.search(scanned)
     truncating = TRUNCATING.search(scanned)
-    targets = redirect_targets(scanned)
+    # Detect the operator on executable text, but retain quoted destination paths.
+    targets = redirect_targets(strip_heredocs(command)) if ">" in scanned else []
+    # Obvious interpreter truncations need no subprocess named 'truncate'. This
+    # is intentionally not a general Python sandbox: alternate APIs still need
+    # the host's permissions and code-review boundary.
+    python_body = re.search(r"(?:^|[;&|])\s*(?:python3?|py)\s+-c\s", scanned)
+    if python_body:
+        targets += [m.group(2) for m in re.finditer(
+            r"\bopen\(\s*(['\"])(.*?)\1\s*,\s*(?:mode\s*=\s*)?['\"]w[bt+]*['\"]", scanned)]
+        targets += [m.group(2) for m in re.finditer(
+            r"\bPath\(\s*(['\"])(.*?)\1\s*\)\.(?:write_text|write_bytes)\(", scanned)]
 
     if not (compressing or truncating or targets):
         return 0
@@ -185,7 +224,7 @@ def main() -> int:
     # Without this split, `security_trail.py --scope "...SECURITY-TRAIL.md..."
     # >/dev/null` was refused, which blocked the audit tool from writing its own
     # row. A guard that stops the logging is worse than no guard.
-    suspect = scanned if (compressing or truncating) else " ".join(targets)
+    suspect = strip_heredocs(command) if (compressing or truncating) else " ".join(targets)
 
     # Capability definitions first: they are protected by path, so this catches
     # a SKILL.md or an MCP config even in a repository that has no marked block.

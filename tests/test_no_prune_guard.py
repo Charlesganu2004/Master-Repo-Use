@@ -58,6 +58,12 @@ class Blocks(unittest.TestCase):
         # Double quotes are kept, because real targets are written this way.
         self.assertEqual(run('rm -rf "$HOME/.claude/skills"'), 2)
 
+    def test_cursor_shell_tool_is_guarded(self):
+        self.assertEqual(run("rm -rf ~/.cursor/skills", tool="Shell"), 2)
+
+    def test_gemini_shell_tool_is_guarded(self):
+        self.assertEqual(run("rm -rf ~/.gemini/skills", tool="run_shell_command"), 2)
+
 
 class Allows(unittest.TestCase):
     def test_ordinary_build_cleanup(self):
@@ -92,6 +98,12 @@ class Allows(unittest.TestCase):
 
     def test_git_status_is_untouched(self):
         self.assertEqual(run("git status --short"), 0)
+
+    def test_cursor_shell_allows_an_ordinary_command(self):
+        self.assertEqual(run("git status --short", tool="Shell"), 0)
+
+    def test_gemini_shell_allows_an_ordinary_command(self):
+        self.assertEqual(run("git status --short", tool="run_shell_command"), 0)
 
 
 class DataIsNotAnInstruction(unittest.TestCase):
@@ -129,6 +141,9 @@ class ThePipelineCannotBeDeleted(unittest.TestCase):
     def test_the_pipeline_hook_cannot_be_removed(self):
         self.assertEqual(run("rm scripts/hooks/skill_pipeline.py"), 2)
 
+    def test_the_local_model_harness_cannot_be_removed(self):
+        self.assertEqual(run("rm scripts/auto_mode_harness.py"), 2)
+
     def test_the_whole_hooks_directory_cannot_be_removed(self):
         self.assertEqual(run("rm -rf scripts/hooks/"), 2)
 
@@ -149,3 +164,35 @@ class ThePipelineCannotBeDeleted(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TheDashCBypass(unittest.TestCase):
+    """Found 2026-09-08 while protecting the source poller.
+
+    executable_part dropped every single-quoted span as inert, which is true of
+    an ordinary argument and false of the body of `-c`, where the quotes hold a
+    command. So `sh -c 'rm -rf ~/.claude/skills'` reached the guard as a string
+    with nothing destructive left in it and passed. The double-quoted form
+    passed for a different reason: quotes were kept, but the verb then sat
+    directly behind a quote character, which is not one of the anchors.
+
+    The fix unwraps a kept `-c` body instead of widening the anchors. Adding the
+    quote to the anchors was tried first and blocked
+    `grep -n "rm skills/" notes.md`, because real deletion targets are commonly
+    written double-quoted and have to stay matchable.
+    """
+
+    def test_a_single_quoted_dash_c_body_is_still_a_command(self):
+        self.assertEqual(run("sh -c 'rm -rf ~/.claude/skills'"), 2)
+
+    def test_a_double_quoted_dash_c_body_is_still_a_command(self):
+        self.assertEqual(run('bash -c "rm -rf skills/"'), 2)
+
+    def test_a_double_quoted_path_is_still_a_target(self):
+        self.assertEqual(run('rm -rf "$HOME/.claude/skills"'), 2)
+
+    def test_a_quoted_search_pattern_is_still_not_a_command(self):
+        self.assertEqual(run('grep -n "rm skills/" notes.md'), 0)
+
+    def test_a_quoted_commit_message_is_still_not_a_command(self):
+        self.assertEqual(run("git commit -m 'rm skills/ from the docs'"), 0)

@@ -26,7 +26,7 @@ OVERRIDE = "# APPROVED PRUNE"
 PROTECTED = (
     ".claude/skills", ".claude/plugins", ".claude/settings.json",
     ".claude/agents", ".claude/commands", ".claude.json",
-    ".codex/", ".gemini/", ".copilot/",
+    ".codex/", ".gemini/", ".copilot/", ".cursor/", ".github/hooks/",
     ".mcp.json", "mcp.json",
     "repo-lists/", "docs/auto-mode-block.txt",
     "skills/", "AGENTS.md", "CLAUDE.md", "GEMINI.md",
@@ -34,7 +34,12 @@ PROTECTED = (
     # pipeline to be a rule that cannot be deleted, and a guard that protects
     # every capability except its own source is one `rm` from protecting
     # nothing. hooks.json is Antigravity's registration of the same pipeline.
-    "scripts/hooks/", "hooks.json",
+    "scripts/hooks/", "scripts/auto_mode_harness.py", "hooks.json",
+    # The source poller and the job that runs it. Charles asked for agentskill.sh
+    # to be monitored and scanned regularly; monitoring that can be deleted
+    # without a word is monitoring that quietly stops, and the failure mode is
+    # silence rather than an error.
+    "scripts/watch_sources.py", "watch-sources.yml",
 )
 
 # Destructive verbs, anchored so 'formatter' never matches 'rm'.
@@ -58,6 +63,8 @@ TRUNCATING = re.compile(r"(?:^|[|;&]|\s)(?:truncate\b|Clear-Content\b)", re.IGNO
 
 HEREDOC_START = re.compile(r"<<-?\s*(?P<quote>['\"]?)(?P<tag>\w+)(?P=quote)")
 SINGLE_QUOTED = re.compile(r"'[^']*'")
+QUOTED = re.compile(r"'[^']*'|\"[^\"]*\"")
+DASH_C = re.compile(r"-c\s*$")
 
 
 def strip_heredocs(command: str) -> str:
@@ -94,8 +101,31 @@ def executable_part(command: str) -> str:
     Heredoc bodies and single-quoted literals are inert in shell, so both go
     before matching. Double-quoted text stays, because real deletion targets are
     commonly written as "$HOME/.claude/skills".
+
+    One quoted span is not inert: the body of `-c`, which is a command. Dropping
+    it, which is what this did before, meant `sh -c 'rm -rf ~/.claude/skills'`
+    walked past the guard entirely, and `bash -c "rm -rf skills/"` did too.
+
+    A kept `-c` body is UNWRAPPED rather than left in its quotes. The verbs are
+    anchored on a chain character or whitespace, so a verb sitting directly
+    behind a quote would not match; adding the quote to those anchors instead
+    was tried and blocked `grep -n "rm skills/" notes.md`, since real deletion
+    targets are commonly written double-quoted and must stay matchable.
     """
-    return SINGLE_QUOTED.sub(" ", strip_heredocs(command))
+    text = strip_heredocs(command)
+    out, last = [], 0
+    for match in QUOTED.finditer(text):
+        before = text[last:match.start()]
+        out.append(before)
+        if DASH_C.search(before):
+            out.append(" " + match.group(0)[1:-1] + " ")
+        elif match.group(0).startswith('"'):
+            out.append(match.group(0))   # double-quoted paths are real targets
+        else:
+            out.append(" ")              # single-quoted literals are inert
+        last = match.end()
+    out.append(text[last:])
+    return "".join(out)
 
 
 def protected_hits(command: str) -> list[str]:
@@ -109,7 +139,7 @@ def main() -> int:
     except (ValueError, OSError):
         return 0  # never break a session over a malformed event
 
-    if event.get("tool_name") != "Bash":
+    if event.get("tool_name") not in ("Bash", "Shell", "run_shell_command"):
         return 0
 
     command = str((event.get("tool_input") or {}).get("command") or "")
@@ -120,7 +150,8 @@ def main() -> int:
     if not (DESTRUCTIVE.search(scanned) or TRUNCATING.search(scanned)):
         return 0
 
-    hits = protected_hits(scanned)
+    # The verb is checked on executable text, but quoted paths are real targets.
+    hits = protected_hits(strip_heredocs(command))
     if not hits:
         return 0
 

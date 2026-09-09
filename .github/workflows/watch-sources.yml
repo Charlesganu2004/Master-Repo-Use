@@ -1,0 +1,160 @@
+name: Watch Sources
+
+# Charles asked for agentskill.sh to be monitored and new skills pulled in
+# regularly after a security check. This is the "regularly" half; the refusals
+# live in scripts/watch_sources.py and are the point of the design.
+#
+# Deliberately separate from catalog-guardian.yml. Guardian watches repositories
+# that are already in the catalog and is trusted to propose removals under owner
+# approval. This job watches an aggregator of user-submitted skills, which is a
+# supply-chain vector by construction, and is trusted with nothing: it can write
+# a queue file and open an issue, and that is all. It cannot touch repo-lists/,
+# so nothing it finds can become installable without Charles moving it there by
+# hand.
+
+on:
+  schedule:
+    # Thursday, three days off Guardian's Monday, so a busy week does not land
+    # two catalog issues on the same morning.
+    - cron: '41 6 * * 4'
+  push:
+    branches: [main]
+    paths:
+      - 'repo-lists/watch-sources.txt'
+      - 'scripts/watch_sources.py'
+      - '.github/workflows/watch-sources.yml'
+  workflow_dispatch:
+    inputs:
+      max_pages:
+        description: 'Author pages to fetch this run'
+        required: false
+        default: '25'
+      scan_limit:
+        description: 'Candidates to security scan this run'
+        required: false
+        default: '10'
+      max_shards:
+        description: 'Sitemap shards to read (0 reads every shard)'
+        required: false
+        default: '0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: watch-sources
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Set up Go for the scanners that need it
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
+      - name: Install scanners
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Every scanner scan_tree_honestly calls has to be installed here, or
+          # CLEAN is unreachable and every candidate sits at INCONCLUSIVE forever.
+          # Each install is non-fatal the way Guardian does it: a scanner that
+          # fails to install makes a candidate INCONCLUSIVE, which means rescan.
+          # It must never quietly become CLEAN, and since 2026-09-08 it cannot:
+          # the missing scanner emits SCANNER-ERROR and that outranks a clean pass.
+          python -m pip install --disable-pip-version-check semgrep \
+            || echo '::warning::semgrep install failed; it will report as SCANNER-ERROR.'
+
+          # gitleaks moved to the gitleaks org but its go.mod still declares the
+          # module path as github.com/zricethezav/gitleaks/v8, so the old path is
+          # the one that installs.
+          go install github.com/zricethezav/gitleaks/v8@latest \
+            || echo '::warning::gitleaks install failed; secret scanning reports as SCANNER-ERROR.'
+          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest \
+            || echo '::warning::osv-scanner install failed; it will report as SCANNER-ERROR.'
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+          sudo apt-get update -qq || true
+          sudo apt-get install -y -qq clamav \
+            || echo '::warning::clamav install failed; malware scanning reports as SCANNER-ERROR.'
+          sudo systemctl stop clamav-freshclam 2>/dev/null || true
+          sudo freshclam --quiet \
+            || echo '::warning::freshclam could not update signatures; malware scanning reports as a scanner error, not as a clean result.'
+
+      - name: Poll the watched sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          # 0 means every shard. Measured at 410 seconds and 60 MB on 2026-09-07,
+          # which is fine inside a 25 minute weekly job on GitHub's bandwidth and
+          # is not fine as a laptop default, so the script bounds the sweep and
+          # this job is the one place that opts out of the bound.
+          python scripts/watch_sources.py --poll \
+            --max-shards "${{ github.event.inputs.max_shards || '0' }}" \
+            --max-pages "${{ github.event.inputs.max_pages || '25' }}"
+
+      - name: Security scan the new candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/watch_sources.py --scan \
+            --scan-limit "${{ github.event.inputs.scan_limit || '10' }}"
+
+      - name: Build the report
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/watch_sources.py --report > /tmp/watch-sources.md
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, pathlib
+          queue = json.loads(pathlib.Path('docs/watch-candidates.json').read_text(encoding='utf-8'))
+          rows = queue.get('candidates', {})
+          interesting = sum(1 for r in rows.values() if r['security'] in ('clean', 'blocked'))
+          print(f"interesting={interesting}")
+          PY
+        id: report
+
+      - name: Commit the queue
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Only the two generated files. A workflow that can commit anything else
+          # is a workflow that can be made to commit anything else.
+          git config user.name 'Charles Ganu'
+          git config user.email 'charlesganu2004@gmail.com'
+          git add docs/watch-sources-seen.txt docs/watch-candidates.json
+          if git diff --cached --quiet; then
+            echo 'Nothing changed this run.'
+            exit 0
+          fi
+          git commit -m 'Watched sources: refresh the candidate queue'
+          git push
+
+      - name: Create or refresh the sources issue
+        if: steps.report.outputs.interesting != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search 'in:title [Skill Sources]' --json number,title --jq '[.[] | select(.title | startswith("[Skill Sources]"))][0].number // empty')"
+          title='[Skill Sources] New candidates from the watched sources'
+          if [[ -n "$existing" ]]; then
+            gh issue edit "$existing" --repo "$GITHUB_REPOSITORY" --title "$title" --body-file /tmp/watch-sources.md
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file /tmp/watch-sources.md --assignee Charlesganu2004
+          fi
