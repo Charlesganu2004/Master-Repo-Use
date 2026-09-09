@@ -379,3 +379,129 @@ class TheHarnessOnTheMainPage(unittest.TestCase):
         rule = re.search(r"\.harness-check code\s*\{[^}]*\}", self.styles)
         self.assertIsNotNone(rule)
         self.assertIn("font-variant-ligatures: none", rule.group(0))
+
+
+class TheCatalogInMongo(unittest.TestCase):
+    """Charles liked the card-wall index and asked to see the same catalog backed
+    by MongoDB. An index is a claim about the documents and about the queries, and
+    both rot silently: a field renamed in the generator leaves an index still
+    created, still listed, and never used again. These hold both claims."""
+
+    def setUp(self):
+        self.store = DATA.get("catalogStore", {})
+        self.index_file = ROOT / "scripts" / "catalog-indexes.js"
+
+    def test_the_definitions_file_exists_and_is_parsed_not_restated(self):
+        self.assertTrue(self.index_file.is_file())
+        builder = (ROOT / "scripts" / "build_atlas_data.py").read_text(encoding="utf-8")
+        self.assertIn("CATALOG_INDEX_FILE.read_text", builder)
+
+    def test_every_created_index_reaches_the_page(self):
+        """Matched inside the options object only.
+
+        A bare name: "..." search also picks up the text index's own key spec,
+        { name: "text", detail: "text" }, and reports "text" as a missing index.
+        The options object is where an index name actually lives.
+        """
+        text = self.index_file.read_text(encoding="utf-8")
+        created = set()
+        for options in re.findall(r"createIndex\(.*?,\s*(\{.*?\})\s*\)", text, re.DOTALL):
+            found = re.search(r'name:\s*"([^"]+)"', options)
+            if found:
+                created.add(found.group(1))
+        shown = {i["name"] for i in self.store["indexes"]}
+        self.assertEqual(created, shown)
+
+    def test_every_index_explains_the_question_it_answers(self):
+        for index in self.store["indexes"]:
+            self.assertTrue(index["question"].strip(), index["name"])
+            self.assertTrue(index["question"].rstrip().endswith("?"), index["name"])
+            self.assertGreater(len(index["why"]), 40, index["name"])
+
+    def test_the_checker_passes_against_the_real_catalog(self):
+        """Run, not asserted. This is the check that caught two real mistakes."""
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / "load_catalog_mongo.py"), "--check"],
+            cwd=ROOT, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("every indexed field exists", result.stdout)
+
+    def test_the_unique_index_is_partial_because_of_the_runtime_sentinel(self):
+        """A plain unique index on lanes.source fails on load: the runtime stage
+        lanes all carry the sentinel "runtime" rather than a path."""
+        lane_source = [i for i in self.store["indexes"] if i["name"] == "lane_source"][0]
+        self.assertTrue(lane_source["unique"])
+        self.assertTrue(lane_source["partial"])
+
+    def test_no_index_claims_sparse_over_a_field_every_document_carries(self):
+        payload = DATA
+        key_for = {"components": "components", "lanes": "lanes", "routes": "routes",
+                   "surfaces": "surfaces", "setupRecipes": "setupRecipes"}
+        for index in self.store["indexes"]:
+            if not index["sparse"]:
+                continue
+            docs = payload[key_for[index["collection"]]]
+            first = index["fields"][0]
+            carried = sum(1 for d in docs if d.get(first) not in (None, "", [], {}))
+            self.assertLess(carried / len(docs), 0.95,
+                            f"{index['name']} is sparse over a field on most documents")
+
+    def test_the_numbers_in_the_prose_are_computed_not_written(self):
+        """The first draft said "593 of 1120" against a catalog of 1126."""
+        components = len(DATA["components"])
+        with_recipe = sum(1 for c in DATA["components"] if c.get("setupRecipe"))
+        by_recipe = [i for i in self.store["indexes"] if i["name"] == "by_recipe"][0]
+        self.assertIn(f"{with_recipe} of {components}", by_recipe["why"])
+
+    def test_every_query_names_an_index_that_exists(self):
+        names = {i["name"] for i in self.store["indexes"]}
+        for query in self.store["queries"]:
+            self.assertIn(query["index"], names, query["filter"])
+
+    def test_the_collection_counts_match_the_payload(self):
+        key_for = {"components": "components", "lanes": "lanes", "routes": "routes",
+                   "surfaces": "surfaces", "setupRecipes": "setupRecipes"}
+        for collection in self.store["collections"]:
+            self.assertEqual(collection["count"], len(DATA[key_for[collection["name"]]]),
+                             collection["name"])
+
+    def test_the_design_renders_from_the_payload(self):
+        page = (ROOT / "designs" / "d36-mongo.html").read_text(encoding="utf-8")
+        self.assertIn("A.state.data.catalogStore", page)
+        self.assertIn("store.indexes", page)
+        self.assertIn("store.queries", page)
+
+    def test_it_is_a_sibling_of_the_monitor_store_not_a_copy(self):
+        text = self.index_file.read_text(encoding="utf-8")
+        self.assertIn("monitor-indexes.js", text)
+        self.assertNotIn("expireAfterSeconds", text,
+                         "the catalog is rewritten wholesale; nothing expires")
+
+    def test_no_em_or_en_dashes(self):
+        for path in ("scripts/catalog-indexes.js", "scripts/load_catalog_mongo.py",
+                     "designs/d36-mongo.html"):
+            body = (ROOT / path).read_text(encoding="utf-8")
+            self.assertNotIn("—", body, path)
+            self.assertNotIn("–", body, path)
+
+
+class TheGalleryHasNoDeadLinks(unittest.TestCase):
+    """Four designs were listed with no file behind them, so clicking any of the
+    four was a 404. That is what "the new design buttons do nothing" was."""
+
+    def test_every_listed_design_exists(self):
+        gallery = (ROOT / "designs" / "index.html").read_text(encoding="utf-8")
+        listed = re.findall(r"file: '([^']+)'", gallery)
+        self.assertGreater(len(listed), 30)
+        missing = [f for f in listed if not (ROOT / "designs" / f).is_file()]
+        self.assertFalse(missing, f"listed in the gallery with no file: {missing}")
+
+    def test_every_exhibition_scene_has_a_page(self):
+        """The shell carried scenes for broadsheet, switchboard, bathysphere and
+        prism long before any page mounted them."""
+        shell = (ROOT / "designs" / "atlas-exhibition.js").read_text(encoding="utf-8")
+        block = shell[shell.index("const SCENES"):shell.index("function esc(")]
+        scenes = set(re.findall(r"^\s{4}(\w+):\s*\{", block, re.M))
+        pages = " ".join(p.name for p in (ROOT / "designs").glob("d*.html"))
+        unmounted = sorted(s for s in scenes if s not in pages)
+        self.assertFalse(unmounted, f"scenes with no page: {unmounted}")

@@ -1644,6 +1644,11 @@ def build() -> dict:
     for route in routes:
         route["lanes"] = sorted({lane_of[m] for m in route["members"] if m in lane_of})
 
+    # Bound once so the catalog store counts the list the payload actually ships
+    # rather than recomputing it from the producers and landing one short.
+    recipes = ([MASTER_SETUP_RECIPE] + model_setup_recipes() + [LOCAL_HARNESS_RECIPE]
+               + global_rules_recipes() + antigravity_recipes())
+
     return {
         "meta": {"lanes": len(lanes), "components": len(comps), "routes": len(routes),
                  "families": len(FAMILIES),
@@ -1651,16 +1656,14 @@ def build() -> dict:
         "families": [{"id": f, "name": n, "kind": k} for f, n, k in FAMILIES],
         "lanes": lanes,
         "components": comps,
-        "setupRecipes": ([MASTER_SETUP_RECIPE] + model_setup_recipes() + [LOCAL_HARNESS_RECIPE]
-                     + global_rules_recipes() + antigravity_recipes()),
+        "setupRecipes": recipes,
         "designs": design_pages(),
         "store": store_payload(),
         "harnesses": harness_entries(),
         "catalogStore": catalog_store_payload({
             "components": len(comps), "lanes": len(lanes), "routes": len(routes),
             "surfaces": len(surface_entries()) + len(local_model_surfaces()),
-            "setupRecipes": len([MASTER_SETUP_RECIPE] + model_setup_recipes()
-                                + global_rules_recipes() + antigravity_recipes()),
+            "setupRecipes": len(recipes),
         }, {
             "recipeCoverage": (f"{sum(1 for c in comps if c.get('setupRecipe'))} "
                                f"of {len(comps)}"),
