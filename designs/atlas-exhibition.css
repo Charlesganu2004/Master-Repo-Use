@@ -402,3 +402,23 @@ body[data-atlas-shell] :focus-visible { outline: 3px solid var(--ws-accent); out
   .ex-spectrum { left: 4vw; right: 4vw; top: 29vh; bottom: 29vh; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(44px, 1fr)); gap: 5px; transform: none; }.ex-prism-band { min-width: 0; min-height: 44px; transform: none; padding: 9px 7px; writing-mode: horizontal-tb; clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%); }.ex-prism-band strong { writing-mode: horizontal-tb; transform: none; font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.ex-prism-band i { margin-top: auto; }
   .ex-prism > aside { left: 5vw; bottom: 3vh; width: 90vw; }.ex-prism > aside .ex-readout span, .ex-prism > aside .ex-readout p { display: none; }.ex-prism > aside .ex-readout strong { font-size: 1.25rem; }.ex-prism-rule { display: none; }
 }
+
+/* ------------------------------------------- the collapsed root must not paint
+
+   .exhibition-root.ex-collapsed sets background: transparent at (0,2,0), and
+   every per-scene skin sets .exhibition-root[data-scene="name"] at the same
+   (0,2,0) but LATER in this file, so the scene won every time. The collapsed
+   root stayed opaque, and since it is position: fixed, inset: 0, z-index: 9998,
+   it painted over the whole atlas.
+
+   The symptom was that Open full Atlas and Command center appeared to do
+   nothing: the workspace un-hid and rendered correctly underneath, with all its
+   content, behind an opaque sheet. pointer-events: none meant clicks still went
+   through, so the page was live and invisible at the same time.
+
+   This sits at the end of the file on purpose. It is the same specificity as a
+   scene rule and wins on order, which is the same mechanism that broke it. */
+.exhibition-root.ex-collapsed[data-scene] {
+  background: transparent;
+  backdrop-filter: none;
+}
