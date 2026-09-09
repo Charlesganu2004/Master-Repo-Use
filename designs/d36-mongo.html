@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The Master Repo catalog as a MongoDB index: collections, documents, index definitions and the plan each query uses.">
+<title>Store | Master Repo Atlas</title>
+<link rel="stylesheet" href="themes.css">
+<link rel="stylesheet" href="atlas-next.css">
+<style>
+/* A query workbench, not a card wall.
+   d12 is the card version of this catalog and Charles liked it, so this is
+   deliberately its opposite number: the same 1126 components seen the way a
+   database sees them. Three columns, monospace throughout, and every number on
+   screen read from the payload rather than written here.
+   Density is the point. A console that breathes is a console lying about how
+   much data it holds. */
+:root{
+  --mg-gap:10px; --mg-radius:10px; --mg-radius-sm:6px;
+  --mg-mono:"Cascadia Code",ui-monospace,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100dvh; background:var(--bg); color:var(--ink);
+  font:13px/1.5 var(--mg-mono); font-variant-ligatures:none;
+}
+a{color:var(--accent)}
+
+.mg-top{
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  padding:11px 16px; border-bottom:1px solid var(--line);
+  background:var(--panel); position:sticky; top:0; z-index:20;
+}
+.mg-top a.back{color:var(--dim); text-decoration:none; font-size:11px}
+.mg-top a.back:hover{color:var(--accent)}
+.mg-prompt{color:var(--accent); font-weight:700}
+.mg-top h1{margin:0; font-size:13px; font-weight:700; letter-spacing:.02em}
+.mg-top .spacer{flex:1}
+.mg-stat{color:var(--dim); font-size:11px; white-space:nowrap}
+.mg-stat b{color:var(--ink)}
+
+.mg-shell{
+  display:grid; gap:var(--mg-gap); padding:var(--mg-gap);
+  grid-template-columns:minmax(190px,15vw) minmax(0,1fr) minmax(260px,25vw);
+  align-items:start;
+}
+.mg-panel{
+  border:1px solid var(--line); border-radius:var(--mg-radius);
+  background:var(--panel); min-width:0;
+}
+.mg-panel > h2{
+  margin:0; padding:9px 12px; border-bottom:1px solid var(--line);
+  font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--dim);
+}
+.mg-body{padding:10px 12px}
+
+/* collections */
+.mg-coll{
+  display:block; width:100%; text-align:left; padding:8px 10px; margin-bottom:5px;
+  border:1px solid transparent; border-radius:var(--mg-radius-sm);
+  background:transparent; color:inherit; font:inherit; cursor:pointer;
+}
+.mg-coll:hover{border-color:var(--line)}
+.mg-coll.on{border-color:var(--accent); background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.mg-coll b{display:block; font-size:12.5px}
+.mg-coll span{color:var(--dim); font-size:10.5px}
+.mg-coll.on b{color:var(--accent)}
+
+/* a document */
+.mg-doc{
+  margin:0; padding:11px 12px; border:1px solid var(--line);
+  border-radius:var(--mg-radius-sm); background:var(--bg);
+  font:11.5px/1.65 var(--mg-mono); font-variant-ligatures:none;
+  white-space:pre-wrap; overflow-wrap:anywhere; max-height:260px; overflow:auto;
+}
+.mg-k{color:var(--accent)}
+.mg-s{color:var(--ink)}
+.mg-n{color:var(--dim)}
+.mg-note{margin:9px 0 0; color:var(--dim); font-size:11px; line-height:1.55}
+
+/* indexes */
+.mg-index{padding:11px 0; border-top:1px solid var(--line)}
+.mg-index:first-child{border-top:0; padding-top:0}
+.mg-q{margin:0 0 5px; font-size:12.5px; font-weight:700; color:var(--ink); line-height:1.4}
+.mg-keys{
+  display:inline-block; padding:3px 7px; border-radius:var(--mg-radius-sm);
+  background:var(--bg); color:var(--accent); font-size:11px;
+}
+.mg-name{color:var(--dim); font-size:10.5px; margin-left:7px}
+.mg-flags{display:inline-flex; gap:4px; margin-left:7px; vertical-align:middle}
+.mg-flag{
+  padding:2px 5px; border-radius:3px; font-size:9px; font-weight:700;
+  letter-spacing:.05em; text-transform:uppercase;
+  background:color-mix(in srgb,var(--accent) 20%,transparent); color:var(--accent);
+}
+.mg-why{margin:6px 0 0; color:var(--dim); font-size:11.5px; line-height:1.55; max-width:78ch}
+
+/* the plan */
+.mg-query{
+  display:block; width:100%; text-align:left; padding:8px 9px; margin-bottom:5px;
+  border:1px solid var(--line); border-radius:var(--mg-radius-sm);
+  background:transparent; color:inherit; font:inherit; font-size:11px; cursor:pointer;
+  overflow-wrap:anywhere;
+}
+.mg-query:hover{border-color:var(--accent)}
+.mg-query.on{border-color:var(--accent); background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.mg-plan{
+  margin:0; padding:11px 12px; border:1px solid var(--line);
+  border-radius:var(--mg-radius-sm); background:var(--bg);
+  font:11px/1.7 var(--mg-mono); font-variant-ligatures:none; white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.mg-win{color:var(--accent); font-weight:700}
+.mg-lose{color:var(--dim); text-decoration:line-through}
+
+.mg-run{margin-top:var(--mg-gap)}
+.mg-cmd{
+  display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;
+}
+.mg-cmd code{
+  flex:1; min-width:0; padding:7px 9px; border-radius:var(--mg-radius-sm);
+  background:var(--bg); color:var(--accent); font-size:11px; overflow-wrap:anywhere;
+}
+.mg-cmd button{
+  min-height:32px; padding:0 10px; border:1px solid var(--line);
+  border-radius:var(--mg-radius-sm); background:transparent; color:inherit;
+  font:inherit; font-size:10.5px; cursor:pointer;
+}
+.mg-cmd button:hover{border-color:var(--accent)}
+
+@media(max-width:1100px){
+  .mg-shell{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+<header class="mg-top">
+  <a class="back" href="index.html">&larr; Design collection</a>
+  <span class="mg-prompt">atlas&gt;</span>
+  <h1>The catalog as a MongoDB index</h1>
+  <span class="spacer"></span>
+  <span class="mg-stat"><b id="mgDocs">0</b> documents</span>
+  <span class="mg-stat"><b id="mgColls">0</b> collections</span>
+  <span class="mg-stat"><b id="mgIdx">0</b> indexes</span>
+  <div id="themehost"></div>
+</header>
+
+<main class="mg-shell">
+  <section class="mg-panel">
+    <h2>Collections</h2>
+    <div class="mg-body" id="mgCollections"></div>
+  </section>
+
+  <section class="mg-panel">
+    <h2>One document, and the indexes over it</h2>
+    <div class="mg-body">
+      <pre class="mg-doc" id="mgDocument"></pre>
+      <p class="mg-note" id="mgDocNote"></p>
+      <div id="mgIndexes" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <section class="mg-panel">
+    <h2>Which index answers which query</h2>
+    <div class="mg-body">
+      <div id="mgQueries"></div>
+      <pre class="mg-plan" id="mgPlan"></pre>
+      <div class="mg-run">
+        <div class="mg-cmd"><code id="mgCheck"></code><button type="button" data-copy="check">Copy</button></div>
+        <div class="mg-cmd"><code id="mgLoad"></code><button type="button" data-copy="load">Copy</button></div>
+        <div class="mg-cmd"><code id="mgCreate"></code><button type="button" data-copy="create">Copy</button></div>
+        <p class="mg-note">The check runs with no server and no pymongo: it reads the index
+          definitions and the real catalog and verifies every claim. It found two mistakes in
+          the first draft of these indexes.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script>
+'use strict';
+const A = AtlasCore, T = AtlasTheme;
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
+  m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+
+let store = null, collection = 'components', queryIndex = 0;
+
+/* Syntax highlighting written out rather than pulled in. A design that has to
+   load a library to colour twelve lines of JSON is a design with a dependency
+   it does not need, and this file has to work from file:// where a CDN cannot
+   be reached at all. */
+function renderJson(value, indent) {
+  const pad = '  '.repeat(indent);
+  if (value === null) return '<span class="mg-n">null</span>';
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return '<span class="mg-n">' + esc(String(value)) + '</span>';
+  }
+  if (typeof value === 'string') return '<span class="mg-s">"' + esc(value) + '"</span>';
+  if (Array.isArray(value)) {
+    if (!value.length) return '[]';
+    return '[\n' + value.map(v => pad + '  ' + renderJson(v, indent + 1)).join(',\n') +
+      '\n' + pad + ']';
+  }
+  const keys = Object.keys(value);
+  if (!keys.length) return '{}';
+  return '{\n' + keys.map(k =>
+    pad + '  <span class="mg-k">"' + esc(k) + '"</span>: ' + renderJson(value[k], indent + 1)
+  ).join(',\n') + '\n' + pad + '}';
+}
+
+/* The document shown is a real one out of the payload, picked as the first that
+   carries every field the indexes name. A document missing an indexed field
+   would illustrate the index badly. */
+function sampleFor(name) {
+  const key = name === 'setupRecipes' ? 'setupRecipes' : name;
+  const docs = A.state.data[key] || [];
+  const fields = store.indexes.filter(i => i.collection === name)
+    .reduce((all, i) => all.concat(i.fields), []);
+  const complete = docs.find(d => fields.every(f => d[f] !== undefined));
+  const doc = complete || docs[0];
+  if (!doc) return null;
+  // _id is shown because the loader sets it from the natural id, and that is the
+  // one field on screen that does not exist in atlas-data.json.
+  const shown = { _id: doc.id };
+  Object.keys(doc).forEach(k => {
+    if (k === 'action' || k === 'cmd') return;   // presentation, not indexed
+    shown[k] = doc[k];
+  });
+  return { doc: shown, complete: !!complete, total: docs.length };
+}
+
+function drawCollections() {
+  document.getElementById('mgCollections').innerHTML = store.collections.map(c =>
+    `<button type="button" class="mg-coll${c.name === collection ? ' on' : ''}"
+      data-coll="${esc(c.name)}">
+      <b>${esc(c.name)}</b>
+      <span>${c.count} docs &middot; ${c.indexes.length} index${c.indexes.length === 1 ? '' : 'es'}</span>
+    </button>`).join('');
+  document.querySelectorAll('[data-coll]').forEach(b => {
+    b.onclick = () => { collection = b.dataset.coll; draw(); };
+  });
+}
+
+function drawDocument() {
+  const sample = sampleFor(collection);
+  const host = document.getElementById('mgDocument');
+  const note = document.getElementById('mgDocNote');
+  if (!sample) {
+    host.textContent = '// no documents in this collection';
+    note.textContent = '';
+    return;
+  }
+  host.innerHTML = renderJson(sample.doc, 0);
+  const detail = (store.collections.find(c => c.name === collection) || {}).detail || '';
+  note.textContent = `One of ${sample.total}. ${detail}`;
+}
+
+function drawIndexes() {
+  const items = store.indexes.filter(i => i.collection === collection);
+  document.getElementById('mgIndexes').innerHTML = items.map(i => {
+    const flags = ['unique', 'sparse', 'partial', 'text', 'multikey']
+      .filter(f => i[f]).map(f => `<span class="mg-flag">${f}</span>`).join('');
+    return `<div class="mg-index">
+      <p class="mg-q">${esc(i.question)}</p>
+      <div><span class="mg-keys">${esc(i.keys)}</span><span class="mg-name">${esc(i.name)}</span>
+        <span class="mg-flags">${flags}</span></div>
+      <p class="mg-why">${esc(i.why)}</p>
+    </div>`;
+  }).join('') || '<p class="mg-note">No indexes on this collection beyond _id.</p>';
+}
+
+function drawQueries() {
+  document.getElementById('mgQueries').innerHTML = store.queries.map((q, n) =>
+    `<button type="button" class="mg-query${n === queryIndex ? ' on' : ''}" data-q="${n}">
+      db.${esc(q.collection)}.find(${esc(q.filter)})
+    </button>`).join('');
+  document.querySelectorAll('[data-q]').forEach(b => {
+    b.onclick = () => { queryIndex = Number(b.dataset.q); drawPlan(); drawQueries(); };
+  });
+}
+
+function drawPlan() {
+  const q = store.queries[queryIndex];
+  if (!q) return;
+  document.getElementById('mgPlan').innerHTML =
+    `db.${esc(q.collection)}.find(${esc(q.filter)}).explain()\n\n` +
+    `winningPlan\n  stage      <span class="mg-win">${esc(q.stage)}</span>\n` +
+    `  indexName  <span class="mg-win">${esc(q.index)}</span>\n` +
+    `  keyPattern ${esc(q.keys)}\n\n` +
+    `without that index\n  stage      <span class="mg-lose">COLLSCAN</span>\n` +
+    `  examined   ${q.scanned} documents`;
+}
+
+function draw() {
+  drawCollections();
+  drawDocument();
+  drawIndexes();
+  drawQueries();
+  drawPlan();
+}
+
+(async function () {
+  await A.init('atlas-data.json');
+  store = A.state.data.catalogStore;
+  if (T) T.mount(document.getElementById('themehost'), 'viper');
+  if (!store) {
+    document.getElementById('mgDocument').textContent =
+      '// catalogStore missing. Run: python scripts/build_atlas_data.py';
+    return;
+  }
+  document.getElementById('mgDocs').textContent = store.totalDocuments;
+  document.getElementById('mgColls').textContent = store.collections.length;
+  document.getElementById('mgIdx').textContent = store.indexes.length;
+  document.getElementById('mgCheck').textContent = store.checkCommand;
+  document.getElementById('mgLoad').textContent = store.loadCommand;
+  document.getElementById('mgCreate').textContent = store.createCommand;
+  document.querySelectorAll('[data-copy]').forEach(b => {
+    b.onclick = async () => {
+      const map = { check: store.checkCommand, load: store.loadCommand, create: store.createCommand };
+      b.textContent = (await A.copy(map[b.dataset.copy])) ? 'copied' : 'select it';
+      setTimeout(() => { b.textContent = 'Copy'; }, 1400);
+    };
+  });
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Read the live catalog as a front page with no dashboard chrome. The full Master Repo Atlas sits behind the chrome.">
+<title>Broadsheet | Master Repo</title>
+<link rel="stylesheet" href="themes.css">
+<link rel="stylesheet" href="atlas-exhibition.css">
+</head>
+<body>
+<noscript>This interactive Atlas requires JavaScript. All data remains local to this page.</noscript>
+<script src="atlas-theme.js"></script>
+<script src="atlas-data.js"></script>
+<script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script src="atlas-exhibition.js"></script>
+<script>
+/* The scene, its styling and its renderer all live in atlas-exhibition.
+   This file existed in the gallery list for a while with no page behind it, so
+   clicking Broadsheet was a 404. The shell already had the scene; only the page was
+   missing. */
+AtlasExhibition.workspace({
+  skin:'broadsheet',
+  title:'Broadsheet Atlas',
+  eyebrow:'Front page workspace',
+  note:'Every lane, component, skill and route set as a daily edition rather than a dashboard.',
+  theme:'sand'
+});
+AtlasExhibition.mount('broadsheet');
+</script>
+</body>
+</html>

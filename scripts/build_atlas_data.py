@@ -1384,6 +1384,166 @@ def store_payload() -> dict:
     }
 
 
+# ------------------------------------------------------- the catalog in MongoDB
+#
+# Charles asked to see the atlas index backed by MongoDB. The index definitions
+# live in scripts/catalog-indexes.js and are parsed here rather than restated, on
+# the same principle as the monitor store: a page that describes a store drifts
+# from it the moment anyone edits the definitions, and nothing notices.
+#
+# scripts/load_catalog_mongo.py --check verifies every claim below against the
+# real documents. It caught two mistakes in the first draft of that file: a unique
+# index that would have failed on load because fifteen runtime lanes share one
+# sentinel source, and a sparse flag on a field every document carries.
+
+CATALOG_INDEX_FILE = ROOT / "scripts" / "catalog-indexes.js"
+
+_CATALOG_CREATE = re.compile(
+    r"db\.(?P<coll>\w+)\.createIndex\(\s*(?P<keys>\{.*?\})\s*,\s*(?P<opts>\{.*?\})\s*\)",
+    re.DOTALL)
+
+# The collections the catalog loads into, and why each one is a collection rather
+# than a field on another. Counts come from the payload itself at build time.
+CATALOG_COLLECTIONS = {
+    "components": ("Every capability, one document each. The largest collection "
+                   "and the one every filter runs against."),
+    "lanes": ("The groups components sit in. A lane is backed by a file, except "
+              "the runtime stages, which carry the sentinel source \"runtime\"."),
+    "routes": ("Hybrid routes. members and lanes are arrays, so the indexes over "
+               "them are multikey."),
+    "surfaces": ("Clients, chat surfaces and local model tags, which is what the "
+                 "setup picker reads."),
+    "setupRecipes": ("The reviewed commands. Fetched by id constantly, so _id "
+                     "already carries most of the load."),
+}
+
+# What each index is FOR, in the question it answers. Keyed by index name so a
+# rename surfaces as a missing explanation rather than the wrong one attached to
+# new keys, the same way the monitor store does it.
+CATALOG_QUESTIONS = {
+    "family_kind": (
+        "Which components are in this family, and of this kind?",
+        "The two rows of filter chips on every design. One index serves both, "
+        "because a compound index answers its own leading prefix: no separate "
+        "family-only index is needed and adding one would only cost writes."),
+    "lane_order": (
+        "What is inside this lane, in the author's order?",
+        "Clicking a lane. order is the second key so the sort comes off the "
+        "index; without it MongoDB would fetch then sort in memory."),
+    "component_search": (
+        "Which components mention this word?",
+        "The search box. A text index rather than a regex, because a regex "
+        "without a left anchor cannot use a btree at all. Weighted 10 to 2 so a "
+        "name match outranks a description match."),
+    "by_recipe": (
+        "Which components can actually be set up?",
+        "What the Build basket collects. Sparse: {recipeCoverage} carry a recipe, "
+        "so the index skips the rest instead of storing a null for each."),
+    "lane_family_size": (
+        "Which lanes are in this family, biggest first?",
+        "count descends in the index itself, so the ordering is free."),
+    "lane_source": (
+        "Which lane came from this file?",
+        "Unique, but partial. {runtimeLanes} runtime lanes share the sentinel source "
+        "\"runtime\", so a plain unique index rejects the load on the second one. "
+        "The partial filter excludes the sentinel and keeps the real claim: no "
+        "file backs two lanes."),
+    "route_members": (
+        "Which hybrid routes touch this component?",
+        "members is an array, so this is multikey: a route naming four "
+        "components gets four index entries and matches on any of them."),
+    "route_lanes": (
+        "Which routes cross this lane?",
+        "The same multikey shape over the lanes array."),
+    "surface_group_ram": (
+        "Which surfaces are in this group, and which fit this memory?",
+        "Not sparse, though minRamGb is missing on {ramMissing}. A compound sparse "
+        "index only skips a document missing EVERY indexed field, and group is "
+        "on all of them, so sparse would skip nothing while claiming otherwise."),
+    "recipe_ready": (
+        "Which recipes are reviewed and ready?",
+        "kind then state, because every query filters kind first."),
+}
+
+# The queries the interface really makes, each named with the index that serves
+# it. This is the list load_catalog_mongo.py --check validates.
+CATALOG_QUERIES = [
+    ("components", "family_kind", "{ family: 'skills' }"),
+    ("components", "family_kind", "{ family: 'skills', kind: 'capability' }"),
+    ("components", "lane_order", "{ lane: 'sys-intake' }"),
+    ("components", "by_recipe", "{ setupRecipe: { $exists: true } }"),
+    ("components", "component_search", "{ $text: { $search: 'caveman' } }"),
+    ("lanes", "lane_family_size", "{ family: 'knowledge' }"),
+    ("lanes", "lane_source", "{ source: 'repo-lists/agent-skills.txt' }"),
+    ("routes", "route_members", "{ members: 'claude-code' }"),
+    ("routes", "route_lanes", "{ lanes: 'sys-skills' }"),
+    ("surfaces", "surface_group_ram", "{ group: 'local-model', minRamGb: { $lte: 16 } }"),
+    ("setupRecipes", "recipe_ready", "{ kind: 'setup', state: 'ready' }"),
+]
+
+
+def catalog_indexes() -> list[dict]:
+    """Parse the real createIndex calls so the page cannot drift from the file."""
+    text = CATALOG_INDEX_FILE.read_text(encoding="utf-8")
+    out = []
+    for match in _CATALOG_CREATE.finditer(text):
+        opts = match.group("opts")
+        name = re.search(r'name:\s*"([^"]+)"', opts)
+        name = name.group(1) if name else "unnamed"
+        keys = " ".join(match.group("keys").split())
+        question, why = CATALOG_QUESTIONS.get(name, ("", ""))
+        out.append({
+            "collection": match.group("coll"),
+            "name": name,
+            "keys": keys,
+            "fields": re.findall(r"(\w+)\s*:", match.group("keys")),
+            "unique": "unique: true" in opts,
+            "sparse": "sparse: true" in opts,
+            "partial": "partialFilterExpression" in opts,
+            "text": '"text"' in keys,
+            "multikey": name in ("route_members", "route_lanes"),
+            "question": question,
+            "why": why,
+        })
+    return out
+
+
+def catalog_store_payload(counts: dict, facts: dict) -> dict:
+    """facts carries the counts the prose quotes, so a number on the page cannot
+    disagree with the catalog it describes. The first draft said "593 of 1120"
+    against a catalog of 1126."""
+    indexes = catalog_indexes()
+    for index in indexes:
+        index["why"] = index["why"].format(**facts)
+    by_name = {i["name"]: i for i in indexes}
+    queries = []
+    for collection, index_name, filter_text in CATALOG_QUERIES:
+        index = by_name.get(index_name)
+        queries.append({
+            "collection": collection,
+            "index": index_name,
+            "filter": filter_text,
+            "keys": index["keys"] if index else "",
+            "stage": "TEXT" if index and index["text"] else "IXSCAN",
+            "scanned": counts.get(collection, 0),
+        })
+    return {
+        "file": "scripts/catalog-indexes.js",
+        "loader": "scripts/load_catalog_mongo.py",
+        "createCommand": "mongosh atlas --file scripts/catalog-indexes.js",
+        "loadCommand": "python scripts/load_catalog_mongo.py --load",
+        "checkCommand": "python scripts/load_catalog_mongo.py --check",
+        "collections": [
+            {"name": name, "count": counts.get(name, 0), "detail": detail,
+             "indexes": [i["name"] for i in indexes if i["collection"] == name]}
+            for name, detail in CATALOG_COLLECTIONS.items()
+        ],
+        "indexes": indexes,
+        "queries": queries,
+        "totalDocuments": sum(counts.values()),
+    }
+
+
 def design_pages() -> list[dict]:
     """Every interactive design, read from the files rather than listed by hand.
 
@@ -1496,6 +1656,18 @@ def build() -> dict:
         "designs": design_pages(),
         "store": store_payload(),
         "harnesses": harness_entries(),
+        "catalogStore": catalog_store_payload({
+            "components": len(comps), "lanes": len(lanes), "routes": len(routes),
+            "surfaces": len(surface_entries()) + len(local_model_surfaces()),
+            "setupRecipes": len([MASTER_SETUP_RECIPE] + model_setup_recipes()
+                                + global_rules_recipes() + antigravity_recipes()),
+        }, {
+            "recipeCoverage": (f"{sum(1 for c in comps if c.get('setupRecipe'))} "
+                               f"of {len(comps)}"),
+            "ramMissing": (f"{sum(1 for s in surface_entries() + local_model_surfaces() if not s.get('minRamGb'))} "
+                           f"of {len(surface_entries()) + len(local_model_surfaces())}"),
+            "runtimeLanes": sum(1 for l in lanes if l.get("source") == "runtime"),
+        }),
         "autoMode": {
             "source": "docs/auto-mode-block.txt",
             "summary": "The exact protected rules used by installers and hosted-web setup.",
