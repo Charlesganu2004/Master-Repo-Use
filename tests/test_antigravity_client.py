@@ -143,12 +143,32 @@ class TheHostedModelsAreReferenceNotSetup(unittest.TestCase):
                 self.assertIn("Enterprise", model["detail"], model["name"])
 
     def test_they_are_not_mixed_into_the_local_model_lane(self):
+        """A hosted model must not appear where local setup commands live.
+
+        vendor_models.py counts as local: it fetches the same Ollama tags by the
+        digests pinned in docs/model-manifest.json, and it exists because the
+        weights cannot be committed. Recognising only the literal string "ollama"
+        flagged it as a leak, which is the predicate being too narrow rather than
+        a hosted model getting in.
+        """
         local = [c for c in DATA["components"] if c.get("lane") == "sys-model-setup"]
-        self.assertTrue(all("ollama" in c.get("cmd", {}).get("linux", "") or
-                            "ollama" in c.get("detail", "").lower() or
-                            c["id"].startswith(("ollama", "model-"))
-                            for c in local),
-                        "a hosted model leaked into the local setup lane")
+        self.assertTrue(local, "the local model lane is empty")
+        leaked = [c["id"] for c in local
+                  if not ("ollama" in c.get("cmd", {}).get("linux", "")
+                          or "ollama" in c.get("detail", "").lower()
+                          or "vendor_models.py" in c.get("cmd", {}).get("linux", "")
+                          or c["id"].startswith(("ollama", "model-", "fetch-", "plan-")))]
+        self.assertFalse(leaked, f"hosted models in the local setup lane: {leaked}")
+
+    def test_the_local_lane_never_names_a_hosted_model(self):
+        """The other half of the same guarantee, asserted directly rather than
+        inferred from a command string."""
+        hosted = ("claude ", "gpt-", "gpt-oss", "gemini 3", "nano banana")
+        local = [c for c in DATA["components"] if c.get("lane") == "sys-model-setup"]
+        for component in local:
+            name = component.get("name", "").lower()
+            self.assertFalse(any(name.startswith(h) for h in hosted),
+                             f"{component['id']} is a hosted model")
 
 
 class TheCliInstallerIsTheVendorsOwn(unittest.TestCase):

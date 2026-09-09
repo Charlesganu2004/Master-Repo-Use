@@ -93,6 +93,33 @@ def _model_setups() -> list[tuple]:
         setups.append((_model_slug(model["tag"]), model["tag"], "models", detail,
                        {k: f"ollama pull {model['tag']}"
                         for k in ("windows", "wsl", "linux", "macos", "other")}))
+    # One command instead of thirty-five. Charles asked for the models to be in
+    # the repository so nobody visits a model page; the weights cannot be (the
+    # smallest is 2.6x GitHub's file limit and the set is 42x the repository
+    # cap), so this is the command that does the same job from the repository,
+    # pinned to the digests in docs/model-manifest.json and verified against them.
+    _fetch = "vendor_models.py --fetch --max-ram 16"
+    _plan = "vendor_models.py --plan --max-ram 16"
+    setups.append(("fetch-all-models", "Fetch every model this machine can hold",
+                   "models",
+                   "Pulls every catalogued tag that fits the memory you name, verifying "
+                   "each against the digest pinned in docs/model-manifest.json. Nothing "
+                   "goes through Hugging Face, and afterwards the machine needs no "
+                   "network for these.",
+                   {"windows": f"python scripts/{_fetch}",
+                    "wsl": f"python3 scripts/{_fetch}",
+                    "linux": f"python3 scripts/{_fetch}",
+                    "macos": f"python3 scripts/{_fetch}",
+                    "other": f"python3 scripts/{_fetch}"}))
+    setups.append(("plan-models", "See what would be fetched, and what it costs",
+                   "models",
+                   "Prints every model that fits, its size, whether it is licence-clean "
+                   "to redistribute, and the total download. Downloads nothing.",
+                   {"windows": f"python scripts/{_plan}",
+                    "wsl": f"python3 scripts/{_plan}",
+                    "linux": f"python3 scripts/{_plan}",
+                    "macos": f"python3 scripts/{_plan}",
+                    "other": f"python3 scripts/{_plan}"}))
     setups.append(LIST_INSTALLED)
     return setups
 

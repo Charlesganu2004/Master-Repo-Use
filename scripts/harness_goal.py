@@ -44,6 +44,7 @@ import json
 import pathlib
 import re
 import sys
+import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -155,6 +156,26 @@ def context_for(prompt: str) -> str:
 
 
 def check() -> int:
+    """Run the self-check against an isolated goal store.
+
+    A verifier must not append fixture goals to the tracked goal history. Keep
+    both readers on the same temporary path, then restore their exact globals
+    even when an assertion below fails.
+    """
+    global GOAL_FILE
+    original_goal_file = GOAL_FILE
+    original_pipeline_goal_file = skill_pipeline.GOAL_FILE
+    with tempfile.TemporaryDirectory() as tmp:
+        GOAL_FILE = pathlib.Path(tmp) / "auto-mode-goal.json"
+        skill_pipeline.GOAL_FILE = GOAL_FILE
+        try:
+            return _check_isolated()
+        finally:
+            GOAL_FILE = original_goal_file
+            skill_pipeline.GOAL_FILE = original_pipeline_goal_file
+
+
+def _check_isolated() -> int:
     failures = []
     data = load_goal()
 
@@ -201,7 +222,7 @@ def check() -> int:
     if "master-goal" not in [p.name for p in (ROOT / "skills").iterdir() if p.is_dir()]:
         failures.append("the master-goal skill is missing")
     print(f"skills            {len(base.ENFORCED_SKILLS) - len(gone)} enforced, master-goal present")
-    print(f"goal store        {GOAL_FILE.relative_to(ROOT)}")
+    print("goal store        isolated temporary file")
     print(f"current goal      {data.get('goal') or 'none set'}")
 
     if failures:

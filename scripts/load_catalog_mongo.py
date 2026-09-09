@@ -59,8 +59,7 @@ _CREATE = re.compile(
     r"db\.(?P<coll>\w+)\.createIndex\(\s*(?P<keys>\{.*?\})\s*,\s*(?P<opts>\{.*?\})\s*\)",
     re.DOTALL)
 
-# partialFilterExpression: { field: { $ne: "value" } }. Only the $ne form, which
-# is the one used here: a partial index that EXCLUDES a sentinel value.
+# Boolean equality is supported by MongoDB partial indexes. $ne is not.
 _PARTIAL_EQ = re.compile(r'partialFilterExpression:\s*\{\s*(\w+):\s*(true|false)\s*\}')
 
 # The queries the atlas interface actually makes, written the way the code makes
@@ -167,8 +166,9 @@ def local_skill_bodies() -> dict:
         definition = path / "SKILL.md"
         if not path.is_dir() or not definition.is_file():
             continue
-        text = definition.read_text(encoding="utf-8")
-        front = _FRONTMATTER.match(text)
+        raw = definition.read_bytes()
+        text = raw.decode("utf-8")
+        front = _FRONTMATTER.match(text.lstrip("\ufeff"))
         description, name = "", path.name
         if front:
             for line in front.group(1).splitlines():
@@ -181,8 +181,8 @@ def local_skill_bodies() -> dict:
             "description": description,
             "path": str(definition.relative_to(ROOT)).replace("\\", "/"),
             "body": text,
-            "bytes": len(text.encode("utf-8")),
-            "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+            "bytes": len(raw),
+            "sha256": hashlib.sha256(raw).hexdigest(),
         }
     return out
 
@@ -605,6 +605,9 @@ def explain() -> int:
 
 
 def load(uri: str, database: str) -> int:
+    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,63}", database):
+        print("Invalid database name: use a letter followed by letters, digits, underscores or hyphens.", file=sys.stderr)
+        return 2
     if not uri:
         print("Set MONGODB_URI in the backend environment first. No connection attempted.", file=sys.stderr)
         return 2
@@ -636,20 +639,25 @@ def load(uri: str, database: str) -> int:
         print("MongoDB connection failed. Check backend credentials, TLS and network access. URI and server details withheld.", file=sys.stderr)
         return 1
 
-    db = client[database]
-    for name, docs in documents.items():
-        if not docs:
-            continue
-        # Replace by natural id rather than dropping the collection. A reload is
-        # then idempotent and never removes something added alongside it.
-        operations = [ReplaceOne({"_id": doc["_id"]}, doc, upsert=True) for doc in docs]
-        result = db[name].bulk_write(operations, ordered=False)
-        print(f"{name:<16}{result.upserted_count} inserted, {result.modified_count} updated, "
-              f"{db[name].count_documents({})} total")
+    try:
+        db = client[database]
+        for name, docs in documents.items():
+            if not docs:
+                continue
+            # Replace owned natural IDs, never drop collections. Use a dedicated
+            # catalog database: same-ID edits belong in Git, not a conflicting DB copy.
+            operations = [ReplaceOne({"_id": doc["_id"]}, doc, upsert=True) for doc in docs]
+            result = db[name].bulk_write(operations, ordered=False)
+            print(f"{name:<16}{result.upserted_count} inserted, {result.modified_count} updated, "
+                  f"{db[name].count_documents({})} total")
+    except Exception:
+        print("Catalog write failed; some records may already be written. No collections were dropped. Fix backend permissions or connectivity and rerun. Server details withheld.", file=sys.stderr)
+        return 1
+    finally:
+        client.close()
 
-    print("\nnow create the indexes:")
-    print(f"  mongosh {database} --file scripts/catalog-indexes.js")
-    client.close()
+    print("\nNext: connect mongosh to the SAME approved cluster and database using a secure prompt, then run:")
+    print("  load('scripts/catalog-indexes.js')")
     return 0
 
 

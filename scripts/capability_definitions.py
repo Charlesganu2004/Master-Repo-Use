@@ -38,5 +38,5 @@ def read_owned_definition(repo: pathlib.Path, relative: str) -> dict | None:
         return None
     raw = path.read_bytes()
     return {"path": path.relative_to(repo.resolve()).as_posix(),
-            "body": raw.decode("utf-8-sig"), "bytes": len(raw),
+            "body": raw.decode("utf-8"), "bytes": len(raw),
             "sha256": hashlib.sha256(raw).hexdigest()}

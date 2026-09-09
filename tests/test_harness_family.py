@@ -19,6 +19,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -181,14 +182,18 @@ class TheWrapperIsTransparent(unittest.TestCase):
 
 class TheGoalSurvivesTheTurn(unittest.TestCase):
     def setUp(self):
-        self.original = goal.load_goal().get("goal")
-        self.addCleanup(self.restore)
+        self.goal_store = tempfile.TemporaryDirectory()
+        self.addCleanup(self.goal_store.cleanup)
+        self.original_goal_file = goal.GOAL_FILE
+        self.original_pipeline_goal_file = pipeline.GOAL_FILE
+        isolated = pathlib.Path(self.goal_store.name) / "auto-mode-goal.json"
+        goal.GOAL_FILE = isolated
+        pipeline.GOAL_FILE = isolated
+        self.addCleanup(self.restore_goal_paths)
 
-    def restore(self):
-        if self.original:
-            goal.set_goal(self.original)
-        else:
-            goal.clear_goal()
+    def restore_goal_paths(self):
+        goal.GOAL_FILE = self.original_goal_file
+        pipeline.GOAL_FILE = self.original_pipeline_goal_file
 
     def test_every_spelling_sets_it(self):
         """People type all three. A rule that depends on remembering a slash is
