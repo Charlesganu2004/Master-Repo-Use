@@ -11,3 +11,8 @@ _site/
 
 # Generated layout chooser. Temporary: delete once a layout is picked.
 layout-options.html
+
+# codex-token-reducer keeps its SQLite caches here. They are regenerable, they
+# are specific to one machine, and index.db alone is 31 MB. The reducer itself
+# is untouched; only its cache is untracked, and the files stay on disk.
+.codex-token-reducer/
