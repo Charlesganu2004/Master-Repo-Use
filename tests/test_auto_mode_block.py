@@ -60,7 +60,19 @@ HOOK = ROOT / "scripts" / "hooks" / "no_prune_guard.py"
 # still written here because Codex, the Gemini CLI and Copilot have no verified
 # hook mechanism: for those three this block is not a reminder of the rule, it is
 # the entire enforcement.
-BLOCK_BUDGET_BYTES = 2800
+# The ledger, so each rise is a decision rather than a drift:
+#
+#   2800 bytes   the block as agreed, roughly 700 tokens ONCE per session
+#   3100 bytes   2026-09-09: REFACTOR in layer 3, and the goal rule. About 370
+#                bytes. The detail for both lives in master-refactor and
+#                master-goal; what is here is the rule that makes the model
+#                reach for them. Kept rather than trimmed to fit because for
+#                Codex, the Gemini CLI and Copilot this block IS the
+#                enforcement, and a rule those three never see is not enforced
+#                anywhere. This is a per-SESSION cost, unlike the per-prompt
+#                core in skill_pipeline.py, which is why 370 bytes buys more
+#                here than it would there.
+BLOCK_BUDGET_BYTES = 3100
 
 
 class TheAlwaysLoadedBlock(unittest.TestCase):
@@ -71,6 +83,37 @@ class TheAlwaysLoadedBlock(unittest.TestCase):
         self.assertLess(
             len(self.text.encode("utf-8")), BLOCK_BUDGET_BYTES,
             "the always-loaded block is growing back; move detail into the skill")
+
+    def test_every_file_the_verifier_requires_is_written_by_a_command(self):
+        """CLAUDE.md, AGENTS.md and GEMINI.md carry the managed block and
+        verify_auto_mode fails when they do not match the source. Nothing wrote
+        them: the only way to pass was to hand-edit three files in step with the
+        source, which drifted the first time the block changed."""
+        import sys
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import auto_mode_harness as harness
+        verifier = (ROOT / "scripts" / "verify_auto_mode.py").read_text(encoding="utf-8")
+        for name in harness.REPO_INSTRUCTION_FILES:
+            self.assertIn(f'self.repo / "{name}"', verifier,
+                          f"{name} is written but never verified")
+            self.assertTrue((ROOT / name).is_file(), f"{name} does not exist")
+
+    def test_the_installed_block_matches_the_source_in_those_files(self):
+        """Same equality the verifier checks, without needing a home directory."""
+        import re
+        body = self.text.strip()
+        marker = re.compile(r"<!-- NO-COMPRESS:BEGIN -->.*?<!-- NO-COMPRESS:END -->",
+                            re.DOTALL)
+        import sys
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import auto_mode_harness as harness
+        for name in harness.REPO_INSTRUCTION_FILES:
+            found = marker.search((ROOT / name).read_text(encoding="utf-8"))
+            self.assertIsNotNone(found, f"{name} carries no managed block")
+            self.assertIn("REFACTOR", found.group(0),
+                          f"{name} is serving a block from before layer 3 changed")
+            self.assertIn("THE GOAL NEEDS NO COMMAND", found.group(0),
+                          f"{name} still describes the goal as a command")
 
     def test_points_at_the_skill_rather_than_restating_it(self):
         self.assertIn("master-repo-auto", self.text)

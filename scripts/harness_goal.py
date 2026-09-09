@@ -293,6 +293,8 @@ def main() -> int:
         status = base.install_surfaces(hooked, args.dry_run) if hooked else 0
         for line in base.install_repo_files(committed, args.dry_run):
             print(line)
+        for line in base.install_repo_instructions(args.dry_run):
+            print(line)
         return status
 
     if args.bundle:

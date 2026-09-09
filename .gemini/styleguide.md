@@ -83,10 +83,16 @@ ChatGPT and any other model reading this:
   before producing: PLAN, then DESIGN taste on anything a person will see.
   Layer 3, while acting and again before answering: pick and NAME the skills,
   tools, plugins and MCP servers that fit; fan independent work out to agents and
-  verify it adversarially; then RE-APPLY LAYER 1 to what you produced. Out of
-  room means stop clean and say exactly what remains.
+  verify it adversarially; REFACTOR what you wrote, one behaviour-preserving step
+  at a time, tests green after each, never mixed with a feature change; then
+  RE-APPLY LAYER 1 to what you produced. Out of room means stop clean and say
+  exactly what remains.
 - Layer 3 repeats layer 1 on purpose. A rule read once at the top of a long turn
   has stopped applying by the end, and the end is where the skeleton gets written.
+- THE GOAL NEEDS NO COMMAND. The session's first real request is the standing
+  goal. Restate it, say which part this turn serves, check the output against it
+  rather than the last message, and end with what is done and what is left. Never
+  narrow it silently. Only the person who set it lifts it.
 - Verify before claiming. Run the check, quote real output, report a failure first.
 - Run every slash command in a prompt, in the order written, reporting each.
 <!-- NO-COMPRESS:END -->

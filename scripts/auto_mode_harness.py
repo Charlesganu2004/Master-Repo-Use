@@ -230,6 +230,24 @@ REPO_FILE_TARGETS = {
     "gemini-code-assist": (".gemini/styleguide.md",),
 }
 
+# The repository's OWN instruction files, which every hook client reads when it
+# opens this repo. They carry the same managed block, verify_auto_mode requires
+# them to match docs/auto-mode-block.txt, and until this constant existed nothing
+# wrote them: the verifier demanded a file no command produced, so the only way
+# to pass was to hand-edit three files in step with the source. That drifted the
+# first time the block changed.
+REPO_INSTRUCTION_FILES = ("CLAUDE.md", "AGENTS.md", "GEMINI.md")
+
+
+def install_repo_instructions(dry: bool) -> list[str]:
+    """Refresh the managed block in this repository's own instruction files."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import install_auto_mode as installer  # noqa: E402
+
+    body = block_text().strip()
+    return [f"{installer.upsert_block(ROOT / name, body, dry)} the block in {name}"
+            for name in REPO_INSTRUCTION_FILES]
+
 
 def install_repo_files(ids: list[str], dry: bool) -> list[str]:
     """Upsert the standing block into the committed instruction files.
@@ -441,6 +459,8 @@ def main() -> int:
         if hooked:
             status = install_surfaces(hooked, args.dry_run)
         for line in install_repo_files(committed, args.dry_run):
+            print(line)
+        for line in install_repo_instructions(args.dry_run):
             print(line)
         return status
 
