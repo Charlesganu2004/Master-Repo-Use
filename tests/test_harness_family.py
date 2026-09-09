@@ -419,7 +419,16 @@ class TheCatalogInMongo(unittest.TestCase):
     def test_the_definitions_file_exists_and_is_parsed_not_restated(self):
         self.assertTrue(self.index_file.is_file())
         builder = (ROOT / "scripts" / "build_atlas_data.py").read_text(encoding="utf-8")
-        self.assertIn("CATALOG_INDEX_FILE.read_text", builder)
+        # Parsing moved into catalog_index_spec, shared with the loader, because
+        # both files had their own copy and both grew the same dotted-key bug.
+        # The claim being tested is unchanged: the page reads the mongosh file
+        # rather than restating what the indexes are.
+        self.assertIn("catalog_index_spec.parse(CATALOG_INDEX_FILE)", builder)
+        # No hand-rolled regex, rather than no mention of the word: the
+        # docstrings say "parse the real createIndex calls", which is the thing
+        # being described and not a fourth copy of the pattern.
+        self.assertNotIn(r"createIndex\(", builder,
+                         "the builder restates an index instead of reading the file")
 
     def test_every_created_index_reaches_the_page(self):
         """Matched inside the options object only.

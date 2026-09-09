@@ -55,8 +55,25 @@ class MongoUploadSafety(unittest.TestCase):
 
     def test_partial_index_uses_supported_equality(self):
         index = next(i for i in loader.parse_indexes() if i["name"] == "lane_source")
-        self.assertEqual(index["partial"].group(1), "isFileSource")
-        self.assertEqual(index["partial"].group(2), "true")
+        self.assertTrue(index["partial"])
+        self.assertEqual(index["partialFilter"], ("isFileSource", True))
+        # The reason this index is partial at all: it was first written with
+        # { source: { $ne: "runtime" } }, and MongoDB does not permit $ne inside
+        # partialFilterExpression, so the server would have refused to create it.
+        self.assertEqual(index["partialProblems"], [],
+                         "an operator MongoDB refuses would fail at index creation")
+
+    def test_no_index_uses_an_operator_mongodb_refuses(self):
+        """Checked against the permitted list rather than against the file.
+
+        partialFilterExpression allows equality, $exists true, $gt, $gte, $lt,
+        $lte, $type, $and, $or, $in, $geoWithin and $geoIntersects, and nothing
+        else. An index using anything else fails at creation, so the whole index
+        silently never exists.
+        """
+        for index in loader.parse_indexes():
+            self.assertEqual(index["partialProblems"], [],
+                             f"{index['name']} uses {index['partialProblems']}")
 
 
 if __name__ == "__main__":

@@ -41,6 +41,9 @@ import sys
 
 from capability_definitions import read_owned_definition
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import catalog_index_spec as spec  # noqa: E402
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / "atlas-data.json"
 INDEX_FILE = ROOT / "scripts" / "catalog-indexes.js"
@@ -54,13 +57,6 @@ COLLECTIONS = {
     "surfaces": "surfaces",
     "setupRecipes": "recipes",
 }
-
-_CREATE = re.compile(
-    r"db\.(?P<coll>\w+)\.createIndex\(\s*(?P<keys>\{.*?\})\s*,\s*(?P<opts>\{.*?\})\s*\)",
-    re.DOTALL)
-
-# Boolean equality is supported by MongoDB partial indexes. $ne is not.
-_PARTIAL_EQ = re.compile(r'partialFilterExpression:\s*\{\s*(\w+):\s*(true|false)\s*\}')
 
 # The queries the atlas interface actually makes, written the way the code makes
 # them. Each names the index that must serve it. A query with no index here is a
@@ -341,44 +337,24 @@ def validate_documents(collections: dict) -> list[str]:
 
 
 def parse_indexes() -> list[dict]:
-    """Read the index definitions from the mongosh file rather than restating them."""
-    text = INDEX_FILE.read_text(encoding="utf-8")
-    out = []
-    for match in _CREATE.finditer(text):
-        keys_raw = " ".join(match.group("keys").split())
-        opts = match.group("opts")
-        name = re.search(r'name:\s*"([^"]+)"', opts)
-        fields = re.findall(r'"([\w.]+)"\s*:|(\w+)\s*:', match.group("keys"))
-        fields = [quoted or bare for quoted, bare in fields]
-        out.append({
-            "collection": match.group("coll"),
-            "name": name.group(1) if name else "unnamed",
-            "keys": keys_raw,
-            "fields": fields,
-            "unique": "unique: true" in opts,
-            "sparse": "sparse: true" in opts,
-            "text": '"text"' in keys_raw,
-            "partial": re.search(_PARTIAL_EQ, opts),
-        })
-    return out
+    """Read the index definitions from the mongosh file rather than restating them.
+
+    Parsing itself lives in catalog_index_spec, shared with build_atlas_data.py.
+    Both files had their own copy of this and both grew the same dotted-key bug:
+    a quoted path like "health.status" matched no field, so every nested index
+    reported zero coverage and read as a prefix of everything. Found once, fixed
+    twice, which is the kind of duplication worth removing.
+    """
+    return spec.parse(INDEX_FILE)
 
 
 def field_value(doc: dict, field: str):
-    """Walk a dotted path the way MongoDB does.
-
-    health.status and definition.body are real index keys, and a flat doc.get on
-    either returns None, so every nested index read as covering zero documents.
-    """
-    value = doc
-    for part in field.split("."):
-        if not isinstance(value, dict):
-            return None
-        value = value.get(part)
-    return value
+    """Walk a dotted path the way MongoDB does."""
+    return spec.value_at(doc, field)
 
 
 def field_coverage(docs: list[dict], field: str) -> int:
-    return sum(1 for doc in docs if field_value(doc, field) not in (None, "", [], {}))
+    return spec.coverage(docs, field)
 
 
 def collections_report() -> int:
@@ -512,6 +488,18 @@ def check() -> int:
         print(f"{index['collection']:<14}{index['name']:<20}{index['keys'][:32]:<34}"
               f"{', '.join(marks)[:40]} {flags}")
 
+    # An operator MongoDB refuses inside partialFilterExpression fails at index
+    # creation, not at query time, so the whole index silently never exists.
+    # lane_source shipped with { source: { $ne: "runtime" } } and $ne is not on
+    # the permitted list; the server would have rejected it. Checking the file
+    # against itself could never catch that, so this checks it against the rule.
+    for index in indexes:
+        for operator in index.get("partialProblems", []):
+            failures.append(
+                f"{index['name']} uses {operator} in partialFilterExpression, which "
+                f"MongoDB does not permit. Allowed: equality, $exists true, $gt, "
+                f"$gte, $lt, $lte, $type, $and, $or, $in, $geoWithin, $geoIntersects.")
+
     # A unique index is a claim that no two documents share the value.
     for index in indexes:
         if not index["unique"]:
@@ -522,9 +510,9 @@ def check() -> int:
         # the excluded value is dropped before counting duplicates. Without this
         # the fifteen runtime lanes read as a violation of a constraint that was
         # written specifically to exclude them.
-        partial = index["partial"]
+        partial = index.get("partialFilter")
         values = [doc.get(field) for doc in docs if doc.get(field) is not None
-                  and (not partial or doc.get(partial.group(1)) is (partial.group(2) == "true"))]
+                  and (not partial or doc.get(partial[0]) is partial[1])]
         if len(values) != len(set(values)):
             duplicates = len(values) - len(set(values))
             failures.append(f"{index['name']} is unique but {index['collection']}.{field} "

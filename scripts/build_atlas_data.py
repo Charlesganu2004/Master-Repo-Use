@@ -23,10 +23,14 @@ from __future__ import annotations
 import ast
 import json
 import pathlib
+import sys
 import re
 
 from sync_project_skills import sync_project_skills
 from capability_definitions import owned_agents
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import catalog_index_spec  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 # Written to both places on purpose. The designs fetch it relative to themselves,
@@ -1381,10 +1385,6 @@ def local_model_surfaces() -> list[dict]:
 
 STORE_INDEX_FILE = ROOT / "scripts" / "monitor-indexes.js"
 
-_CREATE_RE = re.compile(
-    r"db\.(\w+)\.createIndex\(\s*(\{.*?\})\s*,\s*(\{.*?\})\s*\)\s*;",
-    re.DOTALL)
-
 # What each index is FOR, in the words of the question it answers. The comments
 # in the .js file say this too, but a comment is prose above a statement and this
 # has to survive as a field. Keyed by index name so a renamed index fails loudly
@@ -1461,20 +1461,26 @@ STORE_SEARCH = [
 
 
 def store_indexes() -> list[dict]:
-    """Parse the real createIndex calls so the page cannot drift from the file."""
-    text = STORE_INDEX_FILE.read_text(encoding="utf-8")
+    """Parse the real createIndex calls so the page cannot drift from the file.
+
+    Same shared parser as the catalog store, pointed at a different file. This
+    was the third hand-rolled copy of the same regex in the repository, and two
+    of the three grew an identical dotted-key bug that had to be fixed twice.
+
+    Only the question and the why are added here. Those are this page's own
+    writing about an index; everything factual about the index comes from the
+    file, including the TTL flag, because only this store expires anything and
+    the catalog is rewritten wholesale.
+    """
     out = []
-    for collection, keys, options in _CREATE_RE.findall(text):
-        name = re.search(r'name:\s*"([^"]+)"', options)
-        name = name.group(1) if name else "unnamed"
-        keys = " ".join(keys.split())
-        question, why = INDEX_QUESTIONS.get(name, ("", ""))
+    for index in catalog_index_spec.parse(STORE_INDEX_FILE):
+        question, why = INDEX_QUESTIONS.get(index["name"], ("", ""))
         out.append({
-            "collection": collection,
-            "name": name,
-            "keys": keys,
-            "unique": "unique: true" in options,
-            "ttl": "expireAfterSeconds" in options,
+            "collection": index["collection"],
+            "name": index["name"],
+            "keys": index["keys"],
+            "unique": index["unique"],
+            "ttl": index["ttl"],
             "question": question,
             "why": why,
         })
@@ -1505,10 +1511,6 @@ def store_payload() -> dict:
 # sentinel source, and a sparse flag on a field every document carries.
 
 CATALOG_INDEX_FILE = ROOT / "scripts" / "catalog-indexes.js"
-
-_CATALOG_CREATE = re.compile(
-    r"db\.(?P<coll>\w+)\.createIndex\(\s*(?P<keys>\{.*?\})\s*,\s*(?P<opts>\{.*?\})\s*\)",
-    re.DOTALL)
 
 # The collections the catalog loads into, and why each one is a collection rather
 # than a field on another. Counts come from the payload itself at build time.
@@ -1640,29 +1642,18 @@ CATALOG_QUERIES = [
 
 
 def catalog_indexes() -> list[dict]:
-    """Parse the real createIndex calls so the page cannot drift from the file."""
-    text = CATALOG_INDEX_FILE.read_text(encoding="utf-8")
+    """Parse the real createIndex calls so the page cannot drift from the file.
+
+    Parsing is catalog_index_spec's job, shared with load_catalog_mongo.py. This
+    file had its own copy, and the two copies grew the same dotted-key bug: a
+    quoted path like "health.status" matched no field, so every nested index came
+    through with an empty field list. Found once, fixed twice. Only the page's
+    own additions, the question and the why, are attached here.
+    """
     out = []
-    for match in _CATALOG_CREATE.finditer(text):
-        opts = match.group("opts")
-        name = re.search(r'name:\s*"([^"]+)"', opts)
-        name = name.group(1) if name else "unnamed"
-        keys = " ".join(match.group("keys").split())
-        question, why = CATALOG_QUESTIONS.get(name, ("", ""))
-        out.append({
-            "collection": match.group("coll"),
-            "name": name,
-            "keys": keys,
-            "fields": [q or b for q, b in
-                       re.findall(r'"([\w.]+)"\s*:|(\w+)\s*:', match.group("keys"))],
-            "unique": "unique: true" in opts,
-            "sparse": "sparse: true" in opts,
-            "partial": "partialFilterExpression" in opts,
-            "text": '"text"' in keys,
-            "multikey": name in ("route_members", "route_lanes"),
-            "question": question,
-            "why": why,
-        })
+    for index in catalog_index_spec.parse(CATALOG_INDEX_FILE):
+        question, why = CATALOG_QUESTIONS.get(index["name"], ("", ""))
+        out.append(dict(index, question=question, why=why))
     return out
 
 

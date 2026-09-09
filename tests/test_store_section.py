@@ -216,7 +216,13 @@ class TheParserItself(unittest.TestCase):
     def test_it_reads_the_file_rather_than_a_copy_of_it(self):
         source = (ROOT / "scripts" / "build_atlas_data.py").read_text(encoding="utf-8")
         self.assertIn('STORE_INDEX_FILE = ROOT / "scripts" / "monitor-indexes.js"', source)
-        self.assertIn("STORE_INDEX_FILE.read_text", source)
+        # Reading moved into catalog_index_spec, which parses any mongosh index
+        # file. It was the third hand-rolled copy of one regex, and two of the
+        # three had grown the same dotted-key bug. The claim is unchanged: the
+        # page reads monitor-indexes.js rather than restating its indexes.
+        self.assertIn("catalog_index_spec.parse(STORE_INDEX_FILE)", source)
+        self.assertNotIn("createIndex\(", source,
+                         "the builder restates an index instead of reading the file")
 
     def test_a_renamed_index_loses_its_question_rather_than_borrowing_one(self):
         """Keyed by name on purpose: a rename should surface as a missing
