@@ -1,0 +1,13 @@
+# smollm2:360m
+# Ollama, Apache-2.0. 0.73 GB, needs 4 GB of memory.
+#
+# Pinned to the digest the registry returned on the day
+# docs/model-manifest.json was last written:
+#   sha256:7d23be4097d67c5c43c3df62ebc19609a25f483c7d0b77d3989e1d94e36ccab6
+#
+# Build it from this file rather than from a web page:
+#   ollama create smollm2:360m --file models/smollm2-360m.Modelfile
+# Or pull it, which is the same bytes by digest:
+#   ollama pull smollm2:360m
+
+FROM smollm2:360m

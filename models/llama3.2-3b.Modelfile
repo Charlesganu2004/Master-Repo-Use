@@ -1,0 +1,13 @@
+# llama3.2:3b
+# Ollama, Llama 3.2 Community. 2.02 GB, needs 6 GB of memory.
+#
+# Pinned to the digest the registry returned on the day
+# docs/model-manifest.json was last written:
+#   sha256:dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff
+#
+# Build it from this file rather than from a web page:
+#   ollama create llama3.2:3b --file models/llama3.2-3b.Modelfile
+# Or pull it, which is the same bytes by digest:
+#   ollama pull llama3.2:3b
+
+FROM llama3.2:3b

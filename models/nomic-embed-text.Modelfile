@@ -1,0 +1,13 @@
+# nomic-embed-text
+# Ollama, Apache-2.0. 0.27 GB, needs 4 GB of memory.
+#
+# Pinned to the digest the registry returned on the day
+# docs/model-manifest.json was last written:
+#   sha256:970aa74c0a90ef7482477cf803618e776e173c007bf957f635f1015bfcfef0e6
+#
+# Build it from this file rather than from a web page:
+#   ollama create nomic-embed-text --file models/nomic-embed-text.Modelfile
+# Or pull it, which is the same bytes by digest:
+#   ollama pull nomic-embed-text
+
+FROM nomic-embed-text

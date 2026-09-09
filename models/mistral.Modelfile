@@ -1,0 +1,13 @@
+# mistral
+# Ollama, Apache-2.0. 4.37 GB, needs 8 GB of memory.
+#
+# Pinned to the digest the registry returned on the day
+# docs/model-manifest.json was last written:
+#   sha256:f5074b1221da0f5a2910d33b642efa5b9eb58cfdddca1c79e16d7ad28aa2b31f
+#
+# Build it from this file rather than from a web page:
+#   ollama create mistral --file models/mistral.Modelfile
+# Or pull it, which is the same bytes by digest:
+#   ollama pull mistral
+
+FROM mistral

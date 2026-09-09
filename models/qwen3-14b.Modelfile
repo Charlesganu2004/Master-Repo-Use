@@ -1,0 +1,13 @@
+# qwen3:14b
+# Ollama, Apache-2.0. 9.28 GB, needs 16 GB of memory.
+#
+# Pinned to the digest the registry returned on the day
+# docs/model-manifest.json was last written:
+#   sha256:a8cc1361f3145dc01f6d77c6c82c9116b9ffe3c97b34716fe20418455876c40e
+#
+# Build it from this file rather than from a web page:
+#   ollama create qwen3:14b --file models/qwen3-14b.Modelfile
+# Or pull it, which is the same bytes by digest:
+#   ollama pull qwen3:14b
+
+FROM qwen3:14b

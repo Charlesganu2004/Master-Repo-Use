@@ -1,0 +1,13 @@
+# phi4-mini-reasoning
+# Microsoft, MIT. 3.15 GB, needs 6 GB of memory.
+#
+# Pinned to the digest the registry returned on the day
+# docs/model-manifest.json was last written:
+#   sha256:f4dd2368e6c32725dc1c5c5548ae9ee2724d6a79052952eb50b65e26288022c4
+#
+# Build it from this file rather than from a web page:
+#   ollama create phi4-mini-reasoning --file models/phi4-mini-reasoning.Modelfile
+# Or pull it, which is the same bytes by digest:
+#   ollama pull phi4-mini-reasoning
+
+FROM phi4-mini-reasoning

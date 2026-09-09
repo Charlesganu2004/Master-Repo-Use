@@ -1,0 +1,13 @@
+# gemma3:12b
+# Google, Gemma Terms of Use. 8.15 GB, needs 12 GB of memory.
+#
+# Pinned to the digest the registry returned on the day
+# docs/model-manifest.json was last written:
+#   sha256:e8ad13eff07a78d89926e9e8b882317d082ef5bf9768ad7b50fcdbbcd63748de
+#
+# Build it from this file rather than from a web page:
+#   ollama create gemma3:12b --file models/gemma3-12b.Modelfile
+# Or pull it, which is the same bytes by digest:
+#   ollama pull gemma3:12b
+
+FROM gemma3:12b

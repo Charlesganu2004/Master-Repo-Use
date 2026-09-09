@@ -1,0 +1,13 @@
+# phi4-mini
+# Microsoft, MIT. 2.49 GB, needs 6 GB of memory.
+#
+# Pinned to the digest the registry returned on the day
+# docs/model-manifest.json was last written:
+#   sha256:3c168af1dea0a414299c7d9077e100ac763370e5a98b3c53801a958a47f0a5db
+#
+# Build it from this file rather than from a web page:
+#   ollama create phi4-mini --file models/phi4-mini.Modelfile
+# Or pull it, which is the same bytes by digest:
+#   ollama pull phi4-mini
+
+FROM phi4-mini

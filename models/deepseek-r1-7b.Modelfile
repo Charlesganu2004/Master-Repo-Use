@@ -1,0 +1,13 @@
+# deepseek-r1:7b
+# Ollama, MIT. 4.68 GB, needs 8 GB of memory.
+#
+# Pinned to the digest the registry returned on the day
+# docs/model-manifest.json was last written:
+#   sha256:96c415656d377afbff962f6cdb2394ab092ccbcbaab4b82525bc4ca800fe8a49
+#
+# Build it from this file rather than from a web page:
+#   ollama create deepseek-r1:7b --file models/deepseek-r1-7b.Modelfile
+# Or pull it, which is the same bytes by digest:
+#   ollama pull deepseek-r1:7b
+
+FROM deepseek-r1:7b
