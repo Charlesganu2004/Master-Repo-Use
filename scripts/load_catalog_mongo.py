@@ -86,9 +86,219 @@ QUERIES = [
      "The surface picker, one group at a time."),
     ("surfaces", "surface_group_ram", ["group", "minRamGb"],
      "Local models this machine can hold, which is the group plus a memory floor."),
-    ("setupRecipes", "recipe_ready", ["kind", "state"],
+    ("recipes", "recipe_ready", ["kind", "state"],
      "Recipes that are reviewed and ready on this platform."),
 ]
+
+
+# --------------------------------------------------------------- the documents
+#
+# Charles asked what would actually be stored, so that someone can open MongoDB
+# and find the skills, agents, tools and MCP servers there. Two tiers, and the
+# difference between them is the whole answer:
+#
+#   local     Skills, hooks, harnesses and scripts this repository owns. The
+#             document carries the FULL TEXT, because we wrote it and it is ours
+#             to store. A skill in Mongo is the skill, not a link to it.
+#
+#   catalog   Third-party repositories the catalog points at. The document
+#             carries the RECORD: slug, licence, health, scan verdict, the lane
+#             that vouches for it. NOT the code.
+#
+# That second line is a decision, not a limitation. This repository deliberately
+# does not vendor third-party source: install_catalog_skill.py refuses any slug
+# that is not catalogued, never executes anything from a clone, and never
+# overwrites a skill it did not install. Copying 300 repositories into a database
+# would undo all of that and leave a stale copy nobody scans.
+
+CATALOG_STATUS = ROOT / "docs" / "catalog-status.json"
+
+# Which families become their own collection. Someone typing `show collections`
+# should see the four things Charles named, not one bucket called components
+# with a family field they have to know about first.
+FAMILY_COLLECTIONS = {
+    "skills": "skills",
+    "agents": "agents",
+    "tools": "tools",
+    "mcp": "mcp",
+}
+
+_FRONTMATTER = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+_SLUG = re.compile(r"^[\w.-]+/[\w.-]+$")
+
+
+def health_by_repo() -> dict:
+    """Lifecycle and scan state per catalogued repository, keyed by slug."""
+    if not CATALOG_STATUS.is_file():
+        return {}
+    data = json.loads(CATALOG_STATUS.read_text(encoding="utf-8"))
+    out = {}
+    for row in data.get("repos", []):
+        out[row["repo"]] = {
+            "status": row.get("status"),
+            "license": row.get("license"),
+            "pushedAt": row.get("pushed_at"),
+            "ageDays": row.get("age_days"),
+            "archived": bool(row.get("archived")),
+            "deepScanned": bool(row.get("deep_scanned")),
+            "critical": bool(row.get("critical")),
+            "findings": row.get("findings") or [],
+            "note": row.get("note") or "",
+        }
+    return out
+
+
+def local_skill_bodies() -> dict:
+    """Every SKILL.md this repository owns, by directory name.
+
+    The body is stored whole. A skill is instructions, and instructions
+    summarised are instructions broken, which is the same reason the no-compress
+    guard exists.
+    """
+    out = {}
+    source = ROOT / "skills"
+    if not source.is_dir():
+        return out
+    for path in sorted(source.iterdir()):
+        definition = path / "SKILL.md"
+        if not path.is_dir() or not definition.is_file():
+            continue
+        text = definition.read_text(encoding="utf-8")
+        front = _FRONTMATTER.match(text)
+        description, name = "", path.name
+        if front:
+            for line in front.group(1).splitlines():
+                if line.startswith("description:"):
+                    description = line.split(":", 1)[1].strip()
+                elif line.startswith("name:"):
+                    name = line.split(":", 1)[1].strip()
+        out[path.name] = {
+            "skillName": name,
+            "description": description,
+            "path": str(definition.relative_to(ROOT)).replace("\\", "/"),
+            "body": text,
+            "bytes": len(text.encode("utf-8")),
+        }
+    return out
+
+
+def catalog_slug_for(component: dict, lane: dict) -> str:
+    """The owner/repo a catalogued component points at, or empty for a local one."""
+    name = (component.get("name") or "").strip()
+    owner = (component.get("owner") or "").strip()
+    if owner and _SLUG.match(f"{owner}/{name}"):
+        return f"{owner}/{name}"
+    if _SLUG.match(name):
+        return name
+    return ""
+
+
+def mongo_document(component: dict, lane: dict, health: dict, bodies: dict) -> dict:
+    """One component as it would sit in MongoDB.
+
+    _id is the natural id rather than an ObjectId, so a reload replaces a
+    document instead of adding a second copy of it.
+    """
+    doc = {
+        "_id": component["id"],
+        "name": component["name"],
+        "family": component["family"],
+        "kind": component["kind"],
+        "lane": component["lane"],
+        "laneName": lane.get("name", ""),
+        "detail": component.get("detail", ""),
+        "origin": "catalog" if lane.get("catalog") else "local",
+        "source": lane.get("source", ""),
+        # The author's sequence within a lane. lane_order sorts on it, so leaving
+        # it out made that index reference a field no document carried.
+        "order": component.get("order", 0),
+    }
+    if component.get("sub"):
+        doc["sub"] = component["sub"]
+    if component.get("cmd"):
+        doc["commands"] = component["cmd"]
+    if component.get("setupRecipe"):
+        doc["setupRecipe"] = component["setupRecipe"]
+        doc["setupState"] = component.get("setupState", "")
+    if component.get("routes"):
+        doc["routes"] = component["routes"]
+    if component.get("connects"):
+        doc["connects"] = component["connects"]
+
+    # Local definition: the whole thing. Matched on the directory name, the
+    # component id, and the name declared in the skill's own frontmatter,
+    # because the three disagree often enough to matter: caveman-compact is the
+    # component, caveman-ultra-compact is the directory.
+    body = (bodies.get(component["id"])
+            or bodies.get(component.get("name", ""))
+            or next((b for b in bodies.values()
+                     if b["skillName"] in (component["id"], component.get("name"))), None))
+    if body:
+        doc["origin"] = "local"
+        doc["definition"] = {
+            "path": body["path"],
+            "description": body["description"],
+            "body": body["body"],
+            "bytes": body["bytes"],
+        }
+
+    # Catalogued entry: the record about it, never its code.
+    slug = catalog_slug_for(component, lane)
+    if slug:
+        doc["slug"] = slug
+        doc["url"] = f"https://github.com/{slug}"
+        if slug in health:
+            doc["health"] = health[slug]
+    return doc
+
+
+def mongo_documents(payload: dict) -> dict:
+    """Every collection that would be created, with its documents."""
+    lanes = {l["id"]: l for l in payload["lanes"]}
+    health = health_by_repo()
+    bodies = local_skill_bodies()
+
+    collections = {name: [] for name in FAMILY_COLLECTIONS.values()}
+    collections["components"] = []
+    for component in payload["components"]:
+        lane = lanes.get(component["lane"], {})
+        doc = mongo_document(component, lane, health, bodies)
+        collections["components"].append(doc)
+        target = FAMILY_COLLECTIONS.get(component["family"])
+        if target:
+            collections[target].append(doc)
+
+    # Any skill this repository owns that no component names still belongs in the
+    # skills collection. Three of the fifteen were in exactly that position, and
+    # a skill nobody can find in the database is the failure this whole
+    # collection exists to prevent.
+    claimed = {d.get("definition", {}).get("path") for d in collections["skills"]}
+    for directory, body in sorted(bodies.items()):
+        if body["path"] in claimed:
+            continue
+        collections["skills"].append({
+            "_id": directory,
+            "name": body["skillName"],
+            "family": "skills",
+            "kind": "capability",
+            "lane": "sys-skills",
+            "laneName": "Skills",
+            "detail": body["description"],
+            "origin": "local",
+            "source": body["path"],
+            "definition": {
+                "path": body["path"],
+                "description": body["description"],
+                "body": body["body"],
+                "bytes": body["bytes"],
+            },
+        })
+
+    collections["lanes"] = [dict(l, _id=l["id"]) for l in payload["lanes"]]
+    collections["routes"] = [dict(r, _id=r["id"]) for r in payload["routes"]]
+    collections["surfaces"] = [dict(s, _id=s["id"]) for s in payload["surfaces"]]
+    collections["recipes"] = [dict(r, _id=r["id"]) for r in payload["setupRecipes"]]
+    return collections
 
 
 def payload() -> dict:
@@ -103,7 +313,8 @@ def parse_indexes() -> list[dict]:
         keys_raw = " ".join(match.group("keys").split())
         opts = match.group("opts")
         name = re.search(r'name:\s*"([^"]+)"', opts)
-        fields = re.findall(r"(\w+)\s*:", match.group("keys"))
+        fields = re.findall(r'"([\w.]+)"\s*:|(\w+)\s*:', match.group("keys"))
+        fields = [quoted or bare for quoted, bare in fields]
         out.append({
             "collection": match.group("coll"),
             "name": name.group(1) if name else "unnamed",
@@ -117,24 +328,122 @@ def parse_indexes() -> list[dict]:
     return out
 
 
+def field_value(doc: dict, field: str):
+    """Walk a dotted path the way MongoDB does.
+
+    health.status and definition.body are real index keys, and a flat doc.get on
+    either returns None, so every nested index read as covering zero documents.
+    """
+    value = doc
+    for part in field.split("."):
+        if not isinstance(value, dict):
+            return None
+        value = value.get(part)
+    return value
+
+
 def field_coverage(docs: list[dict], field: str) -> int:
-    return sum(1 for doc in docs if doc.get(field) not in (None, "", [], {}))
+    return sum(1 for doc in docs if field_value(doc, field) not in (None, "", [], {}))
+
+
+def collections_report() -> int:
+    """Exactly what MongoDB would hold, measured rather than described.
+
+    Charles asked what data would be sent so he can set the server up. The answer
+    has to be a measurement, not a paragraph: how many documents, how many bytes,
+    which carry full text and which carry only a record.
+    """
+    data = payload()
+    cols = mongo_documents(data)
+    order = ["skills", "agents", "tools", "mcp",
+             "lanes", "routes", "surfaces", "recipes", "components"]
+
+    print("Collections MongoDB would hold")
+    print()
+    print(f"{'collection':<13}{'docs':>6}{'bytes':>11}{'local':>7}{'catalog':>9}  full text")
+    print("-" * 74)
+    total_docs = total_bytes = 0
+    for name in order:
+        docs = cols[name]
+        size = len(json.dumps(docs).encode("utf-8"))
+        local = sum(1 for d in docs if d.get("origin") == "local")
+        catalogued = sum(1 for d in docs if d.get("origin") == "catalog")
+        bodies = sum(1 for d in docs if d.get("definition"))
+        total_docs += len(docs)
+        total_bytes += size
+        print(f"{name:<13}{len(docs):>6}{size:>11,}{local:>7}{catalogued:>9}  "
+              f"{bodies if bodies else '-'}")
+    print("-" * 74)
+    print(f"{'total':<13}{total_docs:>6}{total_bytes:>11,}")
+    distinct = total_bytes - len(json.dumps(cols["components"]).encode("utf-8"))
+    print()
+    print("components repeats the four family collections, so the distinct total is")
+    print(f"about {distinct:,} bytes without it. That is one small collection by any")
+    print("measure: it fits in the free tier of Atlas with room to spare.")
+
+    print()
+    print()
+    print("What a LOCAL document carries")
+    print()
+    print("Things this repository owns. The full text is stored, because a skill is")
+    print("instructions and instructions summarised are instructions broken, which")
+    print("is the same reason the no-compress guard exists.")
+    print()
+    sample = next(d for d in cols["skills"] if d.get("definition"))
+    shown = dict(sample)
+    shown["definition"] = dict(shown["definition"])
+    body = shown["definition"]["body"][:110].replace("\n", " ")
+    shown["definition"]["body"] = f"{body} ... [{shown['definition']['bytes']} bytes in full]"
+    print(json.dumps(shown, indent=2)[:1400])
+
+    catalogued = next((d for d in cols["agents"] if d.get("health")), None)
+    if catalogued:
+        print()
+        print("What a CATALOG document carries")
+        print()
+        print("Third-party repositories the catalog points at. The RECORD is stored,")
+        print("never the code. This repository does not vendor third-party source:")
+        print("install_catalog_skill.py refuses an uncatalogued slug, never runs")
+        print("anything from a clone, and never overwrites a skill it did not install.")
+        print("Copying 293 repositories into a database would undo all of that and")
+        print("leave a stale copy nobody rescans.")
+        print()
+        print(json.dumps(catalogued, indent=2)[:1100])
+
+    print()
+    print()
+    print("What is NOT sent")
+    print()
+    print("  no secrets, tokens or credentials. Nothing in the catalog holds one, and")
+    print("    the privacy guard already fails the build if a secret reaches a")
+    print("    published artifact.")
+    print("  no third-party source code, for the reason above.")
+    print("  no prompts, transcripts or activity. That is the monitor store, a")
+    print("    separate database with a TTL, described in docs/CHAT-CODE-MONITOR.md.")
+    print("  no personal data. The catalog is repositories, commands and lanes.")
+    return 0
 
 
 def check() -> int:
-    """Every claim an index makes, checked against the real catalog. No server."""
+    """Every claim an index makes, checked against the real catalog. No server.
+
+    Validated against mongo_documents rather than the raw payload, because those
+    are the documents that get stored: skills, agents, tools and mcp are shaped
+    here and have no payload key of their own, so checking the payload would skip
+    exactly the four collections Charles asked for.
+    """
     data = payload()
+    stored = mongo_documents(data)
     indexes = parse_indexes()
     failures = []
 
     print(f"{'collection':<14}{'index':<20}{'keys':<34}{'coverage'}")
     print("-" * 82)
     for index in indexes:
-        source_key = next((k for k, v in COLLECTIONS.items() if v == index["collection"]), None)
-        if source_key is None:
+        docs = stored.get(index["collection"])
+        if docs is None:
             failures.append(f"{index['name']} indexes {index['collection']}, which is not loaded")
             continue
-        docs = data.get(source_key, [])
         if not docs:
             failures.append(f"{index['collection']} has no documents to index")
             continue
@@ -172,8 +481,7 @@ def check() -> int:
     for index in indexes:
         if not index["unique"]:
             continue
-        source_key = next((k for k, v in COLLECTIONS.items() if v == index["collection"]), None)
-        docs = data.get(source_key, [])
+        docs = stored.get(index["collection"], [])
         field = index["fields"][0]
         # A partial index only claims uniqueness over the documents it covers, so
         # the excluded value is dropped before counting duplicates. Without this
@@ -226,8 +534,8 @@ def check() -> int:
               f"{'yes' if covered else 'NO'}")
 
     print()
-    total = sum(len(data.get(k, [])) for k in COLLECTIONS)
-    print(f"{total} documents across {len(COLLECTIONS)} collections, "
+    total = sum(len(docs) for docs in stored.values())
+    print(f"{total} documents across {len(stored)} collections, "
           f"{len(indexes)} indexes, {len(QUERIES)} queries checked")
 
     if failures:
@@ -281,14 +589,12 @@ def load(uri: str, database: str) -> int:
         return 1
 
     db = client[database]
-    for key, name in COLLECTIONS.items():
-        docs = data.get(key, [])
+    for name, docs in mongo_documents(data).items():
         if not docs:
             continue
         # Replace by natural id rather than dropping the collection. A reload is
         # then idempotent and never removes something added alongside it.
-        operations = [ReplaceOne({"_id": doc["id"]}, dict(doc, _id=doc["id"]), upsert=True)
-                      for doc in docs]
+        operations = [ReplaceOne({"_id": doc["_id"]}, doc, upsert=True) for doc in docs]
         result = db[name].bulk_write(operations, ordered=False)
         print(f"{name:<16}{result.upserted_count} inserted, {result.modified_count} updated, "
               f"{db[name].count_documents({})} total")
@@ -300,6 +606,8 @@ def load(uri: str, database: str) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("--collections", action="store_true",
+                        help="print exactly what would be stored, with counts and bytes")
     parser.add_argument("--check", action="store_true",
                         help="verify every index against the real catalog, offline")
     parser.add_argument("--explain", action="store_true",
@@ -309,6 +617,8 @@ def main() -> int:
     parser.add_argument("--db", default="atlas")
     args = parser.parse_args()
 
+    if args.collections:
+        return collections_report()
     if args.check:
         return check()
     if args.explain:

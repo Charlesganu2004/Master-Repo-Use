@@ -1404,17 +1404,29 @@ _CATALOG_CREATE = re.compile(
 
 # The collections the catalog loads into, and why each one is a collection rather
 # than a field on another. Counts come from the payload itself at build time.
+# Nine collections, and the first four are the ones Charles asked to be able to
+# open. They could have been a family filter over components, and were, but then
+# `show collections` answers with one bucket you have to already know the field
+# name to search. A collection you can see is worth the duplication.
 CATALOG_COLLECTIONS = {
-    "components": ("Every capability, one document each. The largest collection "
-                   "and the one every filter runs against."),
+    "skills": ("Every skill. The fifteen this repository owns carry their whole "
+               "SKILL.md in definition.body; the catalogued ones carry the "
+               "record and never the code."),
+    "agents": ("Agent frameworks and kits, all catalogued today, each with the "
+               "licence and health the guardian last recorded."),
+    "tools": ("Scripts and binaries. All of these are ours, so each names the "
+              "file it lives in and the command that runs it."),
+    "mcp": ("MCP servers and connectors, two local against the rest catalogued."),
+    "components": ("Every capability in one place, including the four above. "
+                   "Kept for the queries that cross families."),
     "lanes": ("The groups components sit in. A lane is backed by a file, except "
               "the runtime stages, which carry the sentinel source \"runtime\"."),
     "routes": ("Hybrid routes. members and lanes are arrays, so the indexes over "
                "them are multikey."),
     "surfaces": ("Clients, chat surfaces and local model tags, which is what the "
                  "setup picker reads."),
-    "setupRecipes": ("The reviewed commands. Fetched by id constantly, so _id "
-                     "already carries most of the load."),
+    "recipes": ("The reviewed commands. Fetched by id constantly, so _id "
+                "already carries most of the load."),
 }
 
 # What each index is FOR, in the question it answers. Keyed by index name so a
@@ -1460,6 +1472,49 @@ CATALOG_QUESTIONS = {
         "Not sparse, though minRamGb is missing on {ramMissing}. A compound sparse "
         "index only skips a document missing EVERY indexed field, and group is "
         "on all of them, so sparse would skip nothing while claiming otherwise."),
+    "skill_origin": (
+        "What do we own, and what are we only pointing at?",
+        "origin leads because it is the line that matters: a local skill carries "
+        "its full text, a catalogued one carries a record and never its code."),
+    "agent_origin": (
+        "Which agents are ours and which are catalogued?",
+        "All 50 agents are catalogued today, so this answers with one value. It "
+        "stays because the day one is written here, the question changes."),
+    "tool_origin": (
+        "Which tools are ours and which are catalogued?",
+        "All 88 are our own scripts. The index costs almost nothing and the "
+        "field is the one a reader filters on first."),
+    "mcp_origin": (
+        "Which MCP servers are ours and which are catalogued?",
+        "Two are ours and 33 are catalogued, so this index is mostly a way to "
+        "find the two without reading past the rest."),
+    "skill_health": (
+        "Which catalogued skills have gone stale or failed a scan?",
+        "Sparse: only a catalogued document carries health, which is 35 of the "
+        "132 skills, so the other 97 are skipped rather than stored as nulls."),
+    "agent_health": (
+        "Which agent repositories have gone stale or failed a scan?",
+        "NOT sparse. Every one of the 50 agents is catalogued and carries "
+        "health, so sparse would skip nothing while claiming otherwise. The "
+        "offline check caught that."),
+    "mcp_health": (
+        "Which MCP servers have gone stale or failed a scan?",
+        "Sparse: 33 of the 35 carry health, and the two that do not are the "
+        "local servers, which have no upstream repository to go stale."),
+    "skill_fulltext": (
+        "Which skill actually says this?",
+        "Searches the whole SKILL.md, not a one-line summary, which is the "
+        "difference between a catalog and a library. Weighted 10, 4, 1 so a name "
+        "beats a description and a description beats the body."),
+    "skill_lane": (
+        "Which skills come from this lane?",
+        "The lane is what vouches for a catalogued entry."),
+    "agent_lane": ("Which agents come from this lane?",
+                   "The lane is what vouches for a catalogued entry."),
+    "tool_lane": ("Which tools come from this lane?",
+                  "The lane is the file or script the tool was read from."),
+    "mcp_lane": ("Which MCP servers come from this lane?",
+                 "The lane is what vouches for a catalogued entry."),
     "recipe_ready": (
         "Which recipes are reviewed and ready?",
         "kind then state, because every query filters kind first."),
@@ -1478,7 +1533,7 @@ CATALOG_QUERIES = [
     ("routes", "route_members", "{ members: 'claude-code' }"),
     ("routes", "route_lanes", "{ lanes: 'sys-skills' }"),
     ("surfaces", "surface_group_ram", "{ group: 'local-model', minRamGb: { $lte: 16 } }"),
-    ("setupRecipes", "recipe_ready", "{ kind: 'setup', state: 'ready' }"),
+    ("recipes", "recipe_ready", "{ kind: 'setup', state: 'ready' }"),
 ]
 
 
@@ -1496,7 +1551,8 @@ def catalog_indexes() -> list[dict]:
             "collection": match.group("coll"),
             "name": name,
             "keys": keys,
-            "fields": re.findall(r"(\w+)\s*:", match.group("keys")),
+            "fields": [q or b for q, b in
+                       re.findall(r'"([\w.]+)"\s*:|(\w+)\s*:', match.group("keys"))],
             "unique": "unique: true" in opts,
             "sparse": "sparse: true" in opts,
             "partial": "partialFilterExpression" in opts,
@@ -1506,6 +1562,30 @@ def catalog_indexes() -> list[dict]:
             "why": why,
         })
     return out
+
+
+def orphan_skill_count(comps: list[dict]) -> int:
+    """Skills this repository owns that no component names.
+
+    Three of the fifteen were in that position, and the loader adds them to the
+    skills collection so a skill we wrote is never missing from the database.
+    Written as a rule rather than the number three, because the number is right
+    until somebody writes a sixteenth skill.
+    """
+    named = {c["id"] for c in comps} | {c["name"] for c in comps}
+    orphans = 0
+    for path in sorted((ROOT / "skills").iterdir()):
+        definition = path / "SKILL.md"
+        if not path.is_dir() or not definition.is_file():
+            continue
+        declared = ""
+        for line in definition.read_text(encoding="utf-8").splitlines()[:12]:
+            if line.startswith("name:"):
+                declared = line.split(":", 1)[1].strip()
+                break
+        if path.name not in named and declared not in named:
+            orphans += 1
+    return orphans
 
 
 def catalog_store_payload(counts: dict, facts: dict) -> dict:
@@ -1663,7 +1743,14 @@ def build() -> dict:
         "catalogStore": catalog_store_payload({
             "components": len(comps), "lanes": len(lanes), "routes": len(routes),
             "surfaces": len(surface_entries()) + len(local_model_surfaces()),
-            "setupRecipes": len(recipes),
+            "recipes": len(recipes),
+            # The four family collections are a slice of components, counted the
+            # same way the loader slices them so the page cannot disagree.
+            "skills": (sum(1 for c in comps if c["family"] == "skills")
+                       + orphan_skill_count(comps)),
+            "agents": sum(1 for c in comps if c["family"] == "agents"),
+            "tools": sum(1 for c in comps if c["family"] == "tools"),
+            "mcp": sum(1 for c in comps if c["family"] == "mcp"),
         }, {
             "recipeCoverage": (f"{sum(1 for c in comps if c.get('setupRecipe'))} "
                                f"of {len(comps)}"),

@@ -72,10 +72,58 @@ db.surfaces.createIndex({ group: 1, minRamGb: 1 }, { name: "surface_group_ram" }
 // Setup recipes are fetched by id constantly, once per rendered command. _id
 // already covers that, so the only index worth adding is the one that answers
 // "which recipes are ready on this platform".
-db.setupRecipes.createIndex({ kind: 1, state: 1 }, { name: "recipe_ready" });
+db.recipes.createIndex({ kind: 1, state: 1 }, { name: "recipe_ready" });
 
 print("components: " + db.components.getIndexes().map(i => i.name).join(", "));
 print("lanes:      " + db.lanes.getIndexes().map(i => i.name).join(", "));
 print("routes:     " + db.routes.getIndexes().map(i => i.name).join(", "));
 print("surfaces:   " + db.surfaces.getIndexes().map(i => i.name).join(", "));
-print("recipes:    " + db.setupRecipes.getIndexes().map(i => i.name).join(", "));
+print("recipes:    " + db.recipes.getIndexes().map(i => i.name).join(", "));
+
+// ---------------------------------------------------------------------------
+// skills, agents, tools and mcp as collections of their own.
+//
+// Charles asked that someone opening MongoDB finds these four there. They could
+// have been a query over components with a family filter, and that is what the
+// first version was, but then `show collections` answers with one bucket and you
+// have to already know the field name to find anything. A collection you can see
+// is worth the duplication: the four together are 214 KB, and components stays
+// for the cross-family queries.
+
+// "What do we own, and what are we only pointing at." origin is the field that
+// separates a skill whose full text is stored from a repository we deliberately
+// do not vendor, so it leads every one of these.
+db.skills.createIndex({ origin: 1, name: 1 }, { name: "skill_origin" });
+db.agents.createIndex({ origin: 1, name: 1 }, { name: "agent_origin" });
+db.tools.createIndex({ origin: 1, name: 1 }, { name: "tool_origin" });
+db.mcp.createIndex({ origin: 1, name: 1 }, { name: "mcp_origin" });
+
+// "Which of these has gone stale, been archived, or failed a scan." Only a
+// catalogued document carries health, so skills and mcp are sparse: 35 of 132
+// and 33 of 35, and storing a null for the rest buys nothing.
+//
+// agents is NOT sparse, because every one of the 50 is catalogued and carries
+// health. Sparse there would skip nothing while claiming the opposite, which is
+// the same mistake surface_group_ram made and the checker caught both.
+db.skills.createIndex({ "health.status": 1 }, { name: "skill_health", sparse: true });
+db.agents.createIndex({ "health.status": 1 }, { name: "agent_health" });
+db.mcp.createIndex({ "health.status": 1 }, { name: "mcp_health", sparse: true });
+
+// Search the skills we own by what is actually in them. The body is the whole
+// SKILL.md, so this searches the instructions rather than a one-line summary,
+// which is the difference between a catalog and a library.
+db.skills.createIndex(
+  { name: "text", detail: "text", "definition.body": "text" },
+  { name: "skill_fulltext",
+    weights: { name: 10, detail: 4, "definition.body": 1 } });
+
+// Every collection above is browsed by the lane that vouches for the entry.
+db.skills.createIndex({ lane: 1 }, { name: "skill_lane" });
+db.agents.createIndex({ lane: 1 }, { name: "agent_lane" });
+db.tools.createIndex({ lane: 1 }, { name: "tool_lane" });
+db.mcp.createIndex({ lane: 1 }, { name: "mcp_lane" });
+
+print("skills:     " + db.skills.getIndexes().map(i => i.name).join(", "));
+print("agents:     " + db.agents.getIndexes().map(i => i.name).join(", "));
+print("tools:      " + db.tools.getIndexes().map(i => i.name).join(", "));
+print("mcp:        " + db.mcp.getIndexes().map(i => i.name).join(", "));

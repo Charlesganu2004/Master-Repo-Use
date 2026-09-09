@@ -434,15 +434,22 @@ class TheCatalogInMongo(unittest.TestCase):
         self.assertTrue(lane_source["partial"])
 
     def test_no_index_claims_sparse_over_a_field_every_document_carries(self):
-        payload = DATA
-        key_for = {"components": "components", "lanes": "lanes", "routes": "routes",
-                   "surfaces": "surfaces", "setupRecipes": "setupRecipes"}
+        """Checked against the documents that are actually stored.
+
+        skills, agents, tools and mcp are shaped by mongo_documents and have no
+        payload key of their own, so reading the payload would skip exactly the
+        four collections Charles asked for. This is how agent_health was caught
+        claiming sparse over a field all 50 agents carry.
+        """
+        import load_catalog_mongo as loader
+        stored = loader.mongo_documents(DATA)
         for index in self.store["indexes"]:
             if not index["sparse"]:
                 continue
-            docs = payload[key_for[index["collection"]]]
+            docs = stored[index["collection"]]
             first = index["fields"][0]
-            carried = sum(1 for d in docs if d.get(first) not in (None, "", [], {}))
+            carried = sum(1 for d in docs
+                          if loader.field_value(d, first) not in (None, "", [], {}))
             self.assertLess(carried / len(docs), 0.95,
                             f"{index['name']} is sparse over a field on most documents")
 
@@ -459,11 +466,19 @@ class TheCatalogInMongo(unittest.TestCase):
             self.assertIn(query["index"], names, query["filter"])
 
     def test_the_collection_counts_match_the_payload(self):
+        """Only the collections that ARE a payload key.
+
+        skills, agents, tools and mcp are shaped by the loader and have no key of
+        their own, so they are checked against the loader instead, in
+        TheFourCollectionsCharlesAskedFor.
+        """
         key_for = {"components": "components", "lanes": "lanes", "routes": "routes",
-                   "surfaces": "surfaces", "setupRecipes": "setupRecipes"}
+                   "surfaces": "surfaces", "recipes": "setupRecipes"}
         for collection in self.store["collections"]:
-            self.assertEqual(collection["count"], len(DATA[key_for[collection["name"]]]),
-                             collection["name"])
+            key = key_for.get(collection["name"])
+            if key is None:
+                continue
+            self.assertEqual(collection["count"], len(DATA[key]), collection["name"])
 
     def test_the_design_renders_from_the_payload(self):
         page = (ROOT / "designs" / "d36-mongo.html").read_text(encoding="utf-8")
@@ -505,3 +520,104 @@ class TheGalleryHasNoDeadLinks(unittest.TestCase):
         pages = " ".join(p.name for p in (ROOT / "designs").glob("d*.html"))
         unmounted = sorted(s for s in scenes if s not in pages)
         self.assertFalse(unmounted, f"scenes with no page: {unmounted}")
+
+
+class TheFourCollectionsCharlesAskedFor(unittest.TestCase):
+    """Skills, agents, tools and MCP have to be findable by opening the database.
+
+    They could have been a family filter over components, and were: then
+    `show collections` answers with one bucket you must already know the field
+    name to search. These hold that the four are real collections, that a skill
+    we own carries its whole text, and that a catalogued entry carries a record
+    and never the code.
+    """
+
+    def setUp(self):
+        import load_catalog_mongo as loader
+        self.loader = loader
+        self.stored = loader.mongo_documents(loader.payload())
+        self.store = DATA.get("catalogStore", {})
+
+    def test_all_four_are_collections_of_their_own(self):
+        for name in ("skills", "agents", "tools", "mcp"):
+            self.assertIn(name, self.stored, f"{name} is not a collection")
+            self.assertTrue(self.stored[name], f"{name} is empty")
+
+    def test_the_page_count_matches_what_the_loader_would_write(self):
+        """The page describes the store, so a number it shows that the loader
+        does not produce is the drift the store section exists to prevent."""
+        page = {c["name"]: c["count"] for c in self.store["collections"]}
+        for name, count in page.items():
+            self.assertEqual(count, len(self.stored.get(name, [])), name)
+
+    def test_every_skill_this_repo_owns_is_in_the_skills_collection(self):
+        """Three of the fifteen were named by no component and would have been
+        missing entirely, which is the failure the collection exists to stop."""
+        on_disk = {p.name for p in (ROOT / "skills").iterdir()
+                   if p.is_dir() and (p / "SKILL.md").is_file()}
+        stored_paths = {d["definition"]["path"] for d in self.stored["skills"]
+                        if d.get("definition")}
+        for name in sorted(on_disk):
+            self.assertIn(f"skills/{name}/SKILL.md", stored_paths,
+                          f"{name} is on disk but would not be in MongoDB")
+
+    def test_a_local_skill_carries_its_whole_body(self):
+        with_body = [d for d in self.stored["skills"] if d.get("definition")]
+        self.assertEqual(len(with_body), 15)
+        for doc in with_body:
+            path = ROOT / doc["definition"]["path"]
+            self.assertEqual(doc["definition"]["body"], path.read_text(encoding="utf-8"),
+                             f"{doc['_id']} body differs from the file")
+
+    def test_a_catalogued_entry_carries_a_record_and_not_the_code(self):
+        """The deliberate line. This repository does not vendor third-party
+        source, and a database copy would undo that and go stale unscanned."""
+        catalogued = [d for d in self.stored["agents"] if d["origin"] == "catalog"]
+        self.assertTrue(catalogued)
+        for doc in catalogued:
+            self.assertNotIn("definition", doc,
+                             f"{doc['_id']} carries third-party code")
+            self.assertIn("slug", doc)
+            self.assertTrue(doc["url"].startswith("https://github.com/"))
+
+    def test_a_catalogued_entry_carries_the_health_the_guardian_recorded(self):
+        withhealth = [d for d in self.stored["agents"] if d.get("health")]
+        self.assertTrue(withhealth)
+        for doc in withhealth:
+            for field in ("status", "license", "archived", "critical", "findings"):
+                self.assertIn(field, doc["health"], doc["_id"])
+
+    def test_origin_separates_the_two_tiers_on_every_document(self):
+        for name in ("skills", "agents", "tools", "mcp"):
+            for doc in self.stored[name]:
+                self.assertIn(doc["origin"], ("local", "catalog"), doc["_id"])
+
+    def test_every_document_uses_a_natural_id_so_a_reload_replaces(self):
+        for name, docs in self.stored.items():
+            ids = [d["_id"] for d in docs]
+            self.assertEqual(len(ids), len(set(ids)), f"{name} has duplicate _id")
+            self.assertTrue(all(isinstance(i, str) and i for i in ids), name)
+
+    def test_no_secret_reaches_the_documents(self):
+        blob = json.dumps(self.stored)
+        # Anchored to the shapes real credentials take. A bare "sk-" matches
+        # task-intake and risk-tools, and a check that fires on ordinary
+        # hyphenated words is a check somebody deletes.
+        patterns = [
+            r"ghp_[A-Za-z0-9]{20,}",
+            r"github_pat_[A-Za-z0-9_]{20,}",
+            r"sk-[A-Za-z0-9]{20,}",
+            r"AKIA[0-9A-Z]{16}",
+            r"-----BEGIN [A-Z ]*PRIVATE KEY-----",
+            r"(?i)(password|api_key|secret|token)\s*[=:]\s*[\"']?[A-Za-z0-9_\-]{12,}",
+        ]
+        for pattern in patterns:
+            found = re.search(pattern, blob)
+            self.assertIsNone(found, f"{pattern} matched: {found.group(0)[:40] if found else ''}")
+
+    def test_the_loader_writes_the_shaped_documents_not_the_raw_payload(self):
+        """Loading the payload instead would store documents with no origin, no
+        health and no skill bodies, and every new index would be dead."""
+        body = (ROOT / "scripts" / "load_catalog_mongo.py").read_text(encoding="utf-8")
+        load = body[body.index("def load("):]
+        self.assertIn("mongo_documents(data)", load)
