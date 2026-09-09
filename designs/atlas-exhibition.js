@@ -1,4 +1,4 @@
-/* Immersive first views for designs 16 through 30.
+/* Immersive first views for designs 16 through 35.
  *
  * Each page still mounts AtlasCore and AtlasPanes underneath this layer. The
  * exhibition view is the first screen, built from the same generated data, and
@@ -330,6 +330,47 @@
   }
 
   function bind(root) {
+    let stageRestore = null;
+
+    function stageIsSuppressed(stage) {
+      if (!stage) return true;
+      const inlineLeft = stage.style && stage.style.left ? stage.style.left : '';
+      return stage.hidden || stage.getAttribute('aria-hidden') === 'true' || /^-\d/.test(inlineLeft);
+    }
+
+    function restoreStage() {
+      if (!stageRestore) return;
+      const stage = stageRestore.stage;
+      stage.classList.remove('atlas-command-surface');
+      stage.hidden = stageRestore.hidden;
+      if (stageRestore.ariaHidden == null) stage.removeAttribute('aria-hidden');
+      else stage.setAttribute('aria-hidden', stageRestore.ariaHidden);
+      stageRestore = null;
+    }
+
+    function syncStageSurface(tab) {
+      const stage = document.getElementById('stage');
+      if (!stage) return null;
+      const needsVisibleStage = Boolean(tab && tab !== 'map');
+      if (!needsVisibleStage) {
+        restoreStage();
+        return stage;
+      }
+      if (!stageRestore && stageIsSuppressed(stage)) {
+        stageRestore = {
+          stage: stage,
+          hidden: stage.hidden,
+          ariaHidden: stage.getAttribute('aria-hidden')
+        };
+      }
+      if (stageRestore) {
+        stage.hidden = false;
+        stage.removeAttribute('aria-hidden');
+        stage.classList.add('atlas-command-surface');
+      }
+      return stage;
+    }
+
     function dependencyNotice(message) {
       let notice = document.getElementById('atlasRevealError');
       if (notice) return notice;
@@ -364,8 +405,13 @@
         window.AtlasPanes.tab = requestedTab;
         window.AtlasPanes.draw();
       }
+      syncStageSurface(requestedTab || (window.AtlasPanes && window.AtlasPanes.tab));
       window.requestAnimationFrame(function () {
-        const main = document.getElementById('stage') || document.getElementById('main-content');
+        const stage = document.getElementById('stage');
+        const tabs = document.getElementById('tabs');
+        const selectedTab = tabs && tabs.querySelector('[aria-selected="true"]');
+        const main = !stageIsSuppressed(stage) ? stage :
+          (document.getElementById('main-content') || selectedTab || tabs);
         const emptyStage = main && main.id === 'stage' && !main.children.length && !main.textContent.trim();
         if (!main || emptyStage) {
           const notice = dependencyNotice('The shared workspace loaded no controls. Its scripts may be stale or incomplete.');
@@ -391,11 +437,20 @@
       revealAtlas('commands', event.currentTarget);
     });
     root.querySelector('[data-return-concept]').addEventListener('click', function () {
+      restoreStage();
       legacy.forEach(function (node) { node.hidden = true; });
       document.body.classList.remove('exhibition-full-atlas');
       root.classList.remove('ex-collapsed');
       window.scrollTo(0, 0);
       if (lastOpener) lastOpener.focus();
+    });
+
+    const tabs = document.getElementById('tabs');
+    if (tabs) tabs.addEventListener('click', function () {
+      window.requestAnimationFrame(function () {
+        if (!document.body.classList.contains('exhibition-full-atlas')) return;
+        syncStageSurface(window.AtlasPanes && window.AtlasPanes.tab);
+      });
     });
 
     root.querySelectorAll('[data-lane-index]').forEach(function (button) {

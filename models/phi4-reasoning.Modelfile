@@ -1,13 +1,14 @@
 # phi4-reasoning
 # Microsoft, MIT. 11.12 GB, needs 16 GB of memory.
 #
-# Pinned to the digest the registry returned on the day
-# docs/model-manifest.json was last written:
+# Expected weight digest recorded in docs/model-manifest.json:
 #   sha256:89f38c5f78de6092c203b63dd62ff1285276a6f8ee140dd1eb2f6e196a631f40
 #
-# Build it from this file rather than from a web page:
+# FROM below is a mutable tag, not an executable digest pin.
+# Build the tag's current definition with:
 #   ollama create phi4-reasoning --file models/phi4-reasoning.Modelfile
-# Or pull it, which is the same bytes by digest:
+# A direct pull does NOT verify the recorded digest:
 #   ollama pull phi4-reasoning
+# Use scripts/vendor_models.py --fetch --auto-hardware for verified weights.
 
 FROM phi4-reasoning

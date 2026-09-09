@@ -24,6 +24,7 @@ import os
 import pathlib
 import re
 import sys
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PRIVATE_STATE = ROOT / "docs" / "catalog-status.json"
@@ -247,6 +248,11 @@ def build_designs() -> list[str]:
     if not PRIVATE_ATLAS_DATA.exists():
         return ["atlas-data.json is missing; run scripts/build_atlas_data.py"]
 
+    expected_site = ROOT.resolve() / "_site"
+    if (SITE.is_symlink() or PUBLIC_DESIGNS.is_symlink()
+            or SITE.resolve() != expected_site
+            or PUBLIC_DESIGNS.resolve() != expected_site / "designs"):
+        return ["Refusing to replace public design assets through a symlink or outside the repository"]
     PUBLIC_DESIGNS.mkdir(parents=True, exist_ok=True)
     # This directory is generated output. Clear its top-level files before copying
     # so a design removed from the source tree cannot survive a later publication.
@@ -414,20 +420,32 @@ def build_version(identifier: str) -> None:
         }, indent=2) + "\n",
         encoding="utf-8",
     )
-    for page_path, label in (
-        (PUBLIC_INDEX, "index.html"),
-        (PUBLIC_DESIGN_STUDIO, "design-options.html"),
-    ):
+    for page_path in sorted(SITE.rglob("*.html")):
+        label = str(page_path.relative_to(SITE))
         if not page_path.exists():
             print(f"::warning::{label} is missing; it could not be build stamped")
             continue
         page = page_path.read_text(encoding="utf-8")
-        stamped = page.replace('<meta name="build-id" content="dev">',
-                               f'<meta name="build-id" content="{identifier}">', 1)
-        if stamped == page:
-            print(f"::warning::{label} has no build-id placeholder; "
-                  "stale-cache detection will not work")
+        tag = f'<meta name="build-id" content="{identifier}">'
+        if re.search(r'<meta name="build-id" content="[^"]*">', page):
+            stamped = re.sub(r'<meta name="build-id" content="[^"]*">', tag, page, count=1)
+        else:
+            stamped = page.replace("<head>", "<head>\n" + tag, 1)
+        stamped = version_asset_links(stamped, identifier)
         page_path.write_text(stamped, encoding="utf-8")
+
+
+def version_asset_links(page: str, identifier: str) -> str:
+    """A publish must not combine new HTML with cached shared JavaScript or CSS."""
+    def replace(match: re.Match) -> str:
+        url = urlsplit(html.unescape(match.group("url")))
+        if url.scheme or url.netloc or url.path.lower().endswith((".js", ".css", ".json")) is False:
+            return match.group(0)
+        params = [(key, value) for key, value in parse_qsl(url.query) if key != "v"]
+        params.append(("v", identifier))
+        rebuilt = urlunsplit(("", "", url.path, urlencode(params), url.fragment))
+        return f'{match.group("attr")}={match.group("quote")}{html.escape(rebuilt, quote=True)}{match.group("quote")}'
+    return re.sub(r'(?P<attr>src|href)=(?P<quote>[\"\'])(?P<url>[^\"\']+)(?P=quote)', replace, page)
 
 
 def build() -> dict:

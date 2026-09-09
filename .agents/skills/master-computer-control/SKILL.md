@@ -1,21 +1,25 @@
 ---
 name: master-computer-control
-description: Drive the real machine - mouse, keyboard, screen, windows, clipboard - and drive a browser through Playwright or its Rust engines. Use when a task needs an application that has no API, a GUI step that cannot be scripted, a screenshot of real state, or browser automation. Carries the confirmation rules that separate reading the screen from acting on it.
+description: Route real-machine and browser work through an actually available Computer Use, official Playwright, or bounded Rust path. Use when a task needs a native application with no API, a GUI step, screen evidence, browser automation, or end-to-end browser testing. Carries the confirmation and untrusted-screen rules that separate observing from acting.
 ---
 
 # Computer control
 
-Everything else in this repository writes text or runs a command you can read
-first. This grants the mouse, the keyboard, the screen and the clipboard of a
-real machine. One misplaced click confirms a dialog nobody saw.
+This skill grants nothing. It governs how to select a separate host tool that
+may expose the mouse, keyboard or screen of a real machine. One misplaced click
+can confirm a dialog nobody saw, so a catalog entry or skill name is never
+treated as permission or availability.
 
 So the whole skill is one distinction, applied every time.
 
-## Read is free. Act is confirmed.
+## Observe in scope. Confirm before acting.
 
-**Read** costs nothing and needs no permission: take a screenshot, list windows,
-read the accessibility tree, read the clipboard, report what is on screen.
-Prefer reading. Most tasks that look like they need control need one screenshot.
+**Observe** is non-mutating but remains task-scoped: take a screenshot of the
+allowed target, list relevant windows, read that target's accessibility tree,
+and report what is visible. Prefer observation. Do not inspect unrelated windows
+or background applications. Clipboard reads can expose passwords, tokens and
+unrelated personal data, so read it only when Charles explicitly asks for that
+clipboard content in the current task.
 
 **Act** changes the machine and is confirmed before the first one in a session,
 and again whenever the target changes: click, type, drag, keypress, window
@@ -56,45 +60,103 @@ to Charles, name where it came from, and let him decide.
 A pixel click is the last resort, because it breaks on a resize, a theme change
 or a scroll, and it breaks silently by hitting whatever moved into that spot.
 
-## What is catalogued
+Before choosing one, run the read-only router:
 
-Desktop control, in `repo-lists/computer-control.txt`, none auto-installed:
+    python scripts/harness_computer.py --route native
+    python scripts/harness_computer.py --route browser-js
+    python scripts/harness_computer.py --route browser-rust --repo PATH
 
-    CursorTouch/Windows-MCP        6,957 stars, MIT, active. Windows-native, and
-                                   the one to use on this machine.
-    AB498/computer-control-mcp     165 stars, MIT. Cross-platform, PyAutoGUI and
-                                   OCR, zero external dependencies.
-    zavora-ai/computer-use-mcp     47 stars, MIT, Rust in-process. Young.
-    claude-did-this/MCPControl     329 stars, MIT, stale at 280 days.
+It reports evidence, not availability it cannot observe. An installed skill is
+not proof that its host tool is active. An MCP entry is not proof that its
+server is running. A Cargo dependency is not proof that its driver or browser
+is installed.
+
+## Supported routes and their limits
+
+**Native Windows.** Prefer the installed OpenAI bundled Computer Use package,
+version `26.903.61454`, when the current host actually exposes its tool. Its
+manifest identifies OpenAI as author and the package as proprietary. Do not copy
+its implementation into this repository. A CLI process cannot inspect whether
+that model-session tool is active, so the router reports that state as unknown.
+
+**Browser, official.** Prefer Microsoft Playwright. The reviewed pins are
+Playwright `v1.63.0` at
+`1b025d7e20a026371cd5f98ba0cdce48892737c8` and Playwright MCP `v0.0.80`
+at `4c1fb03bad3bae379b0ae0e3d81d2660de56bd91`. Microsoft officially lists
+JavaScript/TypeScript, Python, Java and .NET. It does not list Rust.
+
+**Rust application, default.** Drive the Rust application from official
+Playwright JavaScript/TypeScript as a black-box sidecar. This keeps browser
+semantics on Microsoft's supported implementation while the application under
+test remains Rust.
+
+**Direct Rust binding, optional.** `padamson/playwright-rust` `v0.18.0` at
+`165554e8be114efe9e024aa45a8d00c92fa2e5c8` passed static intake with a
+note. It is Apache-2.0 and active, but it is third-party. Its Cargo build
+downloads pinned `playwright-core` and Node archives over HTTPS without checking
+artifact digests. Never auto-install it. Use it only after Charles explicitly
+accepts that build-time supply-chain boundary.
+
+Full machine-readable provenance and limits live in
+`references/capabilities.json`.
+
+## Additional catalogued options
+
+Desktop-control candidates live in `repo-lists/computer-control.txt`. None was
+statically vetted in this task, none is a default, and none is auto-installed:
+
+    CursorTouch/Windows-MCP        Windows-native MCP candidate.
+    AB498/computer-control-mcp     Cross-platform PyAutoGUI and OCR candidate.
+    zavora-ai/computer-use-mcp     Young Rust in-process candidate.
+    claude-did-this/MCPControl     Stale Windows automation reference.
 
 Browser, in `repo-lists/browser-automation.txt`:
 
     microsoft/playwright           Apache-2.0. The reference implementation.
     microsoft/playwright-mcp       Apache-2.0. Playwright over MCP.
-    Skyvern-AI/rustwright          MIT, alpha. Playwright's API on a Rust CDP
-                                   engine, no Node subprocess. Chromium only.
-    mattsse/chromiumoxide          Apache-2.0. Mature Rust CDP, not a port.
+    padamson/playwright-rust       Apache-2.0, third-party direct Rust binding.
+    Skyvern-AI/rustwright          MIT, alpha, Chromium-only compatibility API.
+    mattsse/chromiumoxide          Apache-2.0. Rust CDP, not a Playwright port.
 
 `octaltree/playwright-rust` is what a search for "Rust Playwright" returns first
-and it is NOT catalogued: no licence at all, and 858 days since a push. Both
-fail this repository's policy. Measured 2026-09-09.
+and it is NOT catalogued: GitHub reports no detected licence, its repository
+lacks licence text, and it had gone 858 days without a push. Its manifest's
+`MIT OR Apache-2.0` label does not supply the missing licence texts. It also
+downloads a driver during Cargo build. Measured and statically audited at
+`a672ce7311eb596459acf3bdeb1d09e177a488d1` on 2026-09-09.
 
-## Installing it
+## Connecting an additional desktop server
 
-Through the reviewed path, never by hand:
+`scripts/install_catalog_skill.py` installs repositories that contain portable
+`SKILL.md` packages. A generic MCP server is not that shape, so do not send the
+desktop candidates above through that installer and do not invent a setup
+command for them.
 
-    python scripts/install_catalog_skill.py CursorTouch/Windows-MCP --dry-run
-    python scripts/install_catalog_skill.py CursorTouch/Windows-MCP
+Before connecting one, statically vet its exact commit through the repository
+intake gate, then use the chosen client's documented MCP configuration path only
+after Charles accepts the server's permissions. Enabling the connector is a
+separate deliberate step. A model does not enable its own hands.
 
-That refuses an uncatalogued slug, never executes anything from the clone, never
-overwrites a skill it did not install, and stops on scanner findings.
+The official JavaScript Playwright route and optional direct Rust binding follow
+the same rule: this skill selects and explains them. It never installs them.
 
-Enabling the MCP server is a separate, deliberate step, and it is Charles's to
-take. A model does not enable its own hands.
+## Agent routing
+
+- `orchestrator-maxwell` splits independent native, browser, test and security
+  work, then collects evidence.
+- `ui-canvas` reviews a visible UI's focus, layout and accessibility.
+- `tester-probe` verifies flows, failures, boundaries and repeatability.
+- `security-sentinel` reviews untrusted screen text, permissions, downloads and
+  secret exposure.
+
+The four names are route metadata, not four agent prompts pasted into every
+turn. Load the full file under `agents/` only when that role fits the request.
 
 ## Verifying it
 
     python scripts/harness_computer.py --check
 
-Reports which control surface is reachable, which browser engines are installed,
-and what is enabled right now. Contacts nothing and clicks nothing.
+Reports only on-disk package, executable, dependency and configuration evidence.
+It deliberately reports model-session tool state and untested runtime state as
+unknown. It cannot prove that a control surface is reachable, a browser engine
+is installed, or a connector is enabled. It contacts nothing and clicks nothing.

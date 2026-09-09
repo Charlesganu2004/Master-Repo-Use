@@ -1,0 +1,6 @@
+interface:
+  display_name: "Master Computer Control"
+  short_description: "Route native and browser control safely"
+  default_prompt: "Use $master-computer-control to choose an actually available native, Playwright, or Rust browser route and state its limits before acting."
+policy:
+  allow_implicit_invocation: true

@@ -1,13 +1,14 @@
 # qwen3:14b
 # Ollama, Apache-2.0. 9.28 GB, needs 16 GB of memory.
 #
-# Pinned to the digest the registry returned on the day
-# docs/model-manifest.json was last written:
+# Expected weight digest recorded in docs/model-manifest.json:
 #   sha256:a8cc1361f3145dc01f6d77c6c82c9116b9ffe3c97b34716fe20418455876c40e
 #
-# Build it from this file rather than from a web page:
+# FROM below is a mutable tag, not an executable digest pin.
+# Build the tag's current definition with:
 #   ollama create qwen3:14b --file models/qwen3-14b.Modelfile
-# Or pull it, which is the same bytes by digest:
+# A direct pull does NOT verify the recorded digest:
 #   ollama pull qwen3:14b
+# Use scripts/vendor_models.py --fetch --auto-hardware for verified weights.
 
 FROM qwen3:14b

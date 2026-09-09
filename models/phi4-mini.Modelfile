@@ -1,13 +1,14 @@
 # phi4-mini
 # Microsoft, MIT. 2.49 GB, needs 6 GB of memory.
 #
-# Pinned to the digest the registry returned on the day
-# docs/model-manifest.json was last written:
+# Expected weight digest recorded in docs/model-manifest.json:
 #   sha256:3c168af1dea0a414299c7d9077e100ac763370e5a98b3c53801a958a47f0a5db
 #
-# Build it from this file rather than from a web page:
+# FROM below is a mutable tag, not an executable digest pin.
+# Build the tag's current definition with:
 #   ollama create phi4-mini --file models/phi4-mini.Modelfile
-# Or pull it, which is the same bytes by digest:
+# A direct pull does NOT verify the recorded digest:
 #   ollama pull phi4-mini
+# Use scripts/vendor_models.py --fetch --auto-hardware for verified weights.
 
 FROM phi4-mini

@@ -1,13 +1,14 @@
 # phi3.5
 # Microsoft, MIT. 2.18 GB, needs 6 GB of memory.
 #
-# Pinned to the digest the registry returned on the day
-# docs/model-manifest.json was last written:
+# Expected weight digest recorded in docs/model-manifest.json:
 #   sha256:b5374915da534cb93df39f03bd4f2cd5a0c533df0d5e21957dc9556c260be9eb
 #
-# Build it from this file rather than from a web page:
+# FROM below is a mutable tag, not an executable digest pin.
+# Build the tag's current definition with:
 #   ollama create phi3.5 --file models/phi3.5.Modelfile
-# Or pull it, which is the same bytes by digest:
+# A direct pull does NOT verify the recorded digest:
 #   ollama pull phi3.5
+# Use scripts/vendor_models.py --fetch --auto-hardware for verified weights.
 
 FROM phi3.5

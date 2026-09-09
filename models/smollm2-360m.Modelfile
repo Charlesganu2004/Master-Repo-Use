@@ -1,13 +1,14 @@
 # smollm2:360m
 # Ollama, Apache-2.0. 0.73 GB, needs 4 GB of memory.
 #
-# Pinned to the digest the registry returned on the day
-# docs/model-manifest.json was last written:
+# Expected weight digest recorded in docs/model-manifest.json:
 #   sha256:7d23be4097d67c5c43c3df62ebc19609a25f483c7d0b77d3989e1d94e36ccab6
 #
-# Build it from this file rather than from a web page:
+# FROM below is a mutable tag, not an executable digest pin.
+# Build the tag's current definition with:
 #   ollama create smollm2:360m --file models/smollm2-360m.Modelfile
-# Or pull it, which is the same bytes by digest:
+# A direct pull does NOT verify the recorded digest:
 #   ollama pull smollm2:360m
+# Use scripts/vendor_models.py --fetch --auto-hardware for verified weights.
 
 FROM smollm2:360m

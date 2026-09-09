@@ -565,6 +565,12 @@ const AtlasPanes = (() => {
             aria-label="Copy the check command for ${esc(h.name)}">Copy</button>
         </div>
       </article>`).join('')}</div>
+      <aside class="harness-safety-note" role="note" aria-label="Computer control safety">
+        <strong>Computer control is read-only by default.</strong>
+        <p>The four harnesses may inspect visible state and report what they find. Clicking, typing,
+        submitting, installing, deleting, or changing settings begins only when that action is in the
+        request and still passes the normal permission and safety checks.</p>
+      </aside>
       <p class="sub harness-foot">All four inject the same three layers, so nothing here changes
         what the rules say. They differ only in how the rules arrive. The goal harness adds one
         thing on top: a goal that survives the turn, set with <code>/goal</code>,
@@ -1047,14 +1053,14 @@ const AtlasPanes = (() => {
     .cmd-action .cmd-tag{background:var(--panel-3,#2a2a2a);color:var(--ink-2,#ccc)}
     .orient{margin-bottom:14px;border:1px solid var(--line,#555);border-radius:10px;overflow:hidden}
     .orient-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 11px}
-    .orient-toggle{flex:1;min-width:0;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+    .orient-toggle{flex:1;min-width:0;min-height:44px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;
       padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
     .orient-mark{flex:none;width:18px;height:18px;display:inline-grid;place-items:center;
       border:1px solid var(--line,#555);border-radius:5px;font-size:12px;line-height:1}
     .orient-toggle b{font-size:13.5px}
     .orient-sub{color:var(--dim,#9aa);font-size:11.5px}
     .orient-level{flex:none;display:flex;gap:2px;padding:2px;border-radius:7px;background:var(--panel-2,#222)}
-    .orient-level button{min-height:30px;padding:0 10px;border:0;border-radius:5px;background:transparent;
+    .orient-level button{min-height:44px;padding:0 12px;border:0;border-radius:5px;background:transparent;
       color:var(--dim,#9aa);font:inherit;font-size:11px;font-weight:700;cursor:pointer}
     .orient-level button[aria-pressed="true"]{background:var(--accent,#b65039);color:#fff}
     .orient-body{padding:0 11px 12px;border-top:1px solid var(--line,#555)}
@@ -1092,6 +1098,10 @@ const AtlasPanes = (() => {
     .harness-foot{margin-top:14px}
     .harness-foot code{padding:1px 5px;border-radius:4px;background:var(--panel-2,#222);
       font:600 11.5px ui-monospace,monospace;font-variant-ligatures:none}
+    .harness-safety-note{margin-top:14px;border-left:4px solid var(--accent,#b65039);padding:12px 14px;
+      border-radius:0 8px 8px 0;background:var(--panel-2,#222)}
+    .harness-safety-note strong{display:block;font-size:13.5px}
+    .harness-safety-note p{margin:4px 0 0;color:var(--dim,#9aa);font-size:12.5px;line-height:1.55}
     @media(max-width:640px){.cmd-line{flex-direction:column}.cmd-copy{align-self:flex-start}}
     .filter-explanations p{margin:8px 0}
     .surface-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin:20px 0}

@@ -229,9 +229,9 @@ class ThePublicDesignBuilder(unittest.TestCase):
         with tempfile.TemporaryDirectory() as scratch:
             scratch_path = pathlib.Path(scratch)
             private = scratch_path / "private-designs"
-            public = scratch_path / "public-designs"
+            public = scratch_path / "_site" / "designs"
             private.mkdir()
-            public.mkdir()
+            public.mkdir(parents=True)
             private_data = scratch_path / "atlas-data.json"
             private_data.write_text("{}", encoding="utf-8")
 
@@ -241,6 +241,8 @@ class ThePublicDesignBuilder(unittest.TestCase):
             stale = public / "d2-constellation.html"
             stale.write_text("obsolete", encoding="utf-8")
 
+            builder.ROOT = scratch_path
+            builder.SITE = scratch_path / "_site"
             builder.PRIVATE_DESIGNS = private
             builder.PUBLIC_DESIGNS = public
             builder.PRIVATE_ATLAS_DATA = private_data

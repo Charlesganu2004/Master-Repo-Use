@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate atlas-data.json, the single data layer every atlas design reads.
 
-Five designs share this file. Without it they drift, and a lane added to one
-quietly goes missing from the other four.
+All atlas designs share this file. Without it they drift, and a lane added to
+one quietly goes missing from the others.
 
 Every lane is grounded in a file that exists. Nothing here is invented to pad a
 count: a lane is a catalog list, a script, a workflow, a test module, a document,
@@ -98,12 +98,12 @@ def _model_setups() -> list[tuple]:
     # smallest is 2.6x GitHub's file limit and the set is 42x the repository
     # cap), so this is the command that does the same job from the repository,
     # pinned to the digests in docs/model-manifest.json and verified against them.
-    _fetch = "vendor_models.py --fetch --max-ram 16"
-    _plan = "vendor_models.py --plan --max-ram 16"
+    _fetch = "vendor_models.py --fetch --auto-hardware"
+    _plan = "vendor_models.py --plan --auto-hardware"
     setups.append(("fetch-all-models", "Fetch every model this machine can hold",
                    "models",
-                   "Pulls every catalogued tag that fits the memory you name, verifying "
-                   "each against the digest pinned in docs/model-manifest.json. Nothing "
+                   "Measures this machine's RAM, then pulls catalogued tags within that "
+                   "limit and verifies their weight bytes against docs/model-manifest.json. Nothing "
                    "goes through Hugging Face, and afterwards the machine needs no "
                    "network for these.",
                    {"windows": f"python scripts/{_fetch}",
@@ -271,27 +271,27 @@ GLOBAL_RULES_SETUPS = [
      _with_clone(_GUARD_BODIES)),
 
     ("rules-pipeline-check", "Show the pipeline that fires", "instructions",
-     "Prints the exact text injected into every prompt, and which hook events are "
-     "registered for it. A pipeline nobody can read is one nobody can trust: this is "
-     "how you confirm it is actually running rather than assume it.",
-     {"windows": "echo '{\"input\":{\"prompt\":\"check\"}}' | python (Join-Path $HOME 'Master-Repo-Use/scripts/hooks/skill_pipeline.py'); Get-Content $HOME\\.claude\\settings.json | Select-String skill_pipeline; Get-Content $HOME\\.gemini\\config\\hooks.json",
-      "wsl": "echo '{\"input\":{\"prompt\":\"check\"}}' | python3 \"$HOME/Master-Repo-Use/scripts/hooks/skill_pipeline.py\"; grep -o 'skill_pipeline[^\"]*' ~/.claude/settings.json; cat ~/.gemini/config/hooks.json 2>/dev/null",
-      "macos": "echo '{\"input\":{\"prompt\":\"check\"}}' | python3 \"$HOME/Master-Repo-Use/scripts/hooks/skill_pipeline.py\"; grep -o 'skill_pipeline[^\"]*' ~/.claude/settings.json; cat ~/.gemini/config/hooks.json 2>/dev/null",
-      "linux": "echo '{\"input\":{\"prompt\":\"check\"}}' | python3 \"$HOME/Master-Repo-Use/scripts/hooks/skill_pipeline.py\"; grep -o 'skill_pipeline[^\"]*' ~/.claude/settings.json; cat ~/.gemini/config/hooks.json 2>/dev/null",
-      "other": "echo '{\"input\":{\"prompt\":\"check\"}}' | python3 \"$HOME/Master-Repo-Use/scripts/hooks/skill_pipeline.py\"; grep -o 'skill_pipeline[^\"]*' ~/.claude/settings.json; cat ~/.gemini/config/hooks.json 2>/dev/null"}),
+     "Validates the standing pipeline and reads installed hook registrations without "
+     "dumping private client settings. File registration does not prove a client has "
+     "trusted or executed its hook; check that in the client's own interface.",
+     _with_clone({
+         "windows": "python (Join-Path $p 'scripts/auto_mode_harness.py') --check; python (Join-Path $p 'scripts/verify_auto_mode.py') --repo $p --installed-only",
+         **{key: 'python3 "$p/scripts/auto_mode_harness.py" --check && python3 "$p/scripts/verify_auto_mode.py" --repo "$p" --installed-only'
+            for key in ("wsl", "macos", "linux", "other")},
+     })),
 
     # Verifies BOTH halves. The rules half is a block in a file; the skills half is
     # a directory of folders, and a setup that wrote the block and silently failed
     # to copy the skills would look identical without the second command.
     ("rules-verify", "Verify what was written", "instructions",
-     "Lists the client files carrying the block, then the skill folders each client "
-     "can actually see. A setup that wrote the rules and quietly failed to copy the "
-     "skills looks complete until you check the second one.",
-     {"windows": "Get-ChildItem $HOME\.claude\CLAUDE.md,$HOME\.codex\AGENTS.md,$HOME\.gemini\GEMINI.md,$HOME\.copilot\copilot-instructions.md -ErrorAction SilentlyContinue | Select-String -Pattern 'MASTER-REPO-USE:BEGIN'; Get-ChildItem $HOME\.claude\skills,$HOME\.codex\skills,$HOME\.gemini\config\skills -Directory -ErrorAction SilentlyContinue | Select-Object FullName",
-      "wsl": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.codex/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null",
-      "macos": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.codex/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null",
-      "linux": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.codex/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null",
-      "other": "grep -l 'MASTER-REPO-USE:BEGIN' ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md ~/.copilot/copilot-instructions.md 2>/dev/null; ls -d ~/.claude/skills/*/ ~/.codex/skills/*/ ~/.gemini/config/skills/*/ 2>/dev/null"}),
+     "Reads back exact protected instruction blocks, every copied skill resource and "
+     "client-specific hook schemas. Reports missing or changed files without editing "
+     "anything or displaying credentials. Clients not installed are explicitly skipped.",
+     _with_clone({
+         "windows": "python (Join-Path $p 'scripts/verify_auto_mode.py') --repo $p --installed-only",
+         **{key: 'python3 "$p/scripts/verify_auto_mode.py" --repo "$p" --installed-only'
+            for key in ("wsl", "macos", "linux", "other")},
+     })),
 ]
 
 
@@ -570,7 +570,9 @@ HARNESSES = [
      "Configures each surface by the strongest mechanism it supports: a hook where "
      "there is one, a request gateway for local models, a paste bundle for a browser "
      "product. Installs the enforced skills as folders where folders exist.",
-     "Setting a machine up, or adding a new client.",
+     "Setting a machine up, or adding a new client. It also installs the "
+     "computer-control and browser-automation skills, so the agents can reach "
+     "Playwright and desktop control once you enable a host.",
      "Cannot reach a program that was already running, and cannot reach a browser "
      "tab at all except through text a person pastes.",
      "python scripts/auto_mode_harness.py --check"),
@@ -580,7 +582,8 @@ HARNESSES = [
      "every request that client makes carries the pipeline, whether or not the "
      "program knows the rules exist.",
      "Anything talking to a local model that you cannot configure: an IDE plugin, a "
-     "notebook, a desktop app, a script somebody wrote last year.",
+     "notebook, a desktop app, a script somebody wrote last year. A Playwright or "
+     "agent run pointed at it inherits the rules without being told.",
      "Only covers traffic routed through it, and only for model servers speaking "
      "those two API shapes. It never logs prompts, so it cannot tell you what was asked.",
      "python scripts/harness_proxy.py --check"),
@@ -588,17 +591,31 @@ HARNESSES = [
     ("harness-wrap", "Wrapper harness", "scripts/harness_wrap.py",
      "Wraps one command invocation and puts the rules in front of the prompt, by "
      "argument, standard input, a file path or an environment variable.",
-     "A CLI client with no hook and no configurable base URL, which is most of them.",
+     "A CLI client with no hook and no configurable base URL, which is most of them, "
+     "including a Playwright runner, a desktop-control host, or an agent invoked "
+     "as a one-off command.",
      "One invocation at a time, and a profile that has not been checked against a "
      "real client says so rather than guessing at its flags.",
      "python scripts/harness_wrap.py --check"),
+
+    ("harness-computer", "Computer harness", "scripts/harness_computer.py",
+     "Routes a task that needs a real machine or a real browser to the narrowest "
+     "surface that can do it: native desktop control, JavaScript Playwright, or a "
+     "Rust CDP engine. Reports which are actually reachable and which agents are "
+     "available to run them.",
+     "A GUI with no API, a browser flow, or a screenshot of real state.",
+     "It grants nothing and clicks nothing. It reports what a host could do, and "
+     "an installed skill is not an enabled tool: only the model host knows "
+     "whether computer use is on in this session.",
+     "python scripts/harness_computer.py --check"),
 
     ("harness-goal", "Goal harness", "scripts/harness_goal.py",
      "The surface harness plus a standing goal that survives the turn. The goal is "
      "restated before the request is read, checked against the output before "
      "answering, and reported at the end. /goal, \\goal and goal: all set it.",
      "Work that spans more than one turn, which is when a session drifts from what "
-     "it was for while nothing errors.",
+     "it was for while nothing errors. It carries the goal into every agent, "
+     "browser step and computer-control action too.",
      "Adds about 544 bytes to every prompt while a goal is set. Lifted only by the "
      "person who set it.",
      "python scripts/harness_goal.py --check"),
@@ -607,7 +624,16 @@ HARNESSES = [
 
 def harness_entries() -> list[dict]:
     return [{"id": h[0], "name": h[1], "file": h[2], "detail": h[3],
-             "useWhen": h[4], "limit": h[5], "check": h[6]} for h in HARNESSES]
+             "useWhen": h[4], "limit": h[5], "check": h[6],
+             "computerControl": {
+                 "skill": "master-computer-control",
+                 "file": "scripts/harness_computer.py",
+                 "check": "python scripts/harness_computer.py --check",
+                 "routes": ["native", "browser-js", "browser-rust"],
+                 "detail": "All four harnesses route screen and browser requests through "
+                           "the same capability skill. The check reads local evidence; "
+                           "it does not grant tools, install packages or control an app.",
+             }} for h in HARNESSES]
 
 
 # ------------------------------------------------------- more runtime stages
@@ -634,6 +660,7 @@ EXTRA_STAGES = [
     ("intake", "harness-proxy-stage", "Proxy harness", "Injects the pipeline into every request routed through it.", "python scripts/harness_proxy.py --check"),
     ("intake", "harness-wrap-stage", "Wrapper harness", "Puts the rules in front of one wrapped command.", "python scripts/harness_wrap.py --check"),
     ("intake", "harness-goal-stage", "Goal harness", "Carries a standing goal across turns and checks the work against it.", "python scripts/harness_goal.py --check"),
+    ("intake", "computer-control-router", "Computer-control routes", "Read-only availability checks for native Computer Use, official Playwright and a Rust application browser-testing route. Skills describe use; only the host can grant actual tools and permissions.", "python scripts/harness_computer.py --check"),
 
     # Skills that the pipeline actually enforces
     ("skills", "master-caveman", "master-caveman", "Layer 1 compression, applied to every build, command and lane.", None),

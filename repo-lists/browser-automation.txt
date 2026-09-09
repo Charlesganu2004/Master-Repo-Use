@@ -1,15 +1,17 @@
-# Browser automation - verified 2026-09-09
-# Every slug and every number below was read from the GitHub API on 2026-09-09.
+# Browser automation - source pins verified 2026-09-09
+# Live popularity and recency belong to the catalog health refresh, not this file.
 #
 # Charles asked for Playwright and "a Rust version of Playwright" in the harness.
 # The first is easy. The second has a trap in it, recorded here rather than
 # discovered later.
 #
-# NOT CATALOGUED: octaltree/playwright-rust. 454 stars, NO LICENCE, 858 days
-# since a push. This is what a search for "Rust Playwright" returns first, and it
-# fails this repository's policy twice over: no licence at all, and 858 days is
-# past the 365-day removal threshold. Measured on 2026-09-09. Written here so the
-# next person to search does not have to re-check it.
+# NOT CATALOGUED: octaltree/playwright-rust at exact commit
+# a672ce7311eb596459acf3bdeb1d09e177a488d1. GitHub licence unidentified,
+# no licence text in the repository, and past the maintenance threshold. Its
+# Cargo manifest says MIT OR Apache-2.0, but neither licence text is supplied.
+# It also downloads a driver during Cargo build. This is what a search for
+# "Rust Playwright" returns first, and it fails this repository's maintenance
+# and provenance policy. Measured and statically audited on 2026-09-09.
 #
 # This note sits in the preamble deliberately. A comment placed directly under a
 # "# ---" header is read as that subcategory's published description, which is
@@ -17,25 +19,34 @@
 
 # --- Playwright itself (the reference implementation and the MCP server that fronts it)
 
-microsoft/playwright          # 95,869 stars, Apache-2.0, pushed today. Chromium,
+microsoft/playwright          # v1.63.0 at 1b025d7e20a026371cd5f98ba0cdce48892737c8.
+                              # Apache-2.0. Chromium,
                               # Firefox and WebKit behind one API.
 
-microsoft/playwright-mcp      # 36,915 stars, Apache-2.0, 4d. Playwright over MCP, so a
+microsoft/playwright-mcp      # v0.0.80 at 4c1fb03bad3bae379b0ae0e3d81d2660de56bd91.
+                              # Apache-2.0. Playwright over MCP, so a
                               # model drives a browser through the accessibility tree
                               # rather than by guessing at pixels. Already catalogued in
                               # mcp-local-servers, mcp-servers-extended, github-copilot
                               # and copilot-studio-integration; repeated here because
                               # this is the lane somebody looking for it will open.
 
-# --- Rust engines (Playwright's API or its protocol, without the Node driver subprocess)
+# --- Rust routes (all third-party; official Playwright does not support Rust)
 
-Skyvern-AI/rustwright         # 879 stars, MIT, pushed yesterday. Playwright's API on a
+padamson/playwright-rust     # v0.18.0, exact reviewed commit
+                              # 165554e8be114efe9e024aa45a8d00c92fa2e5c8.
+                              # Apache-2.0. PASS-WITH-NOTE:
+                              # Cargo build downloads pinned playwright-core and Node
+                              # archives over HTTPS without digest verification. Direct
+                              # binding only by explicit choice, never auto-installed.
+
+Skyvern-AI/rustwright         # MIT, alpha. Playwright's API on a
                               # Rust CDP engine with no Node driver subprocess. Self
                               # described as alpha, and treated that way: the harness
                               # names it as the Rust path and says alpha in the same
                               # breath. Chromium only.
 
-mattsse/chromiumoxide         # 1,381 stars, Apache-2.0, 159d. The mature Rust option.
+mattsse/chromiumoxide         # Apache-2.0. The established Rust CDP option.
                               # Not a Playwright port: it speaks CDP directly, which is
                               # the same protocol underneath, with a Rust-shaped API.
                               # Reach for this when the alpha label on rustwright

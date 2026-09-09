@@ -176,6 +176,8 @@ class CursorAndCopilotInstall(unittest.TestCase):
                             f"no powershell script, so Windows runs nothing: {hook}")
             self.assertNotIn("exec", hook,
                              "exec/args is not part of Copilot's hook entry shape")
+        for hook in tool_hooks:
+            self.assertEqual(hook.get("matcher"), "Bash")
 
     @staticmethod
     def _copilot_commands(hooks):
@@ -244,6 +246,47 @@ class CursorAndCopilotInstall(unittest.TestCase):
         self.assertTrue(tool_entries, "Gemini has no BeforeTool guards")
         for entry in tool_entries:
             self.assertEqual(entry.get("matcher"), "run_shell_command")
+
+
+class ClientSelectionAndInvalidConfiguration(unittest.TestCase):
+    def test_antigravity_only_does_not_install_gemini_cli_hooks_or_skills(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            home = pathlib.Path(scratch) / "home"
+            proc = subprocess.run(
+                [sys.executable, str(INSTALLER), "--repo", str(ROOT),
+                 "--home", str(home), "--client", "antigravity"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr or proc.stdout)
+            self.assertTrue((home / ".gemini" / "GEMINI.md").is_file())
+            self.assertTrue((home / ".gemini" / "config" / "hooks.json").is_file())
+            self.assertTrue((home / ".gemini" / "config" / "skills" /
+                             "master-repo-auto" / "SKILL.md").is_file())
+            self.assertFalse((home / ".gemini" / "settings.json").exists())
+            self.assertFalse((home / ".gemini" / "skills").exists())
+
+    def test_non_object_claude_settings_is_refused_without_an_exception(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as scratch:
+            home = pathlib.Path(scratch) / "home"
+            settings = home / ".claude" / "settings.json"
+            settings.parent.mkdir(parents=True)
+            settings.write_text("[]\n", encoding="utf-8")
+            result = installer.register_hook(ROOT, home, dry=False)
+            self.assertTrue(result.startswith("REFUSED"), result)
+            self.assertEqual(settings.read_text(encoding="utf-8"), "[]\n")
+
+    def test_non_object_antigravity_hooks_is_refused_without_an_exception(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as scratch:
+            home = pathlib.Path(scratch) / "home"
+            hooks = home / ".gemini" / "config" / "hooks.json"
+            hooks.parent.mkdir(parents=True)
+            hooks.write_text("[]\n", encoding="utf-8")
+            result = installer.register_antigravity_hook(ROOT, home, dry=False)
+            self.assertTrue(result.startswith("REFUSED"), result)
+            self.assertEqual(hooks.read_text(encoding="utf-8"), "[]\n")
 
 
 if __name__ == "__main__":

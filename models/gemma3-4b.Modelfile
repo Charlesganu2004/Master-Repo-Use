@@ -1,13 +1,14 @@
 # gemma3:4b
 # Google, Gemma Terms of Use. 3.34 GB, needs 6 GB of memory.
 #
-# Pinned to the digest the registry returned on the day
-# docs/model-manifest.json was last written:
+# Expected weight digest recorded in docs/model-manifest.json:
 #   sha256:aeda25e63ebd698fab8638ffb778e68bed908b960d39d0becc650fa981609d25
 #
-# Build it from this file rather than from a web page:
+# FROM below is a mutable tag, not an executable digest pin.
+# Build the tag's current definition with:
 #   ollama create gemma3:4b --file models/gemma3-4b.Modelfile
-# Or pull it, which is the same bytes by digest:
+# A direct pull does NOT verify the recorded digest:
 #   ollama pull gemma3:4b
+# Use scripts/vendor_models.py --fetch --auto-hardware for verified weights.
 
 FROM gemma3:4b

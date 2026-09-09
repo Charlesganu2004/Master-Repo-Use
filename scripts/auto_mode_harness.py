@@ -66,6 +66,7 @@ ENFORCED_SKILLS = (
     "master-anti-slop",
     "master-plan",
     "master-design-taste",
+    "master-computer-control",
 )
 
 HOOK, GATEWAY, BUNDLE, REPO_FILE = "hook", "gateway", "bundle", "repo-file"

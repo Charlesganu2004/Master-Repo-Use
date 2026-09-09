@@ -1,13 +1,14 @@
 # deepseek-r1:7b
 # Ollama, MIT. 4.68 GB, needs 8 GB of memory.
 #
-# Pinned to the digest the registry returned on the day
-# docs/model-manifest.json was last written:
+# Expected weight digest recorded in docs/model-manifest.json:
 #   sha256:96c415656d377afbff962f6cdb2394ab092ccbcbaab4b82525bc4ca800fe8a49
 #
-# Build it from this file rather than from a web page:
+# FROM below is a mutable tag, not an executable digest pin.
+# Build the tag's current definition with:
 #   ollama create deepseek-r1:7b --file models/deepseek-r1-7b.Modelfile
-# Or pull it, which is the same bytes by digest:
+# A direct pull does NOT verify the recorded digest:
 #   ollama pull deepseek-r1:7b
+# Use scripts/vendor_models.py --fetch --auto-hardware for verified weights.
 
 FROM deepseek-r1:7b

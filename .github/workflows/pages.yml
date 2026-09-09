@@ -28,6 +28,12 @@ on:
       - 'scripts/build_public_site.py'
       - 'scripts/build_atlas_data.py'
       - 'scripts/monitor-indexes.js'
+      - 'scripts/catalog-indexes.js'
+      - 'scripts/capability_definitions.py'
+      - 'scripts/sync_project_skills.py'
+      - 'scripts/harness*.py'
+      - 'skills/**'
+      - 'agents/**'
       - 'docs/CHAT-CODE-MONITOR.md'
       - 'docs/auto-mode-block.txt'
       - '.github/workflows/pages.yml'
@@ -103,6 +109,7 @@ jobs:
           rm -rf _site
           mkdir -p _site/docs
           cp docs/catalog-status.svg _site/docs/catalog-status.svg
+          python scripts/build_atlas_data.py
           python scripts/build_public_site.py
 
       - name: Assert the public artifact leaks nothing private

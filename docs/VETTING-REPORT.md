@@ -249,3 +249,23 @@ performed are the same, only the source differs.
 death. Confirm the fork's provenance yourself before depending on it — a successor fork is
 exactly the shape a supply-chain attack imitates, and "the community moved here" is a claim
 worth checking rather than assuming.
+
+## Addendum: computer control and Rust Playwright routes (2026-09-09)
+
+No candidate dependency, project script, binary or browser was run. Microsoft
+Defender reported antivirus, antispyware and real-time protection enabled during
+the review. Candidate repositories were checked out only in isolated review
+directories with Git hooks disabled. Both review directories were then moved to
+the Windows Recycle Bin and verified absent from `Downloads`.
+
+| Repo | Exact reviewed commit | Verdict | License | Static result | Manual findings |
+| --- | --- | --- | --- | --- | --- |
+| [padamson/playwright-rust](https://github.com/padamson/playwright-rust) `v0.18.0` | `165554e8be114efe9e024aa45a8d00c92fa2e5c8` | PASS-WITH-NOTE | Apache-2.0 | 385 text files, 0 blocking findings | The scanner's malware-fixture match was benign test code writing `Hello, World!`. One internal relative symlink resolves to the repository's own skill. No executable binary was tracked. Cargo build downloads pinned `playwright-core` and Node archives over HTTPS without verifying artifact digests. Workflows use scoped triggers and pinned actions; no `pull_request_target` flow was found. |
+| [octaltree/playwright-rust](https://github.com/octaltree/playwright-rust) | `a672ce7311eb596459acf3bdeb1d09e177a488d1` | REJECT | NOASSERTION | 83 text files, 0 blocking findings | GitHub detects no license and the repository supplies no license text, although Cargo metadata says `MIT OR Apache-2.0`. The last code commit is from 2022, the repository had gone 858 days without a push, and Cargo build downloads a driver. It is not catalogued. |
+
+The accepted Rust binding is still not Microsoft-supported and is not
+auto-installed. The default Rust route uses official Playwright
+JavaScript/TypeScript as a black-box sidecar. Primary pins recorded alongside
+the route are Microsoft Playwright `v1.63.0` at
+`1b025d7e20a026371cd5f98ba0cdce48892737c8` and Playwright MCP `v0.0.80`
+at `4c1fb03bad3bae379b0ae0e3d81d2660de56bd91`.

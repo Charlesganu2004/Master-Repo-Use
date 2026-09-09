@@ -1,13 +1,14 @@
 # llama3.2:1b
 # Ollama, Llama 3.2 Community. 1.32 GB, needs 4 GB of memory.
 #
-# Pinned to the digest the registry returned on the day
-# docs/model-manifest.json was last written:
+# Expected weight digest recorded in docs/model-manifest.json:
 #   sha256:74701a8c35f6c8d9a4b91f3f3497643001d63e0c7a84e085bed452548fa88d45
 #
-# Build it from this file rather than from a web page:
+# FROM below is a mutable tag, not an executable digest pin.
+# Build the tag's current definition with:
 #   ollama create llama3.2:1b --file models/llama3.2-1b.Modelfile
-# Or pull it, which is the same bytes by digest:
+# A direct pull does NOT verify the recorded digest:
 #   ollama pull llama3.2:1b
+# Use scripts/vendor_models.py --fetch --auto-hardware for verified weights.
 
 FROM llama3.2:1b

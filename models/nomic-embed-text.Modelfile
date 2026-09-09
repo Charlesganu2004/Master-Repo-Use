@@ -1,13 +1,14 @@
 # nomic-embed-text
 # Ollama, Apache-2.0. 0.27 GB, needs 4 GB of memory.
 #
-# Pinned to the digest the registry returned on the day
-# docs/model-manifest.json was last written:
+# Expected weight digest recorded in docs/model-manifest.json:
 #   sha256:970aa74c0a90ef7482477cf803618e776e173c007bf957f635f1015bfcfef0e6
 #
-# Build it from this file rather than from a web page:
+# FROM below is a mutable tag, not an executable digest pin.
+# Build the tag's current definition with:
 #   ollama create nomic-embed-text --file models/nomic-embed-text.Modelfile
-# Or pull it, which is the same bytes by digest:
+# A direct pull does NOT verify the recorded digest:
 #   ollama pull nomic-embed-text
+# Use scripts/vendor_models.py --fetch --auto-hardware for verified weights.
 
 FROM nomic-embed-text

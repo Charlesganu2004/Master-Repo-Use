@@ -14,6 +14,7 @@ So the tests hold the boundaries, and hold that each one states its own limit,
 because a harness that advertises a capability it does not have is worse than one
 that admits the gap.
 """
+import hashlib
 import json
 import pathlib
 import re
@@ -42,6 +43,7 @@ SCRIPTS = {
     "harness-proxy": "scripts/harness_proxy.py",
     "harness-wrap": "scripts/harness_wrap.py",
     "harness-goal": "scripts/harness_goal.py",
+    "harness-computer": "scripts/harness_computer.py",
 }
 
 
@@ -51,8 +53,26 @@ def run_check(script: str):
 
 
 class AllFourExistAndCheckThemselves(unittest.TestCase):
-    def test_there_are_four(self):
-        self.assertEqual(len(HARNESSES), 4)
+    def test_there_are_five(self):
+        """Four ways the rules arrive, plus the computer harness, which routes a
+        task that needs a real machine or a real browser to the narrowest surface
+        that can do it."""
+        self.assertEqual(len(HARNESSES), 5)
+
+    def test_every_harness_can_reach_the_agents_and_the_browser(self):
+        """Charles asked for computer control, Playwright and agents to be
+        reachable from every harness rather than from one of them."""
+        for harness in HARNESSES:
+            blob = (harness["detail"] + harness["useWhen"] + harness["limit"]).lower()
+            self.assertTrue("playwright" in blob or "browser" in blob,
+                            f"{harness['name']} does not mention the browser path")
+            self.assertIn("agent", blob, f"{harness['name']} does not mention agents")
+
+    def test_every_harness_mentions_the_machine_it_can_reach(self):
+        for harness in HARNESSES:
+            blob = (harness["detail"] + harness["useWhen"] + harness["limit"]).lower()
+            self.assertTrue("computer" in blob or "desktop" in blob or "machine" in blob,
+                            f"{harness['name']} does not mention computer control")
 
     def test_each_one_is_a_real_file(self):
         for harness in HARNESSES:
@@ -574,8 +594,11 @@ class TheFourCollectionsCharlesAskedFor(unittest.TestCase):
                          "every skill on disk should carry its body, and no more")
         for doc in with_body:
             path = ROOT / doc["definition"]["path"]
-            self.assertEqual(doc["definition"]["body"], path.read_text(encoding="utf-8"),
+            raw = path.read_bytes()
+            self.assertEqual(doc["definition"]["body"].encode("utf-8"), raw,
                              f"{doc['_id']} body differs from the file")
+            self.assertEqual(doc["definition"]["sha256"], hashlib.sha256(raw).hexdigest(),
+                             f"{doc['_id']} checksum differs from the file")
 
     def test_a_catalogued_entry_carries_a_record_and_not_the_code(self):
         """The deliberate line. This repository does not vendor third-party

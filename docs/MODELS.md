@@ -14,15 +14,20 @@ Install the runtime once:
 Then one command pulls every model that fits, verified against the digest pinned
 in `docs/model-manifest.json`:
 
-    python scripts/vendor_models.py --fetch --max-ram 16
+    python scripts/vendor_models.py --fetch --auto-hardware
 
-Change `16` to your memory in gigabytes. After that the machine is offline for
-these: no registry, no Hugging Face, no network at all.
+This scans installed RAM. You can instead supply `--max-ram 16` after checking
+your hardware. Downloads without either a scan or an explicit memory limit are
+refused. After a successful pull, the script checks the tag's reported local
+weight path and hashes the weight file. Changed registry digests fail closed.
+Run against a local Ollama installation; set `OLLAMA_MODELS` if you changed its
+model directory. These checks pin the weight bytes, not every upstream template
+or configuration layer. Locally stored weights can then run offline.
 
 See what it would do first:
 
-    python scripts/vendor_models.py --plan --max-ram 16
-    python scripts/vendor_models.py --fetch --max-ram 16 --dry-run
+    python scripts/vendor_models.py --plan --auto-hardware
+    python scripts/vendor_models.py --fetch --auto-hardware --dry-run
 
 ## Why the weights are not committed here
 

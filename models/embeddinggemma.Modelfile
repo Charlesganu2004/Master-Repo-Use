@@ -1,13 +1,14 @@
 # embeddinggemma
 # Google, Gemma Terms of Use. 0.62 GB, needs 4 GB of memory.
 #
-# Pinned to the digest the registry returned on the day
-# docs/model-manifest.json was last written:
+# Expected weight digest recorded in docs/model-manifest.json:
 #   sha256:0800cbac9c2064dde519420e75e512a83cb360de3ad5df176185dc69652fc515
 #
-# Build it from this file rather than from a web page:
+# FROM below is a mutable tag, not an executable digest pin.
+# Build the tag's current definition with:
 #   ollama create embeddinggemma --file models/embeddinggemma.Modelfile
-# Or pull it, which is the same bytes by digest:
+# A direct pull does NOT verify the recorded digest:
 #   ollama pull embeddinggemma
+# Use scripts/vendor_models.py --fetch --auto-hardware for verified weights.
 
 FROM embeddinggemma

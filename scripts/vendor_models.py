@@ -8,18 +8,19 @@ literal method does not work, so this does the goal a way that does.
 WHY WEIGHTS CANNOT GO IN GIT, measured on 2026-09-09 rather than recalled:
 
   GitHub rejects any single file over 100 MB. The SMALLEST model in the catalog,
-  gemma3:270m, is 290 MB from the registry manifest. Every one of the 35 is over
-  the limit, the smallest by 2.9x.
+  nomic-embed-text, is 274 MB from the registry manifest. Every one of the 35 is
+  over the limit, the smallest by 2.6x.
 
-  A repository is capped at 5 GB and degrades badly past 1 GB. All 35 tags total
-  about 202 GB. That is 40x the cap.
+  GitHub recommends keeping repositories small, ideally below 1 GB and strongly
+  recommends staying below 5 GB. The recorded 35 tags total about 227 GB.
+  The 5 GB figure is guidance, not the hard per-file rejection limit.
 
   Git LFS moves the limit to a few GB per file but bills storage and bandwidth on
-  every clone, and a clone of this repo would then pull 202 GB.
+  every clone, and a clone of this repo would then pull 227 GB.
 
   GitHub Pages, which publishes this repo, caps a site at 1 GB.
 
-So the weights live where a 200 GB artifact belongs, and the REPOSITORY carries
+So the weights live where a 227 GB artifact belongs, and the REPOSITORY carries
 the three things that actually remove the trip to Hugging Face:
 
   1. THE MANIFEST. docs/model-manifest.json pins every tag to the exact digest and
@@ -34,7 +35,7 @@ the three things that actually remove the trip to Hugging Face:
      Nobody visits Hugging Face; they run one command from the repo.
 
 REDISTRIBUTION, and why only some are offered as release assets. A GitHub release
-asset may be 2 GiB, which fits 19 of the 35, and release assets do not enter the
+asset may be 2 GiB, which fits 9 of the 35, and release assets do not enter the
 clone. But size is not the only gate: redistributing weights makes you a
 distributor and the licence decides whether that is allowed.
 
@@ -63,7 +64,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
+import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -170,11 +174,11 @@ def build_manifest(verbose: bool = True) -> dict:
         if verbose:
             print(f"  {tag:<26}{total/1e9:>7.2f} GB  {state}")
     payload = {
-        "note": ("Pinned from registry.ollama.ai. Weights are NOT stored in this "
-                 "repository: the smallest is 2.9x GitHub's 100 MB file limit and "
-                 "the set totals about 202 GB against a 5 GB repository cap. This "
-                 "manifest is what makes the repository the source of truth for "
-                 "which models and which versions."),
+        "note": ("Weight-layer digests recorded from registry.ollama.ai. Weights are "
+                 "NOT stored in this repository. Sizes and redistribution decisions "
+                 "are recorded per model below. --fetch refuses registry weight drift "
+                 "and verifies local weight bytes; templates and runtime configuration "
+                 "are not pinned by the weight digest."),
         "registry": "https://registry.ollama.ai",
         "limits": {
             "gitFileBytes": GIT_FILE_LIMIT,
@@ -224,14 +228,15 @@ def write_modelfiles(dry: bool = False) -> int:
             f"# {model['vendor']}, {model['license']}. "
             f"{model['bytes']/1e9:.2f} GB, needs {model['minRamGb']} GB of memory.\n"
             f"#\n"
-            f"# Pinned to the digest the registry returned on the day\n"
-            f"# docs/model-manifest.json was last written:\n"
+            f"# Expected weight digest recorded in docs/model-manifest.json:\n"
             f"#   {model['digest']}\n"
             f"#\n"
-            f"# Build it from this file rather than from a web page:\n"
+            f"# FROM below is a mutable tag, not an executable digest pin.\n"
+            f"# Build the tag's current definition with:\n"
             f"#   ollama create {tag} --file models/{safe}.Modelfile\n"
-            f"# Or pull it, which is the same bytes by digest:\n"
+            f"# A direct pull does NOT verify the recorded digest:\n"
             f"#   ollama pull {tag}\n"
+            f"# Use scripts/vendor_models.py --fetch --auto-hardware for verified weights.\n"
             f"\n"
             f"FROM {tag}\n"
         )
@@ -292,8 +297,35 @@ def have_ollama() -> bool:
     return shutil.which("ollama") is not None
 
 
+def verify_local_weight(model: dict) -> bool:
+    """Verify the installed tag resolves to the pinned weight, then hash its bytes."""
+    expected = model.get("digest", "")
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", expected):
+        return False
+    try:
+        result = subprocess.run(["ollama", "show", "--modelfile", model["tag"]],
+                                capture_output=True, text=True, timeout=30)
+        source = re.search(r"^FROM\s+(.+)$", result.stdout, re.M)
+        if result.returncode or not source:
+            return False
+        path = pathlib.Path(source.group(1).strip().strip('"')).resolve()
+        model_root = pathlib.Path(os.environ.get("OLLAMA_MODELS", str(pathlib.Path.home() / ".ollama" / "models"))).resolve()
+        if not path.is_relative_to(model_root / "blobs") or path.name != expected.replace(":", "-", 1):
+            return False
+        digest = hashlib.sha256()
+        with path.open("rb") as weight:
+            for chunk in iter(lambda: weight.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return "sha256:" + digest.hexdigest() == expected
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
 def fetch(max_ram: int | None, dry: bool) -> int:
     """Pull every model that fits, then verify each against the pinned digest."""
+    if max_ram is None or max_ram <= 0:
+        print("Choose --auto-hardware or a positive --max-ram. Unbounded downloads are refused.", file=sys.stderr)
+        return 2
     if not MANIFEST.is_file():
         print("run --manifest first", file=sys.stderr)
         return 1
@@ -320,9 +352,16 @@ def fetch(max_ram: int | None, dry: bool) -> int:
 
     failed = []
     for m in models:
+        current = fetch_manifest(m["tag"])
+        layer = weight_layer(current or {})
+        if not layer or layer.get("digest") != m["digest"]:
+            print(f"refused {m['tag']}: registry unavailable or weight digest changed; review before repinning", file=sys.stderr)
+            failed.append(m["tag"])
+            continue
         print(f"pulling {m['tag']} ({m['bytes']/1e9:.2f} GB)")
         result = subprocess.run(["ollama", "pull", m["tag"]])
-        if result.returncode != 0:
+        if result.returncode != 0 or not verify_local_weight(m):
+            print(f"verification failed for {m['tag']}; it is not marked ready", file=sys.stderr)
             failed.append(m["tag"])
     if failed:
         print(f"\nfailed: {', '.join(failed)}", file=sys.stderr)
@@ -360,8 +399,8 @@ def check() -> int:
         print(f"smallest model              {smallest['tag']} at "
               f"{smallest['bytes']/1e6:.0f} MB, "
               f"{smallest['bytes']/GIT_FILE_LIMIT:.1f}x git's file limit")
-        print(f"repository cap              {REPO_SOFT_LIMIT/1e9:.0f} GB, so the set "
-              f"is {total/REPO_SOFT_LIMIT:.0f}x over")
+        print(f"repository size guidance    {REPO_SOFT_LIMIT/1e9:.0f} GB recommended, "
+              f"not a hard storage cap")
         clean = [m for m in payload["models"]
                  if m["redistribution"] == "redistributable" and m["fitsReleaseAsset"]]
         print(f"release-asset candidates    {len(clean)} under 2 GiB and licence-clean")
@@ -455,9 +494,21 @@ def main() -> int:
     parser.add_argument("--release", action="store_true",
                         help="stage the licence-clean subset for release assets")
     parser.add_argument("--max-ram", type=int, help="only models this memory can hold")
+    parser.add_argument("--auto-hardware", action="store_true", help="scan this machine's RAM rather than assume a size")
     parser.add_argument("--out", default="dist/models")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+
+    if args.auto_hardware:
+        if args.max_ram is not None:
+            parser.error("choose --auto-hardware or --max-ram, not both")
+        from local_model_advisor import total_ram_gb
+        measured = total_ram_gb()
+        if measured is None or measured <= 0:
+            print("RAM scan unavailable; use --max-ram with verified scan results.", file=sys.stderr)
+            return 2
+        args.max_ram = math.floor(measured)
+        print(f"Measured RAM: {measured:.1f} GB; conservative gate: {args.max_ram} GB")
 
     if args.check:
         return check()

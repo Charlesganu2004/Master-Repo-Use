@@ -141,3 +141,49 @@ class TheCheckRunsOffline(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TheProseMatchesTheMeasurement(unittest.TestCase):
+    """Every number written in prose is checked against the manifest.
+
+    A parallel edit on 2026-09-09 introduced four wrong figures into the module
+    docstring at once: the smallest model named as gemma3:270m at 290 MB when it
+    is nomic-embed-text at 274 MB, the multiple as 2.9x when it is 2.6x, the LFS
+    clone as 202 GB when it is 227 GB, and the release-asset count as 19 of 35
+    when it is 9. Prose that restates a measurement is a second copy, and a
+    second copy drifts. This is the check that makes it stop being silent.
+    """
+
+    def setUp(self):
+        self.body = (ROOT / "scripts" / "vendor_models.py").read_text(encoding="utf-8")
+        self.models = MANIFEST["models"]
+
+    def test_the_smallest_model_is_named_correctly(self):
+        smallest = min(self.models, key=lambda m: m["bytes"])
+        self.assertIn(smallest["tag"], self.body,
+                      "the docstring names the wrong smallest model")
+        megabytes = round(smallest["bytes"] / 1e6)
+        self.assertIn(f"{megabytes} MB", self.body,
+                      f"the docstring does not say {megabytes} MB")
+
+    def test_the_multiple_over_the_git_limit_is_right(self):
+        smallest = min(self.models, key=lambda m: m["bytes"])
+        multiple = smallest["bytes"] / vendor.GIT_FILE_LIMIT
+        self.assertIn(f"{multiple:.1f}x", self.body,
+                      f"the docstring should say {multiple:.1f}x the git limit")
+
+    def test_the_total_is_right_everywhere_it_appears(self):
+        total = round(sum(m["bytes"] for m in self.models) / 1e9)
+        self.assertIn(f"{total} GB", self.body)
+        for wrong in ("202 GB", "200 GB"):
+            self.assertNotIn(wrong, self.body, f"stale total {wrong} is still written")
+
+    def test_the_release_asset_count_is_right(self):
+        fits = sum(1 for m in self.models if m["fitsReleaseAsset"])
+        self.assertIn(f"{fits} of the 35", self.body,
+                      f"the docstring should say {fits} of the 35 fit a release asset")
+
+    def test_the_doc_and_the_module_agree_on_the_smallest(self):
+        smallest = min(self.models, key=lambda m: m["bytes"])
+        self.assertIn(f"{round(smallest['bytes']/1e6)} MB", DOC,
+                      "MODELS.md and the module disagree on the smallest model")

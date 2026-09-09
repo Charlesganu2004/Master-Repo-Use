@@ -156,10 +156,27 @@ class TheGlobalRulesHaveSetupCommands(unittest.TestCase):
             self.assertIn("install_auto_mode.py", command)
 
     def test_a_verify_step_exists(self):
-        """A setup you cannot check is a setup you have to believe."""
+        """A setup you cannot check is a setup you have to believe.
+
+        This asserted the literal marker MASTER-REPO-USE:BEGIN, because the step
+        used to be a grep for it. The step is now verify_auto_mode.py, which
+        checks the same block plus the hooks, the skills and the schema, and
+        reports per client. The intent is unchanged and the proxy for it was
+        the implementation detail, so the assertion moved to the intent.
+        """
         recipe = RECIPES["setup-rules-verify"]
-        for command in recipe["commands"].values():
-            self.assertIn("MASTER-REPO-USE:BEGIN", command)
+        self.assertTrue(recipe["commands"], "the verify recipe has no commands")
+        for platform, command in recipe["commands"].items():
+            self.assertIn("verify_auto_mode.py", command, platform)
+            self.assertIn("--installed-only", command, platform)
+
+    def test_the_verify_step_only_reads(self):
+        """It runs on a machine that is already set up, so it must not change it."""
+        body = (ROOT / "scripts" / "verify_auto_mode.py").read_text(encoding="utf-8")
+        for writer in ("write_text(", "shutil.copy", "shutil.rmtree", "os.remove",
+                       "unlink(", "mkdir("):
+            self.assertNotIn(writer, body,
+                             f"the verifier calls {writer}, so it is not read-only")
 
     def test_the_scripts_the_recipes_call_are_present(self):
         for name in ("setup-global-ai.ps1", "setup-global-ai.sh", "install_auto_mode.py"):

@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "verifiedOn": "2026-09-09",
+  "routes": {
+    "native": {
+      "kind": "host-tool",
+      "provider": "OpenAI",
+      "installedPackage": "computer-use 26.903.61454",
+      "platform": "Windows",
+      "official": true,
+      "sources": [
+        {
+          "url": "https://github.com/openai/openai/tree/master/project/cua/sky_js/plugin",
+          "version": "26.903.61454",
+          "provenance": "Installed OpenAI bundled plugin manifest"
+        }
+      ],
+      "supportLimit": "Package discovery proves only that the skill bundle exists. Only a supported model host can expose the active Computer Use tool, and permission is still required before changing an app."
+    },
+    "browser-js": {
+      "kind": "browser-library-or-mcp",
+      "provider": "Microsoft",
+      "official": true,
+      "languages": [
+        "JavaScript/TypeScript",
+        "Python",
+        "Java",
+        ".NET"
+      ],
+      "sources": [
+        {
+          "url": "https://github.com/microsoft/playwright",
+          "release": "v1.63.0",
+          "commit": "1b025d7e20a026371cd5f98ba0cdce48892737c8",
+          "license": "Apache-2.0"
+        },
+        {
+          "url": "https://github.com/microsoft/playwright-mcp",
+          "release": "v0.0.80",
+          "commit": "4c1fb03bad3bae379b0ae0e3d81d2660de56bd91",
+          "license": "Apache-2.0"
+        },
+        {
+          "url": "https://playwright.dev/docs/languages",
+          "provenance": "Official supported-language documentation"
+        }
+      ],
+      "supportLimit": "A package, executable, or MCP configuration on disk does not prove browser binaries are installed or that a Playwright tool is active in the current model session."
+    },
+    "browser-rust": {
+      "kind": "official-sidecar-with-optional-third-party-binding",
+      "provider": "Microsoft sidecar by default; padamson direct binding only by explicit choice",
+      "official": false,
+      "default": "Run official Playwright JavaScript/TypeScript black-box automation against the Rust application.",
+      "sources": [
+        {
+          "url": "https://github.com/microsoft/playwright/issues/34216",
+          "commit": "1b025d7e20a026371cd5f98ba0cdce48892737c8",
+          "provenance": "Microsoft closed official Rust support as not planned; commit pins the official Playwright source used for the sidecar route"
+        },
+        {
+          "url": "https://github.com/padamson/playwright-rust",
+          "release": "v0.18.0",
+          "commit": "165554e8be114efe9e024aa45a8d00c92fa2e5c8",
+          "license": "Apache-2.0",
+          "verdict": "PASS-WITH-NOTE",
+          "provenance": "Primary repository and release tag, statically audited at the exact commit"
+        }
+      ],
+      "supportLimit": "Microsoft does not support a Rust Playwright binding. The optional direct binding is third-party and its Cargo build downloads pinned Playwright and Node archives over HTTPS without verifying artifact digests. It is never installed automatically."
+    }
+  },
+  "agents": [
+    {
+      "id": "orchestrator-maxwell",
+      "file": "agents/orchestrator-maxwell.md",
+      "role": "Split independent native, browser, test, and security work and collect evidence."
+    },
+    {
+      "id": "ui-canvas",
+      "file": "agents/ui-canvas.md",
+      "role": "Review visible interaction, focus, layout, and accessibility when the controlled surface is a UI."
+    },
+    {
+      "id": "tester-probe",
+      "file": "agents/tester-probe.md",
+      "role": "Verify browser flows, failures, boundaries, and repeatability."
+    },
+    {
+      "id": "security-sentinel",
+      "file": "agents/security-sentinel.md",
+      "role": "Review untrusted screen content, permissions, secrets, downloads, and control boundaries."
+    }
+  ],
+  "agentLoading": "Reference these roles in every harness, but load a full agent definition only when its role fits the current task."
+}

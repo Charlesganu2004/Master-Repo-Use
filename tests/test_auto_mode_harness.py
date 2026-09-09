@@ -180,7 +180,8 @@ class TheCheckIsOfflineAndHonest(unittest.TestCase):
         result = run("--check")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("all three layers", result.stdout)
-        self.assertIn("7 of 7 present", result.stdout)
+        expected = f"{len(harness.ENFORCED_SKILLS)} of {len(harness.ENFORCED_SKILLS)} present"
+        self.assertIn(expected, result.stdout)
 
     def test_check_exercises_every_client_output_shape(self):
         """Asserted by running the hook, not by reading the source. A shape that

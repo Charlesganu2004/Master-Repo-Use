@@ -94,20 +94,21 @@ h1 span{display:block;color:var(--accent)}
 .remix-card:nth-child(17){grid-column:span 8}
 .remix-card:nth-child(18){grid-column:span 7;margin-top:-18px}
 .remix-card:nth-child(19){grid-column:span 5;margin-top:34px}
-.remix-card:nth-child(20){grid-column:span 12}
+.remix-card:nth-child(20){grid-column:span 5}
+.remix-card:nth-child(21){grid-column:span 7;margin-top:-18px}
 .remix-frame{display:grid;min-height:100%}
 .remix-card:nth-child(1) .remix-frame,.remix-card:nth-child(4) .remix-frame,
 .remix-card:nth-child(8) .remix-frame,.remix-card:nth-child(13) .remix-frame,
 .remix-card:nth-child(15) .remix-frame,.remix-card:nth-child(17) .remix-frame,
-.remix-card:nth-child(20) .remix-frame{grid-template-columns:minmax(0,1.12fr) minmax(280px,.88fr)}
+.remix-card:nth-child(21) .remix-frame{grid-template-columns:minmax(0,1.12fr) minmax(280px,.88fr)}
 .remix-card:nth-child(4) .remix-art,.remix-card:nth-child(13) .remix-art,
-.remix-card:nth-child(20) .remix-art{order:2}
+.remix-card:nth-child(21) .remix-art{order:2}
 .remix-art{display:block;min-height:230px;border:0;border-bottom:1px solid var(--line);
   text-decoration:none;isolation:isolate;transition:filter 180ms var(--ease),transform 180ms var(--ease)}
 .remix-card:nth-child(1) .remix-art,.remix-card:nth-child(4) .remix-art,
 .remix-card:nth-child(8) .remix-art,.remix-card:nth-child(13) .remix-art,
 .remix-card:nth-child(15) .remix-art,.remix-card:nth-child(17) .remix-art,
-.remix-card:nth-child(20) .remix-art{min-height:420px;border-bottom:0}
+.remix-card:nth-child(21) .remix-art{min-height:420px;border-bottom:0}
 .remix-card:nth-child(3) .remix-art,.remix-card:nth-child(6) .remix-art,
 .remix-card:nth-child(10) .remix-art{min-height:300px}
 .remix-art::marker{display:none}
@@ -187,7 +188,7 @@ h1 span{display:block;color:var(--accent)}
   .remix-card{grid-column:auto!important;margin-top:0!important}
   .remix-card:nth-child(1),.remix-card:nth-child(4),.remix-card:nth-child(8),
   .remix-card:nth-child(13),.remix-card:nth-child(15),.remix-card:nth-child(17),
-  .remix-card:nth-child(20){grid-column:span 2!important}
+  .remix-card:nth-child(20),.remix-card:nth-child(21){grid-column:span 2!important}
 }
 @media (max-width:720px){
   .shell{padding-inline:16px}
@@ -198,10 +199,10 @@ h1 span{display:block;color:var(--accent)}
   .remix-grid{grid-template-columns:1fr}
   .remix-card,.remix-card:nth-child(1),.remix-card:nth-child(4),.remix-card:nth-child(8),
   .remix-card:nth-child(13),.remix-card:nth-child(15),.remix-card:nth-child(17),
-  .remix-card:nth-child(20){grid-column:1!important}
+  .remix-card:nth-child(20),.remix-card:nth-child(21){grid-column:1!important}
   .remix-card .remix-frame{grid-template-columns:1fr!important}
   .remix-card:nth-child(4) .remix-art,.remix-card:nth-child(13) .remix-art,
-  .remix-card:nth-child(20) .remix-art{order:0}
+  .remix-card:nth-child(21) .remix-art{order:0}
   .remix-card .remix-art{min-height:250px!important;border-bottom:1px solid var(--line)!important}
   .archive-head{display:block}
   .archive-head p{margin-top:12px}
@@ -259,7 +260,7 @@ h1 span{display:block;color:var(--accent)}
 .s-city::after{content:"";position:absolute;inset:18px;background:linear-gradient(90deg,var(--accent) 0 19%,transparent 19% 25%,var(--capability) 25% 58%,transparent 58% 64%,var(--knowledge) 64%);clip-path:polygon(0 0,100% 0,100% 47%,77% 47%,77% 100%,36% 100%,36% 65%,0 65%)}
 .s-cinema::before,.s-cinema::after{content:"";position:absolute;left:8px;right:8px;height:8px;background:repeating-linear-gradient(90deg,#eee8da 0 12px,transparent 12px 23px)}.s-cinema::before{top:8px}.s-cinema::after{bottom:8px}.s-cinema{background-image:linear-gradient(90deg,transparent 0 7%,#eee8da 7% 31%,transparent 31% 36%,#eee8da 36% 64%,transparent 64% 69%,#eee8da 69% 93%,transparent 93%)}
 
-/* Swatches for the fifteen rebuilt designs. Each previews its own visual system
+/* Swatches for the rebuilt designs. Each previews its own visual system
    rather than a generic pattern, so the card says what the page will look like. */
 .s-declass{background:#e8e4d9}
 .s-declass::before{content:"";position:absolute;inset:14px;border:1px solid #0f0f0d}
@@ -361,7 +362,7 @@ h1 span{display:block;color:var(--accent)}
   </div>
   <h1>One engine. <span>Many worlds.</span></h1>
   <div class="intro-copy">
-    <p class="lede">Every page reads the same live system. The newest twenty reject the shared dashboard
+    <p class="lede">Every page reads the same live system. The newest collection rejects the shared dashboard
     silhouette and rebuild the first view as an exhibition, instrument, document, organism, or place.</p>
     <p class="counts" id="counts">Reading the atlas data...</p>
   </div>
@@ -378,10 +379,10 @@ the URL as <code>?theme=ember</code>, and full Atlas controls include their own 
   <section class="collection" id="immersive" aria-labelledby="immersive-title">
     <div class="collection-head">
       <div>
-        <p class="section-kicker">The immersive collection / D16 to D35</p>
-        <h2 id="immersive-title">Twenty distinct first views</h2>
+        <p class="section-kicker">The immersive collection / D16 to D36</p>
+        <h2 id="immersive-title"><span id="immersive-title-count">21</span> distinct first views</h2>
       </div>
-      <p class="collection-intro"><strong>20</strong>Full-viewport concepts with different spatial rules,
+      <p class="collection-intro"><strong id="immersive-count">21</strong>Full-viewport concepts with different spatial rules,
       interaction grammar, typography, and atmosphere. Open them at normal browser zoom.</p>
     </div>
     <div class="remix-grid" id="remix-grid"></div>
@@ -596,15 +597,15 @@ const DESIGNS = [
     what: '<b>The index becomes a descent.</b> Lane contacts hang at measured depths in a full-height water column. The porthole keeps the selected description readable while the scene stays quiet and cinematic.',
     from: 'Oceanographic survey diagrams and early submersible viewports, rendered without external media.' },
 
-  { file: 'd36-mongo.html', name: 'Store', swatch: 's-mongo',
-    tagline: 'query workbench · index plans',
-    what: '<b>The same catalog, seen the way a database sees it.</b> Five collections, ten indexes, and the plan each query uses. Every index definition is parsed from scripts/catalog-indexes.js rather than restated, and the numbers in the prose are computed at build time so they cannot drift from the catalog.',
-    from: 'A mongosh session. The card wall in Atlas Index is the same data; this is its opposite number.' },
-
   { file: 'd35-prism.html', name: 'Prism', swatch: 's-prism',
     tagline: 'refracted bands · bold index',
     what: '<b>One source splits into a spectrum of routes.</b> Each faceted band is a live lane control, using scale and angle instead of another card grid. Focus and selection pull the chosen band forward.',
     from: 'Optical dispersion reduced to ultraviolet tonal bands with one yellow focus accent.' },
+
+  { file: 'd36-mongo.html', name: 'Store', swatch: 's-mongo',
+    tagline: 'query workbench · index plans',
+    what: '<b>The same catalog, seen the way a database sees it.</b> Generated collections, indexes, and the plan each query uses. Every index definition is parsed from scripts/catalog-indexes.js rather than restated, and the numbers on the page come from the current build so they cannot drift from the catalog.',
+    from: 'A mongosh session. The card wall in Atlas Index is the same data; this is its opposite number.' },
 ];
 
 function themeLinks(design){
@@ -617,9 +618,12 @@ function render(theme){
   const firstImmersive = DESIGNS.findIndex(d => d.file === 'd16-declassified.html');
   const archive = DESIGNS.slice(0, firstImmersive);
   const immersive = DESIGNS.slice(firstImmersive);
+  document.getElementById('immersive-title-count').textContent = immersive.length;
+  document.getElementById('immersive-count').textContent = immersive.length;
 
   document.getElementById('remix-grid').innerHTML = immersive.map((d, index) => {
-    const number = String(16 + index).padStart(2, '0');
+    const fileNumber = (d.file.match(/^d(\d+)-/) || [])[1];
+    const number = String(fileNumber || (16 + index)).padStart(2, '0');
     const titleId = `remix-title-${number}`;
     return `
       <article class="remix-card" aria-labelledby="${titleId}">

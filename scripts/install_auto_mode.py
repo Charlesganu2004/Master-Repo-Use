@@ -200,19 +200,13 @@ def register_hook(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
     """
     settings = home / ".claude" / "settings.json"
     available = [(name, repo / "scripts" / "hooks" / f"{name}.py") for name in ALL_HOOKS]
-    available = [(name, path) for name, path in available if path.exists()]
-    if not available:
-        return "skipped, hooks missing"
+    missing = [name for name, path in available if not path.is_file()]
+    if missing:
+        return "skipped, hooks missing: " + ", ".join(missing)
 
-    data: dict = {}
-    if settings.exists():
-        raw = settings.read_text(encoding="utf-8")
-        try:
-            data = json.loads(raw)
-        except ValueError:
-            return "REFUSED: settings.json is not valid JSON, refusing to overwrite it"
-        if not dry:  # never touch the file without a copy beside it
-            settings.with_suffix(".json.bak").write_text(raw, encoding="utf-8")
+    data, error = _load_hook_file(settings, dry)
+    if error:
+        return error.replace("hooks.json", "settings.json")
 
     hooks = data.setdefault("hooks", {})
     added, refreshed = [], []
@@ -222,12 +216,19 @@ def register_hook(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
         bucket = hooks.setdefault(event, [])
         command = hook_command(path)
         existing = None
+        existing_entry = None
         for entry in bucket:
             for hook in entry.get("hooks", []):
                 if name in str(hook.get("command", "")):
                     existing = hook
+                    existing_entry = entry
         if existing is not None:
             existing["command"] = command      # refresh the path, do not duplicate
+            existing["type"] = "command"
+            if matcher:
+                existing_entry["matcher"] = matcher
+            else:
+                existing_entry.pop("matcher", None)
             refreshed.append(name)
         else:
             entry = {"hooks": [{"type": "command", "command": command}]}
@@ -273,10 +274,15 @@ def register_antigravity_hook(repo: pathlib.Path, home: pathlib.Path, dry: bool)
             data = json.loads(raw)
         except ValueError:
             return "REFUSED: hooks.json is not valid JSON, refusing to overwrite it"
+        if not isinstance(data, dict):
+            return "REFUSED: hooks.json root is not an object, refusing to overwrite it"
         if not dry:
             config.with_suffix(".json.bak").write_text(raw, encoding="utf-8")
 
     command = hook_command(hook) + " --antigravity"
+    current = data.get("master-repo-pipeline")
+    if current is not None and not isinstance(current, dict):
+        return "REFUSED: master-repo-pipeline is not an object, refusing to overwrite it"
     entry = data.setdefault("master-repo-pipeline", {})
     existed = bool(entry.get("PreInvocation"))
     entry["enabled"] = True
@@ -418,10 +424,12 @@ def register_copilot_hooks(repo: pathlib.Path, home: pathlib.Path, dry: bool) ->
         copilot_entry(required["skill_pipeline"], "--copilot-transform"),
     ) + " userPromptTransformed")
     for name in ("no_prune_guard", "no_compress_guard"):
+        guard = copilot_entry(required[name])
+        guard["matcher"] = "Bash"
         statuses.append(_merge_hook(
             hooks.setdefault("preToolUse", []),
             f"{name}.py",
-            copilot_entry(required[name]),
+            guard,
         ) + f" {name}")
 
     if not dry:
@@ -461,6 +469,10 @@ def register_codex_hooks(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> s
             bucket.append(entry)
         else:
             _merge_hook(existing["hooks"], name, handler)
+            if matcher:
+                existing["matcher"] = matcher
+            else:
+                existing.pop("matcher", None)
     if not dry:
         config.parent.mkdir(parents=True, exist_ok=True)
         config.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
@@ -493,6 +505,10 @@ def register_gemini_hooks(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> 
             bucket.append(entry)
         else:
             _merge_hook(existing["hooks"], name, handler)
+            if pipeline:
+                existing.pop("matcher", None)
+            else:
+                existing["matcher"] = "run_shell_command"
     if not dry:
         config.parent.mkdir(parents=True, exist_ok=True)
         config.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
@@ -512,7 +528,14 @@ def main() -> int:
     home = pathlib.Path(args.home).expanduser()
     dry = args.dry_run
     def selected(key: str) -> bool:
-        return args.client == "all" or args.client == key or (args.client == "antigravity" and key == "gemini")
+        return args.client == "all" or args.client == key
+
+    def instruction_selected(name: str) -> bool:
+        # Gemini CLI and Antigravity share GEMINI.md, but their skills and hook
+        # files are separate. The old broad alias also installed Gemini CLI's
+        # BeforeAgent hook during an Antigravity-only setup.
+        return (selected(CLIENT_KEYS[name]) or
+                (name == "Gemini + Antigravity" and args.client == "antigravity"))
 
     if not (repo / ".git").exists():
         print(f"Master Repo not found at {repo}", file=sys.stderr)
@@ -542,7 +565,7 @@ def main() -> int:
                 failed = failed or result.startswith(("REFUSED", "skipped"))
                 print(f"{key} hook: {result}")
     for name, rel in CLIENTS.items():
-        if selected(CLIENT_KEYS[name]):
+        if instruction_selected(name):
             print(f"{name:<9}: {upsert_block(home / rel, body, dry)}  ({rel})")
     if selected("cursor"):
         cursor_rule = home / ".cursor" / "rules" / "master-repo-auto.mdc"
