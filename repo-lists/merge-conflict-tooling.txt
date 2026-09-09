@@ -7,10 +7,10 @@
 # and learn from them; do not copy their contents into this repository.
 
 # --- Usable (licensed, maintained, and safe to build on)
-microsoft/mcp                 # 3.6k stars, MIT, pushed yesterday. Carries the
-                              # resolve-asset-conflict script under
-                              # eng/common/testproxy/scripts/. The strongest entry here
-                              # and the only one that is both maintained and licensed.
+microsoft/mcp                 # 3.6k stars, MIT, pushed yesterday. Carries the resolve-asset-conflict script.
+                              # It lives under eng/common/testproxy/scripts/. The strongest
+                              # entry here and the only one that is both maintained and
+                              # licensed.
 mattpocock/skills             # 241k stars, MIT. Already catalogued in design-agent-skills.
                               # Its skills/engineering/resolving-merge-conflicts/SKILL.md is
                               # the practical agent-facing procedure for this lane.

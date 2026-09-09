@@ -1,0 +1,104 @@
+# Refactoring skills and the tools that make one safe - observed 2026-09-09
+# Presence here is catalog coverage, not static intake approval or installation.
+#
+# A refactor changes the inside of code and leaves the outside identical, so the
+# whole discipline rests on being able to prove the outside did not move. That
+# splits this lane in two: the skill packs that carry the transformation list,
+# and the tools that supply the proof. The second half is the half usually
+# missing. "Remove Dead Code" written in a skill file is a suggestion; a dead
+# code finder that names the symbol and the line is a finding.
+#
+# The rules live in skills/master-refactor/SKILL.md and
+# skills/master-refactor-ui/SKILL.md, not here, for the same reason as the
+# computer-control lane: a rule that lives only in a catalog comment is a rule
+# nobody reads at the moment it matters.
+#
+# MEASURED, THEN REJECTED. Kept so the next reader does not re-find them:
+#   LovroPodobnik/refactoring-ui-skill   49 stars, NO LICENCE, last push 244
+#                                        days before review. Widely linked as
+#                                        the Refactoring UI skill; without a
+#                                        licence there is no permission to copy
+#                                        it into a skill root, and the staleness
+#                                        makes it a poor exception to argue for.
+#   LoveHikari/full-stack-skills          0 stars, NO LICENCE, pushed 30 days
+#                                        before review. Same licence problem,
+#                                        with no adoption to weigh against it.
+#
+# Both were named in the brief this lane came from. Neither is catalogued, on
+# the same rule that kept octaltree/playwright-rust out of the browser lane.
+# The skills in this repository were written from the public descriptions of the
+# technique, which is not copyrightable, rather than from either file.
+#
+# These sit in the preamble on purpose. A comment directly under a "# ---"
+# header is read as that subcategory's published description.
+
+# --- Refactor skill packs (the transformation list and the workflow, as agent skills)
+
+github/awesome-copilot        # MIT, 38.8k stars, pushed the day of review.
+                              # Carries skills/refactor/SKILL.md, the entry the
+                              # brief quoted for "surgical code refactoring to
+                              # improve maintainability without changing
+                              # behavior". Largest and most current of the four.
+
+seb1n/awesome-ai-agent-skills # MIT, 179 stars, pushed 30 days before review.
+                              # code-and-development/refactoring/SKILL.md is the
+                              # source of the workflow ordering: identify smells,
+                              # select patterns, plan order, apply one at a time,
+                              # test after each.
+
+andreaswasita/copilot-agents-dojo   # MIT, 53 stars, pushed 2 days before review.
+                              # skills/refactoring/SKILL.md. Small and young;
+                              # listed for its when-to-use framing rather than
+                              # for coverage.
+
+jaywilburn/refactoring-ui-skill     # MIT, 28 stars, pushed 111 days before review.
+                              # The licence-clean Refactoring UI skill, after the
+                              # more-linked LovroPodobnik copy failed the gate.
+                              # Grayscale-first workflow, constrained spacing
+                              # scale, modular type, accessible palettes.
+
+# --- Dead code and duplication finders (the proof a deletion needs before it happens)
+
+jendrikseipp/vulture          # MIT. Python dead code. Reports unused names with
+                              # a confidence score, which matters because a
+                              # symbol reached by string dispatch is invisible to
+                              # it and the score is where that uncertainty shows.
+
+webpro-nl/knip                # ISC. Unused files, exports and dependencies in
+                              # JavaScript and TypeScript projects. The closest
+                              # thing to a repo-wide proof that an export is
+                              # genuinely unreferenced.
+
+kucherenko/jscpd              # MIT. Copy-paste detector across 150+ languages.
+                              # Answers "is this duplicated three times or twice",
+                              # which is the threshold the skill sets before an
+                              # extraction is worth doing.
+
+# --- Mechanical transformation (a rename applied to every call site, not by hand)
+
+facebook/jscodeshift          # MIT. Codemod runner over a JS/TS AST. The point
+                              # is that a rename it performs reaches every call
+                              # site including the ones grep would miss.
+
+codemod/codemod               # Apache-2.0. Registry and runner for codemods
+                              # across languages. Younger than jscodeshift;
+                              # listed for the multi-language reach.
+
+asottile/pyupgrade            # MIT. Rewrites Python to newer syntax
+                              # automatically. A narrow, behaviour-preserving
+                              # transformation applied mechanically, which is
+                              # the safest shape a refactor can take.
+
+sourcery-ai/sourcery          # MIT. Suggests refactorings in Python from static
+                              # analysis. Read the suggestion before taking it;
+                              # a tool that proposes an extraction cannot know
+                              # whether the extracted block has a name.
+
+# --- Practice material (a kata where the tests already exist, so the loop is real)
+
+emilybache/GildedRose-Refactoring-Kata  # MIT, 4.2k stars, pushed 18 days before review.
+                              # The canonical refactoring exercise, ported
+                              # to about 40 languages. Its value here is the
+                              # characterisation-test step: the kata cannot be
+                              # started until the current behaviour is pinned,
+                              # which is exactly the gate the skill enforces.
