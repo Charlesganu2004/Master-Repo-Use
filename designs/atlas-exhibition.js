@@ -353,8 +353,12 @@
     root.querySelector('[data-open-atlas]').addEventListener('click', function (event) {
       revealAtlas('', event.currentTarget);
     });
+    // The button says Command center, so it opens the commands tab. It opened
+    // the index, which is a directory of everything rather than the commands,
+    // so the one control on these designs that promises commands did not reach
+    // them.
     root.querySelector('[data-open-command]').addEventListener('click', function (event) {
-      revealAtlas('index', event.currentTarget);
+      revealAtlas('commands', event.currentTarget);
     });
     root.querySelector('[data-return-concept]').addEventListener('click', function () {
       legacy.forEach(function (node) { node.hidden = true; });

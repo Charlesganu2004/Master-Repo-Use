@@ -22,7 +22,7 @@
       <span><strong>Graphite Atlas</strong><small>Master Repo Use</small></span>
     </a>
     <nav class="primary-nav" aria-label="Primary navigation">
-      <a href="#atlas">Atlas</a><a href="#routes">Routes</a><a href="#setup">Setup</a><a href="#store">Store</a><a href="#designs">Designs</a><a href="#hardware">Hardware</a><a href="#health">Health</a>
+      <a href="#atlas">Atlas</a><a href="#routes">Routes</a><a href="#setup">Setup</a><a href="#harness">Harness</a><a href="#store">Store</a><a href="#designs">Designs</a><a href="#hardware">Hardware</a><a href="#health">Health</a>
     </nav>
     <div class="mast-actions">
       <span class="live-pill"><i></i> System current</span>
@@ -111,6 +111,23 @@
       </div>
 
       <div class="setup-output" id="setupOutput" aria-live="polite"></div>
+    </section>
+    <section class="routes-section page-shell" id="harness" aria-labelledby="harnessTitle">
+      <div class="section-heading route-heading">
+        <div><p class="eyebrow">The harness</p><h2 id="harnessTitle">Four places to stand.</h2></div>
+        <p>A harness is what makes the standing rules arrive without anyone remembering to ask. There are four because there are four different places to stand, and where a harness stands decides what it can reach. Each one below says what it enforces, when it is the right choice, and what it cannot do.</p>
+      </div>
+
+      <div class="harness-grid" id="harnessGrid"></div>
+
+      <article class="harness-note">
+        <h3>The part that survives the turn</h3>
+        <p>The first three carry the same three layers. They differ only in how the rules arrive. The fourth adds the thing none of the others can do: a goal that outlives the turn it was set in.</p>
+        <p>A long session forgets what it was for. The first prompt states the objective, the next twenty say "continue", and by the end the model is answering the last message rather than serving the goal. Nothing errors, so nothing surfaces it. The goal harness restates the goal before reading each request, checks the answer against the goal rather than the last message, and reports what is left.</p>
+        <p class="harness-forms">Set it with <code>/goal</code>, <code>\goal</code> or <code>goal:</code>. All three work, because people type all three and a rule that depends on remembering a slash is not a rule. Once set it applies to every prompt without being invoked again, and only the person who set it lifts it.</p>
+        <pre class="out-code"><code id="goalExample"></code></pre>
+        <button type="button" class="quiet-button" id="copyGoal">Copy the goal commands</button>
+      </article>
     </section>
     <section class="routes-section page-shell" id="store" aria-labelledby="storeTitle">
       <div class="section-heading route-heading">

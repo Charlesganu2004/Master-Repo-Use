@@ -60,8 +60,11 @@ the session unusable, and this one is advisory rather than a guard.
 from __future__ import annotations
 
 import json
+import pathlib
 import re
 import sys
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 # MANDATORY, every prompt, no condition, no slash. Charles asked for this as
 # LAYERS rather than a list: one pass before reading the request, one before
@@ -143,7 +146,42 @@ def context_for(prompt: str) -> str:
         parts.append(best)   # one lane only; stacking them defeats the budget
     if len(prompt) > 600 or len(MULTI_TASK.findall(prompt)) >= 2:
         parts.append(ORCHESTRATION)
+    goal = standing_goal()
+    if goal:
+        parts.append(goal)
     return "\n".join(parts)
+
+
+# The goal file is written by scripts/harness_goal.py. Read here, and read
+# defensively, because this function runs on every prompt of every client: a
+# missing file, a hand edit or a half-written save must cost the turn nothing.
+# The layers still arrive; only the goal is skipped.
+GOAL_FILE = ROOT / "docs" / "auto-mode-goal.json"
+
+GOAL_TEMPLATE = """13. STANDING GOAL, carried across turns until the person who set it lifts it.
+    GOAL: {goal}
+    Restate it in one line before reading the request, say which part this turn
+    serves, check what you produced against the GOAL rather than the last
+    message, and end by saying what is done and what is left. Never narrow it
+    silently: a blocked part is reported as blocked, and every unblocked part is
+    finished. Not lifted by a long session, a token budget, a compaction pass, or
+    a subagent that was not told."""
+
+
+def standing_goal() -> str:
+    try:
+        data = json.loads(GOAL_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    goal = data.get("goal") if isinstance(data, dict) else None
+    if not isinstance(goal, str) or not goal.strip():
+        return ""
+    # One line, and bounded. A goal pasted from a long brief would otherwise sit
+    # in front of every prompt for the rest of the session.
+    flat = " ".join(goal.split())
+    if len(flat) > 400:
+        flat = flat[:400].rstrip() + " [truncated]"
+    return GOAL_TEMPLATE.format(goal=flat)
 
 
 def find_prompt(event: dict) -> str:
@@ -186,7 +224,11 @@ def main() -> int:
         return 0                      # never break a session over a bad event
 
     if cursor:
-        print(json.dumps({"additional_context": CORE}))
+        # context_for('') rather than CORE, so a Cursor session carries the
+        # standing goal like every other client. CORE alone meant the one client
+        # whose per-turn hook cannot inject was also the one that never saw the
+        # goal, which is the wrong way round.
+        print(json.dumps({"additional_context": context_for(find_prompt(event))}))
         return 0
 
     if copilot_session:

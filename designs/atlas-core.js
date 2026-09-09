@@ -14,9 +14,9 @@ const AtlasCore = (() => {
 
   /* ------------------------------------------------------------ platform */
 
-  /* Chosen explicitly rather than sniffed. A guess from the user agent is wrong
-     often enough that it would hand someone a command for the wrong shell, and
-     WSL in particular is invisible to the user agent. */
+  /* Suggested from the user agent, then confirmed by the reader. See
+     suggestPlatform below for why it is a labelled suggestion rather than
+     either a silent guess or a blocking question. */
   const PLATFORMS = [
     { id: 'windows', label: 'Windows', shell: 'PowerShell',
       note: 'Commands are PowerShell. Use the WSL option instead if you work inside Ubuntu.' },
@@ -102,19 +102,51 @@ const AtlasCore = (() => {
     return platform();
   }
 
+  /* Suggested from the user agent, never silently adopted.
+     The original rule was that nothing is sniffed, and the reason was sound: a
+     wrong guess hands somebody a command for the wrong shell, and WSL cannot be
+     seen from a user agent at all. The cost was that every command on the page
+     read "Choose OS first" until you found the picker, so the command directory
+     of all thirty designs was empty on arrival, which is the opposite of a
+     reference.
+     So the guess is made, used, and LABELLED. effectivePlatform is what commands
+     render with; state.platform stays null until a person actually picks, so
+     platformIsSuggested stays true and the interface keeps saying so. WSL is
+     never suggested, because it is exactly the case a user agent gets wrong. */
+  function suggestPlatform() {
+    const ua = (navigator.userAgent || '').toLowerCase();
+    if (ua.indexOf('mac') > -1) return 'macos';
+    if (ua.indexOf('win') > -1) return 'windows';
+    if (ua.indexOf('linux') > -1 || ua.indexOf('x11') > -1) return 'linux';
+    return 'other';
+  }
+
+  function effectivePlatform() {
+    return state.platform || suggestPlatform();
+  }
+
+  function platformIsSuggested() {
+    return !state.platform;
+  }
+
   function platform() {
+    return PLATFORMS.find(p => p.id === effectivePlatform()) || null;
+  }
+
+  /** The platform a person explicitly chose, or null. Callers that must not act
+      on a guess, such as anything that writes, ask for this one. */
+  function chosenPlatform() {
     return PLATFORMS.find(p => p.id === state.platform) || null;
   }
 
-  /** Null until a platform is chosen, so callers can prompt rather than guess. */
   function scanCommand() {
-    return state.platform ? (SCAN[state.platform] || SCAN.other) : null;
+    const id = effectivePlatform();
+    return SCAN[id] || SCAN.other;
   }
 
   function commandFor(component) {
     if (!component || !component.cmd) return null;
-    if (!state.platform) return null;
-    return component.cmd[state.platform] || null;
+    return component.cmd[effectivePlatform()] || null;
   }
 
   function setupRecipeFor(component) {
@@ -128,7 +160,7 @@ const AtlasCore = (() => {
   /* The platform is a parameter, not a read of global state, so the Build tab can
      render a script for every system at once. A combination you assemble on
      Windows is worth handing to someone on WSL or a Mac unchanged. */
-  function setupCommandFor(component, platformId = state.platform) {
+  function setupCommandFor(component, platformId = effectivePlatform()) {
     if (!component || !platformId) return null;
     const recipe = setupRecipeFor(component);
     if (!recipe || recipe.kind !== 'setup' || recipe.state !== 'ready') return null;
@@ -143,7 +175,6 @@ const AtlasCore = (() => {
   }
 
   function setupStateFor(component) {
-    if (!state.platform) return { id: 'choose-platform', label: 'Choose OS first' };
     if (setupCommandFor(component)) return { id: 'ready', label: 'Setup ready' };
     if (component && component.setupState === 'review-required') {
       return { id: 'review-required', label: 'Setup recipe needs security review' };
@@ -438,18 +469,19 @@ const AtlasCore = (() => {
 
   /** Backwards-compatible: the script for whatever platform is selected. */
   function combinedCommand() {
-    return combinedCommandFor(state.platform);
+    return combinedCommandFor(effectivePlatform());
   }
 
   /** Every platform at once, so the Build tab can show them all.
       Ordered with the selected system first, since that is the one being run now. */
   function combinedCommandAll() {
     const ids = PLATFORMS.map(p => p.id);
-    if (state.platform) {
-      ids.splice(ids.indexOf(state.platform), 1);
-      ids.unshift(state.platform);
+    const current = effectivePlatform();
+    if (ids.indexOf(current) > -1) {
+      ids.splice(ids.indexOf(current), 1);
+      ids.unshift(current);
     }
-    return ids.map(id => ({ ...combinedCommandFor(id), id, current: id === state.platform }));
+    return ids.map(id => ({ ...combinedCommandFor(id), id, current: id === current }));
   }
 
 
@@ -624,6 +656,12 @@ const AtlasCore = (() => {
              commandCount: commands.length, text: commands.join('\n') };
   }
 
+  /** The four harnesses, in the order they were built, which is also the order
+      from least to most reach. */
+  function harnesses() {
+    return (state.data && state.data.harnesses) || [];
+  }
+
   function profiles() { return (state.data && state.data.profiles) || []; }
   function profileClients() { return (state.data && state.data.profileClients) || []; }
 
@@ -690,6 +728,7 @@ const AtlasCore = (() => {
       match: l => l.family === 'plugins' },
     { id: 'mcp', label: 'MCP', hint: 'Model Context Protocol servers and connectors.',
       match: l => l.family === 'mcp' },
+    { id: 'harness', label: 'Harness', hint: 'The four harnesses, what each one can enforce, and the command that checks it.' },
     { id: 'routes', label: 'Hybrid routes', hint: 'How work is split across models.' },
     { id: 'hardware', label: 'Hardware', hint: 'What this machine can actually host.' },
     { id: 'easy', label: 'Easy setup', hint: 'Choose multiple chat, coding and local-model surfaces, then configure automatic skills.' },
@@ -737,11 +776,12 @@ const AtlasCore = (() => {
     state, init, on, emit, counts, copy,
     PLATFORMS, HW_FIELDS, TABS,
     setPlatform, platform, scanCommand, commandFor,
+    effectivePlatform, platformIsSuggested, suggestPlatform, chosenPlatform,
     setupRecipeFor, setupCommandFor, setupStateFor, canBuild,
     setHardware, usableMemory, tierFor, currentTier, routesForMachine,
     profiles, profileClients, setProfileClient, resolveProfile, profileScriptFor,
     availableSurfaces, selectedSurfaces, toggleSurface, autoModeText,
-    visibleLanes, visibleComponents, subcategories, subDescription, lanesForTab,
+    harnesses, visibleLanes, visibleComponents, subcategories, subDescription, lanesForTab,
     toggleFamily, toggleKind, toggleSub, setQuery, clearFilters, activeFilterCount,
     detailFor, select, laneName, selectLane, laneDetailFor,
     addToBasket, removeFromBasket, clearBasket, basketItems,
@@ -751,3 +791,13 @@ const AtlasCore = (() => {
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = AtlasCore;
+
+/* Published on window as well as the script-scope binding.
+   A top level `const` in a classic script is script-scoped, not a property
+   of window, so `window.AtlasCore` was undefined while the bare `AtlasCore`
+   worked. atlas-exhibition.js reads these through window, so its guard
+   `if (!A || !P) return;` fired on every call and workspace() built nothing.
+   That is why d31 rendered a root map with no atlas behind it, and why the
+   Command center button on the other exhibition designs revealed the atlas
+   without ever switching the tab. */
+if (typeof window !== 'undefined') window.AtlasCore = AtlasCore;

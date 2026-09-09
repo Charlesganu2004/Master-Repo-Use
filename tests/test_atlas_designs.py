@@ -403,13 +403,49 @@ class TheSharedCore(unittest.TestCase):
             self.assertIn(f"id: '{platform}'", self.core, f"{platform} is not selectable")
             self.assertIn(f"{platform}:", self.core, f"{platform} has no scan command")
 
-    def test_platform_is_chosen_not_sniffed(self):
-        """A user-agent guess hands someone the wrong shell, and WSL is invisible."""
-        self.assertNotIn("navigator.userAgent", self.core)
+    def test_the_platform_guess_is_labelled_rather_than_silent(self):
+        """This used to assert that nothing was sniffed at all, and the reason was
+        sound: a wrong guess hands someone the wrong shell. The cost was that the
+        command directory of all thirty designs rendered "Choose OS first" on
+        arrival and showed not one command, which was measured, not assumed.
+
+        So the rule changed rather than the reason. The guess is made and used,
+        and the interface has to say it guessed, which is what these assertions
+        now hold.
+        """
+        self.assertIn("function suggestPlatform()", self.core)
+        self.assertIn("function effectivePlatform()", self.core)
+        self.assertIn("function platformIsSuggested()", self.core)
+        self.assertIn("platformIsSuggested", self.panes,
+                      "the panes never tell the reader the platform was guessed")
+
+    def test_the_guess_never_returns_wsl(self):
+        """The one case a user agent provably cannot see. Suggesting it would put
+        bash commands in front of somebody running PowerShell."""
+        body = self.core[self.core.index("function suggestPlatform()"):]
+        body = body[:body.index("function effectivePlatform()")]
+        self.assertNotIn("wsl", body)
+
+    def test_an_explicit_choice_still_wins_over_the_guess(self):
+        self.assertIn("return state.platform || suggestPlatform();", self.core)
+
+    def test_a_chosen_platform_is_still_distinguishable_from_a_guessed_one(self):
+        """Anything that writes needs the answer a person actually gave."""
+        self.assertIn("function chosenPlatform()", self.core)
         self.assertIn("setPlatform", self.core)
 
-    def test_no_command_is_offered_before_a_platform_is_chosen(self):
-        self.assertIn("if (!state.platform) return null;", self.core)
+    def test_a_command_is_always_offered_for_some_named_platform(self):
+        """The inverse of what this asserted before. Refusing to render a command
+        until a platform was picked left the directory empty on arrival, and the
+        empty state was the first thing a reader saw. Now a command always
+        renders, always for a platform the page names on screen."""
+        self.assertIn("return component.cmd[effectivePlatform()] || null;", self.core)
+        self.assertNotIn("if (!state.platform) return null;", self.core)
+
+    def test_the_scan_command_never_comes_back_empty(self):
+        body = self.core[self.core.index("function scanCommand()"):]
+        body = body[:body.index("function commandFor")]
+        self.assertIn("SCAN[id] || SCAN.other", body)
 
     def test_all_four_hardware_fields_exist(self):
         for field in ("ram", "vram", "storage", "cpu"):

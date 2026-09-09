@@ -532,6 +532,189 @@ FAMILIES = [
     ("domain", "Domain lanes", "knowledge"),
 ]
 
+# --------------------------------------------------------- the harness family
+#
+# Four harnesses, and the differences are not cosmetic: each one stands in a
+# different place, and the place decides what it can enforce. A page that listed
+# them as four similar tools would hide the only thing worth knowing about them.
+HARNESSES = [
+    ("auto-mode-harness", "Surface harness", "scripts/auto_mode_harness.py",
+     "Configures each surface by the strongest mechanism it supports: a hook where "
+     "there is one, a request gateway for local models, a paste bundle for a browser "
+     "product. Installs the enforced skills as folders where folders exist.",
+     "Setting a machine up, or adding a new client.",
+     "Cannot reach a program that was already running, and cannot reach a browser "
+     "tab at all except through text a person pastes.",
+     "python scripts/auto_mode_harness.py --check"),
+
+    ("harness-proxy", "Proxy harness", "scripts/harness_proxy.py",
+     "An OpenAI and Ollama compatible proxy. Point any client's base URL at it and "
+     "every request that client makes carries the pipeline, whether or not the "
+     "program knows the rules exist.",
+     "Anything talking to a local model that you cannot configure: an IDE plugin, a "
+     "notebook, a desktop app, a script somebody wrote last year.",
+     "Only covers traffic routed through it, and only for model servers speaking "
+     "those two API shapes. It never logs prompts, so it cannot tell you what was asked.",
+     "python scripts/harness_proxy.py --check"),
+
+    ("harness-wrap", "Wrapper harness", "scripts/harness_wrap.py",
+     "Wraps one command invocation and puts the rules in front of the prompt, by "
+     "argument, standard input, a file path or an environment variable.",
+     "A CLI client with no hook and no configurable base URL, which is most of them.",
+     "One invocation at a time, and a profile that has not been checked against a "
+     "real client says so rather than guessing at its flags.",
+     "python scripts/harness_wrap.py --check"),
+
+    ("harness-goal", "Goal harness", "scripts/harness_goal.py",
+     "The surface harness plus a standing goal that survives the turn. The goal is "
+     "restated before the request is read, checked against the output before "
+     "answering, and reported at the end. /goal, \\goal and goal: all set it.",
+     "Work that spans more than one turn, which is when a session drifts from what "
+     "it was for while nothing errors.",
+     "Adds about 544 bytes to every prompt while a goal is set. Lifted only by the "
+     "person who set it.",
+     "python scripts/harness_goal.py --check"),
+]
+
+
+def harness_entries() -> list[dict]:
+    return [{"id": h[0], "name": h[1], "file": h[2], "detail": h[3],
+             "useWhen": h[4], "limit": h[5], "check": h[6]} for h in HARNESSES]
+
+
+# ------------------------------------------------------- more runtime stages
+#
+# Every entry below is a file or capability that exists in this repository. The
+# atlas is a map of what is here, so a component that names something aspirational
+# would make the map lie in the direction that costs the most: you would go
+# looking for it.
+EXTRA_STAGES = [
+    # Intake and routing
+    ("intake", "goal-gate", "Goal gate", "Carries the session goal into every prompt and checks the answer against it.", "python scripts/harness_goal.py --show"),
+    ("intake", "prompt-shape", "Prompt shape", "Decides whether a request is one task or several, which is what triggers fan-out.", None),
+    ("intake", "retrieval-first", "Retrieval before assert", "Anything that changes gets looked up rather than recalled.", None),
+
+    # Client surfaces
+    ("surfaces", "cursor", "Cursor", "Editor surface. Rules arrive by an always-apply rule; the guards run on preToolUse.", "cursor"),
+    ("surfaces", "chatgpt-web", "ChatGPT", "Browser surface. No shell, so the rules and skills arrive as a pasted bundle.", None),
+    ("surfaces", "claude-web", "Claude on the web", "Browser surface. Preferences carry the pipeline, project knowledge carries the skills.", None),
+    ("surfaces", "claude-cowork", "Claude cowork", "Shared space. No per-user hook, so the standing text is the whole mechanism.", None),
+    ("surfaces", "gemini-code-assist", "Gemini Code Assist", "Automated review. Reads committed .gemini config; it reviews and never approves.", None),
+
+    # Harnesses, as runtime stages rather than only as documentation
+    ("intake", "harness-surface", "Surface harness", "Installs hooks, skills and bundles for every surface that accepts one.", "python scripts/auto_mode_harness.py --check"),
+    ("intake", "harness-proxy-stage", "Proxy harness", "Injects the pipeline into every request routed through it.", "python scripts/harness_proxy.py --check"),
+    ("intake", "harness-wrap-stage", "Wrapper harness", "Puts the rules in front of one wrapped command.", "python scripts/harness_wrap.py --check"),
+    ("intake", "harness-goal-stage", "Goal harness", "Carries a standing goal across turns and checks the work against it.", "python scripts/harness_goal.py --check"),
+
+    # Skills that the pipeline actually enforces
+    ("skills", "master-caveman", "master-caveman", "Layer 1 compression, applied to every build, command and lane.", None),
+    ("skills", "master-token-reducer", "master-token-reducer", "Compact retrieval packets for large repositories.", None),
+    ("skills", "master-full-output", "master-full-output", "Finish the deliverable; no skeleton where an implementation was asked for.", None),
+    ("skills", "master-anti-slop", "master-anti-slop", "One theme, one accent, one radius scale, and no em dashes.", None),
+    ("skills", "master-plan", "master-plan", "State the read and the approach before producing anything.", None),
+    ("skills", "master-design-taste", "master-design-taste", "Design read and dials before any visible surface is built.", None),
+    ("skills", "master-goal", "master-goal", "The goal survives the turn, and only the person who set it lifts it.", None),
+    ("skills", "verify-before-complete", "verify-before-complete", "Run the check and quote real output before claiming a result.", None),
+    ("skills", "cite-or-abstain", "cite-or-abstain", "Cite what was read, or say the claim is unverified.", None),
+    ("skills", "scope-guard", "scope-guard", "Deliver the scope asked for, no wider and no narrower.", None),
+    ("skills", "dep-audit", "dep-audit", "What to read before adding anything third-party.", None),
+
+    # Tools
+    ("tools", "catalog-skill-install", "install_catalog_skill", "The reviewed route into a skill root. Refuses an uncatalogued slug.", "python scripts/install_catalog_skill.py --list"),
+    ("tools", "watch-sources", "watch_sources", "Polls agentskill.sh for candidates and scans them. Writes a queue, never the catalog.", "python scripts/watch_sources.py --report"),
+    ("tools", "local-advisor", "local_model_advisor", "Reads real memory and reports which tags this machine can host.", "python scripts/local_model_advisor.py"),
+    ("tools", "verify-tags", "verify_model_tags", "Checks every model tag in the catalog against the vendor list.", "python scripts/verify_model_tags.py"),
+    ("tools", "build-atlas", "build_atlas_data", "Regenerates the atlas payload. The site is generated, never hand-edited.", "python scripts/build_atlas_data.py"),
+    ("tools", "build-site", "build_public_site", "Builds the published gallery in privacy mode.", "python scripts/build_public_site.py"),
+    ("tools", "sync-skills", "sync_project_skills", "Mirrors skills/ into the shared .agents/skills discovery path.", "python scripts/sync_project_skills.py --repo ."),
+    ("tools", "store-indexes", "monitor-indexes", "Creates the seven indexes the activity store queries against.", "mongosh monitor --file scripts/monitor-indexes.js"),
+
+    # Validation and safety
+    ("validation", "no-compress-hook", "No-compress hook", "Blocks a compressor or a truncating write aimed at a capability definition.", None),
+    ("validation", "pipeline-hook", "Standing pipeline hook", "Injects the three layers on every prompt, for five clients.", "echo '{}' | python scripts/hooks/skill_pipeline.py"),
+    ("validation", "catalog-security", "catalog_security", "The scanners and the redaction rules every intake path shares.", None),
+    ("validation", "static-audit", "static_audit", "Deterministic checks that need no model and no network.", "python scripts/static_audit.py"),
+    ("validation", "freshness-gate", "catalog_freshness_gate", "Fails the build when the catalog status is too old to trust.", "python scripts/catalog_freshness_gate.py"),
+
+    # Observability
+    ("observability", "security-trail", "security_trail", "Append-only record of what was scanned, when, and with what result.", "python scripts/security_trail.py --tail"),
+    ("observability", "catalog-status", "Catalog status", "Healthy, stale, review and remove counts across the whole catalog.", "python scripts/check_freshness.py"),
+    ("observability", "actions-budget", "actions_budget", "What the scheduled workflows cost in minutes.", "python scripts/actions_budget.py"),
+
+    # Automation
+    ("automation", "guardian-job", "Catalog Guardian", "Weekly metadata pass plus a rotating deep scan. Opens an issue; never merges.", None),
+    ("automation", "watch-job", "Watch Sources", "Weekly poll of the watched sources, with the scan and the queue commit.", None),
+    ("automation", "pages-job", "Pages", "Publishes the gallery when the designs or the atlas data change.", None),
+    ("automation", "approval-job", "Owner approval", "The passcode gate on anything that changes the catalog.", None),
+
+    # Knowledge and retrieval
+    ("knowledge", "activity-store", "Activity store", "MongoDB collections for events, summaries and consent, with a TTL on events only.", "mongosh monitor --file scripts/monitor-indexes.js"),
+    ("knowledge", "hardware-profiles", "Hardware profiles", "The vetted table of model tags and the memory each one needs.", "python scripts/generate_hardware_profiles.py"),
+
+    # Delivery
+    ("delivery", "bundle-out", "Paste bundle", "One file carrying the rules and every enforced skill, for a surface with no hook.", "python scripts/auto_mode_harness.py --bundle chatgpt"),
+    ("delivery", "repo-instructions", "Committed instructions", "The two instruction files that are versioned rather than set per account.", "python scripts/auto_mode_harness.py --install copilot-web,gemini-code-assist"),
+]
+
+
+# ---------------------------------------------------------- more hybrid routes
+#
+# A route is a real division of labour, not a preset. Each names the pieces it
+# needs and the condition under which it is the right answer, because a route
+# recommended outside its condition is worse than no route.
+EXTRA_ROUTES = [
+    ("goal-carried", "Goal carried across turns",
+     "The goal rides every prompt and the answer is checked against it, not against the last message.",
+     ["goal-gate", "harness-goal-stage", "claude-code"], "multi-turn work", "any"),
+    ("proxy-everything", "Proxy every local client",
+     "One proxy in front of the model server, so programs you cannot configure still get the rules.",
+     ["harness-proxy-stage", "hardware-gate"], "mixed local tooling", "8 GB RAM minimum"),
+    ("wrap-one-tool", "Wrap a single tool",
+     "For a CLI with no hook: the rules go in front of the prompt for that one invocation.",
+     ["harness-wrap-stage", "claude-code"], "an unhooked client", "any"),
+    ("bundle-browser", "Bundle for a browser surface",
+     "No shell to run against, so the rules and every enforced skill go in as one pasted file.",
+     ["bundle-out", "chatgpt-web", "claude-web"], "chat-only surfaces", "any"),
+    ("cowork-shared", "Shared space, shared rules",
+     "A cowork space has no per-user hook, so the standing text in project knowledge is the mechanism.",
+     ["bundle-out", "claude-cowork"], "a team space", "any"),
+    ("review-committed", "Review from committed config",
+     "Automated review reads what is in the repository, so the rules ship with the branch.",
+     ["repo-instructions", "gemini-code-assist", "branch-pr"], "pull request review", "any"),
+    ("scan-before-adopt", "Scan before adopting",
+     "A candidate is cloned read-only, scanned by every installed scanner, and queued rather than installed.",
+     ["watch-sources", "catalog-security", "catalog-skill-install"], "third-party skills", "any"),
+    ("guarded-compress", "Compress under guard",
+     "Compression runs, and the no-compress guard refuses anything aimed at a capability definition.",
+     ["caveman-compact", "no-compress-hook", "token-gain"], "long context", "any"),
+    ("retrieve-then-answer", "Retrieve then answer",
+     "Anything that changes is looked up and cited rather than recalled.",
+     ["retrieval-first", "lane-match", "cite-or-abstain"], "version and pricing questions", "any"),
+    ("plan-verify-loop", "Plan, act, verify",
+     "The plan is written down first and the claim is checked against real output before it is made.",
+     ["master-plan", "verify-before-complete", "branch-pr"], "anything multi-step", "any"),
+    ("design-taste-pass", "Design read before build",
+     "A visible surface gets an audit and a stated aesthetic before anything is replaced.",
+     ["master-design-taste", "master-anti-slop"], "UI work", "any"),
+    ("tier-two-models", "Two local models",
+     "A small model drafts and a larger local model reviews, with no hosted call at any point.",
+     ["hardware-gate", "harness-proxy-stage"], "offline with memory to spare", "32 GB RAM"),
+    ("embed-and-search", "Embed then search",
+     "Local embeddings feed the activity store, and search runs against the index rather than the transcript.",
+     ["activity-store", "store-indexes"], "monitor and summary work", "8 GB RAM minimum"),
+    ("audit-trail", "Scan, record, report",
+     "Every scan appends to the trail, so a finding can be traced to the run that produced it.",
+     ["catalog-security", "security-trail", "catalog-status"], "security review", "any"),
+    ("budget-then-fan", "Budget, then fan out",
+     "The token target is checked first, and only what fits is parallelised.",
+     ["budget-check", "actions-budget", "token-gain"], "fixed budgets", "any"),
+    ("full-machine-setup", "Whole machine, one pass",
+     "Every hooked client, the committed files, and the models this machine can hold.",
+     ["harness-surface", "hardware-gate", "repo-instructions"], "a new laptop", "16 GB RAM"),
+]
+
+
 # Runtime stages: the path a task actually takes. Each carries the command a
 # person would run, per platform where they differ.
 STAGES = [
@@ -565,7 +748,7 @@ STAGES = [
     ("validation", "no-prune-hook", "No-prune hook", "Blocks deletion of skills, tools, MCP and catalog paths.", None),
     ("observability", "token-gain", "Token savings", "What the reducers actually saved.", "rtk gain"),
     ("delivery", "branch-pr", "Branch and PR", "Every change lands on a branch, never straight to main.", "git switch -c feature/<name>"),
-]
+] + EXTRA_STAGES
 
 ROUTES = [
     ("local-first", "Local first, hosted on miss", "Small local model answers; escalate only when it cannot.",
@@ -588,7 +771,7 @@ ROUTES = [
      ["budget-check", "token-gain"], "fixed budgets", "any"),
     ("offline", "Fully offline", "No hosted call at any stage. Quality is bounded by the machine.",
      ["hardware-gate", "rtt", "caveman-compact"], "air-gapped work", "16 GB RAM minimum"),
-]
+] + EXTRA_ROUTES
 
 def tier_tags(gb: int, count: int = 2) -> list[str]:
     """The largest vetted tags this tier can host, from two different vendors.
@@ -1312,6 +1495,7 @@ def build() -> dict:
                      + global_rules_recipes() + antigravity_recipes()),
         "designs": design_pages(),
         "store": store_payload(),
+        "harnesses": harness_entries(),
         "autoMode": {
             "source": "docs/auto-mode-block.txt",
             "summary": "The exact protected rules used by installers and hosted-web setup.",

@@ -644,6 +644,7 @@ async function loadCatalog() {
   renderSetupControls();
   renderSurfaces();
   renderSetupOutput();
+  renderHarness();
   renderStore();
   renderDesignLinks();
 }
@@ -1021,6 +1022,75 @@ function osLabel(id) {
    below is parsed out of scripts/monitor-indexes.js by the build, and the page
    renders what that file actually creates. If somebody adds an index and does
    not explain it, the build has no question to show and the test fails. */
+
+/* ------------------------------------------------------------- the harness
+
+   Four cards in a column rather than a four-up grid. They are not
+   interchangeable options to scan across; the whole point is what each one can
+   and cannot reach, and that is a paragraph of reading each. A grid would say
+   "pick one of four similar things", which is the misreading to avoid. */
+
+function renderHarness() {
+  const host = document.getElementById('harnessGrid');
+  const harnesses = catalog.data.harnesses || [];
+  if (!host || !harnesses.length) return;
+
+  host.innerHTML = harnesses.map(function (harness, index) {
+    return '<article class="harness-card">' +
+      '<header><span class="harness-num">' + String(index + 1).padStart(2, '0') + '</span>' +
+      '<div><h3>' + escapeHtml(harness.name) + '</h3>' +
+      '<code class="harness-file">' + escapeHtml(harness.file) + '</code></div></header>' +
+      '<p class="harness-detail">' + escapeHtml(harness.detail) + '</p>' +
+      '<dl class="harness-meta">' +
+        '<div><dt>Use it when</dt><dd>' + escapeHtml(harness.useWhen) + '</dd></div>' +
+        '<div><dt>What it cannot do</dt><dd>' + escapeHtml(harness.limit) + '</dd></div>' +
+      '</dl>' +
+      '<div class="harness-check"><code>' + escapeHtml(harness.check) + '</code>' +
+      '<button type="button" class="quiet-button" data-copy-harness="' +
+        escapeHtml(harness.check) + '">Copy</button></div>' +
+      '</article>';
+  }).join('');
+
+  host.querySelectorAll('[data-copy-harness]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      navigator.clipboard.writeText(button.getAttribute('data-copy-harness')).then(
+        function () { showToast('Check command copied'); },
+        function () { showToast('Select the command and copy it manually'); });
+    });
+  });
+
+  /* Shown as a real transcript rather than described. The three spellings are
+     the part people get wrong, so they are on screen rather than in prose. */
+  const example = [
+    '# set the goal once; it then rides every prompt',
+    'python scripts/harness_goal.py --set "finish the designs and verify each one"',
+    '',
+    '# the same thing, typed into any client that has the hook',
+    '/goal finish the designs and verify each one',
+    '\\goal finish the designs and verify each one',
+    'goal: finish the designs and verify each one',
+    '',
+    '# see what is carried, and what a prompt would actually receive',
+    'python scripts/harness_goal.py --show',
+    'python scripts/harness_goal.py --context "add a settings page"',
+    '',
+    '# end it. Only the person who set it does this.',
+    'python scripts/harness_goal.py --clear',
+  ].join('\n');
+
+  const block = document.getElementById('goalExample');
+  if (block) block.textContent = example;
+
+  const copy = document.getElementById('copyGoal');
+  if (copy && !copy.dataset.wired) {
+    copy.dataset.wired = '1';
+    copy.addEventListener('click', function () {
+      navigator.clipboard.writeText(example).then(
+        function () { showToast('Goal commands copied'); },
+        function () { showToast('Select the block and copy it manually'); });
+    });
+  }
+}
 
 function renderStore() {
   const store = catalog.data.store;

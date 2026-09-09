@@ -465,3 +465,64 @@ html[data-theme="light"] .index-spec code { background: #14161a; }
 @media (max-width: 980px) {
   .store-grid, .store-foot { grid-template-columns: 1fr; }
 }
+
+/* ----------------------------------------------------------- the harness
+
+   A column, not a four-up grid. The four are not interchangeable options to
+   scan across; what each can and cannot reach is a paragraph of reading each,
+   and a grid would say "pick one of four similar things", which is exactly the
+   misreading to avoid. Same orange, same two radii. */
+
+.harness-grid { margin-top: 24px; display: flex; flex-direction: column; gap: 14px; }
+.harness-card {
+  padding: 20px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--panel-2);
+}
+.harness-card header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 11px; }
+.harness-num {
+  flex: none; color: var(--orange); font: 700 11px monospace; letter-spacing: .1em;
+}
+.harness-card h3 { margin: 0; font-size: 1.05rem; letter-spacing: -.01em; }
+.harness-file {
+  display: block; margin-top: 3px; color: var(--ink-3);
+  font: 600 11.5px "Cascadia Code", monospace; font-variant-ligatures: none;
+}
+.harness-detail {
+  margin: 0 0 13px; color: var(--ink-2); font-size: 13.5px; line-height: 1.6; max-width: 84ch;
+}
+.harness-meta {
+  margin: 0 0 14px; display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+.harness-meta dt {
+  margin-bottom: 4px; color: var(--ink-3);
+  font: 700 9.5px monospace; letter-spacing: .1em; text-transform: uppercase;
+}
+.harness-meta dd { margin: 0; color: var(--ink-2); font-size: 12.5px; line-height: 1.55; }
+.harness-check { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.harness-check code {
+  flex: 1; min-width: 0; padding: 9px 11px; border-radius: var(--radius-sm);
+  background: #090a0c; color: #c8f8e0;
+  font: 11.5px/1.6 "Cascadia Code", monospace; font-variant-ligatures: none;
+  overflow-wrap: anywhere;
+}
+html[data-theme="light"] .harness-check code { background: #14161a; }
+
+.harness-note {
+  margin-top: 16px; padding: 20px;
+  border: 1px solid var(--line); border-left: 3px solid var(--orange);
+  border-radius: var(--radius); background: var(--panel-2);
+}
+.harness-note h3 { margin: 0 0 10px; font-size: 1.05rem; letter-spacing: -.01em; }
+.harness-note p { margin: 0 0 11px; color: var(--ink-2); font-size: 13.5px; line-height: 1.6; max-width: 84ch; }
+.harness-forms code {
+  padding: 2px 6px; border-radius: 5px; background: var(--panel-3); color: var(--ink);
+  font: 600 12px "Cascadia Code", monospace; font-variant-ligatures: none;
+}
+.harness-note .out-code { max-height: none; margin-top: 4px; }
+.harness-note .quiet-button { margin-top: 12px; }
+
+@media (max-width: 640px) {
+  .harness-card header { flex-direction: column; gap: 4px; }
+  .harness-check { flex-direction: column; align-items: stretch; }
+}

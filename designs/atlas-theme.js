@@ -71,3 +71,13 @@ const AtlasTheme = (() => {
 
   return { THEMES, mount, apply, initial };
 })();
+
+/* Published on window as well as the script-scope binding.
+   A top level `const` in a classic script is script-scoped, not a property
+   of window, so `window.AtlasTheme` was undefined while the bare `AtlasTheme`
+   worked. atlas-exhibition.js reads these through window, so its guard
+   `if (!A || !P) return;` fired on every call and workspace() built nothing.
+   That is why d31 rendered a root map with no atlas behind it, and why the
+   Command center button on the other exhibition designs revealed the atlas
+   without ever switching the tab. */
+if (typeof window !== 'undefined') window.AtlasTheme = AtlasTheme;

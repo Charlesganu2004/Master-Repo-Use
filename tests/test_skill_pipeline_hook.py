@@ -194,11 +194,21 @@ class TheInjectedBlockStaysCheap(unittest.TestCase):
                         "the always-injected core grew past what was agreed")
 
     def test_the_worst_case_stays_bounded(self):
+        """The ceiling, and the ledger of what each rise bought.
+
+            2400 bytes   core, one lane, and the orchestration line
+            2600 bytes   2026-09-08: the standing goal block, about 544 bytes
+
+        The goal block rides only while a goal is set, so an ordinary session
+        pays nothing for it. It is counted in the worst case anyway, because a
+        session with a goal is the case this repository is usually in and a
+        budget that excludes the normal case is not a budget.
+        """
         worst = max(len(run(p).encode("utf-8")) for p in (
             "redo the css landing page design " + "x " * 400,
             "install an npm package and also scan it, plus update docs",
         ))
-        self.assertLess(worst, 2400, "the worst-case injection is too large per turn")
+        self.assertLess(worst, 2600, "the worst-case injection is too large per turn")
 
 
 class ItServesAntigravityToo(unittest.TestCase):

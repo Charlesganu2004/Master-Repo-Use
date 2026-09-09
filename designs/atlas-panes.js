@@ -48,8 +48,8 @@ const AtlasPanes = (() => {
     const chosen = A.platform();
 
     const osButtons = A.PLATFORMS.map(p =>
-      `<button class="os${A.state.platform === p.id ? ' on' : ''}" data-os="${p.id}"
-        title="${esc(p.note)}">${esc(p.label)}</button>`).join('');
+      `<button class="os${A.effectivePlatform() === p.id ? ' on' : ''}" data-os="${p.id}"
+        title="${esc(p.note)}" aria-pressed="${A.effectivePlatform() === p.id}">${esc(p.label)}</button>`).join('');
 
     const scan = A.scanCommand();
     const tier = A.currentTier();
@@ -373,15 +373,63 @@ const AtlasPanes = (() => {
       </details>` : ''}`;
   }
 
+  /* Said once, where the commands are, rather than left implicit. A reader who
+     is on WSL has to be told that a user agent cannot see that, or they will
+     copy PowerShell into bash and blame the page. */
+  function suggestedNotice() {
+    if (!A.platformIsSuggested()) return '';
+    const guess = A.platform();
+    if (!guess) return '';
+    return `<p class="suggested">Showing <b>${esc(guess.shell)}</b> commands for
+      <b>${esc(guess.label)}</b>, guessed from your browser. Pick your system above to
+      confirm it. Working inside WSL? Choose Ubuntu / WSL: a browser cannot detect it.</p>`;
+  }
+
+  /* The directory shows the COMMAND, not just the name of a thing that has one.
+     It used to render name, description and lane, and you had to click through
+     to see any command text, so a page called "Command directory" contained no
+     commands. Measured across all thirty designs: zero command strings in the
+     rendered DOM.
+
+     Both kinds are shown and labelled, because they are not interchangeable. A
+     setup command comes from a reviewed recipe and installs something; an action
+     command is the thing you run afterwards. A component can carry both. */
+  function commandRow(component) {
+    const setup = A.setupCommandFor(component);
+    const action = A.commandFor(component);
+    const rows = [];
+    if (setup) rows.push({ kind: 'setup', label: 'Setup', text: setup });
+    if (action) rows.push({ kind: 'action', label: 'Run', text: action });
+    if (!rows.length) {
+      const why = A.setupStateFor(component).label;
+      return `<p class="cmd-none">No command for ${esc(A.platform().label)}. ${esc(why)}.</p>`;
+    }
+    return rows.map(row => `<div class="cmd-line cmd-${row.kind}">
+      <span class="cmd-tag">${row.label}</span>
+      <code>${esc(row.text)}</code>
+      <button type="button" class="cmd-copy" data-copy-cmd="${esc(row.text)}"
+        aria-label="Copy the ${row.label.toLowerCase()} command for ${esc(component.name)}">Copy</button>
+    </div>`).join('');
+  }
+
   function commandsHTML() {
     const items = A.visibleComponents().filter(c => c.cmd || c.setupRecipe);
-    return `<h2>Command directory</h2><p class="sub">Every indexed command is reachable here. Setup and action commands
-      are labeled separately. Click an entry for the complete command, description, source and dependencies.</p>
+    const withCommand = items.filter(c => A.setupCommandFor(c) || A.commandFor(c)).length;
+    return `<h2>Command directory</h2><p class="sub">Every indexed command, in full, for the system named below.
+      Setup commands install something and come from a reviewed recipe. Run commands are what you use afterwards.
+      Click an entry for its source, dependencies and lane.</p>
       ${automaticNotice()}
-      ${!A.platform() ? '<p class="empty">Choose an operating system above to reveal its exact commands.</p>' : ''}
-      <div class="grid">${items.map(c => `<button class="lane-card" data-comp="${esc(c.id)}">
-        <b>${esc(c.name)}</b><p>${esc(c.detail)}</p><span class="src">${esc(A.setupStateFor(c).label)} ·
-        ${esc(A.laneName(c.lane))} · ${esc(c.sub || c.kind)}</span></button>`).join('')
+      ${suggestedNotice()}
+      <p class="cmd-count">${withCommand} of ${items.length} entries have a command on
+        ${esc(A.platform().label)}. The rest name what is missing.</p>
+      <div class="cmd-list">${items.map(c => `<article class="cmd-card">
+        <button class="cmd-head" data-comp="${esc(c.id)}">
+          <b>${esc(c.name)}</b>
+          <span class="src">${esc(A.laneName(c.lane))} &middot; ${esc(c.sub || c.kind)}</span>
+        </button>
+        <p class="cmd-detail">${esc(c.detail)}</p>
+        ${commandRow(c)}
+      </article>`).join('')
         || '<p class="empty">No commands match. Clear filters or browse the Index.</p>'}</div>`;
   }
 
@@ -417,6 +465,44 @@ const AtlasPanes = (() => {
           <span class="src">${esc(A.laneName(c.lane))}${c.sub ? ` · ${esc(c.sub)}` : ''}</span>
         </div>`;
       }).join('') || '<p class="empty">Nothing matches the current filters.</p>'}</div>`;
+  }
+
+  /* Four harnesses, and the differences are not cosmetic. Each stands in a
+     different place, and the place decides what it can enforce, so every card
+     leads with the mechanism and carries the limit next to the capability. A
+     list of four similar tools would hide the only thing worth knowing. */
+  function harnessHTML() {
+    const items = A.harnesses();
+    if (!items.length) {
+      return `<h2>The harness</h2><p class="empty">No harness data in this payload.
+        Run <code>python scripts/build_atlas_data.py</code> to regenerate it.</p>`;
+    }
+    return `<h2>The harness</h2>
+      <p class="sub">A harness is the thing that makes the standing rules arrive without anyone
+        remembering to ask for them. There are four, because there are four different places to
+        stand, and where a harness stands decides what it can reach. Each card says what it
+        enforces, when it is the right one, and what it cannot do.</p>
+      <div class="harness-list">${items.map((h, index) => `<article class="harness-card">
+        <header>
+          <span class="harness-num">${String(index + 1).padStart(2, '0')}</span>
+          <div><b>${esc(h.name)}</b><code class="harness-file">${esc(h.file)}</code></div>
+        </header>
+        <p class="harness-detail">${esc(h.detail)}</p>
+        <dl class="harness-meta">
+          <div><dt>Use it when</dt><dd>${esc(h.useWhen)}</dd></div>
+          <div><dt>What it cannot do</dt><dd>${esc(h.limit)}</dd></div>
+        </dl>
+        <div class="cmd-line cmd-action">
+          <span class="cmd-tag">Check</span>
+          <code>${esc(h.check)}</code>
+          <button type="button" class="cmd-copy" data-copy-cmd="${esc(h.check)}"
+            aria-label="Copy the check command for ${esc(h.name)}">Copy</button>
+        </div>
+      </article>`).join('')}</div>
+      <p class="sub harness-foot">All four inject the same three layers, so nothing here changes
+        what the rules say. They differ only in how the rules arrive. The goal harness adds one
+        thing on top: a goal that survives the turn, set with <code>/goal</code>,
+        <code>\\goal</code> or <code>goal:</code>, and lifted only by the person who set it.</p>`;
   }
 
   function routesHTML() {
@@ -699,6 +785,14 @@ const AtlasPanes = (() => {
     document.querySelectorAll('[data-client]').forEach(btn => {
       btn.onclick = () => { A.setProfileClient(btn.dataset.client); draw(); };
     });
+    document.querySelectorAll('[data-copy-cmd]').forEach(btn => {
+      // The command is on the button because the directory renders it inline;
+      // there is no second lookup that could disagree with what is on screen.
+      btn.onclick = async () => {
+        btn.textContent = (await A.copy(btn.dataset.copyCmd)) ? 'copied' : 'select it';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 1400);
+      };
+    });
     document.querySelectorAll('[data-copy-profile]').forEach(btn => {
       btn.onclick = async () => {
         const result = A.profileScriptFor(btn.dataset.copyProfile);
@@ -868,6 +962,46 @@ const AtlasPanes = (() => {
     .text-link{font:inherit;color:var(--accent,#b65039);background:transparent;border:0;text-align:left;text-decoration:underline;cursor:pointer;min-height:44px}
     :is(#side,#stage,#filters) :focus-visible{outline:2px solid var(--accent,#b65039);outline-offset:3px}
     .filter-explanations{max-width:90ch;font-size:14px;line-height:1.55}
+    .pane .suggested{max-width:80ch;margin:10px 0 14px;padding:10px 13px;font-size:13px;line-height:1.55;
+      border-left:3px solid var(--accent,#b65039);border-radius:0 8px 8px 0;
+      background:color-mix(in srgb, var(--accent,#b65039) 10%, transparent)}
+    .pane .suggested b{font-weight:700}
+    .cmd-count{margin:0 0 14px;color:var(--dim,#9aa);font-size:12.5px}
+    .cmd-list{display:flex;flex-direction:column;gap:10px}
+    .cmd-card{padding:13px 14px;border:1px solid var(--line,#555);border-radius:10px;min-width:0}
+    .cmd-head{display:flex;flex-direction:column;gap:3px;width:100%;padding:0;border:0;background:transparent;
+      color:inherit;font:inherit;text-align:left;cursor:pointer;min-height:0}
+    .cmd-head b{font-size:14px}
+    .cmd-head .src{color:var(--dim,#9aa);font-size:11px}
+    .cmd-detail{margin:6px 0 9px;color:var(--dim,#9aa);font-size:12.5px;line-height:1.5;max-width:80ch}
+    .cmd-line{display:flex;align-items:flex-start;gap:8px;margin-top:6px;flex-wrap:wrap}
+    .cmd-tag{flex:none;padding:3px 7px;border-radius:5px;font:700 9.5px ui-monospace,monospace;
+      letter-spacing:.06em;text-transform:uppercase;background:var(--panel-2,#222);color:var(--dim,#9aa)}
+    .cmd-setup .cmd-tag{background:color-mix(in srgb, var(--accent,#b65039) 22%, transparent);color:var(--accent,#b65039)}
+    .cmd-action .cmd-tag{background:var(--panel-3,#2a2a2a);color:var(--ink-2,#ccc)}
+    .cmd-line code{flex:1;min-width:0;padding:7px 9px;border-radius:7px;background:#090a0c;color:#c8f8e0;
+      font:11.5px/1.6 ui-monospace,"Cascadia Code",monospace;font-variant-ligatures:none;
+      white-space:pre-wrap;overflow-wrap:anywhere}
+    .cmd-copy{flex:none;min-height:34px;padding:0 11px;border:1px solid var(--line,#555);border-radius:7px;
+      background:transparent;color:inherit;font:inherit;font-size:11px;cursor:pointer}
+    .cmd-copy:hover{border-color:var(--accent,#b65039)}
+    .cmd-none{margin:6px 0 0;color:var(--dim,#9aa);font-size:12px;font-style:italic}
+    .harness-list{display:flex;flex-direction:column;gap:12px}
+    .harness-card{padding:16px;border:1px solid var(--line,#555);border-radius:12px;min-width:0}
+    .harness-card header{display:flex;align-items:baseline;gap:12px;margin-bottom:9px}
+    .harness-num{flex:none;color:var(--accent,#b65039);font:700 11px ui-monospace,monospace;letter-spacing:.08em}
+    .harness-card header b{display:block;font-size:15px}
+    .harness-file{display:block;margin-top:2px;color:var(--dim,#9aa);
+      font:600 11px ui-monospace,"Cascadia Code",monospace;font-variant-ligatures:none}
+    .harness-detail{margin:0 0 11px;font-size:13.5px;line-height:1.6;max-width:82ch}
+    .harness-meta{margin:0 0 11px;display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+    .harness-meta dt{color:var(--dim,#9aa);font:700 9.5px ui-monospace,monospace;
+      letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+    .harness-meta dd{margin:0;font-size:12.5px;line-height:1.5}
+    .harness-foot{margin-top:14px}
+    .harness-foot code{padding:1px 5px;border-radius:4px;background:var(--panel-2,#222);
+      font:600 11.5px ui-monospace,monospace;font-variant-ligatures:none}
+    @media(max-width:640px){.cmd-line{flex-direction:column}.cmd-copy{align-self:flex-start}}
     .filter-explanations p{margin:8px 0}
     .surface-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin:20px 0}
     .surface-groups fieldset{border:1px solid var(--line,#555);border-radius:8px;padding:16px;min-width:0}
@@ -929,6 +1063,7 @@ const AtlasPanes = (() => {
         pane.innerHTML =
           tab === 'index' ? indexHTML() :
           tab === 'commands' ? commandsHTML() :
+          tab === 'harness' ? harnessHTML() :
           tab === 'routes' ? routesHTML() :
           tab === 'hardware' ? hardwareHTML() :
           tab === 'basket' ? basketHTML() :
@@ -963,3 +1098,13 @@ const AtlasPanes = (() => {
   return { mount, draw, esc, detailUI, filtersUI, syncFilterChips, popover, closePopover,
            get tab() { return tab; }, set tab(v) { tab = v; } };
 })();
+
+/* Published on window as well as the script-scope binding.
+   A top level `const` in a classic script is script-scoped, not a property
+   of window, so `window.AtlasPanes` was undefined while the bare `AtlasPanes`
+   worked. atlas-exhibition.js reads these through window, so its guard
+   `if (!A || !P) return;` fired on every call and workspace() built nothing.
+   That is why d31 rendered a root map with no atlas behind it, and why the
+   Command center button on the other exhibition designs revealed the atlas
+   without ever switching the tab. */
+if (typeof window !== 'undefined') window.AtlasPanes = AtlasPanes;
