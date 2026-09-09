@@ -1,0 +1,49 @@
+# Computer control - verified 2026-09-09
+# Every slug and every number below was read from the GitHub API on 2026-09-09.
+#
+# This lane is different from every other lane in the catalog, and the difference
+# is worth saying before the first entry: these grant a model the mouse, the
+# keyboard, the screen and the clipboard of a real machine. Nothing else in this
+# repository does that. A skill writes text. A tool runs a command you can read
+# first. One of these can click "Confirm" on a dialog you never saw.
+#
+# So the rules around this lane are stricter, and they are in
+# skills/master-computer-control/SKILL.md rather than here, because a rule that
+# lives only in a catalog comment is a rule nobody reads at the moment it
+# matters. The short version: nothing here is auto-installed, nothing here runs
+# without Charles enabling it per session, and the guards still apply.
+#
+# The catalog already carried the OBSERVATION half of this problem in
+# chat-code-monitor.txt: screenpipe, openrecall and activitywatch watch a screen.
+# None of them touch it. That is the line this lane crosses.
+#
+# MEASURED, THEN REJECTED. Kept so the next reader does not re-find them:
+#   jasondsmith72/total-pc-control    5 stars, MIT, 528d. Past the 365-day
+#                                     removal threshold with almost no adoption.
+#   tanob/mcp-desktop-automation     33 stars, MIT, 302d. RobotJS-based and
+#                                     stale; Windows-MCP does the same job and
+#                                     is maintained.
+#
+# These sit in the preamble on purpose. A comment directly under a "# ---"
+# header is read as that subcategory's published description.
+
+# --- Desktop control servers (mouse, keyboard, screen and window control over MCP; the strictest lane in the catalog)
+
+CursorTouch/Windows-MCP       # 6,957 stars, MIT, pushed 3d. The one to reach for on
+                              # this machine: Windows-native, actively developed, and
+                              # the largest by an order of magnitude, which for a
+                              # capability this sharp means the most eyes on it.
+
+AB498/computer-control-mcp    # 165 stars, MIT, 46d. Cross-platform via PyAutoGUI with
+                              # RapidOCR for reading the screen. Zero external
+                              # dependencies is its stated selling point, which is a
+                              # real advantage for something you are auditing.
+
+zavora-ai/computer-use-mcp    # 47 stars, MIT, pushed today. Rust, in-process via NAPI,
+                              # Windows and macOS. Young and small; listed because the
+                              # Rust in-process design avoids a Node subprocess, not
+                              # because it is proven. Read it before you run it.
+
+claude-did-this/MCPControl    # 329 stars, MIT, 280d. Windows automation. Stale by the
+                              # 270d review threshold, so it is a reference rather than
+                              # a recommendation until it moves again.

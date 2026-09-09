@@ -26,6 +26,7 @@ import pathlib
 import re
 
 from sync_project_skills import sync_project_skills
+from capability_definitions import owned_agents
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 # Written to both places on purpose. The designs fetch it relative to themselves,
@@ -712,6 +713,42 @@ EXTRA_ROUTES = [
     ("full-machine-setup", "Whole machine, one pass",
      "Every hooked client, the committed files, and the models this machine can hold.",
      ["harness-surface", "hardware-gate", "repo-instructions"], "a new laptop", "16 GB RAM"),
+    ("ui-build-review", "Design, build, test, review",
+     "Maxwell scopes the work, Canvas defines the visible flow, Atlas builds it, Probe tests it and Sentinel reviews permissions. A handoff plan, not an unattended launch.",
+     ["agent-orchestrator-maxwell", "agent-ui-canvas", "agent-fullstack-atlas", "agent-tester-probe", "agent-security-sentinel"], "interactive UI releases", "any"),
+    ("catalog-to-library", "Catalog into a private library",
+     "Schema defines the collections, Dex prepares reviewed records, Vector checks retrieval and Lock checks for secrets before an owner-approved upload.",
+     ["agent-data-arch-schema", "agent-data-dex", "agent-rag-vector", "agent-secret-scanner-lock"], "private MongoDB catalog", "any"),
+    ("incident-debug-test", "Reproduce, diagnose, verify",
+     "Pulse records impact, Trace isolates the fault and Probe turns the reproduction into a regression test before a fix is released.",
+     ["agent-incident-pulse", "agent-debugger-trace", "agent-tester-probe"], "broken buttons or failed commands", "any"),
+    ("source-audit-adopt", "Research before adoption",
+     "Aria checks primary sources, Vault performs static intake, Delta checks dependency health and Sentinel reviews remaining risk. No candidate code runs during intake.",
+     ["agent-research-aria", "agent-scanner-vault", "agent-dependency-watch-delta", "agent-security-sentinel"], "new tools and skills", "any"),
+    ("mcp-bounded-connect", "Connect with least privilege",
+     "Forge selects the MCP adapter, Weave maps its interface and Sentinel checks directory and tool scopes. Credentials stay in backend environment variables.",
+     ["agent-mcp-forge", "agent-connector-weave", "agent-security-sentinel"], "MCP and API integration", "any"),
+    ("hardware-cost-review", "Size before serving",
+     "The hardware gate supplies measured memory, Model Picker chooses compatible candidates, Tempo measures latency and Penny tracks token cost.",
+     ["hardware-gate", "agent-model-picker", "agent-perf-bench-tempo", "agent-token-penny"], "local and hosted model selection", "any"),
+    ("docs-release-sync", "Docs stay with the release",
+     "Echo compares instructions with behavior, Quill updates setup guidance and Relay checks the release handoff against verified output.",
+     ["agent-doc-drift-echo", "agent-writer-quill", "agent-handoff-relay"], "documentation and release handoff", "any"),
+    ("memory-cite-answer", "Retrieve, cite, preserve",
+     "Recall finds project evidence, Memo organizes it and Aria checks source-backed claims. Capability definitions remain whole; only ordinary prose may be shortened.",
+     ["agent-memory-recall", "agent-knowledge-memo", "agent-research-aria"], "long-running projects", "any"),
+    ("release-security-gate", "Test, scan, publish",
+     "Vera challenges coverage, Probe runs checks, Lock scans outbound artifacts and Volt prepares deployment. Publishing still follows owner approval gates.",
+     ["agent-test-analyst-vera", "agent-tester-probe", "agent-secret-scanner-lock", "agent-devops-volt"], "production releases", "any"),
+    ("first-run-onboarding", "From empty screen to first command",
+     "Guide designs the first-run path, Canvas makes controls discoverable and Help checks the wording and recovery instructions.",
+     ["agent-onboarding-guide", "agent-ui-canvas", "agent-support-help"], "new-user setup", "any"),
+    ("cost-aware-cloud", "Architecture with a cost check",
+     "Nimbus proposes the deployment boundary, Cirrus evaluates operating cost and Tempo checks throughput assumptions before any paid resource is created.",
+     ["agent-cloud-arch-nimbus", "agent-cost-cirrus", "agent-perf-bench-tempo"], "cloud planning", "any"),
+    ("adversarial-goal-check", "Goal and evidence review",
+     "Maxwell records acceptance criteria, Lens checks context integrity, Ghost challenges unsupported claims and Vera checks that tests cover the actual goal.",
+     ["agent-orchestrator-maxwell", "agent-context-auditor-lens", "agent-redteam-ghost", "agent-test-analyst-vera"], "multi-turn completion audits", "any"),
 ]
 
 
@@ -1080,6 +1117,23 @@ def skill_lanes() -> tuple[list, list]:
     return lanes, comps
 
 
+def agent_lanes() -> tuple[list, list]:
+    """Real role contracts, not just upstream agent frameworks or heading counts."""
+    lanes, comps = [], []
+    for agent in owned_agents(ROOT):
+        lid = f"role-{agent['id']}"
+        lanes.append(lane(lid, agent["name"], "agents", "capability", agent["path"], agent["detail"], 1))
+        path = agent["path"]
+        comps.append({"id": agent["id"], "name": agent["name"], "lane": lid,
+                      "family": "agents", "kind": "capability", "order": 0,
+                      "sub": agent["category"], "detail": agent["detail"],
+                      "definitionPath": path, "role": agent["role"],
+                      "cmd": {key: (f"Get-Content -LiteralPath '{path}' -Raw" if key == "windows"
+                                     else f"cat '{path}'")
+                              for key in ("windows", "wsl", "linux", "macos", "other")}})
+    return lanes, comps
+
+
 # Every surface a person might actually be sitting in front of, grouped by what
 # you can DO to it, which is the distinction the old single-select client picker
 # could not make.
@@ -1409,11 +1463,11 @@ _CATALOG_CREATE = re.compile(
 # `show collections` answers with one bucket you have to already know the field
 # name to search. A collection you can see is worth the duplication.
 CATALOG_COLLECTIONS = {
-    "skills": ("Every skill. The fifteen this repository owns carry their whole "
+    "skills": ("Every indexed skill. Definitions this repository owns carry their whole "
                "SKILL.md in definition.body; the catalogued ones carry the "
                "record and never the code."),
-    "agents": ("Agent frameworks and kits, all catalogued today, each with the "
-               "licence and health the guardian last recorded."),
+    "agents": ("Owned specialist roles carry complete contracts and checksums. Catalogued "
+               "frameworks carry source references and the health last recorded."),
     "tools": ("Scripts and binaries. All of these are ours, so each names the "
               "file it lives in and the command that runs it."),
     "mcp": ("MCP servers and connectors, two local against the rest catalogued."),
@@ -1458,8 +1512,8 @@ CATALOG_QUESTIONS = {
         "Which lane came from this file?",
         "Unique, but partial. {runtimeLanes} runtime lanes share the sentinel source "
         "\"runtime\", so a plain unique index rejects the load on the second one. "
-        "The partial filter excludes the sentinel and keeps the real claim: no "
-        "file backs two lanes."),
+        "The loader marks real files with isFileSource: true. Include that predicate "
+        "in file lookups so MongoDB may use the partial index."),
     "route_members": (
         "Which hybrid routes touch this component?",
         "members is an array, so this is multikey: a route naming four "
@@ -1478,29 +1532,23 @@ CATALOG_QUESTIONS = {
         "its full text, a catalogued one carries a record and never its code."),
     "agent_origin": (
         "Which agents are ours and which are catalogued?",
-        "All 50 agents are catalogued today, so this answers with one value. It "
-        "stays because the day one is written here, the question changes."),
+        "Separates local role contracts from referenced upstream agent frameworks."),
     "tool_origin": (
         "Which tools are ours and which are catalogued?",
-        "All 88 are our own scripts. The index costs almost nothing and the "
-        "field is the one a reader filters on first."),
+        "Filters tools by owned implementation or catalog reference, then name."),
     "mcp_origin": (
         "Which MCP servers are ours and which are catalogued?",
-        "Two are ours and 33 are catalogued, so this index is mostly a way to "
-        "find the two without reading past the rest."),
+        "Finds owned MCP adapters separately from catalogued upstream servers."),
     "skill_health": (
         "Which catalogued skills have gone stale or failed a scan?",
-        "Sparse: only a catalogued document carries health, which is 35 of the "
-        "132 skills, so the other 97 are skipped rather than stored as nulls."),
+        "Sparse: documents without recorded upstream health are omitted."),
     "agent_health": (
         "Which agent repositories have gone stale or failed a scan?",
-        "NOT sparse. Every one of the 50 agents is catalogued and carries "
-        "health, so sparse would skip nothing while claiming otherwise. The "
-        "offline check caught that."),
+        "Sparse: owned agent contracts have no upstream lifecycle record, while "
+        "catalogued frameworks may carry one."),
     "mcp_health": (
         "Which MCP servers have gone stale or failed a scan?",
-        "Sparse: 33 of the 35 carry health, and the two that do not are the "
-        "local servers, which have no upstream repository to go stale."),
+        "Sparse: local adapters without upstream health are omitted."),
     "skill_fulltext": (
         "Which skill actually says this?",
         "Searches the whole SKILL.md, not a one-line summary, which is the "
@@ -1529,7 +1577,7 @@ CATALOG_QUERIES = [
     ("components", "by_recipe", "{ setupRecipe: { $exists: true } }"),
     ("components", "component_search", "{ $text: { $search: 'caveman' } }"),
     ("lanes", "lane_family_size", "{ family: 'knowledge' }"),
-    ("lanes", "lane_source", "{ source: 'repo-lists/agent-skills.txt' }"),
+    ("lanes", "lane_source", "{ source: 'repo-lists/agent-skills.txt', isFileSource: true }"),
     ("routes", "route_members", "{ members: 'claude-code' }"),
     ("routes", "route_lanes", "{ lanes: 'sys-skills' }"),
     ("surfaces", "surface_group_ram", "{ group: 'local-model', minRamGb: { $lte: 16 } }"),
@@ -1562,6 +1610,228 @@ def catalog_indexes() -> list[dict]:
             "why": why,
         })
     return out
+
+
+# ------------------------------------------------------- the plain-language layer
+#
+# Charles asked that every design be understandable by a non-technical reader, a
+# beginner engineer, and an experienced one, all from the same page.
+#
+# The audit that prompted this: 17 families shipped with ZERO descriptions, so
+# every design showed a chip reading "Intake and routing" with nothing to say what
+# that meant. Lane descriptions existed but were circular stubs, "Runtime stage:
+# intake and routing", which explains nothing to anyone. Meanwhile the word "lane"
+# appeared 1,523 times in the shipped data, "recipe" 784, "MCP" 649.
+#
+# The answer is not to simplify the technical text. An experienced engineer needs
+# "a compound index answers its own leading prefix" and a first-time visitor needs
+# "this is a list of things the computer can do". Writing one sentence that serves
+# both serves neither.
+#
+# So every explained thing carries TWO registers, and the reader picks:
+#
+#   plain      No jargon at all. What it is, in the words someone would use who
+#              has never opened a terminal. One or two sentences.
+#   technical  What it actually is, with the real names, for someone who will go
+#              on to run the commands.
+#
+# GLOSSARY covers the words that cannot be avoided, because they are the names of
+# the things. A reader meets "lane" 1,523 times; it has to be defined once,
+# somewhere they will find it.
+
+# The six kinds a component can be. These are the coarsest cut in the whole
+# system, so they are the first thing that has to make sense.
+KIND_PLAIN = {
+    "instruction": (
+        "Rules that tell an AI assistant how to work.",
+        "Written guidance loaded into the model's context: standing rules, "
+        "prompt-level policy and the pipeline that enforces them."),
+    "capability": (
+        "Something that does a job. A tool, an assistant, or an add-on.",
+        "Executable capability: a skill pack, a CLI tool, an agent framework or "
+        "an MCP server the client can call."),
+    "knowledge": (
+        "Reference material. Things to look something up in.",
+        "Retrieval surfaces and reference corpora: catalogs, indexes, embedding "
+        "stores and the documents behind them."),
+    "control": (
+        "Safety checks. Things that stop a mistake before it happens.",
+        "Policy and verification: guards, approval gates, scanners and the hooks "
+        "that block a destructive call before it runs."),
+    "model": (
+        "The AI models themselves, and what your computer can run.",
+        "Inference runtimes and model tags, sized against real memory by the "
+        "hardware advisor."),
+    "delivery": (
+        "Getting finished work out: builds, branches and publishing.",
+        "Build, review and publish workflows, including the branch and pull "
+        "request path every change takes."),
+}
+
+# The 17 families. Every design renders these as filter chips, and until now not
+# one of them said what it was.
+FAMILY_PLAIN = {
+    "intake": (
+        "Where a request arrives and gets sorted before any work starts.",
+        "Request normalisation, scope resolution, lane matching, budget and "
+        "hardware gating. Everything that runs before the model reads the task."),
+    "surfaces": (
+        "The apps you actually type into: Claude, ChatGPT, Copilot, Gemini and the rest.",
+        "Client surfaces, each with its own instruction file, hook mechanism and "
+        "skill directory. Where the standing rules have to be installed."),
+    "identity": (
+        "Who is allowed to approve what, and keeping passwords out of the code.",
+        "Owner approval gates, workspace trust and secret scoping. Only Charles "
+        "approves catalog maintenance, by passcode."),
+    "instructions": (
+        "The written rules every assistant follows on every message.",
+        "The always-loaded instruction layer: the protected block, the three "
+        "layers and the no-compaction policy."),
+    "skills": (
+        "Instruction packs an assistant loads when they fit the job.",
+        "Skill definitions with frontmatter, discovered by name and description, "
+        "loaded on demand rather than every session."),
+    "tools": (
+        "Programs you run directly from a terminal.",
+        "Scripts and binaries in this repository plus catalogued third-party "
+        "tools, each with the exact command per platform."),
+    "mcp": (
+        "Connectors that let an assistant reach another program or service.",
+        "Model Context Protocol servers: the standard way a client exposes "
+        "external tools and data to a model."),
+    "agents": (
+        "Assistants that carry out a multi-step job on their own.",
+        "Agent frameworks and kits, catalogued with licence and health, for work "
+        "that fans out rather than running in one pass."),
+    "plugins": (
+        "Add-ons installed into an assistant to extend it.",
+        "Marketplace and installed plugin state for clients that support them."),
+    "knowledge": (
+        "Places to look things up: catalogs, search indexes and stored documents.",
+        "Retrieval and reference: the repository catalog, the activity store and "
+        "the embedding models that search them."),
+    "models": (
+        "The AI models, and which ones your computer has the memory to run.",
+        "Model tags and serving runtimes, filtered by a real memory floor rather "
+        "than offered and left to swap."),
+    "hybrid": (
+        "Ways to split one job across several models to save money or improve answers.",
+        "Hybrid routes: local-first with hosted escalation, draft and review, "
+        "parallel voting, and the conditions each is correct under."),
+    "validation": (
+        "Checks that catch problems: security scans and rules that block mistakes.",
+        "Guards, scanners and verification: the no-prune and no-compress hooks, "
+        "the security scanners and the freshness gate."),
+    "observability": (
+        "Seeing what happened: what was saved, what was scanned, what it cost.",
+        "Token savings, catalog status, the security trail and the workflow "
+        "minute budget."),
+    "automation": (
+        "Jobs that run on a schedule without anyone starting them.",
+        "Scheduled GitHub Actions: the catalog guardian, the source poller, the "
+        "Pages publish and the owner approval gate."),
+    "delivery": (
+        "Publishing finished work and getting it reviewed.",
+        "Branch, pull request and publish workflows. Nothing lands on main "
+        "without review."),
+    "domain": (
+        "Collections for specific subjects, like trading or design.",
+        "Subject-specific catalog lanes grouped away from the system lanes."),
+}
+
+# The words a reader cannot avoid, because they are the names of the things.
+GLOSSARY = [
+    ("lane", "A group of related things, like a shelf in a library.",
+     "A catalog grouping, backed by a file in repo-lists/ or generated from a "
+     "script. Every component belongs to exactly one."),
+    ("component", "One single thing in the catalog: a tool, a skill, a model.",
+     "One catalog entry. Carries an id, a lane, a family, a kind, a description "
+     "and often a command per platform."),
+    ("family", "A broad category that groups lanes together.",
+     "One of 17 top-level groupings. Drives the first row of filter chips."),
+    ("harness", "The thing that makes the rules apply automatically, without you asking.",
+     "The mechanism that injects the standing pipeline into every request: a "
+     "client hook, a request proxy, a command wrapper or a standing goal."),
+    ("skill", "A set of instructions an assistant loads when it fits the job.",
+     "A directory holding a SKILL.md with name and description frontmatter, "
+     "discovered and loaded on demand by the client."),
+    ("MCP", "A standard plug that lets an assistant talk to another program.",
+     "Model Context Protocol. A server exposes tools and resources; the client "
+     "presents them to the model."),
+    ("hybrid route", "A plan for splitting work between a local model and a paid one.",
+     "A named division of labour across models, with the condition it is correct "
+     "under and the hardware it needs."),
+    ("recipe", "A ready-made command that sets something up for you.",
+     "A reviewed setup command per platform, with a state of ready or "
+     "review-required. Only ready recipes reach the Build script."),
+    ("hook", "A small program that runs automatically at a set moment.",
+     "A client lifecycle callback. UserPromptSubmit injects context; PreToolUse "
+     "can block a call before it runs."),
+    ("local model", "An AI model that runs on your own computer instead of over the internet.",
+     "An Ollama tag served locally, gated on a measured memory floor."),
+    ("index", "A shortcut that makes searching fast, like a book's index.",
+     "A database index. Without one a query reads every document; with one it "
+     "reads only the matching range."),
+]
+
+# What each of the fifteen tabs is for, in both registers. The hint already
+# existed as a title attribute, which a touch user never sees and a screen reader
+# announces inconsistently.
+TAB_PLAIN = {
+    "map": ("A picture of the whole system.",
+            "The full component graph, drawn by whichever design you opened."),
+    "index": ("A searchable list of everything.",
+              "Flat directory of lanes and components with filters and search."),
+    "commands": ("Every command, ready to copy.",
+                 "The full command directory for the selected platform, setup and "
+                 "run labelled separately."),
+    "agents": ("Assistants that do multi-step jobs.",
+               "Agent frameworks and the jobs that act on them."),
+    "skills": ("Instruction packs, loaded when they fit.",
+               "Skill definitions discovered by description."),
+    "tools": ("Programs you run yourself.",
+              "Scripts and binaries with their exact commands."),
+    "plugins": ("Add-ons for your assistant.",
+                "Marketplace and installed plugin state."),
+    "mcp": ("Connectors to other programs.",
+            "Model Context Protocol servers and connectors."),
+    "harness": ("How the rules get applied automatically.",
+                "The four harnesses, what each can enforce, and its check command."),
+    "routes": ("Ways to split work between models.",
+               "Hybrid routes with their conditions and hardware floors."),
+    "hardware": ("What your computer can run.",
+                 "Memory-based tiering against the vetted model list."),
+    "easy": ("Set everything up in a few clicks.",
+             "Pick your surfaces and depth; it writes only those commands."),
+    "build": ("Collect what you want, get one script.",
+              "The basket, combined into one commands-only script per platform."),
+    "custom": ("Add your own groups.",
+               "Lanes you define, stored in this browser only."),
+    "suggest": ("Suggest something to add.",
+                "Local suggestion queue; nothing is sent anywhere."),
+}
+
+
+def plain_payload() -> dict:
+    """Both registers for everything a reader meets, plus the glossary."""
+    return {
+        "kinds": {k: {"plain": v[0], "technical": v[1]} for k, v in KIND_PLAIN.items()},
+        "families": {k: {"plain": v[0], "technical": v[1]} for k, v in FAMILY_PLAIN.items()},
+        "tabs": {k: {"plain": v[0], "technical": v[1]} for k, v in TAB_PLAIN.items()},
+        "glossary": [{"term": t, "plain": p, "technical": x} for t, p, x in GLOSSARY],
+        "orientation": {
+            "plain": (
+                "This page lists everything this system can do, and gives you the "
+                "exact command to set each piece up. Start with Easy setup: tick "
+                "the apps you use and it writes the commands for you. Nothing here "
+                "runs on its own, and nothing is sent anywhere."),
+            "technical": (
+                "A generated catalog of 1,190 components across 238 lanes, with "
+                "per-platform setup recipes, hybrid routes and a hardware advisor. "
+                "The payload is built by scripts/build_atlas_data.py and every "
+                "lane is grounded in a file that exists."),
+        },
+    }
 
 
 def orphan_skill_count(comps: list[dict]) -> int:
@@ -1652,7 +1922,7 @@ def build() -> dict:
     lanes, comps = [], []
     for producer in (stage_lanes, model_setup_lane, antigravity_model_lane, global_rules_lane,
                  catalog_lanes, script_lanes, workflow_lanes,
-                 test_lanes, doc_lanes, hook_lanes, skill_lanes):
+                 test_lanes, doc_lanes, hook_lanes, skill_lanes, agent_lanes):
         l, c = producer()
         lanes.extend(l)
         comps.extend(c)
@@ -1733,13 +2003,20 @@ def build() -> dict:
         "meta": {"lanes": len(lanes), "components": len(comps), "routes": len(routes),
                  "families": len(FAMILIES),
                  "note": "Generated by scripts/build_atlas_data.py. Do not hand-edit."},
-        "families": [{"id": f, "name": n, "kind": k} for f, n, k in FAMILIES],
+        # Both registers travel with the family, so no design has to look them
+        # up and none can render a chip with nothing behind it. Seventeen
+        # families shipped with no description at all until 2026-09-09.
+        "families": [{"id": f, "name": n, "kind": k,
+                      "plain": FAMILY_PLAIN.get(f, ("", ""))[0],
+                      "technical": FAMILY_PLAIN.get(f, ("", ""))[1]}
+                     for f, n, k in FAMILIES],
         "lanes": lanes,
         "components": comps,
         "setupRecipes": recipes,
         "designs": design_pages(),
         "store": store_payload(),
         "harnesses": harness_entries(),
+        "plain": plain_payload(),
         "catalogStore": catalog_store_payload({
             "components": len(comps), "lanes": len(lanes), "routes": len(routes),
             "surfaces": len(surface_entries()) + len(local_model_surfaces()),

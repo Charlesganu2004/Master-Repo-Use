@@ -143,13 +143,78 @@ const AtlasPanes = (() => {
     </div>`;
   }
 
+  /* --------------------------------------------------- orientation strip
+
+     Rendered above the filters on every design, so the answer to "what am I
+     looking at" is on screen rather than something you have to already know.
+
+     It carries the reading switch, because that is the control a non-technical
+     reader needs first and it has to be findable without knowing the word for
+     it. Plain is default; the switch says which one is on rather than making
+     you infer it from the prose.
+
+     Collapsible and remembered, so an experienced reader closes it once and
+     never sees it again, while a first-time visitor is not left guessing. */
+  function orientationHTML() {
+    const level = A.readingLevel();
+    const open = orientationOpen();
+    return `<section class="orient${open ? '' : ' closed'}">
+      <div class="orient-bar">
+        <button type="button" class="orient-toggle" data-orient-toggle
+          aria-expanded="${open}">
+          <span class="orient-mark" aria-hidden="true">${open ? '&minus;' : '+'}</span>
+          <b>Start here</b>
+          <span class="orient-sub">What this page is, and how to move around it</span>
+        </button>
+        <div class="orient-level" role="group" aria-label="Reading level">
+          <button type="button" data-reading="plain" aria-pressed="${level === 'plain'}"
+            title="Everyday words, no jargon">Plain</button>
+          <button type="button" data-reading="technical" aria-pressed="${level === 'technical'}"
+            title="Exact names and the detail behind them">Technical</button>
+        </div>
+      </div>
+      ${open ? `<div class="orient-body">
+        <p class="orient-lede">${esc(A.orientationText())}</p>
+        <ol class="orient-steps">
+          <li><b>Pick your system</b> above, so the commands match your computer.</li>
+          <li><b>Use the tabs</b> to move: each one says what it holds.</li>
+          <li><b>Copy a command</b> from Commands, or let Easy setup write them all.</li>
+        </ol>
+        <div class="orient-terms">
+          <p class="orient-terms-head">Words used on this page</p>
+          <dl>${A.glossary().map(entry => `<div>
+            <dt>${esc(entry.term)}</dt><dd>${esc(entry.text)}</dd></div>`).join('')}</dl>
+        </div>
+      </div>` : ''}
+    </section>`;
+  }
+
+  function orientationOpen() {
+    try { return localStorage.getItem('atlas.orient') !== 'closed'; }
+    catch (_) { return true; }
+  }
+
+  function setOrientationOpen(open) {
+    try { localStorage.setItem('atlas.orient', open ? 'open' : 'closed'); }
+    catch (_) { /* private windows must not break the page */ }
+  }
+
+  function wireOrientation() {
+    document.querySelectorAll('[data-reading]').forEach(btn => {
+      btn.onclick = () => { A.setReadingLevel(btn.dataset.reading); draw(); };
+    });
+    document.querySelectorAll('[data-orient-toggle]').forEach(btn => {
+      btn.onclick = () => { setOrientationOpen(!orientationOpen()); draw(); };
+    });
+  }
+
   function filtersUI() {
     const host = document.getElementById('filters');
     if (!host) return;
     const c = A.counts();
     const subs = A.subcategories();
 
-    host.innerHTML = `
+    host.innerHTML = orientationHTML() + `
       <div class="frow">
         <label class="flabel" for="fq">Search</label>
         <input class="fsearch" id="fq" type="text" placeholder="name, owner, lane or description"
@@ -197,6 +262,7 @@ const AtlasPanes = (() => {
       b.onclick = () => { A.toggleKind(b.dataset.kind); filtersUI(); renderStage(); });
     host.querySelectorAll('[data-sub]').forEach(b =>
       b.onclick = () => { A.toggleSub(b.dataset.sub); filtersUI(); renderStage(); });
+    wireOrientation();
   }
 
   function refreshFilterCounts() {
@@ -979,6 +1045,31 @@ const AtlasPanes = (() => {
       letter-spacing:.06em;text-transform:uppercase;background:var(--panel-2,#222);color:var(--dim,#9aa)}
     .cmd-setup .cmd-tag{background:color-mix(in srgb, var(--accent,#b65039) 22%, transparent);color:var(--accent,#b65039)}
     .cmd-action .cmd-tag{background:var(--panel-3,#2a2a2a);color:var(--ink-2,#ccc)}
+    .orient{margin-bottom:14px;border:1px solid var(--line,#555);border-radius:10px;overflow:hidden}
+    .orient-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 11px}
+    .orient-toggle{flex:1;min-width:0;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+      padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+    .orient-mark{flex:none;width:18px;height:18px;display:inline-grid;place-items:center;
+      border:1px solid var(--line,#555);border-radius:5px;font-size:12px;line-height:1}
+    .orient-toggle b{font-size:13.5px}
+    .orient-sub{color:var(--dim,#9aa);font-size:11.5px}
+    .orient-level{flex:none;display:flex;gap:2px;padding:2px;border-radius:7px;background:var(--panel-2,#222)}
+    .orient-level button{min-height:30px;padding:0 10px;border:0;border-radius:5px;background:transparent;
+      color:var(--dim,#9aa);font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+    .orient-level button[aria-pressed="true"]{background:var(--accent,#b65039);color:#fff}
+    .orient-body{padding:0 11px 12px;border-top:1px solid var(--line,#555)}
+    .orient-lede{margin:11px 0;font-size:13px;line-height:1.6;max-width:78ch}
+    .orient-steps{margin:0 0 12px;padding-left:20px;display:flex;flex-direction:column;gap:5px;
+      font-size:12.5px;line-height:1.55;color:var(--dim,#9aa);max-width:78ch}
+    .orient-steps b{color:var(--ink,#eee)}
+    .orient-terms-head{margin:0 0 7px;color:var(--dim,#9aa);font:700 9.5px ui-monospace,monospace;
+      letter-spacing:.1em;text-transform:uppercase}
+    .orient-terms dl{margin:0;display:grid;gap:7px;
+      grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+    .orient-terms dl div{min-width:0}
+    .orient-terms dt{font-size:12px;font-weight:700;color:var(--accent,#b65039)}
+    .orient-terms dd{margin:1px 0 0;font-size:11.5px;line-height:1.5;color:var(--dim,#9aa)}
+    .chip-why{display:block;margin-top:2px;font-size:10.5px;line-height:1.4;opacity:.75}
     .cmd-line code{flex:1;min-width:0;padding:7px 9px;border-radius:7px;background:#090a0c;color:#c8f8e0;
       font:11.5px/1.6 ui-monospace,"Cascadia Code",monospace;font-variant-ligatures:none;
       white-space:pre-wrap;overflow-wrap:anywhere}

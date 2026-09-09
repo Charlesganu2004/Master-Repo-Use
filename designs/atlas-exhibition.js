@@ -330,6 +330,25 @@
   }
 
   function bind(root) {
+    function dependencyNotice(message) {
+      let notice = document.getElementById('atlasRevealError');
+      if (notice) return notice;
+      notice = document.createElement('main');
+      notice.id = 'atlasRevealError';
+      notice.className = 'atlas-reveal-error';
+      notice.tabIndex = -1;
+      notice.innerHTML = '<strong>Full Atlas could not start.</strong><p>' + esc(message) + '</p>' +
+        '<p>Reload this page. If it persists, verify atlas-data.js, atlas-core.js and atlas-panes.js are beside this design.</p>';
+      document.body.appendChild(notice);
+      return notice;
+    }
+
+    const missing = [
+      ['AtlasCore', window.AtlasCore],
+      ['AtlasPanes', window.AtlasPanes]
+    ].filter(function (entry) { return !entry[1]; }).map(function (entry) { return entry[0]; });
+    if (missing.length) dependencyNotice('Missing shared runtime: ' + missing.join(', ') + '.');
+
     const legacy = Array.from(document.body.children).filter(function (node) {
       return node !== root && node.tagName !== 'SCRIPT';
     });
@@ -347,7 +366,18 @@
       }
       window.requestAnimationFrame(function () {
         const main = document.getElementById('stage') || document.getElementById('main-content');
-        if (main) main.focus({ preventScroll: true });
+        const emptyStage = main && main.id === 'stage' && !main.children.length && !main.textContent.trim();
+        if (!main || emptyStage) {
+          const notice = dependencyNotice('The shared workspace loaded no controls. Its scripts may be stale or incomplete.');
+          if (!legacy.includes(notice)) {
+            notice.dataset.atlasLegacy = 'true';
+            legacy.push(notice);
+          }
+          notice.hidden = false;
+          notice.focus({ preventScroll: true });
+          return;
+        }
+        main.focus({ preventScroll: true });
       });
     };
     root.querySelector('[data-open-atlas]').addEventListener('click', function (event) {
@@ -454,10 +484,20 @@
     const A = window.AtlasCore;
     const P = window.AtlasPanes;
     const T = window.AtlasTheme;
-    if (!A || !P) return;
     const config = options || {};
-    const shell = document.createElement('div');
     document.body.dataset.atlasShell = config.skin || 'field';
+    if (!A || !P) {
+      const missing = [!A && 'atlas-core.js', !P && 'atlas-panes.js'].filter(Boolean);
+      const failure = document.createElement('main');
+      failure.id = 'main-content';
+      failure.className = 'atlas-workspace atlas-workspace-error';
+      failure.tabIndex = -1;
+      failure.innerHTML = '<div><strong>Full Atlas could not start.</strong><p>Missing shared runtime: ' +
+        esc(missing.join(', ')) + '.</p><p>Reload this page, then verify the scripts are beside this design.</p></div>';
+      document.body.appendChild(failure);
+      return failure;
+    }
+    const shell = document.createElement('div');
     shell.className = 'atlas-workspace';
     shell.innerHTML = '<a class="atlas-skip" href="#main-content">Skip to component index</a>' +
       '<header class="atlas-workspace-head"><a href="index.html">Design collection</a><div><p>' +
@@ -556,6 +596,7 @@
       onSelect: counts
     });
     A.on(counts);
+    return shell;
   }
 
   function mount(sceneId) {

@@ -16,3 +16,7 @@ layout-options.html
 # are specific to one machine, and index.db alone is 31 MB. The reducer itself
 # is untouched; only its cache is untracked, and the files stay on disk.
 .codex-token-reducer/
+
+# Prompt text saved to a file by accident. These are scratch, not repository
+# content, and one reached a commit on 2026-09-09.
+/finish all of this*.txt

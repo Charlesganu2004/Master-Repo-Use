@@ -54,7 +54,7 @@ db.lanes.createIndex({ family: 1, count: -1 }, { name: "lane_family_size" });
 // The claim worth keeping is narrower: no real file backs two lanes.
 db.lanes.createIndex({ source: 1 },
   { name: "lane_source", unique: true,
-    partialFilterExpression: { source: { $ne: "runtime" } } });
+    partialFilterExpression: { isFileSource: true } });
 
 // "Which routes touch this component" and "which touch this lane". members and
 // lanes are arrays, so both of these are multikey: one route naming four
@@ -106,7 +106,7 @@ db.mcp.createIndex({ origin: 1, name: 1 }, { name: "mcp_origin" });
 // health. Sparse there would skip nothing while claiming the opposite, which is
 // the same mistake surface_group_ram made and the checker caught both.
 db.skills.createIndex({ "health.status": 1 }, { name: "skill_health", sparse: true });
-db.agents.createIndex({ "health.status": 1 }, { name: "agent_health" });
+db.agents.createIndex({ "health.status": 1 }, { name: "agent_health", sparse: true });
 db.mcp.createIndex({ "health.status": 1 }, { name: "mcp_health", sparse: true });
 
 // Search the skills we own by what is actually in them. The body is the whole

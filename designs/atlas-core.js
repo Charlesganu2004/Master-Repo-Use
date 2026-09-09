@@ -56,6 +56,9 @@ const AtlasCore = (() => {
     selectedLane: null,
     basket: load('atlas.basket', []),
     platform: load('atlas.platform', null),
+    // Plain by default: the reader who needs it is the one least likely
+    // to go looking for a setting.
+    reading: load('atlas.reading', 'plain'),
     hw: load('atlas.hw', { ram: null, vram: null, storage: null, cpu: null }),
     customLanes: load('atlas.customLanes', []),
     suggestions: load('atlas.suggestions', []),
@@ -91,6 +94,73 @@ const AtlasCore = (() => {
     state.components.forEach(c => state.byId.set(c.id, c));
     state.lanes.forEach(l => state.lanesById.set(l.id, l));
     return state.data;
+  }
+
+  /* ------------------------------------------------------- reading level
+
+     Charles asked that every design work for a non-technical reader, a beginner
+     engineer and an experienced one. Writing one sentence for all three serves
+     none of them: an experienced reader needs "a compound index answers its own
+     leading prefix", a first-time visitor needs "a shortcut that makes searching
+     fast, like a book's index".
+
+     So everything explained carries two registers and the reader picks. Plain is
+     the default, because the person who needs it is the person least likely to
+     go looking for a setting. The choice persists, so an engineer sets it once.
+
+     This is not a simplified copy of the interface. Same data, same commands,
+     same 35 designs. Only the sentences change. */
+
+  function readingLevel() {
+    return state.reading === 'technical' ? 'technical' : 'plain';
+  }
+
+  function setReadingLevel(level) {
+    state.reading = level === 'technical' ? 'technical' : 'plain';
+    save('atlas.reading', state.reading);
+    emit();
+    return state.reading;
+  }
+
+  /** A phrase in the reader's register, falling back to the other rather than
+      to nothing: a missing plain string must never render as an empty box. */
+  function say(entry, fallback) {
+    if (!entry) return fallback || '';
+    if (typeof entry === 'string') return entry;
+    const level = readingLevel();
+    return entry[level] || entry.plain || entry.technical || fallback || '';
+  }
+
+  function plainData() {
+    return (state.data && state.data.plain) || {};
+  }
+
+  function familyText(id) {
+    const family = (state.data.families || []).find(f => f.id === id);
+    if (!family) return '';
+    return say({ plain: family.plain, technical: family.technical });
+  }
+
+  function kindText(id) {
+    return say((plainData().kinds || {})[id]);
+  }
+
+  function tabText(id) {
+    const entry = (plainData().tabs || {})[id];
+    if (entry) return say(entry);
+    const tab = TABS.find(t => t.id === id);
+    return tab ? tab.hint : '';
+  }
+
+  function orientationText() {
+    return say(plainData().orientation);
+  }
+
+  function glossary() {
+    return (plainData().glossary || []).map(entry => ({
+      term: entry.term,
+      text: say(entry),
+    }));
   }
 
   /* -------------------------------------------------------- platform api */
@@ -775,6 +845,8 @@ const AtlasCore = (() => {
   return {
     state, init, on, emit, counts, copy,
     PLATFORMS, HW_FIELDS, TABS,
+    readingLevel, setReadingLevel, say, familyText, kindText, tabText,
+    orientationText, glossary,
     setPlatform, platform, scanCommand, commandFor,
     effectivePlatform, platformIsSuggested, suggestPlatform, chosenPlatform,
     setupRecipeFor, setupCommandFor, setupStateFor, canBuild,

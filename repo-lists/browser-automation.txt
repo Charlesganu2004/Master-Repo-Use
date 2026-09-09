@@ -1,0 +1,42 @@
+# Browser automation - verified 2026-09-09
+# Every slug and every number below was read from the GitHub API on 2026-09-09.
+#
+# Charles asked for Playwright and "a Rust version of Playwright" in the harness.
+# The first is easy. The second has a trap in it, recorded here rather than
+# discovered later.
+#
+# NOT CATALOGUED: octaltree/playwright-rust. 454 stars, NO LICENCE, 858 days
+# since a push. This is what a search for "Rust Playwright" returns first, and it
+# fails this repository's policy twice over: no licence at all, and 858 days is
+# past the 365-day removal threshold. Measured on 2026-09-09. Written here so the
+# next person to search does not have to re-check it.
+#
+# This note sits in the preamble deliberately. A comment placed directly under a
+# "# ---" header is read as that subcategory's published description, which is
+# how a private scratch note reached a public artifact once before.
+
+# --- Playwright itself (the reference implementation and the MCP server that fronts it)
+
+microsoft/playwright          # 95,869 stars, Apache-2.0, pushed today. Chromium,
+                              # Firefox and WebKit behind one API.
+
+microsoft/playwright-mcp      # 36,915 stars, Apache-2.0, 4d. Playwright over MCP, so a
+                              # model drives a browser through the accessibility tree
+                              # rather than by guessing at pixels. Already catalogued in
+                              # mcp-local-servers, mcp-servers-extended, github-copilot
+                              # and copilot-studio-integration; repeated here because
+                              # this is the lane somebody looking for it will open.
+
+# --- Rust engines (Playwright's API or its protocol, without the Node driver subprocess)
+
+Skyvern-AI/rustwright         # 879 stars, MIT, pushed yesterday. Playwright's API on a
+                              # Rust CDP engine with no Node driver subprocess. Self
+                              # described as alpha, and treated that way: the harness
+                              # names it as the Rust path and says alpha in the same
+                              # breath. Chromium only.
+
+mattsse/chromiumoxide         # 1,381 stars, Apache-2.0, 159d. The mature Rust option.
+                              # Not a Playwright port: it speaks CDP directly, which is
+                              # the same protocol underneath, with a Rust-shaped API.
+                              # Reach for this when the alpha label on rustwright
+                              # matters more than API familiarity.

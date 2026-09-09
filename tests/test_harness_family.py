@@ -563,7 +563,10 @@ class TheFourCollectionsCharlesAskedFor(unittest.TestCase):
 
     def test_a_local_skill_carries_its_whole_body(self):
         with_body = [d for d in self.stored["skills"] if d.get("definition")]
-        self.assertEqual(len(with_body), 15)
+        on_disk = [p for p in (ROOT / "skills").iterdir()
+                   if p.is_dir() and (p / "SKILL.md").is_file()]
+        self.assertEqual(len(with_body), len(on_disk),
+                         "every skill on disk should carry its body, and no more")
         for doc in with_body:
             path = ROOT / doc["definition"]["path"]
             self.assertEqual(doc["definition"]["body"], path.read_text(encoding="utf-8"),

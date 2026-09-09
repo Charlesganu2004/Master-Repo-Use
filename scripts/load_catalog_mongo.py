@@ -32,23 +32,27 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 import pathlib
 import re
 import sys
+
+from capability_definitions import read_owned_definition
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / "atlas-data.json"
 INDEX_FILE = ROOT / "scripts" / "catalog-indexes.js"
 
-# Which payload key becomes which collection. Only these five: the rest of the
+# Which payload key becomes which collection. The shaped family collections are
 # payload is either metadata or presentation and has no query behind it.
 COLLECTIONS = {
     "components": "components",
     "lanes": "lanes",
     "routes": "routes",
     "surfaces": "surfaces",
-    "setupRecipes": "setupRecipes",
+    "setupRecipes": "recipes",
 }
 
 _CREATE = re.compile(
@@ -57,7 +61,7 @@ _CREATE = re.compile(
 
 # partialFilterExpression: { field: { $ne: "value" } }. Only the $ne form, which
 # is the one used here: a partial index that EXCLUDES a sentinel value.
-_PARTIAL_NE = re.compile(r'partialFilterExpression:\s*\{\s*(\w+):\s*\{\s*\$ne:\s*"([^"]+)"')
+_PARTIAL_EQ = re.compile(r'partialFilterExpression:\s*\{\s*(\w+):\s*(true|false)\s*\}')
 
 # The queries the atlas interface actually makes, written the way the code makes
 # them. Each names the index that must serve it. A query with no index here is a
@@ -178,6 +182,7 @@ def local_skill_bodies() -> dict:
             "path": str(definition.relative_to(ROOT)).replace("\\", "/"),
             "body": text,
             "bytes": len(text.encode("utf-8")),
+            "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
         }
     return out
 
@@ -240,7 +245,15 @@ def mongo_document(component: dict, lane: dict, health: dict, bodies: dict) -> d
             "description": body["description"],
             "body": body["body"],
             "bytes": body["bytes"],
+            "sha256": body["sha256"],
         }
+
+    if component.get("definitionPath"):
+        definition = read_owned_definition(ROOT, component["definitionPath"])
+        if definition:
+            doc["definition"] = definition
+            doc["origin"] = "local"
+            doc["role"] = component.get("role", "")
 
     # Catalogued entry: the record about it, never its code.
     slug = catalog_slug_for(component, lane)
@@ -291,10 +304,12 @@ def mongo_documents(payload: dict) -> dict:
                 "description": body["description"],
                 "body": body["body"],
                 "bytes": body["bytes"],
+                "sha256": body["sha256"],
             },
         })
 
-    collections["lanes"] = [dict(l, _id=l["id"]) for l in payload["lanes"]]
+    collections["lanes"] = [dict(l, _id=l["id"], isFileSource=l.get("source") != "runtime")
+                            for l in payload["lanes"]]
     collections["routes"] = [dict(r, _id=r["id"]) for r in payload["routes"]]
     collections["surfaces"] = [dict(s, _id=s["id"]) for s in payload["surfaces"]]
     collections["recipes"] = [dict(r, _id=r["id"]) for r in payload["setupRecipes"]]
@@ -303,6 +318,26 @@ def mongo_documents(payload: dict) -> dict:
 
 def payload() -> dict:
     return json.loads(DATA.read_text(encoding="utf-8"))
+
+
+def validate_documents(collections: dict) -> list[str]:
+    """Pre-upload schema and credential checks. Report locations, never values."""
+    problems = []
+    patterns = [r"ghp_[A-Za-z0-9]{20,}", r"github_pat_[A-Za-z0-9_]{20,}",
+                r"sk-(?:proj-)?[A-Za-z0-9_-]{24,}", r"AKIA[0-9A-Z]{16}",
+                r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----",
+                r"mongodb(?:\+srv)?://[^\s:/<>]+:[^\s@<>]+@"]
+    for name, docs in collections.items():
+        ids = set()
+        for position, doc in enumerate(docs):
+            ident = doc.get("_id")
+            if not isinstance(ident, str) or not ident or ident in ids:
+                problems.append(f"{name}[{position}] has a missing or duplicate identifier")
+            ids.add(str(ident))
+            blob = json.dumps(doc)
+            if any(re.search(pattern, blob) for pattern in patterns):
+                problems.append(f"{name}[{position}] contains a possible credential; inspect locally")
+    return problems
 
 
 def parse_indexes() -> list[dict]:
@@ -323,7 +358,7 @@ def parse_indexes() -> list[dict]:
             "unique": "unique: true" in opts,
             "sparse": "sparse: true" in opts,
             "text": '"text"' in keys_raw,
-            "partial": re.search(_PARTIAL_NE, opts),
+            "partial": re.search(_PARTIAL_EQ, opts),
         })
     return out
 
@@ -377,9 +412,9 @@ def collections_report() -> int:
     print(f"{'total':<13}{total_docs:>6}{total_bytes:>11,}")
     distinct = total_bytes - len(json.dumps(cols["components"]).encode("utf-8"))
     print()
-    print("components repeats the four family collections, so the distinct total is")
-    print(f"about {distinct:,} bytes without it. That is one small collection by any")
-    print("measure: it fits in the free tier of Atlas with room to spare.")
+    print("The family collections duplicate their matching component records.")
+    print(f"Without components, these collections contain {distinct:,} JSON bytes.")
+    print("This is a payload estimate, not BSON, index, backup or cluster storage usage.")
 
     print()
     print()
@@ -414,13 +449,13 @@ def collections_report() -> int:
     print()
     print("What is NOT sent")
     print()
-    print("  no secrets, tokens or credentials. Nothing in the catalog holds one, and")
-    print("    the privacy guard already fails the build if a secret reaches a")
-    print("    published artifact.")
+    print("  load-time checks reject recognized credential patterns before connecting.")
+    print("    Review owned definitions before upload; pattern scanning is not a guarantee.")
     print("  no third-party source code, for the reason above.")
     print("  no prompts, transcripts or activity. That is the monitor store, a")
     print("    separate database with a TTL, described in docs/CHAT-CODE-MONITOR.md.")
-    print("  no personal data. The catalog is repositories, commands and lanes.")
+    print("  no personal histories or machine credentials. Authored definitions may name")
+    print("    their owner and contain policy text; review these as private catalog data.")
     return 0
 
 
@@ -435,7 +470,7 @@ def check() -> int:
     data = payload()
     stored = mongo_documents(data)
     indexes = parse_indexes()
-    failures = []
+    failures = validate_documents(stored)
 
     print(f"{'collection':<14}{'index':<20}{'keys':<34}{'coverage'}")
     print("-" * 82)
@@ -487,9 +522,9 @@ def check() -> int:
         # the excluded value is dropped before counting duplicates. Without this
         # the fifteen runtime lanes read as a violation of a constraint that was
         # written specifically to exclude them.
-        excluded = index["partial"].group(2) if index["partial"] else None
-        values = [doc.get(field) for doc in docs
-                  if doc.get(field) is not None and doc.get(field) != excluded]
+        partial = index["partial"]
+        values = [doc.get(field) for doc in docs if doc.get(field) is not None
+                  and (not partial or doc.get(partial.group(1)) is (partial.group(2) == "true"))]
         if len(values) != len(set(values)):
             duplicates = len(values) - len(set(values))
             failures.append(f"{index['name']} is unique but {index['collection']}.{field} "
@@ -570,26 +605,39 @@ def explain() -> int:
 
 
 def load(uri: str, database: str) -> int:
+    if not uri:
+        print("Set MONGODB_URI in the backend environment first. No connection attempted.", file=sys.stderr)
+        return 2
+    data = payload()
+    documents = mongo_documents(data)
+    problems = validate_documents(documents)
+    if problems:
+        for problem in problems:
+            print(f"UPLOAD REFUSED: {problem}", file=sys.stderr)
+        return 2
     try:
         from pymongo import MongoClient, ReplaceOne
     except ImportError:
-        print("pymongo is not installed. This machine has no MongoDB either, so "
-              "the load has never been run here.\n"
-              "  pip install pymongo\n"
+        print("pymongo is not installed in this Python environment.\n"
+              "Install a reviewed version in the backend environment before loading.\n"
               "  python scripts/load_catalog_mongo.py --check   # needs neither",
               file=sys.stderr)
         return 2
 
-    data = payload()
-    client = MongoClient(uri, serverSelectionTimeoutMS=4000)
+    try:
+        client = MongoClient(uri, serverSelectionTimeoutMS=4000)
+    except Exception:
+        print("Invalid MongoDB connection configuration. URI and details withheld.", file=sys.stderr)
+        return 1
     try:
         client.admin.command("ping")
-    except Exception as exc:                      # noqa: BLE001
-        print(f"no MongoDB at {uri}: {exc}", file=sys.stderr)
+    except Exception:                      # connection errors can contain credentials
+        client.close()
+        print("MongoDB connection failed. Check backend credentials, TLS and network access. URI and server details withheld.", file=sys.stderr)
         return 1
 
     db = client[database]
-    for name, docs in mongo_documents(data).items():
+    for name, docs in documents.items():
         if not docs:
             continue
         # Replace by natural id rather than dropping the collection. A reload is
@@ -601,6 +649,7 @@ def load(uri: str, database: str) -> int:
 
     print("\nnow create the indexes:")
     print(f"  mongosh {database} --file scripts/catalog-indexes.js")
+    client.close()
     return 0
 
 
@@ -613,7 +662,8 @@ def main() -> int:
     parser.add_argument("--explain", action="store_true",
                         help="print the plan each query would use")
     parser.add_argument("--load", action="store_true", help="load the catalog into MongoDB")
-    parser.add_argument("--uri", default="mongodb://127.0.0.1:27017")
+    parser.add_argument("--uri", default=os.environ.get("MONGODB_URI"),
+                        help="Prefer MONGODB_URI: command-line credentials can enter shell history")
     parser.add_argument("--db", default="atlas")
     args = parser.parse_args()
 
