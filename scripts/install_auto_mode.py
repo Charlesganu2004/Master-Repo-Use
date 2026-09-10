@@ -65,6 +65,15 @@ CLIENT_KEYS = {
 }
 
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
+# Where the hook scripts actually are. A checkout keeps them in scripts/hooks/;
+# an installed wheel is flat and keeps them beside the package. Every client
+# registration below asks this rather than assuming a repository layout, which
+# is what let the package install itself into a machine with no checkout.
+import harness_paths  # noqa: E402
+
+
 def hook_command(path: pathlib.Path) -> str:
     """Quote an executable and its one path argument for the platform shell."""
     if os.name == "nt":
@@ -151,7 +160,21 @@ def install_skill(repo: pathlib.Path, home: pathlib.Path, dry: bool,
     directory without a SKILL.md is not a skill and is skipped rather than copied
     as an empty folder the client will scan on every start.
     """
+    # The target's OWN skills when it has them, the packaged ones when it does
+    # not. Order matters in both directions:
+    #
+    #   repo/skills first, because --repo names the checkout being installed
+    #   from, and a checkout's skills are the ones its author is working on.
+    #   Reading the packaged copy instead ignored the argument entirely, which
+    #   two tests caught by building a fixture repo and finding none of it.
+    #
+    #   the packaged copy second, because installed standalone `repo` is the
+    #   project being set up and has no skills directory at all. Before this
+    #   fallback the install registered every hook and copied zero skills: a
+    #   machine carrying the rules and none of the capabilities they select.
     source = repo / "skills"
+    if not source.is_dir():
+        source = harness_paths.skills_dir()
     if not source.is_dir():
         return "skipped, source missing"
     skills = sorted(p for p in source.iterdir()
@@ -199,7 +222,7 @@ def register_hook(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
     rules into the turn before the model reads it.
     """
     settings = home / ".claude" / "settings.json"
-    available = [(name, repo / "scripts" / "hooks" / f"{name}.py") for name in ALL_HOOKS]
+    available = [(name, harness_paths.hooks_dir() / f"{name}.py") for name in ALL_HOOKS]
     missing = [name for name, path in available if not path.is_file()]
     if missing:
         return "skipped, hooks missing: " + ", ".join(missing)
@@ -262,7 +285,7 @@ def register_antigravity_hook(repo: pathlib.Path, home: pathlib.Path, dry: bool)
       the per-prompt event is PreInvocation, not UserPromptSubmit
       PreInvocation handlers sit directly under the event key and take no matcher
     """
-    hook = repo / "scripts" / "hooks" / "skill_pipeline.py"
+    hook = harness_paths.hooks_dir() / "skill_pipeline.py"
     if not hook.exists():
         return "skipped, hook missing"
     config = home / ".gemini" / "config" / "hooks.json"
@@ -341,7 +364,7 @@ def register_cursor_hooks(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> 
     if error:
         return error
 
-    scripts = repo / "scripts" / "hooks"
+    scripts = harness_paths.hooks_dir()
     required = {
         "skill_pipeline": scripts / "skill_pipeline.py",
         "no_prune_guard": scripts / "no_prune_guard.py",
@@ -377,14 +400,22 @@ def register_cursor_hooks(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> 
     return prefix + ", ".join(statuses)
 
 
-def register_copilot_hooks(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> str:
-    """Register Copilot CLI session context and Claude-compatible shell guards."""
-    config = home / ".copilot" / "hooks" / "master-repo-auto.json"
+def register_copilot_hooks(repo: pathlib.Path, home: pathlib.Path, dry: bool,
+                           config: pathlib.Path | None = None) -> str:
+    """Register Copilot CLI session context and Claude-compatible shell guards.
+
+    ``config`` overrides the destination. Copilot reads a PROJECT hook file from
+    .github/hooks/ and a global one from .copilot/hooks/, with the same content
+    in both, so the caller names which one it is writing rather than this
+    function growing a second copy of the entries.
+    """
+    if config is None:
+        config = home / ".copilot" / "hooks" / "master-repo-auto.json"
     data, error = _load_hook_file(config, dry)
     if error:
         return error
 
-    scripts = repo / "scripts" / "hooks"
+    scripts = harness_paths.hooks_dir()
     required = {
         "skill_pipeline": scripts / "skill_pipeline.py",
         "no_prune_guard": scripts / "no_prune_guard.py",
@@ -449,7 +480,7 @@ def register_codex_hooks(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> s
     if not isinstance(hooks, dict):
         return "REFUSED: hooks field is not an object, refusing to overwrite it"
     for name, (event, matcher) in HOOK_EVENTS.items():
-        path = repo / "scripts" / "hooks" / f"{name}.py"
+        path = harness_paths.hooks_dir() / f"{name}.py"
         if not path.is_file():
             return "skipped, hooks missing"
         bucket = hooks.setdefault(event, [])
@@ -487,7 +518,7 @@ def register_gemini_hooks(repo: pathlib.Path, home: pathlib.Path, dry: bool) -> 
         return error
     hooks = data.setdefault("hooks", {})
     for name in ALL_HOOKS:
-        path = repo / "scripts" / "hooks" / f"{name}.py"
+        path = harness_paths.hooks_dir() / f"{name}.py"
         if not path.is_file():
             return "skipped, hooks missing"
         pipeline = name == "skill_pipeline"
@@ -537,15 +568,28 @@ def main() -> int:
         return (selected(CLIENT_KEYS[name]) or
                 (name == "Gemini + Antigravity" and args.client == "antigravity"))
 
-    if not (repo / ".git").exists():
+    # Two gates, and both assumed the target WAS the Master Repo. That holds
+    # when running from a checkout and is wrong for the case this package
+    # exists to serve: someone who pip-installed the harness and is setting up
+    # their own project, which is very often not a git repository at all and
+    # never contains docs/auto-mode-block.txt.
+    #
+    # So the checkout is required only when running from one, and the block is
+    # resolved through harness_paths, which finds it in the checkout or inside
+    # the installed package.
+    standalone = harness_paths.installed_standalone()
+    if not standalone and not (repo / ".git").exists():
         print(f"Master Repo not found at {repo}", file=sys.stderr)
         return 1
 
-    block_file = repo / "docs" / "auto-mode-block.txt"
+    block_file = harness_paths.block_path()
     if not block_file.exists():
         print(f"Auto mode block not found at {block_file}", file=sys.stderr)
         return 1
-    body = f"Master Repo path: {repo}\n" + block_file.read_text(encoding="utf-8").strip()
+    # The header names where the rules came from, defined once in
+    # harness_paths because the verifier compares the same string.
+    body = harness_paths.block_header(repo) + "\n" + block_file.read_text(
+        encoding="utf-8").strip()
 
     print(f"Platform : {describe_platform()}")
     print(f"Repo     : {repo}")

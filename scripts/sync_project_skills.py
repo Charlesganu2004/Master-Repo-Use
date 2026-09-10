@@ -29,15 +29,28 @@ def canonical_skills(repo: pathlib.Path) -> tuple[pathlib.Path, ...]:
 def sync_project_skills(
     repo: pathlib.Path | str,
     dry_run: bool = False,
+    source: pathlib.Path | None = None,
 ) -> tuple[pathlib.Path, ...]:
     """Merge canonical skills into ``.agents/skills`` and return destinations.
 
     This function never removes a destination path. It is safe for build scripts
     to call repeatedly, including when a user or another client placed extra
     resources inside an existing mirrored skill directory.
+
+    ``source`` names where the canonical skills are, for the case the default
+    cannot cover: a project being set up by an installed copy of the harness has
+    no skills/ of its own, and mirroring from itself would copy nothing while
+    reporting success.
     """
     root = pathlib.Path(repo).expanduser().resolve()
-    skills = canonical_skills(root)
+    if source is not None:
+        source = pathlib.Path(source).expanduser().resolve()
+        skills = tuple(sorted(
+            (path for path in source.iterdir()
+             if path.is_dir() and (path / "SKILL.md").is_file()),
+            key=lambda path: path.name.casefold()))
+    else:
+        skills = canonical_skills(root)
     destination_root = root / ".agents" / "skills"
     destinations = tuple(destination_root / skill.name for skill in skills)
 

@@ -173,7 +173,7 @@ def missing_skills() -> list[str]:
     """Enforced skills plus this harness's own, that are not on disk."""
     names = list(surface.ENFORCED_SKILLS) + list(EXTRA_SKILLS)
     return [name for name in names
-            if not (ROOT / "skills" / name / "SKILL.md").is_file()]
+            if not surface.harness_paths.skill_path(name).is_file()]
 
 
 def check() -> int:
@@ -225,7 +225,7 @@ def _check_isolated() -> int:
     # skill reads exactly like one that works, right up to the moment a model
     # tries to load it.
     for label, skill, _base, _when, _rule in PASSES:
-        if not (ROOT / "skills" / skill / "SKILL.md").is_file():
+        if not surface.harness_paths.skill_path(skill).is_file():
             failures.append(f"the {label} pass names {skill}, which is not on disk")
     gone = missing_skills()
     if gone:
@@ -369,6 +369,8 @@ def main() -> int:
             print(line)
         for line in surface.install_repo_instructions(args.dry_run):
             print(line)
+        for line in surface.install_project_files(args.dry_run):
+            print(line)
         return status
 
     if args.bundle:
@@ -393,17 +395,16 @@ def main() -> int:
 
 def _route(route: str) -> int:
     """Delegate to the computer router without reimplementing its probes."""
-    argv = [sys.executable, str(ROOT / "scripts" / "harness_computer.py"),
-            "--route", route]
+    argv = surface.harness_paths.harness_command("harness_computer") + ["--route", route]
     import subprocess
-    return subprocess.run(argv, cwd=ROOT).returncode
+    return subprocess.run(argv, cwd=surface.harness_paths.work_dir()).returncode
 
 
 def _serve(port: int, upstream: str) -> int:
-    argv = [sys.executable, str(ROOT / "scripts" / "harness_proxy.py"),
-            "--super", "--port", str(port), "--upstream", upstream]
+    argv = surface.harness_paths.harness_command("harness_proxy") + [
+        "--super", "--port", str(port), "--upstream", upstream]
     import subprocess
-    return subprocess.run(argv, cwd=ROOT).returncode
+    return subprocess.run(argv, cwd=surface.harness_paths.work_dir()).returncode
 
 
 def _run(profile: str, command: list[str]) -> int:
@@ -416,10 +417,10 @@ def _run(profile: str, command: list[str]) -> int:
         print("nothing to run after --run", file=sys.stderr)
         return 2
     prompt = command[-1]
-    argv = [sys.executable, str(ROOT / "scripts" / "harness_wrap.py"),
-            "--super", "--profile", profile, "--prompt", prompt, "--"] + command
+    argv = surface.harness_paths.harness_command("harness_wrap") + [
+        "--super", "--profile", profile, "--prompt", prompt, "--"] + command
     import subprocess
-    return subprocess.run(argv, cwd=ROOT).returncode
+    return subprocess.run(argv, cwd=surface.harness_paths.work_dir()).returncode
 
 
 if __name__ == "__main__":

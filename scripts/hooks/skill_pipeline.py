@@ -214,11 +214,31 @@ def context_for(prompt: str, session: str | None = None,
 # into the real store, which is precisely how the old file reached 168 kB. It is
 # also the honest way to run two checkouts, or a CI job, without one session's
 # objective leaking into another's.
+# harness_paths answers both modes: .auto-mode/ beside a checkout, a per-user
+# data directory when installed from a wheel with no checkout anywhere. Imported
+# defensively because this hook runs on every prompt of every client and must
+# never fail a turn; without it the repo-relative defaults still apply.
+try:
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import harness_paths
+except Exception:                       # noqa: BLE001 - never break a session
+    harness_paths = None
+
 _OVERRIDE = os.environ.get("MASTER_REPO_GOAL_DIR")
-STATE_FILE = (pathlib.Path(_OVERRIDE) / "goal.json" if _OVERRIDE
-              else ROOT / ".auto-mode" / "goal.json")
-SEED_FILE = (pathlib.Path(_OVERRIDE) / "seed.json" if _OVERRIDE
-             else ROOT / "docs" / "auto-mode-goal.json")
+if _OVERRIDE:
+    STATE_FILE = pathlib.Path(_OVERRIDE) / "goal.json"
+    SEED_FILE = pathlib.Path(_OVERRIDE) / "seed.json"
+elif harness_paths is not None:
+    STATE_FILE = harness_paths.state_dir() / "goal.json"
+    _seed = harness_paths.seed_path()
+    # An installed wheel has no committed goal to inherit. Pointing the seed
+    # into site-packages would put whatever the author last set in front of a
+    # stranger's prompts, so it points at a file that does not exist instead.
+    SEED_FILE = _seed if _seed is not None else STATE_FILE.with_name("seed.json")
+else:
+    STATE_FILE = ROOT / ".auto-mode" / "goal.json"
+    SEED_FILE = ROOT / "docs" / "auto-mode-goal.json"
 HISTORY_LIMIT = 20
 
 EMPTY = {"goal": None, "set_on": None, "source": None, "session": None, "history": []}

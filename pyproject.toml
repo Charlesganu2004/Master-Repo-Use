@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "master-harness"
+version = "1.0.0"
+description = "The Master Repo standing pipeline and its six harnesses, installable without the repository."
+readme = "docs/INSTALL-PACKAGE.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Charles Ganu", email = "charlesganu2004@gmail.com" }]
+keywords = ["llm", "prompt", "hooks", "claude", "codex", "copilot", "gemini", "cursor"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Quality Assurance",
+]
+# No runtime dependencies, on purpose. Every harness uses only the standard
+# library, so this installs into a locked-down environment and an offline one,
+# and a supply-chain question about it has no third party in the answer.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/Charlesganu2004/Master-Repo-Use"
+
+[project.scripts]
+master-harness = "master_harness.cli:surface"
+master-harness-super = "master_harness.cli:super_harness"
+master-harness-proxy = "master_harness.cli:proxy"
+master-harness-wrap = "master_harness.cli:wrap"
+master-harness-goal = "master_harness.cli:goal"
+master-harness-computer = "master_harness.cli:computer"
+master-harness-hook = "master_harness.cli:hook"
+master-harness-where = "master_harness.cli:where"
+master-harness-verify = "master_harness.cli:verify"
+
+[tool.setuptools]
+packages = ["master_harness"]
+
+[tool.setuptools.package-data]
+# Populated by the build hook in setup.py, which copies the harness modules,
+# every SKILL.md and the canonical block into the package before the wheel is
+# written. They are not committed here: the repository keeps one copy of each,
+# and a second committed copy is the duplication that drifts.
+master_harness = ["*.py", "_skills/*/SKILL.md", "_skills/*/**/*", "_data/*", "_agents/*.md"]

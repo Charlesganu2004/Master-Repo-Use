@@ -228,7 +228,7 @@ def _check_isolated() -> int:
             clear_goal()
 
     gone = base.missing_skills()
-    if "master-goal" not in [p.name for p in (ROOT / "skills").iterdir() if p.is_dir()]:
+    if "master-goal" not in base.harness_paths.skill_names():
         failures.append("the master-goal skill is missing")
     print(f"skills            {len(base.ENFORCED_SKILLS) - len(gone)} enforced, master-goal present")
     print("goal store        isolated temporary file")
@@ -267,7 +267,15 @@ def main() -> int:
     if args.set:
         data = set_goal(args.set, args.stamp)
         print(f"goal set: {data['goal']}")
-        print(f"stored in {STATE_FILE.relative_to(ROOT)}; it now rides every prompt.")
+        # Shown relative to the checkout when there is one, absolute otherwise.
+        # relative_to raises rather than falling back, and installed the state
+        # lives in a per-user directory that is nowhere near this package: the
+        # goal was written correctly and the confirmation line was what crashed.
+        try:
+            where = STATE_FILE.relative_to(ROOT)
+        except ValueError:
+            where = STATE_FILE
+        print(f"stored in {where}; it now rides every prompt.")
         return 0
 
     if args.clear:
@@ -298,6 +306,8 @@ def main() -> int:
         for line in base.install_repo_files(committed, args.dry_run):
             print(line)
         for line in base.install_repo_instructions(args.dry_run):
+            print(line)
+        for line in base.install_project_files(args.dry_run):
             print(line)
         return status
 

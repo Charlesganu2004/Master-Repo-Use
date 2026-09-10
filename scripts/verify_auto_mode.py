@@ -11,7 +11,15 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import sys
 from dataclasses import dataclass
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
+# Where the skills, the block and the hook scripts actually are. A checkout
+# keeps them under the repository; a pip install keeps them in the package.
+# Both are complete installs and both must verify.
+import harness_paths  # noqa: E402
 
 
 BEGIN = "<!-- MASTER-REPO-USE:BEGIN -->"
@@ -160,7 +168,8 @@ class Verifier:
         return f"{BEGIN}\n{self.block.strip()}\n{END}"
 
     def _expected_home_block(self) -> str:
-        body = f"Master Repo path: {self.repo}\n{self.block.strip()}"
+        # The header comes from harness_paths, which is also what wrote it.
+        body = f"{harness_paths.block_header(self.repo)}\n{self.block.strip()}"
         return f"{BEGIN}\n{body}\n{END}"
 
     def _check_instruction(self, path: pathlib.Path, scope: str,
@@ -179,7 +188,7 @@ class Verifier:
         self.passed(scope, label, f"exact managed block in {path}")
 
     def _canonical_skills(self) -> tuple[pathlib.Path, ...]:
-        source = self.repo / "skills"
+        source = harness_paths.skills_dir()
         if not source.is_dir():
             self.failed("repo", "canonical skills", f"missing {source}")
             return ()
@@ -215,7 +224,7 @@ class Verifier:
                 if not source.is_file() or "__pycache__" in source.parts:
                     continue
                 files += 1
-                relative = source.relative_to(self.repo / "skills")
+                relative = source.relative_to(harness_paths.skills_dir())
                 destination = destination_root / relative
                 if not destination.is_file():
                     missing.append(relative.as_posix())
@@ -239,7 +248,7 @@ class Verifier:
         if not self.repo.is_dir():
             self.failed("repo", "repository", f"missing {self.repo}")
             return
-        block_path = self.repo / "docs" / "auto-mode-block.txt"
+        block_path = harness_paths.block_path()
         block = self._read_text(block_path, "repo", "canonical block")
         if block is not None:
             if (block.count(NO_COMPRESS_BEGIN) != 1 or
@@ -251,7 +260,7 @@ class Verifier:
                 self.passed("repo", "canonical block",
                             f"protected source present at {block_path}")
 
-        hook_root = self.repo / "scripts" / "hooks"
+        hook_root = harness_paths.hooks_dir()
         missing_hooks = [name for name in HOOK_FILES
                          if not (hook_root / name).is_file()]
         if missing_hooks:
@@ -266,11 +275,24 @@ class Verifier:
 
         harnesses = [name for name in ("auto_mode_harness.py", "harness_proxy.py",
                                        "harness_wrap.py", "harness_goal.py")
-                     if not (self.repo / "scripts" / name).is_file()]
+                     if not (harness_paths.harness_modules_dir() / name).is_file()]
         if harnesses:
             self.failed("repo", "local harnesses", "missing " + self._compact(harnesses))
         else:
-            self.passed("repo", "local harnesses", "four harness entrypoints present")
+            self.passed("repo", "local harnesses",
+                        f"harness entrypoints present in {harness_paths.harness_modules_dir()}")
+
+    def _target_is_the_master_repo(self) -> bool:
+        """Whether --repo names a Master-Repo checkout rather than any project.
+
+        The project-scoped Cursor rule and the two project hook files are
+        COMMITTED CONTENT of this repository, carrying relative paths into
+        scripts/hooks/. They are not written by any installer and they mean
+        nothing in a project that has no scripts/hooks/ to point at. Demanding
+        them of an arbitrary project reported seven failures against an install
+        that was complete and correct for that project.
+        """
+        return (self.repo / "scripts" / "hooks" / "skill_pipeline.py").is_file()
 
     def _installed(self, client: str) -> bool:
         return any(self._rel(self.home, relative).exists()
@@ -292,8 +314,12 @@ class Verifier:
     def _matches_script(self, entry: dict, script: str,
                         absolute: bool, flag: str | None = None) -> bool:
         command = self._normalise_command(self._command_text(entry))
-        expected = (self.repo / "scripts" / "hooks" / script) if absolute else pathlib.Path(
-            "scripts") / "hooks" / script
+        # An absolute registration is matched against the resolved hook
+        # directory, which is scripts/hooks in a checkout and the package
+        # directory in a pip install. The relative form only exists for a
+        # checkout, where a client config may store a repo-relative path.
+        expected = (harness_paths.hooks_dir() / script) if absolute else (
+            pathlib.Path("scripts") / "hooks" / script)
         if self._normalise_command(str(expected)) not in command:
             return False
         return flag is None or flag.casefold() in command
@@ -537,15 +563,25 @@ class Verifier:
                                         "gemini code assist", "review instruction",
                                         home_copy=False)
         elif client == "cursor":
-            self._check_cursor_rule(self.repo / ".cursor" / "rules" /
-                                    "master-repo-auto.mdc", home_copy=False)
-            self._check_cursor_hooks(self.repo / ".cursor" / "hooks.json", project=True)
+            # The project rule and the project hooks are COMMITTED CONTENT of
+            # this repository, carrying relative paths into scripts/hooks/.
+            # Nothing installs them and they mean nothing in a project that
+            # has no scripts/hooks/ to point at, so they are required of a
+            # Master-Repo checkout and not of an arbitrary project. Asking
+            # for them everywhere reported seven failures against an install
+            # that was complete and correct for the project it set up.
+            if self._target_is_the_master_repo():
+                self._check_cursor_rule(self.repo / ".cursor" / "rules" /
+                                        "master-repo-auto.mdc", home_copy=False)
+                self._check_cursor_hooks(self.repo / ".cursor" / "hooks.json",
+                                         project=True)
         elif client == "copilot":
             self._check_instruction(self.repo / ".github" / "copilot-instructions.md",
                                     "copilot project", "repository instruction",
                                     home_copy=False)
-            self._check_copilot_hooks(self.repo / ".github" / "hooks" /
-                                      "master-repo-auto.json", project=True)
+            if self._target_is_the_master_repo():
+                self._check_copilot_hooks(self.repo / ".github" / "hooks" /
+                                          "master-repo-auto.json", project=True)
 
     def _check_home_client(self, client: str) -> None:
         if client in HOME_INSTRUCTIONS and self.block:

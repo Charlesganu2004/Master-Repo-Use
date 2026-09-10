@@ -50,7 +50,16 @@ import urllib.error
 import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 sys.path.insert(0, str(ROOT / "scripts" / "hooks"))
+
+# Where the skills, the block and the goal state actually live. Different in a
+# checkout and in a wheel with no checkout anywhere, and this is the only module
+# that knows the difference.
+import harness_paths  # noqa: E402
+import install_auto_mode  # noqa: E402
+import sync_project_skills  # noqa: E402
+
 
 import skill_pipeline  # noqa: E402
 
@@ -155,11 +164,11 @@ GROUPS = {
 
 def block_text() -> str:
     """The always-loaded rules block, which is the same text on every surface."""
-    return (ROOT / "docs" / "auto-mode-block.txt").read_text(encoding="utf-8")
+    return harness_paths.block_path().read_text(encoding="utf-8")
 
 
 def skill_text(name: str) -> str:
-    path = ROOT / "skills" / name / "SKILL.md"
+    path = harness_paths.skill_path(name)
     if not path.is_file():
         raise FileNotFoundError(f"enforced skill is missing: {path}")
     return path.read_text(encoding="utf-8")
@@ -167,7 +176,7 @@ def skill_text(name: str) -> str:
 
 def missing_skills() -> list[str]:
     return [name for name in ENFORCED_SKILLS
-            if not (ROOT / "skills" / name / "SKILL.md").is_file()]
+            if not harness_paths.skill_path(name).is_file()]
 
 
 def build_bundle(surface_id: str) -> str:
@@ -246,9 +255,14 @@ def install_repo_instructions(dry: bool) -> list[str]:
     sys.path.insert(0, str(ROOT / "scripts"))
     import install_auto_mode as installer  # noqa: E402
 
+    # The project being set up, which is the checkout when there is one and the
+    # caller's own directory when this is an installed copy. Writing these into
+    # the package directory was the bug: they landed in site-packages, where
+    # they instruct nothing and vanish on the next upgrade.
+    project = harness_paths.project_dir()
     body = block_text().strip()
-    return [f"{installer.upsert_block(ROOT / name, body, dry)} the block in {name}"
-            for name in REPO_INSTRUCTION_FILES]
+    return [f"{installer.upsert_block(project / name, body, dry)} the block in "
+            f"{name} ({project})" for name in REPO_INSTRUCTION_FILES]
 
 
 def install_repo_files(ids: list[str], dry: bool) -> list[str]:
@@ -264,12 +278,50 @@ def install_repo_files(ids: list[str], dry: bool) -> list[str]:
 
     results = []
     body = block_text().strip()
+    project = harness_paths.project_dir()
     for surface_id in ids:
         for relative in REPO_FILE_TARGETS.get(surface_id, ()):
-            path = ROOT / relative
+            path = project / relative
             action = installer.upsert_block(path, body, dry)
             results.append(f"{action} the block in {relative}")
     return results
+
+
+def install_project_files(dry: bool) -> list[str]:
+    """Mirror the skills into the project's shared discovery path.
+
+    WHAT THIS DELIBERATELY DOES NOT DO, and why, because the first version did
+    it and it was wrong twice over.
+
+    This repository carries .cursor/hooks.json, .cursor/rules/master-repo-auto.mdc
+    and .github/hooks/master-repo-auto.json. They are project-scoped client
+    configs and they are committed with RELATIVE paths, `python
+    scripts/hooks/no_prune_guard.py`, so they work for anyone who clones this
+    repository.
+
+    Writing them into someone else's project makes no sense: there is no
+    scripts/hooks/ there for a relative path to reach, and the rule's text
+    points at AGENTS.md and docs/auto-mode-block.txt, which that project does
+    not have either. Rewriting them with absolute paths instead, which is what
+    the first version did, replaced a portable committed config with one naming
+    a single machine's Python and home directory, inside a change whose whole
+    purpose was working on other machines.
+
+    A project installing from the package gets its enforcement from the
+    HOME-scoped hooks, which are already installed and point at the package by
+    absolute path because that is where the code actually is.
+
+    The skill mirror is different and is done here: .agents/skills is a shared
+    discovery path that any project benefits from, the merge never deletes, and
+    a project with its own skills keeps every one of them.
+    """
+    project = harness_paths.project_dir()
+    if dry:
+        return [f"would mirror skills into {project / '.agents' / 'skills'}"]
+    destinations = sync_project_skills.sync_project_skills(
+        project, source=harness_paths.skills_dir())
+    return [f"mirrored {len(destinations)} skills into "
+            f"{project / '.agents' / 'skills'}"]
 
 
 def install_surfaces(ids: list[str], dry: bool) -> int:
@@ -280,11 +332,21 @@ def install_surfaces(ids: list[str], dry: bool) -> int:
     second implementation of that would be a second set of those decisions to
     get wrong.
     """
-    installer = ROOT / "scripts" / "install_auto_mode.py"
+    # install_auto_mode writes client config that POINTS AT this repository, so
+    # it needs one. An installed wheel has no checkout to point at; saying that
+    # plainly beats writing paths into site-packages that break on the next
+    # upgrade. The hook command for a standalone install is the console script,
+    # which harness_paths already reports and `master-harness-where` prints.
+    # Works with or without a checkout. install_auto_mode resolves the hook
+    # scripts through harness_paths, so an installed copy registers the hooks
+    # bundled beside it and a checkout registers the ones in scripts/hooks.
+    # --repo still names the project the client configs describe.
+    project = harness_paths.project_dir()
+    installer = pathlib.Path(install_auto_mode.__file__).resolve()
     if not installer.is_file():
         print(f"installer missing: {installer}", file=sys.stderr)
         return 1
-    command = [sys.executable, str(installer), "--repo", str(ROOT)]
+    command = [sys.executable, str(installer), "--repo", str(project)]
     if dry:
         command.append("--dry-run")
     print(f"Installing hooks and skills for: {', '.join(ids)}")
@@ -332,7 +394,11 @@ def _check_isolated() -> int:
         "copilot-cli transform": (["--copilot-transform"],
                                   {"prompt": "check", "transformedPrompt": "check"}),
     }
-    hook = ROOT / "scripts" / "hooks" / "skill_pipeline.py"
+    # The hook file itself, wherever it is. In a checkout that is
+    # scripts/hooks/; in a wheel it sits beside this module. Resolved from the
+    # imported module rather than assumed, so the shapes below are exercised
+    # against the file that will actually run.
+    hook = pathlib.Path(skill_pipeline.__file__).resolve()
     for label, (flags, event) in shapes.items():
         proc = subprocess.run([sys.executable, str(hook), *flags],
                               input=json.dumps(event).encode(), capture_output=True)
@@ -463,6 +529,8 @@ def main() -> int:
         for line in install_repo_files(committed, args.dry_run):
             print(line)
         for line in install_repo_instructions(args.dry_run):
+            print(line)
+        for line in install_project_files(args.dry_run):
             print(line)
         return status
 

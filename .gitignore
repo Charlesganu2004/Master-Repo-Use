@@ -24,3 +24,29 @@ layout-options.html
 # Runtime goal state. Captured from the first task of each session, so it
 # changes constantly; docs/auto-mode-goal.json is the committed seed.
 .auto-mode/
+
+# Build-time copies staged into the package by setup.py. The repository keeps
+# one copy of each module and skill; these are produced by a build and must not
+# be committed, or the duplication this design avoids comes back through the
+# back door.
+master_harness/_skills/
+master_harness/_data/
+master_harness/skill_pipeline.py
+master_harness/auto_mode_harness.py
+master_harness/harness_*.py
+master_harness/install_auto_mode.py
+master_harness/capability_definitions.py
+master_harness/sync_project_skills.py
+build/
+dist/*.whl
+dist/*.tar.gz
+*.egg-info/
+master_harness/harness_paths.py
+master_harness/_agents/
+master_harness/no_prune_guard.py
+master_harness/no_compress_guard.py
+master_harness/verify_auto_mode.py
+
+# Backups the installer writes before touching a client config. Safety copies,
+# not content: the file beside them is the tracked one.
+*.json.bak

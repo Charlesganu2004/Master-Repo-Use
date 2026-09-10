@@ -25,7 +25,15 @@ import sys
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-CAPABILITIES = ROOT / "skills" / "master-computer-control" / "references" / "capabilities.json"
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
+# Where the skills, the block and the goal state actually live. Different in a
+# checkout and in a wheel with no checkout anywhere, and this is the only module
+# that knows the difference.
+import harness_paths  # noqa: E402
+
+CAPABILITIES = (harness_paths.skills_dir() / "master-computer-control"
+                / "references" / "capabilities.json")
 
 ROUTES = ("native", "browser-js", "browser-rust")
 CONFIG_PATHS = (
@@ -178,15 +186,11 @@ def probe_browser_rust(repo: pathlib.Path) -> dict:
             "A direct Rust binding is declared, but this read-only probe does not build it, "
             "download its driver, or launch a browser."
             if declarations else
-            "No Rust binding is declared in this project. Two are catalogued in "
-            "repo-lists/browser-automation.txt, measured 2026-09-09: "
-            "Skyvern-AI/rustwright (879 stars, MIT, self-described alpha) puts "
-            "Playwright's API on a Rust CDP engine with no Node subprocess, and "
-            "mattsse/chromiumoxide (1,381 stars, Apache-2.0) is the mature option "
-            "and speaks CDP directly rather than porting the API. "
-            "octaltree/playwright-rust is the first search hit and is NOT "
-            "catalogued: no licence and 858 days stale. Until one is declared "
-            "here, use official JavaScript Playwright as a black-box sidecar."
+            "No direct playwright-rs binding is declared in this project. Use official "
+            "JavaScript/TypeScript Playwright as a black-box sidecar for the Rust app "
+            "by default. The optional direct binding and other Rust CDP routes are "
+            "documented in the capability metadata and repo-lists/browser-automation.txt; "
+            "being catalogued does not prove they are installed or tested locally."
         ),
     }
 
@@ -245,10 +249,10 @@ def _metadata_failures(capabilities: dict) -> list[str]:
             if commit is not None and not sha.fullmatch(commit):
                 failures.append(f"{route} has an unpinned source commit")
     for agent in capabilities.get("agents", []):
-        path = ROOT / agent.get("file", "")
+        path = harness_paths.agent_path(agent.get("file", ""))
         if not path.is_file():
             failures.append(f"agent reference is missing: {agent.get('file')}")
-    if not (ROOT / "skills" / "master-computer-control" / "SKILL.md").is_file():
+    if not harness_paths.skill_path("master-computer-control").is_file():
         failures.append("master-computer-control skill is missing")
     return failures
 
