@@ -702,6 +702,57 @@ def layer_rules() -> list[dict]:
     return layers
 
 
+def package_payload() -> dict:
+    """How to install the harness without a checkout, read from pyproject.toml.
+
+    Every console script here is one the wheel actually declares. Typing the
+    list into the page instead would drift the first time one was renamed, and
+    a page offering a command that does not exist is worse than a page that
+    offers none: the reader tries it.
+    """
+    import re
+
+    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    scripts_block = pyproject.split("[project.scripts]", 1)
+    entries = []
+    if len(scripts_block) == 2:
+        for line in scripts_block[1].splitlines():
+            line = line.strip()
+            if line.startswith("["):
+                break
+            match = re.match(r'([\w-]+)\s*=\s*"([^"]+)"', line)
+            if match:
+                entries.append(match.group(1))
+
+    version = re.search(r'^version = "([^"]+)"', pyproject, re.M)
+    return {
+        "name": "master-harness",
+        "version": version.group(1) if version else "",
+        "doc": "docs/INSTALL-PACKAGE.md",
+        "detail": "The standing pipeline and every harness, installable with pip. "
+                  "The skills and the canonical block travel inside the wheel, so "
+                  "a machine can carry the rules without carrying the catalog.",
+        "plain": "You can install this on any computer with one command. It does "
+                 "not need a copy of this project; everything it needs comes with it.",
+        "dependencies": "none, standard library only",
+        "commands": entries,
+        "install": [
+            {"label": "Install it, in its own environment",
+             "command": "pipx install git+https://github.com/Charlesganu2004/Master-Repo-Use"},
+            {"label": "Or into the current environment",
+             "command": "pip install git+https://github.com/Charlesganu2004/Master-Repo-Use"},
+            {"label": "See what it resolved to, and from where",
+             "command": "master-harness-where"},
+            {"label": "Set up every client on this machine",
+             "command": "master-harness --install all"},
+            {"label": "Check what the machine actually has",
+             "command": "master-harness-verify"},
+            {"label": "Build the wheel yourself",
+             "command": "python -m build --wheel"},
+        ],
+    }
+
+
 def super_chain_payload() -> dict:
     """The super harness's extra passes, read from the script that injects them."""
     sys.path.insert(0, str(ROOT / "scripts"))
@@ -763,6 +814,7 @@ def layer_payload() -> dict:
         # Same rule as the layers directly above: a page that restates a rule
         # drifts from it silently, and this repository has paid for that twice.
         "superChain": super_chain_payload(),
+        "package": package_payload(),
         "commands": [
             {"label": "See exactly what a prompt would inject",
              "command": "python scripts/harness_goal.py --context \"refactor the retry module\""},

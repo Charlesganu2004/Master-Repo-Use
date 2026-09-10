@@ -1144,6 +1144,41 @@ function renderPipeline() {
   if (capture && pipeline.goal) capture.textContent = pipeline.goal.detail;
 
   renderSuperChain(pipeline.superChain);
+  renderPackage(pipeline.package);
+}
+
+/* Install without the repository. The console-script names come from
+   pyproject.toml through the payload, so this page cannot offer a command the
+   wheel does not ship. */
+function renderPackage(pkg) {
+  const host = document.getElementById('packageInstall');
+  if (!host) return;
+  if (!pkg) { host.innerHTML = ''; return; }
+  host.innerHTML =
+    '<h4>Install it anywhere, without this repository</h4>' +
+    '<p class="pipeline-lede">' + escapeHtml(pkg.detail) + '</p>' +
+    '<dl class="pack-facts">' +
+      '<div><dt>Package</dt><dd><code>' + escapeHtml(pkg.name) + '</code> ' +
+        escapeHtml(pkg.version) + '</dd></div>' +
+      '<div><dt>Dependencies</dt><dd>' + escapeHtml(pkg.dependencies) + '</dd></div>' +
+      '<div><dt>Written up in</dt><dd><code>' + escapeHtml(pkg.doc) + '</code></dd></div>' +
+    '</dl>' +
+    '<ul class="pack-commands">' + (pkg.commands || []).map(function (name) {
+      return '<li><code>' + escapeHtml(name) + '</code></li>';
+    }).join('') + '</ul>' +
+    (pkg.install || []).map(function (entry) {
+      return '<div class="harness-check"><code>' + escapeHtml(entry.command) + '</code>' +
+        '<button type="button" class="quiet-button" data-copy-harness="' +
+        escapeHtml(entry.command) + '">Copy</button></div>';
+    }).join('');
+
+  host.querySelectorAll('[data-copy-harness]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      navigator.clipboard.writeText(button.getAttribute('data-copy-harness')).then(
+        function () { showToast('Command copied'); },
+        function () { showToast('Select the command and copy it manually'); });
+    });
+  });
 }
 
 /* The super harness adds passes rather than reach. Rendered from the payload,

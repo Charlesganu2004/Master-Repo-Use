@@ -755,6 +755,14 @@ const AtlasCore = (() => {
     return (p && p.superChain) || null;
   }
 
+  /** How to install the harness on a machine with no checkout. Console script
+      names are read from pyproject.toml by the builder, so this page cannot
+      offer a command the wheel does not ship. */
+  function packageInfo() {
+    const p = pipeline();
+    return (p && p.package) || null;
+  }
+
   function profiles() { return (state.data && state.data.profiles) || []; }
   function profileClients() { return (state.data && state.data.profileClients) || []; }
 
@@ -876,7 +884,7 @@ const AtlasCore = (() => {
     setHardware, usableMemory, tierFor, currentTier, routesForMachine,
     profiles, profileClients, setProfileClient, resolveProfile, profileScriptFor,
     availableSurfaces, selectedSurfaces, toggleSurface, autoModeText,
-    harnesses, pipeline, goalPolicy, superChain,
+    harnesses, pipeline, goalPolicy, superChain, packageInfo,
     visibleLanes, visibleComponents, subcategories, subDescription, lanesForTab,
     toggleFamily, toggleKind, toggleSub, setQuery, clearFilters, activeFilterCount,
     detailFor, select, laneName, selectLane, laneDetailFor,

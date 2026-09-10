@@ -621,3 +621,20 @@ html[data-theme="light"] .harness-check code { background: #14161a; }
   font: 700 9.5px monospace; letter-spacing: .08em; text-transform: uppercase;
 }
 .chain-steps p { margin: 5px 0 0; color: var(--ink-2); font-size: 12px; line-height: 1.55; max-width: 80ch; }
+
+/* Installing without the repository. Same rail and spacing as the chain above. */
+.pack-facts {
+  display: grid; gap: 12px 28px; margin: 12px 0 6px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+.pack-facts dt {
+  margin-bottom: 4px; color: var(--ink-3);
+  font: 700 9.5px monospace; letter-spacing: .1em; text-transform: uppercase;
+}
+.pack-facts dd { margin: 0; color: var(--ink-2); font-size: 12.5px; }
+.pack-commands { list-style: none; margin: 8px 0 14px; padding: 0; display: flex; flex-wrap: wrap; gap: 7px; }
+.pack-commands code {
+  padding: 3px 8px; border-radius: 5px; background: var(--panel-3); color: var(--ink);
+  font: 600 11px "Cascadia Code", monospace; font-variant-ligatures: none;
+}
+#packageInstall .harness-check { margin-top: 8px; }

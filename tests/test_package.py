@@ -266,5 +266,68 @@ class ItWorksWithNoRepositoryAnywhere(unittest.TestCase):
         self.assertEqual(strays, [], f"the package wrote into itself: {strays}")
 
 
+class ThePageOffersOnlyCommandsThatExist(unittest.TestCase):
+    """A page listing a console script the wheel does not ship is worse than a
+    page listing none: the reader tries it."""
+
+    def setUp(self):
+        self.data = json.loads(
+            (ROOT / "designs" / "atlas-data.json").read_text(encoding="utf-8"))
+        self.package = self.data.get("pipeline", {}).get("package")
+
+    def test_the_package_reached_the_payload(self):
+        self.assertIsNotNone(self.package, "run scripts/build_atlas_data.py")
+
+    def test_every_console_script_on_the_page_is_declared_by_the_wheel(self):
+        pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        for name in self.package["commands"]:
+            self.assertIn(f"{name} =", pyproject,
+                          f"the page offers {name}, which the wheel does not ship")
+
+    def test_every_console_script_the_wheel_ships_is_on_the_page(self):
+        """The other direction. A command nobody is told about is a command
+        nobody runs."""
+        import re
+        pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        block = pyproject.split("[project.scripts]", 1)[1]
+        declared = set()
+        for line in block.splitlines():
+            line = line.strip()
+            if line.startswith("["):
+                break
+            match = re.match(r'([\w-]+)\s*=', line)
+            if match:
+                declared.add(match.group(1))
+        self.assertEqual(declared, set(self.package["commands"]))
+
+    def test_the_version_is_read_rather_than_typed(self):
+        pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        self.assertIn(f'version = "{self.package["version"]}"', pyproject)
+
+    def test_the_install_commands_name_the_real_repository(self):
+        joined = " ".join(entry["command"] for entry in self.package["install"])
+        self.assertIn("github.com/Charlesganu2004/Master-Repo-Use", joined)
+        self.assertIn("master-harness-verify", joined,
+                      "an install with no way to check it is an install to distrust")
+
+    def test_the_written_guide_exists(self):
+        self.assertTrue((ROOT / self.package["doc"]).is_file())
+
+    def test_both_surfaces_render_it(self):
+        panes = (ROOT / "designs" / "atlas-panes.js").read_text(encoding="utf-8")
+        core = (ROOT / "designs" / "atlas-core.js").read_text(encoding="utf-8")
+        script = (ROOT / "atlas.js").read_text(encoding="utf-8")
+        index = (ROOT / "index.html").read_text(encoding="utf-8")
+        self.assertIn("function packageHTML(", panes)
+        self.assertIn("function packageInfo()", core)
+        self.assertIn("function renderPackage(", script)
+        self.assertIn('id="packageInstall"', index)
+
+    def test_every_class_it_introduces_is_styled(self):
+        styles = (ROOT / "atlas.css").read_text(encoding="utf-8")
+        for name in ("pack-facts", "pack-commands"):
+            self.assertIn("." + name, styles, f".{name} is rendered with no rule")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -577,7 +577,31 @@ const AtlasPanes = (() => {
     </section>
 
     ${goalHTML(p.goal, say)}
-    ${chainHTML(say)}`;
+    ${chainHTML(say)}
+    ${packageHTML(say)}`;
+  }
+
+  function packageHTML(say) {
+    const pkg = A.packageInfo && A.packageInfo();
+    if (!pkg) return '';
+    return `<section class="layers install-pack" aria-label="Install without the repository">
+      <h3>Install it anywhere, without this repository</h3>
+      <p class="sub">${esc(say(pkg.plain, pkg.detail))}</p>
+      <dl class="pack-facts">
+        <div><dt>Package</dt><dd><code>${esc(pkg.name)}</code> ${esc(pkg.version)}</dd></div>
+        <div><dt>Dependencies</dt><dd>${esc(pkg.dependencies)}</dd></div>
+        <div><dt>Written up in</dt><dd><code>${esc(pkg.doc)}</code></dd></div>
+      </dl>
+      <p class="sub">Commands it puts on your PATH:</p>
+      <ul class="pack-commands">${(pkg.commands || []).map(name =>
+        `<li><code>${esc(name)}</code></li>`).join('')}</ul>
+      ${(pkg.install || []).map(entry => `<div class="cmd-line cmd-action">
+        <span class="cmd-tag">${esc(entry.label)}</span>
+        <code>${esc(entry.command)}</code>
+        <button type="button" class="cmd-copy" data-copy-cmd="${esc(entry.command)}"
+          aria-label="Copy: ${esc(entry.label)}">Copy</button>
+      </div>`).join('')}
+    </section>`;
   }
 
   function chainHTML(say) {
@@ -1227,6 +1251,16 @@ const AtlasPanes = (() => {
       background:transparent;color:inherit;font:inherit;font-size:11px;cursor:pointer}
     .cmd-copy:hover{border-color:var(--accent,#b65039)}
     .cmd-none{margin:6px 0 0;color:var(--dim,#9aa);font-size:12px;font-style:italic}
+    .install-pack{border-left:4px solid var(--accent,#b65039)}
+    .pack-facts{display:grid;gap:10px 24px;margin:11px 0 4px;
+      grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+    .pack-facts dt{color:var(--dim,#9aa);font:700 9.5px ui-monospace,monospace;
+      letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+    .pack-facts dd{margin:0;font-size:12.5px}
+    .pack-commands{list-style:none;margin:6px 0 12px;padding:0;display:flex;
+      flex-wrap:wrap;gap:6px}
+    .pack-commands code{padding:2px 7px;border-radius:4px;background:var(--panel-2,#222);
+      font:600 11px ui-monospace,monospace;font-variant-ligatures:none}
     .super-chain{border-left:4px solid var(--accent,#b65039)}
     .chain-steps{list-style:none;margin:11px 0 14px;padding:0;display:grid;gap:10px 24px;
       grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr))}
