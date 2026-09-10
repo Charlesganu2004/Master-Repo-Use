@@ -39,23 +39,46 @@ an argument or stdin through the wrapper, a pasted bundle for a browser product.
 A local model behind Ollama and a hosted model behind a chat box get the same
 chain, because the chain does not depend on any client feature.
 
-COST, measured rather than estimated, on the prompt "refactor the retry module
-and check it" with the refactor lane firing:
+COST. Every figure below states the input that produced it, because the previous
+version did not and one of them turned out to be unreproducible: it published
+"6452 bytes plus a standing goal" without saying which goal, and the goal text
+is interpolated into the block, so the total moves with its length. Reproducing
+6452 needed an undisclosed 52-character goal, and the harness's own --check
+printed a different number for the same quantity.
+
+Measured on the prompt "refactor the retry module and check it", which fires the
+refactor lane:
 
     1912 bytes   the core, eleven rules in three layers
     2254 bytes   plus the matching lane
-    4595 bytes   plus this chain, about 1150 tokens
-    6452 bytes   plus a standing goal, about 1600 tokens
+    4595 bytes   plus this chain
+    + a goal      the goal block on top, whose size depends on the goal text
 
-That is roughly three times the base pipeline, on every turn, and it is the
-trade: more passes named explicitly, paid every time. Use the surface harness
-when that price is not worth it, which is most short tasks. Use this one for
-work that spans turns, where the cost of the model forgetting the chain is
+So the chain roughly DOUBLES the standing pipeline: 4595 over 2254 is 2.04x. An
+earlier version of this docstring said "roughly three times", which was reached
+by comparing the goal-carrying total against the base; the standing goal is a
+separate opt-in and not part of the chain's cost, so that overstated it by about
+half. A goal, when one is set, adds its block on top of all of this.
+
+These numbers move whenever the core, a lane or the goal block changes, and they
+have. Rather than trusting the table, print the real ones:
+
+    python scripts/harness_super.py --check
+
+which measures and reports the current figures for this machine, and
+
+    python scripts/harness_super.py --context "<your prompt>" | wc -c
+
+which gives the exact bytes that prompt would carry, goal included.
+
+It is the trade: more passes named explicitly, paid every turn. Use the surface
+harness when that price is not worth it, which is most short tasks. Use this one
+for work that spans turns, where the cost of the model forgetting the chain is
 larger than the cost of carrying it.
 
-The chain is 2339 bytes of that. It was 4.3 kB in the first version, which
-restated seven rules the core already carries; those seven now point at their
-rule number instead. Same ten passes, same order, one copy of each rule.
+The chain itself is about 2.3 kB of that. It was 4.3 kB in the first version,
+which restated seven rules the core already carries; those seven now point at
+their rule number instead. Same ten passes, same order, one copy of each rule.
 
 Usage:
     python scripts/harness_super.py --check

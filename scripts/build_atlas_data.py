@@ -1184,6 +1184,8 @@ def catalog_lanes() -> tuple[list, list]:
         # prose behind it gets no description rather than an invented one.
         blurbs: dict[str, list[str]] = {}
         awaiting_blurb = ""
+        # Whether the next comment line continues the note of the entry above.
+        awaiting_note = False
         for line in path.read_text(encoding="utf-8").splitlines():
             text = line.strip()
             if text.startswith("# ---"):
@@ -1195,25 +1197,31 @@ def catalog_lanes() -> tuple[list, list]:
                     sections.append(section)
                     blurbs[section] = [tail] if tail else []
                 awaiting_blurb = section
+                awaiting_note = False
                 continue
             if not text:
                 awaiting_blurb = ""
+                awaiting_note = False
                 continue
             if text.startswith("#"):
                 # A comment directly under a header describes that header. One
                 # further down is describing the entry above it instead.
                 if awaiting_blurb:
                     blurbs.setdefault(awaiting_blurb, []).append(text.lstrip("# ").strip())
-                # An entry whose slug is too long for the note column has its
-                # note on the NEXT line instead, and it was being dropped: the
-                # page showed "Catalogued in <file>" where a measurement was
-                # written. Seven entries across the catalog were in that state,
-                # and the shape is invisible in the file because the note is
-                # right there, one line down. Only the first such line is taken,
-                # matching the inline convention where the rest is continuation.
-                elif entries and not entries[-1][2]:
-                    slug, sub, _empty = entries[-1]
-                    entries[-1] = (slug, sub, text.lstrip("# ").strip())
+                # Continuation lines belong to the entry above them, ALL of
+                # them. Taking only the first was the previous behaviour and it
+                # shipped notes cut off mid-clause: vulture's detail ended
+                # "Reports unused names with", knip's ended "dependencies in".
+                # Seventeen entries read that way and the measurement each note
+                # was written to carry was gone.
+                #
+                # The earlier fix here took the first continuation line only for
+                # an entry whose note was empty, which solved the empty case and
+                # left the truncation. A note is a paragraph; it is joined.
+                elif awaiting_note and entries:
+                    slug, sub, note = entries[-1]
+                    addition = text.lstrip("# ").strip()
+                    entries[-1] = (slug, sub, f"{note} {addition}".strip())
                 continue
             candidate = text.split("#")[0].strip()
             if not SLUG_RE.fullmatch(candidate):
@@ -1225,6 +1233,7 @@ def catalog_lanes() -> tuple[list, list]:
                 continue
             entries.append((candidate, section, note))
             awaiting_blurb = ""
+            awaiting_note = True
 
         entry = lane(lid, path.stem.replace("-", " ").title(), family, kind,
                      f"repo-lists/{path.name}", first_comment(path, ("#",)),
@@ -2171,6 +2180,15 @@ def catalog_store_payload(counts: dict, facts: dict) -> dict:
 # open it: who it fits, and the one thing to do first. Keyed by filename so a
 # renamed page loses its entry loudly rather than silently keeping the wrong one.
 #
+# WRITE THESE FROM WHAT LOADS, NOT FROM THE PAGE SOURCE. Most of these designs
+# end with AtlasExhibition.mount(...), which prepends an overlay scene: the
+# surface a visitor lands on is that scene, not the markup underneath it. Three
+# of these lines were written from the page underneath and described a surface
+# nobody sees. d28 said "three layers" where the scene renders six and claimed
+# the sharp plane is in front when it is the focused one; d16 said to click a
+# redaction bar that is an <i>, not a button; d33 promised a per-jack keyboard
+# shortcut with no accesskey anywhere in the codebase. Open the page and use it.
+#
 # AUDIENCE is one of four, in the order Charles named them, and it is a floor
 # rather than a ceiling: an experienced engineer can use the "new to this" ones
 # perfectly well, but someone new cannot use the dense ones.
@@ -2194,7 +2212,7 @@ DESIGN_AUDIENCE = {
     "d13-skill-tree.html": (SOME, "A game-style skill tree. Follow a branch to see what depends on what."),
     "d14-river.html": (SOME, "Work flowing through stages. Follow the current to see the order things happen in."),
     "d15-city.html": (SOME, "A city map. Districts are families; streets connect the things that talk to each other."),
-    "d16-declassified.html": (SOME, "A photocopied case file. Click a redaction bar to uncover what is under it."),
+    "d16-declassified.html": (SOME, "A photocopied case file with the evidence blacked out. One button lifts every redaction at once."),
     "d17-spatial.html": (SOME, "Frosted glass panels floating over colour. Hover to bring one forward."),
     "d18-boresight.html": (DEV, "A targeting reticle. Everything sits by angle from the centre rather than in rows."),
     "d19-vitrine.html": (NEW, "One object at a time under a museum light. Deliberately shows very little at once."),
@@ -2206,12 +2224,12 @@ DESIGN_AUDIENCE = {
     "d25-riso.html": (SOME, "Printed poster style in two inks. Bold and simple; click any block to open it."),
     "d26-stage.html": (NEW, "A dark stage with one spotlight. Whatever is lit is what you are looking at."),
     "d27-machined.html": (SOME, "A brushed metal instrument face with engraved markings. Reads like a physical control panel."),
-    "d28-depth.html": (SOME, "Three layers separated by blur. What is sharp is in front; click to bring a layer forward."),
+    "d28-depth.html": (SOME, "Six lanes stacked into the distance, all but one blurred. Drag the focus slider, or click a lane, to bring it into focus."),
     "d29-reactor.html": (DEV, "Glowing geometry with a real bloom filter. Heavy on effects; the data underneath is the same."),
     "d30-atrium.html": (NEW, "A bright open space with the content in the shaded part, so the text stays easy on the eyes."),
     "d31-mycelium.html": (SOME, "A root system. Choose a root and it branches into the real lanes underneath it."),
     "d32-broadsheet.html": (NEW, "A newspaper front page. Headlines first, detail below, columns to scan."),
-    "d33-switchboard.html": (DEV, "A patch bay. Twelve jacks select real lanes; each jack is also a keyboard button."),
+    "d33-switchboard.html": (DEV, "A patch bay. Twelve jacks each select a real lane; Tab moves between them and Enter picks one."),
     "d34-bathysphere.html": (SOME, "A descent through water. Items hang at depths; the porthole keeps the text readable."),
     "d35-prism.html": (SOME, "One beam split into colours. Each band is a different way of slicing the same catalog."),
     "d36-mongo.html": (EXPERT, "The catalog as a database console. Three columns, monospace, every number read from the payload."),

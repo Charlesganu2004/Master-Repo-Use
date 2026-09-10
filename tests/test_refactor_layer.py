@@ -337,5 +337,47 @@ class BothSurfacesRenderTheLayers(unittest.TestCase):
                              f"{missing} is not defined in atlas.css")
 
 
+class LaneNotesReachThePageWhole(unittest.TestCase):
+    """A note is a paragraph, and only its first line was reaching the payload.
+
+    vulture's detail ended "Reports unused names with". knip's ended
+    "dependencies in". Seventeen catalog entries shipped a sentence that stopped
+    mid-clause, and the measurement each note was written to carry was gone.
+
+    The earlier fix in this area took the first continuation line for an entry
+    whose note was EMPTY, which solved the empty case and left the truncation
+    in place for every entry that had one.
+    """
+
+    def setUp(self):
+        import build_atlas_data as builder
+        self.lanes, self.components = builder.catalog_lanes()
+
+    def test_no_catalog_detail_stops_mid_clause(self):
+        dangling = (" with", " in", " the", " and", " a", " of", " to", " for",
+                    " on", " that", " which", " is", " from", " by")
+        broken = [c["slug"] for c in self.components
+                  if (c.get("detail") or "").rstrip().rstrip(".").endswith(dangling)]
+        self.assertEqual(broken, [], "catalog details cut off mid-sentence")
+
+    def test_a_multi_line_note_is_joined_rather_than_truncated(self):
+        """The specific entries that were cut, checked by content rather than
+        by shape, so a change to the file is noticed."""
+        by_slug = {c["slug"]: (c.get("detail") or "") for c in self.components}
+        vulture = by_slug.get("jendrikseipp/vulture", "")
+        self.assertIn("confidence score", vulture,
+                      "vulture's note is still truncated at its first line")
+        self.assertIn("MIT", vulture, "the licence must survive the join")
+
+    def test_the_join_stops_at_the_entry_boundary(self):
+        """A note must not absorb the next entry's comment. If it did, one
+        entry's detail would describe two repositories."""
+        by_slug = {c["slug"]: (c.get("detail") or "") for c in self.components}
+        knip = by_slug.get("webpro-nl/knip", "")
+        self.assertIn("ISC", knip)
+        self.assertNotIn("jscpd", knip.lower(),
+                         "knip's note absorbed the entry below it")
+
+
 if __name__ == "__main__":
     unittest.main()
