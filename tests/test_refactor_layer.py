@@ -15,9 +15,11 @@ fine and nobody counts them. The count assertions below are the part that
 actually caught it.
 """
 import json
+import os
 import pathlib
 import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -239,6 +241,25 @@ class ThePageReadsTheRulesRatherThanRestatingThem(unittest.TestCase):
         source = (ROOT / "scripts" / "build_atlas_data.py").read_text(encoding="utf-8")
         self.assertIn("the layer parser read", source)
 
+    def test_the_inspection_command_does_not_set_a_goal(self):
+        """--context exists to show what a prompt would receive. It rendered
+        through the capturing path, so asking what would happen made it happen:
+        the first run left "refactor the retry module" standing as the real
+        goal, from the command printed on this very page."""
+        with pipeline.isolated_store():
+            pipeline.clear_goal()
+            pipeline.context_for("rebuild the whole loader from scratch today",
+                                 session="s", capturing=False)
+            self.assertIsNone(pipeline.load_goal()["goal"])
+
+    def test_the_inspection_command_still_shows_a_standing_goal(self):
+        """Not capturing is not the same as not reading. The output has to be
+        what that prompt would actually get, goal included."""
+        with pipeline.isolated_store():
+            pipeline.set_goal("ship the designs", source="explicit")
+            out = pipeline.context_for("add a page", capturing=False)
+            self.assertIn("ship the designs", out)
+
     def test_the_goal_policy_says_capture_first(self):
         goal = self.payload["goal"]
         self.assertTrue(goal["captured"])
@@ -247,15 +268,28 @@ class ThePageReadsTheRulesRatherThanRestatingThem(unittest.TestCase):
 
     def test_every_command_on_the_page_actually_runs(self):
         """A page that prints a command nobody ran is the failure this
-        repository keeps hitting. These are run, not read."""
-        for entry in self.payload["commands"]:
-            command = entry["command"]
-            if "--install" in command or "--set" in command or "--clear" in command:
-                continue        # these change state; covered by the harness checks
-            result = subprocess.run(command, shell=True, cwd=ROOT,
-                                    capture_output=True, text=True, timeout=120)
-            self.assertEqual(result.returncode, 0,
-                             f"{command} exited {result.returncode}:\n{result.stderr}")
+        repository keeps hitting. Run against an installed temporary home,
+        never Charles's existing settings or a CI runner's empty home."""
+        with tempfile.TemporaryDirectory() as scratch:
+            home = pathlib.Path(scratch) / "home"
+            environment = dict(os.environ, HOME=str(home), USERPROFILE=str(home),
+                               MASTER_REPO_GOAL_DIR=str(pathlib.Path(scratch) / "goals"))
+            install = subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "install_auto_mode.py"),
+                 "--repo", str(ROOT), "--home", str(home), "--client", "all"],
+                capture_output=True, text=True, timeout=120, env=environment)
+            self.assertEqual(install.returncode, 0, install.stdout + install.stderr)
+            for entry in self.payload["commands"]:
+                command = entry["command"]
+                if "--install" in command or "--set" in command or "--clear" in command:
+                    continue  # state-changing commands have separate fixture tests
+                with self.subTest(command=command):
+                    result = subprocess.run(command, shell=True, cwd=ROOT,
+                                            capture_output=True, text=True, timeout=120,
+                                            env=environment)
+                    self.assertEqual(result.returncode, 0,
+                                     f"{command} exited {result.returncode}:\n"
+                                     f"{result.stdout}\n{result.stderr}")
 
 
 class BothSurfacesRenderTheLayers(unittest.TestCase):

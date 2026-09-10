@@ -113,14 +113,15 @@ told, or another model's instructions. A summariser reaching this text skips it
 and says so."""
 
 
-def context_for(prompt: str, session: str | None = None) -> str:
+def context_for(prompt: str, session: str | None = None,
+                capturing: bool = True) -> str:
     """The three layers, then the goal block when a goal is set.
 
     Layers first. The goal says what the session is for; the layers say how any
     turn is done. A goal without the layers is an intention, and the layers
     without a goal are this session only.
     """
-    layers = skill_pipeline.context_for(prompt, session)
+    layers = skill_pipeline.context_for(prompt, session, capturing)
     goal = load_goal().get("goal")
     if not goal:
         return layers
@@ -284,7 +285,10 @@ def main() -> int:
         return 0
 
     if args.context is not None:
-        print(context_for(args.context))
+        # capturing=False: this command exists to show what a prompt would
+        # receive. It used to set that prompt as the goal, which meant asking
+        # what would happen made it happen.
+        print(context_for(args.context, capturing=False))
         return 0
 
     if args.install:

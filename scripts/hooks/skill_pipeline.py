@@ -149,7 +149,8 @@ ORCHESTRATION = ("13. More than about three independent pieces of work here: fan
 MULTI_TASK = re.compile(r"\balso\b|\band then\b|\bafter that\b|\bplus\b|^\s*\d[\).]", re.I | re.M)
 
 
-def context_for(prompt: str, session: str | None = None) -> str:
+def context_for(prompt: str, session: str | None = None,
+                capturing: bool = True) -> str:
     """The core, plus at most one lane, plus fan-out advice on a big prompt.
 
     The lane is chosen by how MANY distinct terms it matched, not by declaration
@@ -161,8 +162,16 @@ def context_for(prompt: str, session: str | None = None) -> str:
     `session` is optional because not every client sends one. Without it the
     capture below is conservative: it sets a goal when none stands and never
     replaces one, which is the safe half of the behaviour.
+
+    `capturing=False` renders without setting anything, for the commands that
+    exist to SHOW what a prompt would receive. `--context "refactor the retry
+    module"` set that string as the standing goal the first time it ran, which
+    is the whole class of bug this parameter closes: inspecting a thing must not
+    change it. The standing goal is still read, so the output is what that
+    prompt would actually get.
     """
-    capture(prompt, session)
+    if capturing:
+        capture(prompt, session)
     lowered = prompt.lower()
     parts = [CORE]
     best, best_score = None, 0
