@@ -1142,6 +1142,41 @@ function renderPipeline() {
 
   const capture = document.getElementById('goalCapture');
   if (capture && pipeline.goal) capture.textContent = pipeline.goal.detail;
+
+  renderSuperChain(pipeline.superChain);
+}
+
+/* The super harness adds passes rather than reach. Rendered from the payload,
+   which the builder read out of scripts/harness_super.py, so the page cannot
+   list a pass the harness stopped injecting. */
+function renderSuperChain(chain) {
+  const host = document.getElementById('superChain');
+  if (!host) return;
+  if (!chain) { host.innerHTML = ''; return; }
+  host.innerHTML =
+    '<h4>' + escapeHtml(chain.name) + ': one command instead of four</h4>' +
+    '<p class="pipeline-lede">' + escapeHtml(chain.note) + '</p>' +
+    '<ol class="chain-steps">' + (chain.passes || []).map(function (step) {
+      const body = step.baseRule
+        ? 'Rule ' + step.baseRule + ' of the layers above, applied again here.'
+        : escapeHtml(step.rule);
+      return '<li><span class="chain-step">S' + step.step + '</span><div>' +
+        '<b>' + escapeHtml(step.label) + '</b>' +
+        '<code class="chain-skill">' + escapeHtml(step.skill) + '</code>' +
+        '<span class="chain-when">' + escapeHtml(step.when) + '</span>' +
+        '<p>' + body + '</p></div></li>';
+    }).join('') + '</ol>' +
+    '<div class="harness-check"><code>' + escapeHtml(chain.check) + '</code>' +
+    '<button type="button" class="quiet-button" data-copy-harness="' +
+      escapeHtml(chain.check) + '">Copy</button></div>';
+
+  host.querySelectorAll('[data-copy-harness]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      navigator.clipboard.writeText(button.getAttribute('data-copy-harness')).then(
+        function () { showToast('Check command copied'); },
+        function () { showToast('Select the command and copy it manually'); });
+    });
+  });
 }
 
 function renderStore() {
@@ -1215,12 +1250,22 @@ function renderStore() {
   }
 }
 
+/* Each design card says three things now, because one was not enough for the
+   range of people who open this page: what it is, who it suits, and the one
+   thing to do first. The description is written in interface vocabulary and is
+   accurate; "conic specular rim" tells a reader who has not met the words
+   nothing at all, and that reader is most of them. */
 function renderDesignLinks() {
   const host = document.getElementById('designLinks');
   if (!host) return;
   host.innerHTML = (catalog.data.designs || []).map(function (design) {
-    return '<a class="design-link" href="' + design.file + '"><strong>' + escapeHtml(design.name) +
-      '</strong><small>' + escapeHtml(design.detail || '') + '</small></a>';
+    const audience = design.audience
+      ? '<span class="design-audience">' + escapeHtml(design.audience) + '</span>' : '';
+    const howto = design.howto
+      ? '<em class="design-howto">' + escapeHtml(design.howto) + '</em>' : '';
+    return '<a class="design-link" href="' + design.file + '">' +
+      '<strong>' + escapeHtml(design.name) + audience + '</strong>' +
+      '<small>' + escapeHtml(design.detail || '') + '</small>' + howto + '</a>';
   }).join('');
 }
 

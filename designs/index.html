@@ -154,6 +154,12 @@ h1 span{display:block;color:var(--accent)}
   padding:2px 8px;font-weight:700}
 .tagline{font-size:11.5px;color:var(--accent);font-family:var(--mono);margin-top:3px}
 .what{font-size:13.5px;color:var(--dim);margin-top:9px;flex:1}
+.who{margin-top:10px;padding-top:9px;border-top:1px solid var(--line);
+  display:flex;flex-direction:column;gap:5px}
+.who-tag{align-self:flex-start;padding:2px 8px;border:1px solid var(--line);
+  border-radius:999px;color:var(--dim);font:700 9.5px/1.6 var(--mono);
+  letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
+.who em{color:var(--ink);font-size:12.5px;line-height:1.5;font-style:italic}
 .what b{color:var(--ink);font-weight:600}
 .from{font-size:11.5px;color:var(--dim);margin-top:9px;font-family:var(--mono);
   border-top:1px solid var(--line);padding-top:9px}
@@ -614,6 +620,31 @@ function themeLinks(design){
       <i style="background:${t.accent}" aria-hidden="true"></i>${t.label}</a>`).join('');
 }
 
+/* Who each design suits and what to do first, read from atlas-data.js rather
+   than typed here. The `what` copy above each of these is written in interface
+   vocabulary on purpose and it stays; this is the second line, for the reader
+   who has not met those words. A third hand-written copy would drift from the
+   payload the first time a design changed. */
+function escText(value) {
+  return String(value === null || value === undefined ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function audienceFor(file) {
+  const name = String(file).split('/').pop();
+  // The payload global here is __ATLAS_DATA__, not ATLAS_DATA. Both names look
+  // right and only one exists, so the wrong one returns undefined, the lookup
+  // finds nothing, and every card renders without the line while the page still
+  // looks finished. Nothing errors.
+  const data = window.__ATLAS_DATA__ || {};
+  const designs = data.designs || [];
+  const match = designs.find(d => String(d.file).split('/').pop() === name);
+  if (!match || !match.audience) return '';
+  return `<p class="who"><span class="who-tag">${escText(match.audience)}</span>` +
+    `<em>${escText(match.howto || '')}</em></p>`;
+}
+
 function render(theme){
   const firstImmersive = DESIGNS.findIndex(d => d.file === 'd16-declassified.html');
   const archive = DESIGNS.slice(0, firstImmersive);
@@ -637,6 +668,7 @@ function render(theme){
             <h3 class="remix-name" id="${titleId}">${d.name}</h3>
             <p class="remix-tagline">${d.tagline}</p>
             <p class="what">${d.what}</p>
+            ${audienceFor(d.file)}
             <p class="from">${d.from}</p>
             <div class="remix-actions">
               <a class="remix-open" href="${d.file}?theme=${theme}">
@@ -662,6 +694,7 @@ function render(theme){
         </div>
         <div class="tagline">${d.tagline}</div>
         <p class="what">${d.what}</p>
+        ${audienceFor(d.file)}
         <p class="from">${d.from}</p>
         <div class="links">
           <a class="open" href="${d.file}?theme=${theme}">Open</a>

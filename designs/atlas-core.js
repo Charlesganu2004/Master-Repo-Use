@@ -748,6 +748,13 @@ const AtlasCore = (() => {
     return (p && p.goal) || null;
   }
 
+  /** The super harness chain: the extra named passes on top of the three layers.
+      Read from the payload, which the builder read from harness_super.py. */
+  function superChain() {
+    const p = pipeline();
+    return (p && p.superChain) || null;
+  }
+
   function profiles() { return (state.data && state.data.profiles) || []; }
   function profileClients() { return (state.data && state.data.profileClients) || []; }
 
@@ -869,7 +876,7 @@ const AtlasCore = (() => {
     setHardware, usableMemory, tierFor, currentTier, routesForMachine,
     profiles, profileClients, setProfileClient, resolveProfile, profileScriptFor,
     availableSurfaces, selectedSurfaces, toggleSurface, autoModeText,
-    harnesses, pipeline, goalPolicy,
+    harnesses, pipeline, goalPolicy, superChain,
     visibleLanes, visibleComponents, subcategories, subDescription, lanesForTab,
     toggleFamily, toggleKind, toggleSub, setQuery, clearFilters, activeFilterCount,
     detailFor, select, laneName, selectLane, laneDetailFor,

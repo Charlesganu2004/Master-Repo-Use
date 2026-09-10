@@ -604,17 +604,6 @@ HARNESSES = [
      "real client says so rather than guessing at its flags.",
      "python scripts/harness_wrap.py --check"),
 
-    ("harness-computer", "Computer harness", "scripts/harness_computer.py",
-     "Routes a task that needs a real machine or a real browser to the narrowest "
-     "surface that can do it: native desktop control, JavaScript Playwright, or a "
-     "Rust CDP engine. Reports which are actually reachable and which agents are "
-     "available to run them.",
-     "A GUI with no API, a browser flow, or a screenshot of real state.",
-     "It grants nothing and clicks nothing. It reports what a host could do, and "
-     "an installed skill is not an enabled tool: only the model host knows "
-     "whether computer use is on in this session.",
-     "python scripts/harness_computer.py --check"),
-
     ("harness-goal", "Goal harness", "scripts/harness_goal.py",
      "The surface harness plus a standing goal that survives the turn. The goal is "
      "restated before the request is read, checked against the output before "
@@ -625,6 +614,24 @@ HARNESSES = [
      "Adds about 544 bytes to every prompt while a goal is set. Lifted only by the "
      "person who set it.",
      "python scripts/harness_goal.py --check"),
+
+    ("harness-super", "Super harness", "scripts/harness_super.py",
+     "One command that does what the other four do, by calling them rather than "
+     "reimplementing any of them: installs every surface, serves the injecting "
+     "proxy, wraps a single command, carries the standing goal, and routes "
+     "computer-control and Playwright work. On top of that it injects a longer "
+     "chain of ten named passes, adding architect before anything is produced, "
+     "token reduction throughout, and an adversarial review before answering.",
+     "Work that spans turns and touches more than one kind of task, on any model "
+     "local or hosted, where you want one command instead of four and the model "
+     "to name each pass it ran. Agents, browser steps and desktop control all "
+     "inherit the same chain.",
+     "It costs about three times the base pipeline per turn, roughly 1600 tokens "
+     "with a goal set, because every pass is named explicitly on every prompt. "
+     "It adds no reach the other four lack: what it cannot do, they cannot "
+     "either, and a machine it has not installed is a machine it cannot enforce "
+     "anything on.",
+     "python scripts/harness_super.py --check")
 ]
 
 
@@ -695,6 +702,31 @@ def layer_rules() -> list[dict]:
     return layers
 
 
+def super_chain_payload() -> dict:
+    """The super harness's extra passes, read from the script that injects them."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import harness_super  # noqa: E402
+
+    return {
+        "name": "Super harness",
+        "file": "scripts/harness_super.py",
+        "check": "python scripts/harness_super.py --check",
+        "note": "One command that calls the other four, plus a longer chain of "
+                "named passes on top of the three layers.",
+        "passes": [{
+            "step": index,
+            "label": label,
+            "skill": skill,
+            "when": when,
+            # A pass that extends a base rule points at its number; only a pass
+            # that adds something carries its own text.
+            "baseRule": base_rule,
+            "rule": rule,
+        } for index, (label, skill, base_rule, when, rule)
+            in enumerate(harness_super.PASSES, start=1)],
+    }
+
+
 def layer_payload() -> dict:
     """The layers, the lanes that attach on top, and the commands that run them.
 
@@ -727,6 +759,10 @@ def layer_payload() -> dict:
         "lanes": [{"line": line.split(": ", 1)[0].split(". ", 1)[-1],
                    "detail": line.split(": ", 1)[1] if ": " in line else line}
                   for _pattern, line in skill_pipeline.LANES],
+        # The super harness chain, read from harness_super rather than retyped.
+        # Same rule as the layers directly above: a page that restates a rule
+        # drifts from it silently, and this repository has paid for that twice.
+        "superChain": super_chain_payload(),
         "commands": [
             {"label": "See exactly what a prompt would inject",
              "command": "python scripts/harness_goal.py --context \"refactor the retry module\""},
@@ -755,7 +791,9 @@ def harness_entries() -> list[dict]:
                  "file": "scripts/harness_computer.py",
                  "check": "python scripts/harness_computer.py --check",
                  "routes": ["native", "browser-js", "browser-rust"],
-                 "detail": "All five harnesses route screen and browser requests through "
+                 "kind": "capability-router",
+                 "name": "Computer-control availability check",
+                 "detail": "All four injection harnesses route screen and browser requests through "
                            "the same capability skill. The check reads local evidence; "
                            "it does not grant tools, install packages or control an app.",
              }} for h in HARNESSES]
@@ -2070,6 +2108,87 @@ def catalog_store_payload(counts: dict, facts: dict) -> dict:
     }
 
 
+# Who each design suits, and how to move around it, in plain words.
+#
+# The <meta name="description"> on each page says WHAT it is, in the vocabulary
+# of someone who already reads interfaces: "conic specular rim", "orthogonal
+# traces", "tonal layers". That is accurate and it is useless to a reader who
+# has not met those words, which is most readers.
+#
+# So every design carries a second line aimed at the person deciding whether to
+# open it: who it fits, and the one thing to do first. Keyed by filename so a
+# renamed page loses its entry loudly rather than silently keeping the wrong one.
+#
+# AUDIENCE is one of four, in the order Charles named them, and it is a floor
+# rather than a ceiling: an experienced engineer can use the "new to this" ones
+# perfectly well, but someone new cannot use the dense ones.
+NEW = "New to this"
+SOME = "Some technical background"
+DEV = "Comfortable with code"
+EXPERT = "Reads interfaces for a living"
+
+DESIGN_AUDIENCE = {
+    "d3-console.html": (DEV, "Everything on one screen, like a system log. Use the search box; arrows move, enter opens."),
+    "d4-orbital.html": (SOME, "Rings of related things. Click any dot to see what it connects to."),
+    "d5-blueprint.html": (DEV, "A wiring diagram you can pan and zoom. Drag to move, scroll to zoom, click a box to read it."),
+    "d6-graphite.html": (NEW, "A plain stacked list that opens in place. Start at the top and expand what looks relevant."),
+    "d7-material.html": (NEW, "Cards and buttons that behave the way a phone app does. Use the side rail to change section."),
+    "d8-dossier.html": (NEW, "One subject per page, lots of white space, made for reading rather than hunting."),
+    "d8-metro.html": (NEW, "A transit map. Follow one coloured line end to end to see a single path through the system."),
+    "d9-workbench.html": (DEV, "Laid out like a code editor: tree on the left, detail on the right, tabs across the top."),
+    "d10-journal.html": (NEW, "Reads like an article. Scroll from the top and it explains itself in order."),
+    "d11-command.html": (DEV, "A control room. Every tab is a different view of the same catalog; Commands is the useful one."),
+    "d12-index.html": (SOME, "Index cards you flip through. Good for browsing when you do not know the name yet."),
+    "d13-skill-tree.html": (SOME, "A game-style skill tree. Follow a branch to see what depends on what."),
+    "d14-river.html": (SOME, "Work flowing through stages. Follow the current to see the order things happen in."),
+    "d15-city.html": (SOME, "A city map. Districts are families; streets connect the things that talk to each other."),
+    "d16-declassified.html": (SOME, "A photocopied case file. Click a redaction bar to uncover what is under it."),
+    "d17-spatial.html": (SOME, "Frosted glass panels floating over colour. Hover to bring one forward."),
+    "d18-boresight.html": (DEV, "A targeting reticle. Everything sits by angle from the centre rather than in rows."),
+    "d19-vitrine.html": (NEW, "One object at a time under a museum light. Deliberately shows very little at once."),
+    "d20-tube.html": (SOME, "An old curved television. The look is the point; the controls underneath are the standard ones."),
+    "d21-poster.html": (NEW, "A printed poster on a strict grid. Flat, bold, nothing moves. Easiest to read at a glance."),
+    "d22-membrane.html": (SOME, "Soft cells with no straight lines, breathing slowly. Click a cell to open it."),
+    "d23-panes.html": (EXPERT, "Tiled panes snapped to a character cell, one pixel apart. Dense; built for people who like tiling windows."),
+    "d24-plate.html": (SOME, "A photographic star plate. Brighter points are used more; click one to read its entry."),
+    "d25-riso.html": (SOME, "Printed poster style in two inks. Bold and simple; click any block to open it."),
+    "d26-stage.html": (NEW, "A dark stage with one spotlight. Whatever is lit is what you are looking at."),
+    "d27-machined.html": (SOME, "A brushed metal instrument face with engraved markings. Reads like a physical control panel."),
+    "d28-depth.html": (SOME, "Three layers separated by blur. What is sharp is in front; click to bring a layer forward."),
+    "d29-reactor.html": (DEV, "Glowing geometry with a real bloom filter. Heavy on effects; the data underneath is the same."),
+    "d30-atrium.html": (NEW, "A bright open space with the content in the shaded part, so the text stays easy on the eyes."),
+    "d31-mycelium.html": (SOME, "A root system. Choose a root and it branches into the real lanes underneath it."),
+    "d32-broadsheet.html": (NEW, "A newspaper front page. Headlines first, detail below, columns to scan."),
+    "d33-switchboard.html": (DEV, "A patch bay. Twelve jacks select real lanes; each jack is also a keyboard button."),
+    "d34-bathysphere.html": (SOME, "A descent through water. Items hang at depths; the porthole keeps the text readable."),
+    "d35-prism.html": (SOME, "One beam split into colours. Each band is a different way of slicing the same catalog."),
+    "d36-mongo.html": (EXPERT, "The catalog as a database console. Three columns, monospace, every number read from the payload."),
+}
+
+AUDIENCE_ORDER = (NEW, SOME, DEV, EXPERT)
+
+
+def design_audience(filename: str) -> tuple[str, str]:
+    """(audience, how to use it) for one design, or empty strings.
+
+    Empty rather than invented: a design with no entry says nothing on the page
+    instead of guessing, and the test fails so the entry gets written.
+    """
+    return DESIGN_AUDIENCE.get(filename, ("", ""))
+
+
+def audience_keys_that_name_nothing() -> list[str]:
+    """Entries pointing at a design file that does not exist.
+
+    Fifteen of the first thirty-six did. Each one was written from a name that
+    sounded like a design in this repository, every one of them silently did
+    nothing, and the page looked correct because a missing key returns empty
+    strings on purpose. A wrong key is invisible; only counting catches it.
+    """
+    real = {path.name for path in (ROOT / "designs").glob("d*.html")}
+    return sorted(key for key in DESIGN_AUDIENCE if key not in real)
+
+
 def design_pages() -> list[dict]:
     """Every interactive design, read from the files rather than listed by hand.
 
@@ -2086,10 +2205,15 @@ def design_pages() -> list[dict]:
         if not title:
             continue                  # not a design page if it does not name itself
         name = title.group(1).split("|")[0].strip()
+        audience, howto = design_audience(path.name)
         pages.append({
             "file": f"designs/{path.name}",
             "name": name,
             "detail": (note.group(1).strip() if note else ""),
+            # The plain layer. `detail` is what it is, in interface vocabulary;
+            # these two are who it suits and what to do first.
+            "audience": audience,
+            "howto": howto,
         })
     return pages
 

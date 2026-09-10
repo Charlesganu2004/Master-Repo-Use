@@ -576,7 +576,36 @@ const AtlasPanes = (() => {
       </li>`).join('')}</ul>
     </section>
 
-    ${goalHTML(p.goal, say)}`;
+    ${goalHTML(p.goal, say)}
+    ${chainHTML(say)}`;
+  }
+
+  function chainHTML(say) {
+    const chain = A.superChain && A.superChain();
+    if (!chain) return '';
+    return `<section class="layers super-chain" aria-label="The super harness chain">
+      <h3>${esc(chain.name)}, one command instead of four</h3>
+      <p class="sub">${esc(say(
+        'One command that does what all the others do, and adds more checks on top. Slower and more thorough. Use it when the work takes several messages.',
+        chain.note))}</p>
+      <ol class="chain-steps">${(chain.passes || []).map(step => `<li>
+        <span class="chain-step">S${step.step}</span>
+        <div>
+          <b>${esc(step.label)}</b>
+          <code class="chain-skill">${esc(step.skill)}</code>
+          <span class="chain-when">${esc(step.when)}</span>
+          <p>${step.baseRule
+            ? `Rule ${step.baseRule} of the layers above, applied again here.`
+            : esc(step.rule)}</p>
+        </div>
+      </li>`).join('')}</ol>
+      <div class="cmd-line cmd-action">
+        <span class="cmd-tag">Check</span>
+        <code>${esc(chain.check)}</code>
+        <button type="button" class="cmd-copy" data-copy-cmd="${esc(chain.check)}"
+          aria-label="Copy the super harness check">Copy</button>
+      </div>
+    </section>`;
   }
 
   function goalHTML(goal, say) {
@@ -622,6 +651,37 @@ const AtlasPanes = (() => {
     </section>`;
   }
 
+  function computerControlHTML(items) {
+    const control = items.map(h => h.computerControl).find(Boolean);
+    if (!control) {
+      return `<aside class="harness-safety-note" role="note" aria-label="Computer control safety">
+        <strong>Computer-control metadata is unavailable.</strong>
+        <p>Regenerate the Atlas data before choosing a desktop or browser route.</p>
+      </aside>`;
+    }
+    return `<aside class="harness-safety-note" role="note" aria-label="Computer control safety">
+      <header>
+        <div><span>Shared capability router</span><strong>${esc(control.name || 'Computer control')}</strong></div>
+        <a class="harness-guide-link" href="https://github.com/Charlesganu2004/Master-Repo-Use/blob/main/docs/COMPUTER-CONTROL.md">Read the guide</a>
+      </header>
+      <p>${esc(control.detail)}</p>
+      <dl class="harness-control-meta">
+        <div><dt>Skill</dt><dd><code>${esc(control.skill)}</code></dd></div>
+        <div><dt>Source</dt><dd><code>${esc(control.file)}</code></dd></div>
+      </dl>
+      <div class="harness-routes" aria-label="Available computer-control routes">
+        ${(control.routes || []).map(route => `<code>${esc(route)}</code>`).join('')}
+      </div>
+      <div class="cmd-line cmd-action">
+        <span class="cmd-tag">Read-only check</span>
+        <code>${esc(control.check)}</code>
+        <button type="button" class="cmd-copy" data-copy-cmd="${esc(control.check)}"
+          aria-label="Copy the computer-control availability check">Copy</button>
+      </div>
+      <p class="harness-control-limit">The skill describes how to route the work. It grants no host tool or permission.</p>
+    </aside>`;
+  }
+
   function harnessHTML() {
     const items = A.harnesses();
     if (!items.length) {
@@ -654,12 +714,7 @@ const AtlasPanes = (() => {
         </div>
       </article>`).join('')}</div>
       ${pipelineCommandsHTML()}
-      <aside class="harness-safety-note" role="note" aria-label="Computer control safety">
-        <strong>Computer control is read-only by default.</strong>
-        <p>The harnesses may inspect visible state and report what they find. Clicking, typing,
-        submitting, installing, deleting, or changing settings begins only when that action is in the
-        request and still passes the normal permission and safety checks.</p>
-      </aside>
+      ${computerControlHTML(items)}
       <p class="sub harness-foot">All ${items.length} inject the same layers, so nothing here
         changes what the rules say. They differ only in how the rules arrive. The goal harness adds
         one thing on top: a goal that survives the turn, captured from the first task of the session
@@ -1168,10 +1223,23 @@ const AtlasPanes = (() => {
     .cmd-line code{flex:1;min-width:0;padding:7px 9px;border-radius:7px;background:#090a0c;color:#c8f8e0;
       font:11.5px/1.6 ui-monospace,"Cascadia Code",monospace;font-variant-ligatures:none;
       white-space:pre-wrap;overflow-wrap:anywhere}
-    .cmd-copy{flex:none;min-height:34px;padding:0 11px;border:1px solid var(--line,#555);border-radius:7px;
+    .cmd-copy{flex:none;min-height:44px;padding:0 11px;border:1px solid var(--line,#555);border-radius:7px;
       background:transparent;color:inherit;font:inherit;font-size:11px;cursor:pointer}
     .cmd-copy:hover{border-color:var(--accent,#b65039)}
     .cmd-none{margin:6px 0 0;color:var(--dim,#9aa);font-size:12px;font-style:italic}
+    .super-chain{border-left:4px solid var(--accent,#b65039)}
+    .chain-steps{list-style:none;margin:11px 0 14px;padding:0;display:grid;gap:10px 24px;
+      grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr))}
+    .chain-steps li{display:grid;grid-template-columns:30px 1fr;gap:8px;align-items:baseline;
+      align-content:start}
+    .chain-step{color:var(--accent,#b65039);font:700 10px ui-monospace,monospace;text-align:right}
+    .chain-steps b{font-size:12.5px}
+    .chain-skill{display:inline-block;margin-left:6px;padding:1px 5px;border-radius:4px;
+      background:var(--panel-2,#222);font:600 10.5px ui-monospace,monospace;
+      font-variant-ligatures:none}
+    .chain-when{display:block;margin-top:2px;color:var(--dim,#9aa);
+      font:600 9.5px ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase}
+    .chain-steps p{margin:4px 0 0;font-size:12px;line-height:1.55;max-width:78ch}
     .layers{margin:0 0 22px;padding:16px;border:1px solid var(--line,#555);border-radius:12px}
     .layers h3{margin:0 0 6px;font-size:14px}
     .layer{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line,#555)}
@@ -1225,8 +1293,19 @@ const AtlasPanes = (() => {
       font:600 11.5px ui-monospace,monospace;font-variant-ligatures:none}
     .harness-safety-note{margin-top:14px;border-left:4px solid var(--accent,#b65039);padding:12px 14px;
       border-radius:0 8px 8px 0;background:var(--panel-2,#222)}
+    .harness-safety-note header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .harness-safety-note header span{display:block;color:var(--dim,#9aa);font:700 9.5px ui-monospace,monospace;
+      letter-spacing:.1em;text-transform:uppercase}
     .harness-safety-note strong{display:block;font-size:13.5px}
     .harness-safety-note p{margin:4px 0 0;color:var(--dim,#9aa);font-size:12.5px;line-height:1.55}
+    .harness-guide-link{min-height:44px;display:inline-flex;align-items:center;color:var(--accent,#b65039);font-weight:700}
+    .harness-control-meta{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0}
+    .harness-control-meta div{min-width:min(100%,220px)}
+    .harness-control-meta dt{color:var(--dim,#9aa);font:700 9px ui-monospace,monospace;text-transform:uppercase}
+    .harness-control-meta dd{margin:3px 0 0;overflow-wrap:anywhere}.harness-control-meta code{font-size:11.5px}
+    .harness-routes{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}.harness-routes code{padding:5px 8px;
+      border:1px solid var(--line,#555);border-radius:6px;font-size:11px}
+    .harness-control-limit{font-weight:650}
     @media(max-width:640px){.cmd-line{flex-direction:column}.cmd-copy{align-self:flex-start}}
     .filter-explanations p{margin:8px 0}
     .surface-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin:20px 0}

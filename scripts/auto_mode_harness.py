@@ -69,6 +69,8 @@ ENFORCED_SKILLS = (
     "master-computer-control",
     "master-refactor",
     "master-refactor-ui",
+    "master-architect",
+    "master-review",
 )
 
 HOOK, GATEWAY, BUNDLE, REPO_FILE = "hook", "gateway", "bundle", "repo-file"

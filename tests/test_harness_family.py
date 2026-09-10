@@ -38,13 +38,16 @@ HARNESSES = DATA.get("harnesses", [])
 CORE_JS = (ROOT / "designs" / "atlas-core.js").read_text(encoding="utf-8")
 PANES_JS = (ROOT / "designs" / "atlas-panes.js").read_text(encoding="utf-8")
 
-SCRIPTS = {
+INJECTION_SCRIPTS = {
     "auto-mode-harness": "scripts/auto_mode_harness.py",
     "harness-proxy": "scripts/harness_proxy.py",
     "harness-wrap": "scripts/harness_wrap.py",
     "harness-goal": "scripts/harness_goal.py",
-    "harness-computer": "scripts/harness_computer.py",
+    # Last, because the list runs from least to most reach and this one calls
+    # the other four rather than standing anywhere new itself.
+    "harness-super": "scripts/harness_super.py",
 }
+COMPUTER_SCRIPT = "scripts/harness_computer.py"
 
 
 def run_check(script: str):
@@ -52,12 +55,9 @@ def run_check(script: str):
                           cwd=ROOT, capture_output=True, text=True)
 
 
-class AllFourExistAndCheckThemselves(unittest.TestCase):
-    def test_there_are_five(self):
-        """Four ways the rules arrive, plus the computer harness, which routes a
-        task that needs a real machine or a real browser to the narrowest surface
-        that can do it."""
-        self.assertEqual(len(HARNESSES), 5)
+class EveryInjectionHarnessExistsAndChecksItself(unittest.TestCase):
+    def test_the_declared_harnesses_are_exactly_the_injection_scripts(self):
+        self.assertEqual([h["id"] for h in HARNESSES], list(INJECTION_SCRIPTS))
 
     def test_every_harness_can_reach_the_agents_and_the_browser(self):
         """Charles asked for computer control, Playwright and agents to be
@@ -79,16 +79,34 @@ class AllFourExistAndCheckThemselves(unittest.TestCase):
             self.assertTrue((ROOT / harness["file"]).is_file(),
                             f"{harness['name']} names a file that does not exist")
 
-    def test_every_declared_file_is_one_of_the_four_scripts(self):
+    def test_every_declared_file_is_one_of_the_injection_scripts(self):
         declared = {h["file"] for h in HARNESSES}
-        self.assertEqual(declared, set(SCRIPTS.values()))
+        self.assertEqual(declared, set(INJECTION_SCRIPTS.values()))
 
     def test_each_one_passes_its_own_check(self):
         """Run, not read. A check that is only asserted to exist proves nothing."""
-        for script in SCRIPTS.values():
+        for script in INJECTION_SCRIPTS.values():
             result = run_check(script)
             self.assertEqual(result.returncode, 0,
                              f"{script} --check failed:\n{result.stdout}\n{result.stderr}")
+
+    def test_computer_control_is_shared_diagnostic_metadata(self):
+        controls = [h.get("computerControl") for h in HARNESSES]
+        self.assertTrue(all(controls), "an injection harness lost the shared router")
+        self.assertTrue(all(control == controls[0] for control in controls[1:]),
+                        "the shared computer-control route drifted between harnesses")
+        control = controls[0]
+        self.assertEqual(control["kind"], "capability-router")
+        self.assertEqual(control["skill"], "master-computer-control")
+        self.assertEqual(control["file"], COMPUTER_SCRIPT)
+        self.assertEqual(control["check"], "python scripts/harness_computer.py --check")
+        self.assertEqual(control["routes"], ["native", "browser-js", "browser-rust"])
+        self.assertIn("does not grant tools", control["detail"])
+
+    def test_computer_control_diagnostic_passes_its_own_check(self):
+        result = run_check(COMPUTER_SCRIPT)
+        self.assertEqual(result.returncode, 0,
+                         f"{COMPUTER_SCRIPT} --check failed:\n{result.stdout}\n{result.stderr}")
 
     def test_the_check_command_on_the_card_is_the_one_that_works(self):
         for harness in HARNESSES:
@@ -449,6 +467,16 @@ class TheHarnessIsReachableInEveryDesign(unittest.TestCase):
         pane = PANES_JS[PANES_JS.index("function harnessHTML()"):]
         pane = pane[:pane.index("function routesHTML")]
         self.assertIn("data-copy-cmd", pane)
+
+    def test_shared_computer_control_metadata_is_visible_and_copyable(self):
+        body = PANES_JS[PANES_JS.index("function computerControlHTML(items)"):]
+        body = body[:body.index("function harnessHTML()")]
+        for field in ("control.name", "control.skill", "control.file",
+                      "control.routes", "control.check", "control.detail"):
+            self.assertIn(field, body, f"the pane does not render {field}")
+        self.assertIn("data-copy-cmd", body)
+        self.assertIn("COMPUTER-CONTROL.md", body)
+        self.assertIn("grants no host tool or permission", body)
 
     def test_every_class_the_pane_introduces_has_a_rule(self):
         """Scoped to the classes this pane brings with it.

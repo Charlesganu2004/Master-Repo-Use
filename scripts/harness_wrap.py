@@ -79,8 +79,28 @@ PROFILES = {
 RULES_VAR = "MASTER_REPO_AUTO_MODE"
 
 
+# One seam, so the super harness can put a longer chain in front of the command
+# without this file growing a second copy of it. Rebound by --super below and by
+# harness_super when it drives this module in-process.
+CONTEXT = skill_pipeline.context_for
+
+
 def rules_for(prompt: str) -> str:
-    return skill_pipeline.context_for(prompt)
+    return CONTEXT(prompt)
+
+
+def use_super_context() -> None:
+    """Send the super harness's chain instead of the base pipeline.
+
+    Imported lazily: harness_super imports this module, so a module-level import
+    the other way would be a cycle. The seam exists because --run spawns this
+    file as a SUBPROCESS, and rebinding CONTEXT in the parent process reaches
+    nothing. Without the flag, "the super harness does what the wrapper does and
+    more" was true of the wrapper half and false of the more.
+    """
+    global CONTEXT
+    import harness_super
+    CONTEXT = lambda prompt: harness_super.context_for(prompt, capturing=False)
 
 
 def build(profile: str, prompt: str, command: list[str], rules_path: pathlib.Path | None):
@@ -192,6 +212,8 @@ def _check_isolated() -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("--super", action="store_true", dest="super_chain",
+                        help="carry the super harness chain, not just the base layers")
     parser.add_argument("--list", action="store_true", help="show the profiles")
     parser.add_argument("--check", action="store_true", help="verify every mode offline")
     parser.add_argument("--profile", default="generic", choices=sorted(PROFILES))
@@ -201,6 +223,9 @@ def main() -> int:
     parser.add_argument("command", nargs=argparse.REMAINDER,
                         help="after --, the command to wrap")
     args = parser.parse_args()
+
+    if getattr(args, "super_chain", False):
+        use_super_context()
 
     if args.list:
         return show_list()

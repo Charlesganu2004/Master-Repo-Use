@@ -95,13 +95,25 @@ def already_injected(messages: list) -> bool:
     return False
 
 
+# One seam, same reasoning as harness_wrap: the super harness spawns this file
+# as a subprocess, so it needs a flag rather than a rebound attribute.
+CONTEXT = skill_pipeline.context_for
+
+
+def use_super_context() -> None:
+    """Inject the super harness's chain instead of the base pipeline."""
+    global CONTEXT
+    import harness_super
+    CONTEXT = lambda prompt: harness_super.context_for(prompt, capturing=False)
+
+
 def inject(payload: dict) -> tuple[dict, bool]:
     """Put the pipeline in front. Returns the payload and whether it changed."""
     messages = payload.get("messages")
     if isinstance(messages, list):
         if already_injected(messages):
             return payload, False
-        context = skill_pipeline.context_for(last_user_text(messages))
+        context = CONTEXT(last_user_text(messages))
         # Ahead of the caller's own system message rather than replacing it. The
         # caller's instructions are theirs; these are the standing rules, and the
         # order says which one frames the other.
@@ -113,7 +125,7 @@ def inject(payload: dict) -> tuple[dict, bool]:
         existing = payload.get("system")
         if isinstance(existing, str) and MARKER in existing:
             return payload, False
-        context = skill_pipeline.context_for(prompt)
+        context = CONTEXT(prompt)
         payload["system"] = context + (("\n\n" + existing) if isinstance(existing, str) and existing else "")
         return payload, True
 
@@ -273,6 +285,8 @@ def _check_isolated() -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("--super", action="store_true", dest="super_chain",
+                        help="carry the super harness chain, not just the base layers")
     parser.add_argument("--port", type=int, default=11500)
     parser.add_argument("--host", default="127.0.0.1",
                         help="loopback by default; anything else is an open relay")
@@ -283,6 +297,9 @@ def main() -> int:
     parser.add_argument("--check", action="store_true",
                         help="verify injection offline and exit")
     args = parser.parse_args()
+
+    if getattr(args, "super_chain", False):
+        use_super_context()
 
     if args.check:
         return check()
