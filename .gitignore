@@ -50,3 +50,10 @@ master_harness/verify_auto_mode.py
 # Backups the installer writes before touching a client config. Safety copies,
 # not content: the file beside them is the tracked one.
 *.json.bak
+
+# A pip cache landing in the repository root. pip resolves its cache relative to
+# the working directory when HOME is overridden, which the packaging test does,
+# and 1.1 MB of it appeared here untracked. The test now pins PIP_CACHE_DIR; this
+# is the second line of defence, because the failure was silent both times.
+/pip/
+.pip-cache/

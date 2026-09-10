@@ -54,14 +54,37 @@ def hook_env() -> dict:
     return env
 
 
-def run(prompt: str) -> str:
-    """The hook's additionalContext for a prompt, or '' when it stays silent."""
+def run(prompt: str, goal_dir: str | None = None) -> str:
+    """The hook's additionalContext for a prompt, or '' when it stays silent.
+
+    `goal_dir` overrides the shared store. Any test whose RESULT depends on the
+    goal state has to pass one, because the shared store makes that result
+    depend on which test ran first. The budget test did not, and passed only in
+    file order: an earlier test had already captured a short goal, so the long
+    prompt never became the goal and the worst case was never measured.
+    """
     event = json.dumps({"input": {"prompt": prompt}})
+    env = hook_env()
+    if goal_dir is not None:
+        env["MASTER_REPO_GOAL_DIR"] = goal_dir
     proc = subprocess.run([sys.executable, str(HOOK)], input=event,
-                          capture_output=True, text=True, env=hook_env())
+                          capture_output=True, text=True, env=env)
     if proc.returncode != 0 or not proc.stdout.strip():
         return ""
     return json.loads(proc.stdout)["hookSpecificOutput"]["additionalContext"]
+
+
+# One probe per lane, each long enough to also pull in the orchestration line.
+# Keyed by lane so a new lane with no probe fails the count assertion below
+# rather than quietly going unmeasured.
+LANE_PROBES = {
+    "security": "scan this repo for a vulnerability and a leaked credential",
+    "computer": "playwright browser automation screenshot the gui and the keyboard",
+    "ui": "redo the css landing page design layout theme and typography",
+    "refactor": "refactor the duplicated dead code and reduce the technical debt",
+    "install": "install an npm package dependency from the marketplace",
+    "changes": "what is the latest model pricing version released today",
+}
 
 
 class ItFiresOnEveryOrdinaryPrompt(unittest.TestCase):
@@ -219,25 +242,62 @@ class TheInjectedBlockStaysCheap(unittest.TestCase):
         self.assertLess(len(pipeline.CORE.encode("utf-8")), 2000,
                         "the always-injected core grew past what was agreed")
 
+    def test_every_lane_has_a_probe_so_none_goes_unmeasured(self):
+        """A lane with no probe is a lane whose cost nobody measures. Adding one
+        without a probe should fail here rather than pass silently and blow the
+        budget in production."""
+        self.assertEqual(len(LANE_PROBES), len(pipeline.LANES),
+                         "a lane was added or removed without updating LANE_PROBES")
+
     def test_the_worst_case_stays_bounded(self):
         """The ceiling, and the ledger of what each rise bought.
 
             2400 bytes   core, one lane, and the orchestration line
             2600 bytes   2026-09-08: the standing goal block, about 544 bytes
-            3000 bytes   2026-09-09: REFACTOR in the core, about 300 bytes, and
-                         the two sentences in the goal block saying the goal was
-                         captured rather than commanded, about 120 bytes
+            3000 bytes   2026-09-09: REFACTOR in the core, plus the goal block's
+                         origin sentence. This number was WRONG, see below.
+            3600 bytes   2026-09-10: the real worst case, measured properly, is
+                         3464 bytes. The 3000 above was never true; the test
+                         passed only because of the order it ran in.
+
+        WHY THE OLD NUMBER WAS WRONG, because it is the more useful half of this
+        ledger. run() used one module-level store shared by the whole file, so
+        by the time this test executed an earlier test had already captured a
+        short goal. The long probe prompt therefore never became the goal, the
+        goal block stayed small, and the worst case was never measured. Run on
+        its own the same assertion failed at 3286. Measured properly, against a
+        goal at the truncation cap and across every lane rather than two ad-hoc
+        prompts, it is 3464: the refactor lane added in that same commit is the
+        longest of the six, so the real cost went up by more than the ceiling
+        was raised.
 
         The goal block rides only while a goal is set, so an ordinary session
         pays nothing for it. It is counted in the worst case anyway, because a
         session with a goal is the case this repository is usually in and a
         budget that excludes the normal case is not a budget.
         """
-        worst = max(len(run(p).encode("utf-8")) for p in (
-            "redo the css landing page design " + "x " * 400,
-            "install an npm package and also scan it, plus update docs",
-        ))
-        self.assertLess(worst, 3000, "the worst-case injection is too large per turn")
+        with tempfile.TemporaryDirectory() as store:
+            # A goal past the 400-character truncation cap, which makes the goal
+            # block as large as it can ever be. Set explicitly, so capture
+            # cannot replace it with one of the probe prompts mid-measurement.
+            subprocess.run([sys.executable, str(ROOT / "scripts" / "harness_goal.py"),
+                            "--set", "z" * 900],
+                           capture_output=True, cwd=ROOT,
+                           env={**os.environ, "MASTER_REPO_GOAL_DIR": store})
+
+            sizes = {}
+            for lane, probe in LANE_PROBES.items():
+                # Padded so the orchestration line attaches too: worst case
+                # means every conditional piece present at once.
+                text = run(f"{probe} " + "x " * 400, goal_dir=store)
+                self.assertIn("STANDING GOAL", text,
+                              f"the {lane} probe measured no goal block")
+                sizes[lane] = len(text.encode("utf-8"))
+
+        worst_lane = max(sizes, key=sizes.get)
+        self.assertLess(sizes[worst_lane], 3600,
+                        f"the worst-case injection is too large per turn: "
+                        f"{worst_lane} lane at {sizes[worst_lane]} bytes")
 
 
 class ItServesAntigravityToo(unittest.TestCase):

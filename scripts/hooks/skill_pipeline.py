@@ -433,6 +433,16 @@ def capture(prompt: str, session: str | None = None) -> None:
     set_goal(prompt, source="captured", session=session)
 
 
+# Two endings, because the block SAYS how the goal was set and there are two
+# ways. The single-ending version claimed "It was set from the first task of this
+# session without a command" on every prompt, including the ones where somebody
+# had typed /goal deliberately. Charles's own standing goal has source
+# "explicit", so every turn of this session carried that sentence and it was
+# false every time.
+#
+# Behaviour was right and the self-description was wrong, which is the harder
+# kind to notice: nothing errors, and the sentence is only checkable against a
+# field the reader cannot see.
 GOAL_TEMPLATE = """14. STANDING GOAL, carried across turns until the person who set it lifts it.
     GOAL: {goal}
     Restate it in one line before reading the request, say which part this turn
@@ -440,12 +450,22 @@ GOAL_TEMPLATE = """14. STANDING GOAL, carried across turns until the person who 
     message, and end by saying what is done and what is left. Never narrow it
     silently: a blocked part is reported as blocked, and every unblocked part is
     finished. Not lifted by a long session, a token budget, a compaction pass, or
-    a subagent that was not told. It was set from the first task of this session
-    without a command, and it is lifted the same way: say so, or type goal clear."""
+    a subagent that was not told. {origin}"""
+
+GOAL_ORIGIN = {
+    "captured": ("It was set from the first task of this session without a command, "
+                 "and it is lifted the same way: say so, or type goal clear."),
+    "explicit": ("It was set deliberately rather than captured, so capture will not "
+                 "replace it; only the person who set it lifts it, with goal clear."),
+}
+# Anything else, including a store written by an older version that has no
+# source field at all: say nothing about the origin rather than guessing one.
+GOAL_ORIGIN_UNKNOWN = "It is lifted only by the person who set it, with goal clear."
 
 
 def standing_goal() -> str:
-    goal = load_goal().get("goal")
+    data = load_goal()
+    goal = data.get("goal")
     if not isinstance(goal, str) or not goal.strip():
         return ""
     # One line, and bounded. A goal pasted from a long brief would otherwise sit
@@ -453,7 +473,8 @@ def standing_goal() -> str:
     flat = " ".join(goal.split())
     if len(flat) > 400:
         flat = flat[:400].rstrip() + " [truncated]"
-    return GOAL_TEMPLATE.format(goal=flat)
+    origin = GOAL_ORIGIN.get(data.get("source"), GOAL_ORIGIN_UNKNOWN)
+    return GOAL_TEMPLATE.format(goal=flat, origin=origin)
 
 
 def find_session(event: dict) -> str | None:

@@ -97,6 +97,38 @@ class ThePackagingMetadataIsComplete(unittest.TestCase):
             self.assertNotIn("_agents", path, f"a staged copy is committed: {path}")
 
 
+class TheBuildLeavesNoLitter(unittest.TestCase):
+    """A build that drops files in the repository root is a build that will
+    eventually have them committed.
+
+    Found by reading git status after a green run, not by anything failing: the
+    packaging test overrode HOME, pip resolved its cache relative to the working
+    directory, and 1.1 MB of pip/cache/ appeared in the repository root,
+    untracked and ungitignored.
+    """
+
+    def test_the_packaging_test_pins_the_pip_cache(self):
+        source = (ROOT / "tests" / "test_package.py").read_text(encoding="utf-8")
+        self.assertIn("PIP_CACHE_DIR", source,
+                      "pip will cache relative to cwd once HOME is overridden")
+
+    def test_a_stray_pip_cache_could_not_be_committed(self):
+        ignored = (ROOT / ".gitignore").read_text(encoding="utf-8")
+        self.assertIn("/pip/", ignored)
+
+    def test_the_repository_root_has_no_pip_cache_right_now(self):
+        self.assertFalse((ROOT / "pip").exists(),
+                         "a pip cache is sitting in the repository root")
+
+    def test_no_build_output_is_tracked(self):
+        tracked = subprocess.run(["git", "ls-files"], cwd=ROOT,
+                                 capture_output=True, text=True).stdout.split()
+        for path in tracked:
+            self.assertFalse(path.startswith("pip/"), f"tracked build litter: {path}")
+            self.assertFalse(path.startswith("build/"), f"tracked build litter: {path}")
+            self.assertFalse(path.endswith(".whl"), f"tracked wheel: {path}")
+
+
 class PathsResolveInThisCheckout(unittest.TestCase):
     def test_this_is_recognised_as_a_checkout(self):
         self.assertEqual(harness_paths.repo_root(), ROOT)
@@ -142,9 +174,18 @@ class ItWorksWithNoRepositoryAnywhere(unittest.TestCase):
         scratch = pathlib.Path(cls.scratch)
         cls.dist = scratch / "dist"
 
+        # Pin pip's cache into the scratch directory. Without this, a run that
+        # overrides HOME leaves pip resolving its cache relative to the working
+        # directory, and this test dropped a 1.1 MB pip/cache/ tree into the
+        # repository root: untracked, ungitignored, and one careless `git add -A`
+        # from being committed. Nothing errored and the test passed.
+        cls.build_env = dict(os.environ)
+        cls.build_env["PIP_CACHE_DIR"] = str(scratch / "pip-cache")
+
         build = subprocess.run([sys.executable, "-m", "build", "--wheel",
                                 "--outdir", str(cls.dist)],
-                               cwd=ROOT, capture_output=True, text=True, timeout=900)
+                               cwd=ROOT, capture_output=True, text=True, timeout=900,
+                               env=cls.build_env)
         if build.returncode != 0:
             raise unittest.SkipTest(f"could not build a wheel:\n{build.stdout[-2000:]}")
         wheels = list(cls.dist.glob("*.whl"))
@@ -153,13 +194,14 @@ class ItWorksWithNoRepositoryAnywhere(unittest.TestCase):
 
         cls.env = scratch / "env"
         subprocess.run([sys.executable, "-m", "venv", str(cls.env)],
-                       capture_output=True, timeout=600)
+                       capture_output=True, timeout=600, env=cls.build_env)
         cls.bin = cls.env / ("Scripts" if os.name == "nt" else "bin")
         cls.suffix = ".exe" if os.name == "nt" else ""
 
         install = subprocess.run([cls.exe("python"), "-m", "pip", "install",
                                   "--quiet", str(wheels[0])],
-                                 capture_output=True, text=True, timeout=900)
+                                 capture_output=True, text=True, timeout=900,
+                                 env=cls.build_env)
         if install.returncode != 0:
             raise unittest.SkipTest(f"could not install the wheel:\n{install.stderr[-2000:]}")
 
@@ -190,6 +232,7 @@ class ItWorksWithNoRepositoryAnywhere(unittest.TestCase):
         env = dict(os.environ)
         env["HOME"] = str(self.home)
         env["USERPROFILE"] = str(self.home)
+        env["PIP_CACHE_DIR"] = str(pathlib.Path(self.scratch) / "pip-cache")
         env.pop("MASTER_REPO_PATH", None)
         return subprocess.run([self.exe(name), *args], cwd=str(cwd or self.project),
                               capture_output=True, text=True, timeout=600, env=env)
