@@ -717,6 +717,174 @@ function pickedIn(group) {
     .filter(function (s) { return picked.has(s.id); });
 }
 
+/* The "+" on every group, for a client the vetted list does not name: an open
+   frontier model behind an API, Copilot in an editor, a CLI with no hook, a chat
+   product. The generator is designs/custom-surfaces.js, shared with every design
+   so the two pages cannot drift apart on the commands for the same client, and
+   the templates come from atlas-data.json. This file only renders and binds. */
+let addingClient = null;
+let customDraft = null;
+let customResult = null;
+
+function customSurfaces() {
+  return typeof window !== 'undefined' ? window.CustomSurfaces : null;
+}
+
+function customStepsHtml(result) {
+  const cs = customSurfaces();
+  return '<ol class="custom-steps">' + result.steps.map(function (step) {
+    const words = cs.tokens(step.command).map(function (token) {
+      return '<span class="cmd-tok">' + escapeHtml(token) + '</span>';
+    }).join(' ');
+    return '<li><span class="custom-step-label">' + escapeHtml(step.label) + '</span>' +
+      '<div class="harness-check"><code>' + words + '</code>' +
+      '<button type="button" class="quiet-button" data-copy-custom="' +
+        escapeHtml(step.command) + '" aria-label="Copy: ' + escapeHtml(step.label) +
+        '">Copy</button></div></li>';
+  }).join('') + '</ol>' +
+    '<p class="custom-limit">' + escapeHtml(result.limit || '') + '</p>';
+}
+
+function customFormHtml(groupId) {
+  const cs = customSurfaces();
+  const draft = customDraft || {};
+  const kindId = draft.kind || cs.defaultKindFor(catalog.data, groupId);
+  const spec = cs.kind(catalog.data, kindId) || {};
+  const values = draft.values || {};
+  const fields = (spec.fields || []).map(function (field) {
+    if (field.options) {
+      return '<label class="custom-field"><span>' + escapeHtml(field.label) + '</span>' +
+        '<select data-custom-field="' + escapeHtml(field.id) + '">' +
+        field.options.map(function (option) {
+          const label = (field.optionLabels || {})[option] || option;
+          return '<option value="' + escapeHtml(option) + '"' +
+            (values[field.id] === option ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+        }).join('') + '</select></label>';
+    }
+    return '<label class="custom-field"><span>' + escapeHtml(field.label) + '</span>' +
+      '<input type="text" data-custom-field="' + escapeHtml(field.id) + '" value="' +
+        escapeHtml(values[field.id] || '') + '" placeholder="' + escapeHtml(field.placeholder || '') +
+        '" autocomplete="off" spellcheck="false"></label>';
+  }).join('');
+  const kindOptions = cs.kinds(catalog.data).map(function (k) {
+    return '<option value="' + escapeHtml(k.id) + '"' + (k.id === kindId ? ' selected' : '') +
+      '>' + escapeHtml(k.label) + '</option>';
+  }).join('');
+  let outcome = '';
+  if (customResult) {
+    outcome = customResult.ok ? customStepsHtml(customResult)
+      : '<p class="custom-error" role="alert">' + escapeHtml(customResult.error) + '</p>';
+  }
+  return '<div class="custom-form" role="group" aria-label="Add a client">' +
+    '<label class="custom-field"><span>What kind of client is it?</span>' +
+      '<select data-custom-kind>' + kindOptions + '</select></label>' +
+    '<p class="custom-plain">' + escapeHtml(spec.plain || '') +
+      ' <span>For example: ' + escapeHtml(spec.examples || '') + '</span></p>' +
+    '<label class="custom-field"><span>Name it, so you can find it again</span>' +
+      '<input type="text" data-custom-name maxlength="60" value="' + escapeHtml(draft.name || '') +
+      '" placeholder="' + escapeHtml(cs.namePlaceholder(spec)) + '"></label>' +
+    fields +
+    '<div class="custom-actions">' +
+      '<button type="button" class="quiet-button" data-custom-generate="' + escapeHtml(groupId) +
+        '">Show the commands</button>' +
+      (customResult && customResult.ok
+        ? '<button type="button" class="quiet-button" data-custom-save="' + escapeHtml(groupId) +
+          '">Save to this list</button>' : '') +
+    '</div>' + outcome + '</div>';
+}
+
+function customClientsHtml(groupId) {
+  const cs = customSurfaces();
+  if (!cs) return '';
+  const saved = cs.forGroup(groupId).map(function (item) {
+    const result = cs.commands(catalog.data, item.kind, item.values);
+    const kindLabel = (cs.kind(catalog.data, item.kind) || {}).label || item.kind;
+    return '<details class="custom-client"><summary><b>' + escapeHtml(item.name) + '</b> ' +
+      '<span>' + escapeHtml(kindLabel) + '</span></summary>' +
+      (result.ok ? customStepsHtml(result)
+        : '<p class="custom-error">' + escapeHtml(result.error) + '</p>') +
+      '<button type="button" class="quiet-button" data-custom-remove="' + escapeHtml(item.id) +
+        '">Remove this client</button></details>';
+  }).join('');
+  const open = addingClient === groupId;
+  return '<div class="custom-clients">' + saved +
+    '<button type="button" class="add-client" data-add-client="' + escapeHtml(groupId) +
+      '" aria-expanded="' + open + '">' + (open ? 'Close' : '+ Add a client that is not listed') +
+    '</button>' + (open ? customFormHtml(groupId) : '') + '</div>';
+}
+
+function readCustomDraft(host) {
+  const form = host.querySelector('.custom-form');
+  const draft = customDraft || {};
+  if (!form) return draft;
+  const kind = form.querySelector('[data-custom-kind]');
+  const name = form.querySelector('[data-custom-name]');
+  const values = {};
+  form.querySelectorAll('[data-custom-field]').forEach(function (el) {
+    values[el.getAttribute('data-custom-field')] = el.value;
+  });
+  return { kind: kind ? kind.value : draft.kind, name: name ? name.value : draft.name, values: values };
+}
+
+function wireCustomClients(host) {
+  const cs = customSurfaces();
+  if (!cs) return;
+  host.querySelectorAll('[data-add-client]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      const group = button.getAttribute('data-add-client');
+      const closing = addingClient === group;
+      addingClient = closing ? null : group;
+      customDraft = closing ? null : { kind: cs.defaultKindFor(catalog.data, group), values: {} };
+      customResult = null;
+      renderSurfaces();
+    });
+  });
+  host.querySelectorAll('[data-custom-kind]').forEach(function (select) {
+    select.addEventListener('change', function () {
+      const draft = readCustomDraft(host);
+      customDraft = { kind: select.value, name: draft.name, values: {} };
+      customResult = null;
+      renderSurfaces();
+    });
+  });
+  host.querySelectorAll('[data-custom-generate]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      customDraft = readCustomDraft(host);
+      customResult = cs.commands(catalog.data, customDraft.kind, customDraft.values);
+      renderSurfaces();
+    });
+  });
+  host.querySelectorAll('[data-custom-save]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      const draft = readCustomDraft(host);
+      const saved = cs.save(catalog.data, {
+        kind: draft.kind, name: draft.name, values: draft.values,
+        group: button.getAttribute('data-custom-save')
+      });
+      if (saved.ok) {
+        addingClient = null; customDraft = null; customResult = null;
+        showToast('Saved in this browser');
+      } else {
+        customResult = { ok: false, error: saved.error };
+      }
+      renderSurfaces();
+    });
+  });
+  host.querySelectorAll('[data-custom-remove]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      cs.remove(button.getAttribute('data-custom-remove'));
+      renderSurfaces();
+    });
+  });
+  host.querySelectorAll('[data-copy-custom]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      navigator.clipboard.writeText(button.getAttribute('data-copy-custom')).then(
+        function () { showToast('Command copied'); },
+        function () { showToast('Select the command and copy it manually'); });
+    });
+  });
+}
+
 function renderSurfaces() {
   const host = document.getElementById('surfaceGroups');
   if (!host || !catalog.data) return;
@@ -754,8 +922,10 @@ function renderSurfaces() {
     return '<section class="surface-group">' +
       '<header class="group-head"><h3>' + escapeHtml(group.name) + '</h3>' +
       '<span class="group-count">' + count + ' of ' + items.length + '</span></header>' +
-      '<p class="group-note">' + escapeHtml(group.note) + '</p>' + body + '</section>';
+      '<p class="group-note">' + escapeHtml(group.note) + '</p>' + body +
+      customClientsHtml(group.id) + '</section>';
   }).join('');
+  wireCustomClients(host);
 
   host.querySelectorAll('[data-surface]').forEach(function (box) {
     box.addEventListener('change', function () {
@@ -1188,9 +1358,28 @@ function renderSuperChain(chain) {
   const host = document.getElementById('superChain');
   if (!host) return;
   if (!chain) { host.innerHTML = ''; return; }
+  /* The one thing a person types. Spellings come from the payload, which the
+     builder parsed with the hook's own parser before shipping. */
+  const limit = chain.tokenLimit;
+  const limitHtml = limit
+    ? '<div class="token-limit"><h5>The one thing you type: /token limit</h5>' +
+      '<p>' + escapeHtml(limit.plain) + '</p>' +
+      '<ul class="token-spellings" aria-label="Spellings the hook accepts">' +
+        (limit.spellings || []).map(function (spelling) {
+          return '<li><code>' + escapeHtml(spelling) + '</code></li>';
+        }).join('') + '</ul>' +
+      '<p class="pipeline-lede">' + escapeHtml(limit.technical) + '</p></div>'
+    : '';
+  const modeHtml = (chain.modeCommands || []).map(function (entry) {
+    return '<p class="custom-step-label">' + escapeHtml(entry.label) + '</p>' +
+      '<div class="harness-check"><code>' + escapeHtml(entry.command) + '</code>' +
+      '<button type="button" class="quiet-button" data-copy-harness="' +
+        escapeHtml(entry.command) + '">Copy</button></div>';
+  }).join('');
   host.innerHTML =
     '<h4>' + escapeHtml(chain.name) + ': one command instead of four</h4>' +
     '<p class="pipeline-lede">' + escapeHtml(chain.note) + '</p>' +
+    (chain.automatic ? '<p class="pipeline-lede">' + escapeHtml(chain.automatic) + '</p>' : '') +
     '<ol class="chain-steps">' + (chain.passes || []).map(function (step) {
       const body = step.baseRule
         ? 'Rule ' + step.baseRule + ' of the layers above, applied again here.'
@@ -1201,14 +1390,16 @@ function renderSuperChain(chain) {
         '<span class="chain-when">' + escapeHtml(step.when) + '</span>' +
         '<p>' + body + '</p></div></li>';
     }).join('') + '</ol>' +
+    limitHtml +
     '<div class="harness-check"><code>' + escapeHtml(chain.check) + '</code>' +
     '<button type="button" class="quiet-button" data-copy-harness="' +
-      escapeHtml(chain.check) + '">Copy</button></div>';
+      escapeHtml(chain.check) + '">Copy</button></div>' +
+    (modeHtml ? '<div class="token-modes">' + modeHtml + '</div>' : '');
 
   host.querySelectorAll('[data-copy-harness]').forEach(function (button) {
     button.addEventListener('click', function () {
       navigator.clipboard.writeText(button.getAttribute('data-copy-harness')).then(
-        function () { showToast('Check command copied'); },
+        function () { showToast('Command copied'); },
         function () { showToast('Select the command and copy it manually'); });
     });
   });

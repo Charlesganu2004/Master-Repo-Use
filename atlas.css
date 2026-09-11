@@ -281,6 +281,62 @@ html[data-theme="light"] .map-node rect { fill: #fffefa; stroke: #b7b2a8; }html[
 }
 
 .surface-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: 9px; }
+/* The "+" for a client the list does not name. Same line, panel and small
+   radius as the surface picks above it; the dashed border is what says "empty
+   slot, add one", and it turns solid on hover and focus. */
+.custom-clients { margin-top: 10px; display: flex; flex-direction: column; gap: 9px; }
+.add-client {
+  align-self: flex-start; min-height: 44px; padding: 0 16px; cursor: pointer;
+  border: 1px dashed var(--line-strong); border-radius: var(--radius-sm);
+  background: transparent; color: var(--ink-2); font: 700 12.5px "Segoe UI", sans-serif;
+  transition: border-color 140ms ease, color 140ms ease, transform 140ms ease;
+}
+.add-client:hover, .add-client:focus-visible {
+  border-style: solid; border-color: var(--orange); color: var(--ink); outline: none;
+}
+.add-client:active { transform: translateY(1px); }
+.custom-form, .custom-client {
+  padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--panel-2); display: flex; flex-direction: column; gap: 11px;
+}
+.custom-client { gap: 9px; }
+.custom-client summary { cursor: pointer; font-size: 13.5px; }
+.custom-client summary span, .custom-plain span { color: var(--ink-3); font-size: 12px; }
+.custom-field { display: flex; flex-direction: column; gap: 6px; }
+.custom-field > span {
+  color: var(--ink-3); font: 700 9.5px monospace; letter-spacing: .1em; text-transform: uppercase;
+}
+.custom-field input, .custom-field select {
+  min-height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--panel); color: var(--ink); font: 13px "Segoe UI", sans-serif;
+}
+.custom-field input:focus-visible, .custom-field select:focus-visible {
+  outline: 2px solid var(--orange); outline-offset: 1px;
+}
+.custom-plain { margin: 0; color: var(--ink-2); font-size: 13px; line-height: 1.5; max-width: 78ch; }
+.custom-actions { display: flex; gap: 9px; flex-wrap: wrap; }
+.custom-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
+.custom-step-label { display: block; margin-bottom: 6px; color: var(--ink-2); font-size: 12.5px; }
+.custom-error { margin: 0; color: var(--red); font-size: 13px; font-weight: 700; }
+.custom-limit { margin: 0; color: var(--ink-3); font-size: 12px; line-height: 1.5; max-width: 78ch; }
+.custom-steps .cmd-tok { display: inline-block; max-width: 100%; overflow-wrap: anywhere; }
+
+/* The token limit: the one command in the super harness a person types. */
+.token-limit {
+  margin: 16px 0; padding: 16px; border: 1px solid var(--line);
+  border-radius: var(--radius-sm); background: var(--panel-2);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.token-limit h5 { margin: 0; font-size: .95rem; letter-spacing: -.01em; }
+.token-limit > p { margin: 0; color: var(--ink-2); font-size: 13.5px; line-height: 1.6; max-width: 78ch; }
+.token-spellings { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.token-spellings code {
+  display: inline-block; padding: 6px 9px; border-radius: 7px; border: 1px solid var(--line-strong);
+  background: var(--panel); color: var(--ink); font: 600 12px "Cascadia Code", monospace;
+}
+.token-modes { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+.token-modes .custom-step-label { margin: 8px 0 0; }
+
 .surface-pick {
   display: flex; gap: 11px; padding: 13px 14px; cursor: pointer;
   border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel-2);

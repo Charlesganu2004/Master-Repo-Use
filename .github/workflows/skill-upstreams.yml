@@ -1,0 +1,81 @@
+name: Skill Upstreams
+
+# Notices when the original behind one of our skills changes, and asks a human.
+#
+# Several master-* skills restate a technique somebody else wrote first. When the
+# original moves, ours should be read again. This job compares each upstream
+# file's SHA-256 with the one we reviewed and, when any differ, opens or refreshes
+# ONE "[Skill Upstream]" issue with a compare link per skill.
+#
+# It changes nothing in the repository and it has no write access to contents.
+# These skills run on every prompt of every client; merging a third party's new
+# text into them automatically would hand whoever controls that upstream, or its
+# maintainer's account, the ability to rewrite what every model here is told.
+# Detection is automatic. The merge is a person reading a diff.
+#
+# Non-AI and deterministic: no model is called, which is the repository's rule
+# for scheduled maintenance.
+
+on:
+  schedule:
+    # Wednesday, between Guardian on Monday and Watch Sources on Thursday.
+    - cron: '17 7 * * 3'
+  push:
+    branches: [main]
+    paths:
+      - 'repo-lists/skill-upstreams.json'
+      - 'scripts/skill_upstreams.py'
+      - '.github/workflows/skill-upstreams.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skill-upstreams
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Compare each upstream with what was reviewed
+        id: compare
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set +e
+          python scripts/skill_upstreams.py --check --report /tmp/skill-upstreams.md
+          status=$?
+          set -e
+          # 0 means every upstream matches; 1 means at least one moved; anything
+          # else is a crash, which must fail the job rather than open an issue.
+          if [ "$status" -gt 1 ]; then exit "$status"; fi
+          echo "moved=$([ "$status" -eq 1 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Create or refresh the upstream issue
+        if: steps.compare.outputs.moved == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search 'in:title [Skill Upstream]' --json number,title --jq '[.[] | select(.title | startswith("[Skill Upstream]"))][0].number // empty')"
+          title='[Skill Upstream] The originals behind our skills have changed'
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --repo "$GITHUB_REPOSITORY" --title "$title" --body-file /tmp/skill-upstreams.md
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file /tmp/skill-upstreams.md --assignee Charlesganu2004
+          fi

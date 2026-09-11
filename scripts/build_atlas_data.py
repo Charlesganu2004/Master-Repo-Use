@@ -702,6 +702,181 @@ def layer_rules() -> list[dict]:
     return layers
 
 
+# The surface groups, shared by the payload and the "+" templates, which check
+# their defaultFor ids against this list.
+SURFACE_GROUPS = [
+    {"id": "local-client", "name": "Code, CLI and desktop agents",
+     "note": "Select every client you use. Setup commands install its rules, skills and supported hooks for chat and code."},
+    {"id": "web-chat", "name": "Web and app chat",
+     "note": "Configure account or project instructions once in each product. Local shell commands cannot change a hosted chat account."},
+    {"id": "web-code", "name": "Web coding and IDE assistants",
+     "note": "Connect the repository so committed rules and supported cloud hooks apply. Personal skills may need a separate sync."},
+    {"id": "local-model", "name": "Local models",
+     "note": "Filtered by the memory you enter above. A tag your machine cannot hold is not offered, because a model that swaps is worse than no model."},
+]
+
+
+def surface_groups() -> list[dict]:
+    return SURFACE_GROUPS
+
+
+# ------------------------------------------------------- the "+" on every group
+#
+# Every surface group gets a "+" so a client that is not in the list can still
+# be configured: an open frontier model behind an OpenAI-compatible API, a local
+# server, an IDE extension, a CLI with no hook, a chat product on the web. The
+# person picks what KIND of client it is and fills one field; the page writes
+# the exact commands for it.
+#
+# The templates live here rather than in either page's JavaScript because there
+# are two pages. Writing the generator twice is how the main page and the
+# designs would end up offering different commands for the same client, which
+# is the drift this repository keeps paying for. Both render what this returns.
+#
+# {placeholders} are filled from the form and QUOTED by the page before
+# substitution, so a pasted URL with a space or an ampersand cannot turn one
+# command into two. `pattern` is checked before anything is shown.
+#
+# The patterns are allowlists, not denylists. The first draft forbade spaces and
+# quotes in a URL and still let `https://x/$(id)` through, which bash and
+# PowerShell both expand inside double quotes; the command pattern let `(`
+# through, which PowerShell evaluates as an expression in argument mode. A base
+# URL needs a host, a port and a path, and nothing in a program name and its
+# flags needs a shell metacharacter, so those are all the patterns admit.
+URL_PATTERN = r"^https?://([A-Za-z0-9.-]+|\[[0-9A-Fa-f:]+\])(:[0-9]{1,5})?(/[A-Za-z0-9._~/-]*)?$"
+COMMAND_PATTERN = r"^[A-Za-z0-9 ._/\\:=@+,-]+$"
+
+CUSTOM_SURFACE_KINDS = [
+    {
+        "id": "openai-endpoint",
+        "defaultFor": ["local-model"],
+        "label": "An OpenAI-compatible endpoint",
+        "plain": "A model you reach through an API address, such as an open frontier model host or a server on your own machine.",
+        "examples": "OpenRouter, Together, Groq, Fireworks, vLLM, LM Studio, llama.cpp server",
+        "fields": [{"id": "url", "label": "Base URL", "placeholder": "https://openrouter.ai/api/v1",
+                    "pattern": URL_PATTERN}],
+        "steps": [
+            {"label": "Run the injecting proxy in front of it",
+             "command": "master-harness-super --serve --port 11500 --upstream {url}"},
+            {"label": "Point the client at the proxy instead of the endpoint",
+             "command": "http://127.0.0.1:11500/v1"},
+            {"label": "Set an answer ceiling for everything it serves (optional)",
+             "command": "master-harness-super --token-limit 4000"},
+        ],
+        "limit": "Only requests sent through the proxy carry the rules, and there /token limit is a hard max_tokens.",
+    },
+    {
+        "id": "ollama",
+        "defaultFor": [],
+        "label": "Ollama on this machine",
+        "plain": "Models you downloaded with Ollama and run locally.",
+        "examples": "qwen3, llama3.2, gemma3, phi4",
+        "fields": [{"id": "url", "label": "Ollama address", "placeholder": "http://127.0.0.1:11434",
+                    "pattern": URL_PATTERN}],
+        "steps": [
+            {"label": "Run the injecting proxy in front of Ollama",
+             "command": "master-harness-super --serve --port 11500 --upstream {url}"},
+            {"label": "Point your client at the proxy's Ollama API",
+             "command": "http://127.0.0.1:11500"},
+        ],
+        "limit": "A client that talks to port 11434 directly bypasses the proxy and gets no rules.",
+    },
+    {
+        "id": "ide",
+        "defaultFor": ["web-code", "local-client"],
+        "label": "An IDE extension or coding agent",
+        "plain": "A coding assistant inside your editor or terminal that reads instruction files.",
+        "examples": "GitHub Copilot in VS Code or JetBrains, Cursor, Codex, Claude Code, Gemini CLI, Antigravity",
+        "fields": [],
+        "steps": [
+            {"label": "Install the super harness for every supported client",
+             "command": "master-harness-super --install all"},
+            {"label": "Check what each client actually received",
+             "command": "master-harness-verify"},
+        ],
+        "limit": "Writes .github/copilot-instructions.md and the other instruction files into the project you run it from; clients with hooks get the chain on every prompt.",
+    },
+    {
+        "id": "cli",
+        "defaultFor": [],
+        "label": "A command-line tool with no hook",
+        "plain": "Any terminal program you send a prompt to, where nothing can be installed into it.",
+        "examples": "aider, llm, a script of your own",
+        "fields": [{"id": "command", "label": "The command you normally run",
+                    "placeholder": "aider --message",
+                    "pattern": COMMAND_PATTERN}],
+        "steps": [
+            {"label": "Wrap one invocation so the rules go in front of the prompt",
+             "command": "master-harness-super --run -- {command} \"your prompt\""},
+        ],
+        "limit": "One invocation at a time. A tool that takes its prompt from a file needs --profile file.",
+    },
+    {
+        "id": "chat",
+        "defaultFor": ["web-chat"],
+        "label": "A chat product on the web",
+        "plain": "A chatbot in your browser, where the only thing you can add is text you paste or a file you attach.",
+        "examples": "ChatGPT, Claude.ai, Gemini, Copilot Chat",
+        "fields": [{"id": "product", "label": "Which one",
+                    "options": ["chatgpt", "claude-web", "claude-cowork", "gemini-web"]}],
+        "steps": [
+            {"label": "Write the paste bundle for it",
+             "command": "master-harness-super --bundle {product}"},
+            {"label": "Attach this file to a Project or Gem so every chat reads it",
+             "command": "dist/auto-mode/auto-mode-{product}.md"},
+        ],
+        "limit": "No hook exists here, so the bundle is the whole enforcement. It is too large for a custom-instructions box; attach it as a project file.",
+    },
+]
+
+
+def custom_surface_payload() -> list[dict]:
+    """The "+" templates, checked against the real surface ids before shipping."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import auto_mode_harness  # noqa: E402
+
+    bundle_ids = {sid for sid, s in auto_mode_harness.SURFACES.items()
+                  if s["mechanism"] == auto_mode_harness.BUNDLE}
+    # Every group's "+" offers every kind; defaultFor only picks which one is
+    # preselected. The group ids are checked against the real ones because the
+    # first draft said "code", "local" and "chat", matched no group at all, and
+    # would have preselected nothing anywhere without a single error.
+    group_ids = {group["id"] for group in surface_groups()}
+    for kind in CUSTOM_SURFACE_KINDS:
+        for group in kind["defaultFor"]:
+            if group not in group_ids:
+                raise SystemExit(f"custom surface {kind['id']} names group {group!r}, "
+                                 f"which does not exist; the groups are {sorted(group_ids)}")
+        field_ids = {field["id"] for field in kind["fields"]}
+        for field in kind["fields"]:
+            for option in field.get("options", []):
+                if option not in bundle_ids:
+                    raise SystemExit(f"custom surface {kind['id']} offers {option!r}, "
+                                     f"which is not a bundle surface")
+            if "pattern" in field:
+                re.compile(field["pattern"])
+            elif "options" not in field:
+                raise SystemExit(f"custom surface {kind['id']} field {field['id']!r} has "
+                                 f"neither a pattern nor options, so anything typed would "
+                                 f"land in a command unchecked")
+        # A placeholder with no field behind it would reach the page as a literal
+        # {name} inside a command someone copies and runs.
+        for step in kind["steps"]:
+            for name in re.findall(r"\{(\w+)\}", step["command"]):
+                if name not in field_ids:
+                    raise SystemExit(f"custom surface {kind['id']} step {step['label']!r} "
+                                     f"uses {{{name}}}, which no field fills")
+    # The option VALUE is the surface id, because that is what the command takes;
+    # the page shows the product's own name beside it, "ChatGPT" not "chatgpt".
+    kinds = json.loads(json.dumps(CUSTOM_SURFACE_KINDS))
+    for kind in kinds:
+        for field in kind["fields"]:
+            if "options" in field:
+                field["optionLabels"] = {option: auto_mode_harness.SURFACES[option]["name"]
+                                         for option in field["options"]}
+    return kinds
+
+
 def package_payload() -> dict:
     """How to install the harness without a checkout, read from pyproject.toml.
 
@@ -758,12 +933,47 @@ def super_chain_payload() -> dict:
     sys.path.insert(0, str(ROOT / "scripts"))
     import harness_super  # noqa: E402
 
+    # Every spelling shown is parsed here by the hook's own parser, so the page
+    # cannot advertise a form the hook ignores. The expected value sits beside
+    # each one; a parser change that breaks a spelling fails the build.
+    spellings = [("/token limit 2000", ("set", 2000)), ("\\token limit 2k", ("set", 2000)),
+                 ("token limit: 4000", ("set", 4000)), ("/token limit off", ("clear", None))]
+    for spelling, expected in spellings:
+        action, value, _rest = skill_pipeline.parse_token_command(spelling)
+        if (action, value) != expected:
+            raise SystemExit(f"the page would advertise {spelling!r}, which the hook "
+                             f"parses as {(action, value)} instead of {expected}")
     return {
         "name": "Super harness",
         "file": "scripts/harness_super.py",
         "check": "python scripts/harness_super.py --check",
         "note": "One command that calls the other four, plus a longer chain of "
                 "named passes on top of the three layers.",
+        "automatic": "Everything in the super harness runs by itself on every prompt, "
+                     "in every chat and code session. The token limit is the one thing "
+                     "you type, and only when you want a ceiling.",
+        "tokenLimit": {
+            "plain": "Type /token limit and a number at the start of a message. The model "
+                     "plans its answer to fit, stops at the last clean break, and says "
+                     "what it left out. It stays for the rest of the session until you "
+                     "type /token limit off.",
+            "technical": "Adds rule 15 to every prompt in the session. Through the proxy "
+                         "it is also a hard cap: max_tokens, max_completion_tokens or "
+                         "Ollama's num_predict, whichever the API takes, never raising a "
+                         "lower cap the caller already set. Elsewhere it is an instruction.",
+            "spellings": [spelling for spelling, _expected in spellings],
+            "rule": skill_pipeline.token_block(2000, enforced=False),
+        },
+        "modeCommands": [
+            {"label": "Make every prompt on this machine carry the chain",
+             "command": "python scripts/harness_super.py --mode super"},
+            {"label": "Back to the three layers only",
+             "command": "python scripts/harness_super.py --mode base"},
+            {"label": "Set an answer ceiling for every session that has none",
+             "command": "python scripts/harness_super.py --token-limit 4000"},
+            {"label": "Lift that ceiling",
+             "command": "python scripts/harness_super.py --token-limit off"},
+        ],
         "passes": [{
             "step": index,
             "label": label,
@@ -2412,16 +2622,10 @@ def build() -> dict:
             "text": AUTO_MODE_FILE.read_text(encoding="utf-8"),
         },
         "surfaces": surface_entries() + local_model_surfaces(),
-        "surfaceGroups": [
-            {"id": "local-client", "name": "Code, CLI and desktop agents",
-             "note": "Select every client you use. Setup commands install its rules, skills and supported hooks for chat and code."},
-            {"id": "web-chat", "name": "Web and app chat",
-             "note": "Configure account or project instructions once in each product. Local shell commands cannot change a hosted chat account."},
-            {"id": "web-code", "name": "Web coding and IDE assistants",
-             "note": "Connect the repository so committed rules and supported cloud hooks apply. Personal skills may need a separate sync."},
-            {"id": "local-model", "name": "Local models",
-             "note": "Filtered by the memory you enter above. A tag your machine cannot hold is not offered, because a model that swaps is worse than no model."},
-        ],
+        "surfaceGroups": surface_groups(),
+        # What the "+" on each group offers. Beside the groups, which the
+        # pickers already read; both pages render from here.
+        "customSurfaceKinds": custom_surface_payload(),
         "profiles": PROFILES,
         "profileClients": PROFILE_CLIENTS,
         "routes": routes,

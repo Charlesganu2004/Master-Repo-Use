@@ -113,21 +113,39 @@ and says so."""
 
 
 def context_for(prompt: str, session: str | None = None,
-                capturing: bool = True) -> str:
-    """The three layers, then the goal block when a goal is set.
+                capturing: bool = True, mode: str | None = None,
+                token_enforced: bool = False) -> str:
+    """The three layers, then the goal block, then the super chain if on.
 
     Layers first. The goal says what the session is for; the layers say how any
     turn is done. A goal without the layers is an intention, and the layers
     without a goal are this session only.
+
+    The pipeline is asked for NO goal of its own here. It used to render its
+    compact goal block and then this function appended the detailed one, so a
+    goal-carrying prompt carried the goal text twice: about a kilobyte of pure
+    duplication, found by a verification pass that measured the bytes and could
+    not make them add up.
+
+    The chain comes last, after the goal, whichever mode asked for it: `mode`
+    None follows the machine's setting, and the super harness passes "super".
     """
-    layers = skill_pipeline.context_for(prompt, session, capturing)
+    resolved = mode or skill_pipeline.harness_mode()
+    layers = skill_pipeline.context_for(prompt, session, capturing,
+                                        include_goal=False, mode="base",
+                                        token_enforced=token_enforced)
     data = skill_pipeline.goal_for_context(session, prompt if capturing else None)
-    if not data.get("goal"):
-        return layers
-    return layers + "\n\n" + GOAL_BLOCK.format(
-        goal=skill_pipeline.goal_excerpt(data, session),
-        origin=skill_pipeline.GOAL_ORIGIN.get(data.get("source"),
-                                            skill_pipeline.GOAL_ORIGIN_UNKNOWN))
+    parts = [layers]
+    if data.get("goal"):
+        parts.append(GOAL_BLOCK.format(
+            goal=skill_pipeline.goal_excerpt(data, session),
+            origin=skill_pipeline.GOAL_ORIGIN.get(data.get("source"),
+                                                skill_pipeline.GOAL_ORIGIN_UNKNOWN)))
+    if resolved == "super":
+        chain = skill_pipeline.chain_block()
+        if chain:
+            parts.append(chain)
+    return "\n\n".join(parts)
 
 
 def check() -> int:

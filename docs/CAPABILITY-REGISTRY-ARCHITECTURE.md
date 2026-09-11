@@ -30,6 +30,32 @@ has a 16 MiB document limit and GridFS for larger files; the proposed separation
 is an operational choice, not a claim that MongoDB cannot store files.
 [MongoDB GridFS](https://www.mongodb.com/docs/manual/core/gridfs/).
 
+## The plan as first asked, and where it breaks
+
+Asked 2026-09-11: store every skill, tool, plugin and MCP server in MongoDB or
+PostgreSQL as packages; let GitHub bots watch upstream releases, update the
+packages and tell users who are behind; send stale or archived entries to a
+GitHub issue for keep, adopt or delete, deleting from storage too; and have a
+monitor send every new capability a user adopts to the repo for a safety review.
+
+Possible: yes. Works as written: no. Works with these changes: yes.
+
+| Step as asked | What breaks | Change |
+| --- | --- | --- |
+| Packages live in the database | The only copy loses diffs, history and review; bytes do not belong in rows; a hosted MCP server has nothing to package | Git stays the source, object storage holds bytes by sha256, the database holds metadata and lifecycle state; hosted MCP is a reviewed connector descriptor |
+| Bots update packages on each release | One compromised upstream account ships malware to every user under our name; many skill repos never tag releases | Detect automatically, publish only after scan and owner approval of the exact digest; watch file hashes as `scripts/skill_upstreams.py` does; notify by default |
+| Tell users who is behind | Requires knowing every user's installs, which is telemetry | The client pulls a signed index and compares its own lockfile |
+| Stale or archived: issue, then adopt or delete | Quiet is not dead; a delete cannot reach users' copies, Git history or backups | Tombstone first, notify, purge after retention; approval binds to the exact digests |
+| A monitor sends users' new capabilities to the repo | A skill has no process and cannot monitor; users' files in a repo publish private work and possible malware | An opt-in local CLI and hook; metadata first, content only with separate consent, into private quarantine |
+| Scan, and add whatever is clean | No scan proves harmless; skill risk is plain-language prompt injection; SQL injection is a flaw in our API, not something Markdown carries; republishing needs a licence | Scan output is evidence for a person; parameterized queries; licence check before republishing |
+
+Phase 0 of this is already running without a database: the `repo-lists/`
+catalog, `catalog-guardian.yml` with the owner-only `APPROVE CATALOG
+MAINTENANCE` phrase and the SHA-bound `owner-approval.yml`, `watch-sources.yml`
+for the skill aggregator, and `skill-upstreams.yml` pinning the sha256 of every
+skill adapted from upstream. The database earns its place when other people
+install from us; until then Git and Actions are the registry.
+
 ## Architecture
 
 ```mermaid

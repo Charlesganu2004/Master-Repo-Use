@@ -97,23 +97,70 @@ def already_injected(messages: list) -> bool:
 
 # One seam, same reasoning as harness_wrap: the super harness spawns this file
 # as a subprocess, so it needs a flag rather than a rebound attribute.
-CONTEXT = skill_pipeline.context_for
+def _proxy_context(prompt: str) -> str:
+    """The pipeline, telling the model its token limit is a hard stop here."""
+    return skill_pipeline.context_for(prompt, token_enforced=True)
+
+
+CONTEXT = _proxy_context
 
 
 def use_super_context() -> None:
     """Inject the super harness's chain instead of the base pipeline."""
     global CONTEXT
     import harness_super
-    CONTEXT = lambda prompt: harness_super.context_for(prompt, capturing=False)
+    CONTEXT = lambda prompt: harness_super.context_for(prompt, capturing=False,
+                                                       token_enforced=True)
 
 
-def inject(payload: dict) -> tuple[dict, bool]:
+def cap_tokens(payload: dict, limit: int | None, path: str = "") -> bool:
+    """Turn a /token limit into a hard stop the model cannot run past.
+
+    This is the one place in the harness where the limit is ENFORCED rather than
+    requested: the proxy owns the request, so it lowers the output ceiling before
+    the upstream sees it. Every other surface can only ask the model to plan.
+
+    Keyed on the API path being served, because the field differs and the wrong
+    one is not harmless. The first draft added Ollama's `options` to every
+    request; OpenAI rejects unrecognised request arguments, so setting a token
+    limit would have broken every OpenAI call through this proxy.
+
+      /api/...                Ollama native     options.num_predict
+      anything else           OpenAI-shaped     max_completion_tokens if the
+                                                caller already uses it, else
+                                                max_tokens
+
+    Lowers, never raises: a caller that asked for fewer tokens keeps its number.
+    Returns whether anything was capped.
+    """
+    if not limit:
+        return False
+    if path.startswith("/api/"):
+        options = payload.get("options")
+        options = options if isinstance(options, dict) else {}
+        current = options.get("num_predict")
+        if isinstance(current, int) and 0 <= current <= limit:
+            return False
+        options["num_predict"] = limit
+        payload["options"] = options
+        return True
+    key = "max_completion_tokens" if "max_completion_tokens" in payload else "max_tokens"
+    current = payload.get(key)
+    if isinstance(current, int) and 0 < current <= limit:
+        return False
+    payload[key] = limit
+    return True
+
+
+def inject(payload: dict, path: str = "") -> tuple[dict, bool]:
     """Put the pipeline in front. Returns the payload and whether it changed."""
     messages = payload.get("messages")
     if isinstance(messages, list):
         if already_injected(messages):
             return payload, False
-        context = CONTEXT(last_user_text(messages))
+        text = last_user_text(messages)
+        cap_tokens(payload, skill_pipeline.resolve_token_limit(text, None, capturing=False), path)
+        context = CONTEXT(text)
         # Ahead of the caller's own system message rather than replacing it. The
         # caller's instructions are theirs; these are the standing rules, and the
         # order says which one frames the other.
@@ -125,6 +172,7 @@ def inject(payload: dict) -> tuple[dict, bool]:
         existing = payload.get("system")
         if isinstance(existing, str) and MARKER in existing:
             return payload, False
+        cap_tokens(payload, skill_pipeline.resolve_token_limit(prompt, None, capturing=False), path)
         context = CONTEXT(prompt)
         payload["system"] = context + (("\n\n" + existing) if isinstance(existing, str) and existing else "")
         return payload, True
@@ -162,7 +210,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 payload = json.loads(raw.decode("utf-8"))
                 if isinstance(payload, dict):
-                    payload, changed = inject(payload)
+                    payload, changed = inject(payload, path)
                     raw = json.dumps(payload).encode("utf-8")
             except (ValueError, UnicodeDecodeError):
                 # Not JSON we understand. Forward it untouched rather than

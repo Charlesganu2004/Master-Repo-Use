@@ -11,6 +11,11 @@ the moment a behaviour changes, the work stops being a refactor and becomes an
 edit that nobody can review, because the diff no longer answers the only
 question a reviewer has, which is whether anything moved.
 
+The technique draws on github/awesome-copilot (MIT), whose refactor skill is the
+original; this is our own statement of it. `repo-lists/skill-upstreams.json`
+records the version checked against, and `scripts/skill_upstreams.py --check`
+reports when upstream moves.
+
 So there are two rules that come before the transformation list.
 
 ## Tests green before, tests green after

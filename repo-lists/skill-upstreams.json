@@ -1,0 +1,82 @@
+{
+  "skills": {
+    "master-anti-slop": {
+      "licence": "MIT",
+      "path": "SKILL.md",
+      "relation": "derived",
+      "reviewed": {
+        "bytes": 2629,
+        "commit": "8da1f030185bdfe8471220585162991eaeb970e9",
+        "on": "2026-09-11",
+        "release": null,
+        "sha256": "7432a1d9ebdd42b27666da8458af252edf549f723fb14bcd4791425103930310"
+      },
+      "upstream": "hardikpandya/stop-slop"
+    },
+    "master-caveman": {
+      "licence": "MIT for skills/; the engine-linked directories (engine, proxy, rewriter, browse, mcp and others) are BSL-1.1 and are not used",
+      "path": "skills/caveman/SKILL.md",
+      "relation": "derived",
+      "reviewed": {
+        "bytes": 7022,
+        "commit": "15581d14007fd01fb3f132016741962f34936ca2",
+        "on": "2026-09-11",
+        "release": "bin-v1.1.6",
+        "sha256": "c4d7354b4b063d54601fcdd5097a5b1713d1a1a2e386ac39efa438aa1ffef8ce"
+      },
+      "upstream": "JuliusBrussee/caveman"
+    },
+    "master-design-taste": {
+      "licence": "MIT",
+      "path": "skills/taste-skill/SKILL.md",
+      "relation": "derived",
+      "reviewed": {
+        "bytes": 87253,
+        "commit": "ccbc15639c97057cbfcf32ecebc38ef716e4bb37",
+        "on": "2026-09-11",
+        "release": null,
+        "sha256": "aa194351b246b8b4799099d4ed7b033d29eab6e6e3d58d8d2172978be7b3ec89"
+      },
+      "upstream": "Leonxlnx/taste-skill"
+    },
+    "master-full-output": {
+      "licence": "MIT",
+      "path": "skills/output-skill/SKILL.md",
+      "relation": "derived",
+      "reviewed": {
+        "bytes": 2592,
+        "commit": "ccbc15639c97057cbfcf32ecebc38ef716e4bb37",
+        "on": "2026-09-11",
+        "release": null,
+        "sha256": "e5bf48b1ae561511439cf71672209a10a88cee0968cc925909ff861dfa0a96a7"
+      },
+      "upstream": "Leonxlnx/taste-skill"
+    },
+    "master-refactor": {
+      "licence": "MIT",
+      "path": "skills/refactor/SKILL.md",
+      "relation": "derived",
+      "reviewed": {
+        "bytes": 16843,
+        "commit": "7568a482ce2df38f8965ab5336a3220db796a4ba",
+        "on": "2026-09-11",
+        "release": null,
+        "sha256": "58a38edd230cdcdd866939906321c8ba6f47c98a70d0cda373360196ee2ca1a7"
+      },
+      "upstream": "github/awesome-copilot"
+    },
+    "master-refactor-ui": {
+      "licence": "MIT",
+      "path": "skills/refactoring-ui/SKILL.md",
+      "relation": "derived",
+      "reviewed": {
+        "bytes": 49010,
+        "commit": "f3421560da3d01e3162cd17d91a61933bcf79b47",
+        "on": "2026-09-11",
+        "release": null,
+        "sha256": "e8df9a646129f0643c463e9ba680a019268314a2205ff78ddc548cb9356ad145"
+      },
+      "upstream": "jaywilburn/refactoring-ui-skill"
+    }
+  }
+}

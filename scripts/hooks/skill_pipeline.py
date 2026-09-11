@@ -152,7 +152,8 @@ MULTI_TASK = re.compile(r"\balso\b|\band then\b|\bafter that\b|\bplus\b|^\s*\d[\
 
 
 def context_for(prompt: str, session: str | None = None,
-                capturing: bool = True) -> str:
+                capturing: bool = True, include_goal: bool = True,
+                mode: str | None = None, token_enforced: bool = False) -> str:
     """The core, plus at most one lane, plus fan-out advice on a big prompt.
 
     The lane is chosen by how MANY distinct terms it matched, not by declaration
@@ -170,7 +171,21 @@ def context_for(prompt: str, session: str | None = None,
     is the whole class of bug this parameter closes: inspecting a thing must not
     change it. The standing goal is still read, so the output is what that
     prompt would actually get.
+
+    `include_goal=False` is for harness_goal, which injects its own, more
+    detailed goal block. Letting both render put the goal text in front of the
+    model twice, about a kilobyte of pure duplication on every goal-carrying
+    prompt, which a verification pass found by measuring rather than reading.
+
+    `mode` overrides the machine's configured mode for one call; the super
+    harness passes "base" and appends the chain itself, after the goal.
+    `token_enforced` is true only where the caller really sets max_tokens.
     """
+    limit = resolve_token_limit(prompt, session, capturing)
+    # The token command is not part of the request. Remove it before capture and
+    # lane matching, so "/token limit 3000" never becomes a standing goal and
+    # the digits never tip a lane.
+    _action, _value, prompt = parse_token_command(prompt)
     if capturing:
         capture(prompt, session)
     lowered = prompt.lower()
@@ -184,9 +199,17 @@ def context_for(prompt: str, session: str | None = None,
         parts.append(best)   # one lane only; stacking them defeats the budget
     if len(prompt) > 600 or len(MULTI_TASK.findall(prompt)) >= 2:
         parts.append(ORCHESTRATION)
-    goal = standing_goal(session, prompt if capturing else None)
-    if goal:
-        parts.append(goal)
+    if include_goal:
+        goal = standing_goal(session, prompt if capturing else None)
+        if goal:
+            parts.append(goal)
+    budget = token_block(limit, token_enforced)
+    if budget:
+        parts.append(budget)
+    if (mode or harness_mode()) == "super":
+        chain = chain_block()
+        if chain:
+            parts.append(chain)
     return "\n".join(parts)
 
 
@@ -338,12 +361,21 @@ def save_goal(data: dict, session: str | None = None) -> bool:
     goal for this turn, not a reason to fail the turn.
     """
     data["history"] = data.get("history", [])[-HISTORY_LIMIT:]
+    return _atomic_write_json(goal_path(session), data)
+
+
+def _atomic_write_json(target: pathlib.Path, data: dict) -> bool:
+    """Write JSON so a reader sees the old file or the new one, never half.
+
+    Shared by the goal store and the token limit, which is why it was lifted out
+    of save_goal: the same retry-and-rename written twice is the kind of copy
+    that gets fixed in one place and not the other.
+    """
     temporary = None
-    target = goal_path(session)
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
         # Each writer owns its temporary file. Two simultaneous clients must
-        # never replace or remove one another's shared goal.json.tmp.
+        # never replace or remove one another's shared temporary file.
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
                                          dir=target.parent, prefix=target.stem + ".",
                                          suffix=".tmp", delete=False) as output:
@@ -536,6 +568,180 @@ def standing_goal(session: str | None = None, prompt: str | None = None) -> str:
     flat = goal_excerpt(data, session)
     origin = GOAL_ORIGIN.get(data.get("source"), GOAL_ORIGIN_UNKNOWN)
     return GOAL_TEMPLATE.format(goal=flat, origin=origin)
+
+
+# ------------------------------------------------------------ the token limit
+#
+# `/token limit 4000` is the one command the super harness keeps. Everything else
+# is automatic; a budget is not, because only the person asking knows what an
+# answer is worth to them in tokens.
+#
+# THE MARKER IS REQUIRED, and that is the whole safety of this feature. Without
+# it, "what is the token limit 200000 on opus" would silently cap the answer to
+# that very question. So the command needs a leading / or \, or the colon form
+# at the start of the prompt. Prose that merely mentions a token limit sets
+# nothing.
+#
+# WHAT IT CAN AND CANNOT ENFORCE. A model cannot count its own tokens precisely,
+# so everywhere the harness only speaks to the model the limit is an
+# instruction: plan to fit, stop at the last clean break before it, say what was
+# left out. Where the harness controls the request itself, which is the proxy,
+# the limit also becomes max_tokens or num_predict, and that is a hard stop the
+# model cannot run past. The block says which of the two applies.
+TOKEN_COMMAND = re.compile(
+    r"(?:^|(?<=\s))[/\\]token[\s_-]*limit\b[:\s]*"
+    r"(?P<value>off|clear|none|lift|reset|\d[\d,]*(?:\.\d+)?\s*[kKmM]?)(?![\w.])",
+    re.IGNORECASE)
+TOKEN_COMMAND_COLON = re.compile(
+    r"^\s*token[\s_-]*limit\s*:\s*"
+    r"(?P<value>off|clear|none|lift|reset|\d[\d,]*(?:\.\d+)?\s*[kKmM]?)(?![\w.])",
+    re.IGNORECASE)
+TOKEN_LIFT = {"off", "clear", "none", "lift", "reset"}
+TOKEN_LIMIT_MAX = 10_000_000
+
+
+def parse_token_command(prompt: str) -> tuple[str | None, int | None, str]:
+    """('set', n, rest) or ('clear', None, rest) or (None, None, prompt).
+
+    `rest` is the prompt with the command removed, so "/token limit 3000 refactor
+    the loader" sets a limit AND is still a request to refactor the loader, and
+    the command text never becomes part of a captured goal.
+    """
+    text = prompt or ""
+    match = TOKEN_COMMAND.search(text) or TOKEN_COMMAND_COLON.match(text)
+    if not match:
+        return None, None, text
+    rest = (text[:match.start()] + " " + text[match.end():]).strip()
+    raw = match.group("value").strip().lower().replace(",", "")
+    if raw in TOKEN_LIFT:
+        return "clear", None, rest
+    multiplier = 1
+    if raw.endswith("k"):
+        multiplier, raw = 1_000, raw[:-1].strip()
+    elif raw.endswith("m"):
+        multiplier, raw = 1_000_000, raw[:-1].strip()
+    try:
+        value = int(float(raw) * multiplier)
+    except ValueError:
+        return None, None, text
+    if value < 1:
+        return "clear", None, rest
+    return "set", min(value, TOKEN_LIMIT_MAX), rest
+
+
+def token_limit_path(session: str | None = None) -> pathlib.Path:
+    if not session:
+        return STATE_FILE.parent / "token-limit.json"
+    key = hashlib.sha256(session.encode("utf-8")).hexdigest()
+    return STATE_FILE.parent / "sessions" / f"{key}.token-limit.json"
+
+
+def load_token_limit(session: str | None = None) -> int | None:
+    """This session's limit, else the operator's global one, else none.
+
+    A session that typed `/token limit off` records an explicit null, and that
+    null wins over a global limit for that session: someone who lifted the limit
+    in their conversation should not find it quietly reinstated by a global one.
+    """
+    paths = [token_limit_path(session)] if session else []
+    paths.append(token_limit_path(None))
+    for path in paths:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(data, dict) or "limit" not in data:
+            continue
+        limit = data.get("limit")
+        if limit is None:
+            return None
+        if isinstance(limit, int) and limit > 0:
+            return limit
+    return None
+
+
+def save_token_limit(limit: int | None, session: str | None = None) -> bool:
+    return _atomic_write_json(token_limit_path(session), {"limit": limit})
+
+
+def resolve_token_limit(prompt: str, session: str | None = None,
+                        capturing: bool = True) -> int | None:
+    """The limit that applies to this prompt, persisting a command if one is in it.
+
+    With a session, a command is stored for the rest of that session. Without
+    one, it applies to this prompt alone, the same rule the goal follows: state
+    inferred from a client with no stable id must not leak into somebody else's
+    conversation.
+    """
+    action, value, _rest = parse_token_command(prompt)
+    if action is not None and capturing and session:
+        save_token_limit(value if action == "set" else None, session)
+    if action == "set":
+        return value
+    if action == "clear":
+        return None
+    return load_token_limit(session)
+
+
+TOKEN_TEMPLATE = """15. TOKEN LIMIT: {limit} tokens for this response, set with /token limit. A ceiling, not a target.
+    Plan to fit before writing: choose the most valuable COMPLETE result that fits in {limit} tokens and produce only that. Cut repetition, then examples, then explanation, then breadth; keep the answer itself, the code that was asked for, and any warning that matters.
+    Stop at the last clean break before the limit and end with one line saying exactly what was left out and how to ask for it. Never run past it to finish a thought. FULL OUTPUT still forbids placeholders inside what you do deliver. {enforcement}
+    Lift it with /token limit off."""
+
+TOKEN_ENFORCED = "This client also sets max_tokens to the limit, so it is a hard stop."
+TOKEN_INSTRUCTED = "This client cannot cap tokens itself, so holding to it is on you."
+
+
+def token_block(limit: int | None, enforced: bool = False) -> str:
+    if not limit:
+        return ""
+    return TOKEN_TEMPLATE.format(limit=f"{limit:,}",
+                                 enforcement=TOKEN_ENFORCED if enforced else TOKEN_INSTRUCTED)
+
+
+# -------------------------------------------------------------------- the mode
+#
+# base   the three layers, the matching lane, the goal and the token limit
+# super  all of that plus the ten-pass chain from super_chain.py
+#
+# Stored beside the goal state, so isolated_store() and MASTER_REPO_GOAL_DIR
+# isolate it too: a test or a --check can never switch a real machine into, or
+# out of, super mode by accident. MASTER_HARNESS_MODE overrides it for a single
+# invocation. Set it with `master-harness-super --install all`, or
+# `harness_super.py --mode super`, and put it back with `--mode base`.
+HARNESS_MODES = ("base", "super")
+
+
+def mode_path() -> pathlib.Path:
+    return STATE_FILE.parent / "mode.json"
+
+
+def harness_mode() -> str:
+    override = os.environ.get("MASTER_HARNESS_MODE", "").strip().lower()
+    if override in HARNESS_MODES:
+        return override
+    try:
+        data = json.loads(mode_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "base"
+    mode = data.get("mode") if isinstance(data, dict) else None
+    return mode if mode in HARNESS_MODES else "base"
+
+
+def set_harness_mode(mode: str) -> bool:
+    if mode not in HARNESS_MODES:
+        raise ValueError(f"mode must be one of {HARNESS_MODES}, not {mode!r}")
+    return _atomic_write_json(mode_path(), {"mode": mode})
+
+
+def chain_block() -> str:
+    """The super chain, imported only in super mode so base mode pays nothing."""
+    try:
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+        import super_chain
+    except Exception:                       # noqa: BLE001 - never break a session
+        return ""
+    return super_chain.super_block()
 
 
 def find_session(event: dict) -> str | None:

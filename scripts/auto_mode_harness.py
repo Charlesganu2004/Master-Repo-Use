@@ -179,13 +179,18 @@ def missing_skills() -> list[str]:
             if not harness_paths.skill_path(name).is_file()]
 
 
-def build_bundle(surface_id: str) -> str:
+def build_bundle(surface_id: str, mode: str = "base") -> str:
     """One file carrying the pipeline and every enforced skill.
 
     A browser product cannot mount a skill folder, so the folder is flattened
     into a document it CAN hold. The skills keep their frontmatter: a client that
     does parse it gets a real skill, and one that does not gets a heading and a
     description, which is what it would have matched on anyway.
+
+    mode="super" adds the ten-pass chain, the /token limit rule and the skills
+    the chain names. A chat product has no hook, so the bundle is the only way
+    the super harness reaches it at all; before this, `harness_super --bundle`
+    wrote the base bundle and a ChatGPT project never saw the chain.
     """
     surface = SURFACES[surface_id]
     lines = [
@@ -206,6 +211,28 @@ def build_bundle(surface_id: str) -> str:
         "",
         "---",
         "",
+    ]
+    names = list(ENFORCED_SKILLS)
+    if mode == "super":
+        import super_chain  # noqa: E402  (beside the hook; on sys.path above)
+        lines += [
+            "## The super harness, on every prompt",
+            "",
+            super_chain.super_block(),
+            "",
+            "### /token limit",
+            "",
+            "The one command this harness keeps. `/token limit 4000` sets a ceiling",
+            "for every answer until `/token limit off`. Plan the answer to fit before",
+            "writing, stop at the last clean break before the limit, and end with one",
+            "line saying what was left out. This surface cannot cap tokens itself, so",
+            "holding to it is on the model.",
+            "",
+            "---",
+            "",
+        ]
+        names += [n for n in super_chain.EXTRA_SKILLS if n not in names]
+    lines += [
         "## The enforced skills",
         "",
         "These are the skills the pipeline selects from. On a client with skill",
@@ -213,15 +240,16 @@ def build_bundle(surface_id: str) -> str:
         "instructions are available to a surface that can only hold text.",
         "",
     ]
-    for name in ENFORCED_SKILLS:
+    for name in names:
         lines += [f"### {name}", "", skill_text(name).strip(), "", "---", ""]
     return "\n".join(lines).rstrip() + "\n"
 
 
-def write_bundles(ids: list[str], out_dir: pathlib.Path, dry: bool) -> list[str]:
+def write_bundles(ids: list[str], out_dir: pathlib.Path, dry: bool,
+                  mode: str = "base") -> list[str]:
     results = []
     for surface_id in ids:
-        body = build_bundle(surface_id)
+        body = build_bundle(surface_id, mode)
         path = out_dir / f"auto-mode-{surface_id}.md"
         if dry:
             results.append(f"would write {path} ({len(body)} bytes)")

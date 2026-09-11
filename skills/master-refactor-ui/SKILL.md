@@ -14,6 +14,10 @@ their colour, they are wrong in their spacing and their hierarchy, and colour
 was added on top of that and is now hiding it. So the fixes go in an order
 where each one is visible before the next one lands.
 
+The approach draws on jaywilburn/refactoring-ui-skill (MIT), itself based on the
+Refactoring UI book; this is our own condensed statement of it.
+`repo-lists/skill-upstreams.json` records the version checked against.
+
 ## Grayscale first
 
 Strip the colour and look at it. Not metaphorically: set every colour to a gray

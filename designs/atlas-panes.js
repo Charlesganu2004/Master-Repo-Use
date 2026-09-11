@@ -19,6 +19,21 @@ const AtlasPanes = (() => {
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
     m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
   const val = id => (document.getElementById(id) || {}).value || '';
+
+  /* The "+" generator is one shared file, custom-surfaces.js, so this pane and
+     the main page cannot disagree about the commands for the same client. The
+     designs do not load it themselves, so it is fetched once here; the Easy
+     setup tab is rendered on demand, long after this finishes, and re-renders
+     if it happens to be open when the file arrives. */
+  (function loadCustomSurfaces() {
+    if (typeof window === 'undefined' || window.CustomSurfaces) return;
+    const script = document.createElement('script');
+    script.src = 'custom-surfaces.js';
+    script.onload = () => { if (tab === 'easy') renderStage(); };
+    document.head.appendChild(script);
+  })();
+
+  const CS = () => (typeof window !== 'undefined' ? window.CustomSurfaces : null);
   const KIND_NOTES = {
     instruction: 'Rules and written guidance that tell an assistant how to work.',
     capability: 'Tools, agents and integrations that perform a task.',
@@ -623,13 +638,33 @@ const AtlasPanes = (() => {
             : esc(step.rule)}</p>
         </div>
       </li>`).join('')}</ol>
+      ${chain.automatic ? `<p class="sub">${esc(chain.automatic)}</p>` : ''}
+      ${tokenLimitHTML(chain.tokenLimit, say)}
       <div class="cmd-line cmd-action">
         <span class="cmd-tag">Check</span>
         <code>${esc(chain.check)}</code>
         <button type="button" class="cmd-copy" data-copy-cmd="${esc(chain.check)}"
           aria-label="Copy the super harness check">Copy</button>
       </div>
+      ${(chain.modeCommands || []).map(entry => `<div class="cmd-line cmd-action">
+        <span class="cmd-tag">${esc(entry.label)}</span>
+        <code>${esc(entry.command)}</code>
+        <button type="button" class="cmd-copy" data-copy-cmd="${esc(entry.command)}"
+          aria-label="Copy: ${esc(entry.label)}">Copy</button>
+      </div>`).join('')}
     </section>`;
+  }
+
+  /* The one thing a person types in the super harness. The spellings come from
+     the payload, which the builder parsed with the hook's own parser. */
+  function tokenLimitHTML(limit, say) {
+    if (!limit) return '';
+    return `<div class="token-limit">
+      <h4>The one thing you type: /token limit</h4>
+      <p class="sub">${esc(say(limit.plain, limit.technical))}</p>
+      <ul class="token-spellings" aria-label="Spellings the hook accepts">${(limit.spellings || [])
+        .map(spelling => `<li><code>${esc(spelling)}</code></li>`).join('')}</ul>
+    </div>`;
   }
 
   function goalHTML(goal, say) {
@@ -890,7 +925,8 @@ const AtlasPanes = (() => {
           <input type="checkbox" data-surface="${esc(s.id)}" ${A.state.surfaceIds.includes(s.id) ? 'checked' : ''}>
           <span><b>${esc(s.name)}</b><small>${esc(s.detail)}</small>
           <small>${esc((s.enforcement || {}).label)}: ${esc((s.enforcement || {}).detail)}</small></span></label>`).join('')
-          || '<p class="empty">Enter scan results above. Only models within the recorded RAM requirement are offered.</p>'}</fieldset>`).join('')}</div>
+          || '<p class="empty">Enter scan results above. Only models within the recorded RAM requirement are offered.</p>'}
+        ${customClientHTML(group.id)}</fieldset>`).join('')}</div>
       ${selected.filter(s => s.runs === 'connect').map(s => `<article class="surface-instructions"><h3>${esc(s.name)}</h3>
         <p>${esc(s.detail)}</p><p>Save the protected instructions in <b>${esc(s.target)}</b>.</p></article>`).join('')}
       ${selected.filter(s => s.launchCommands && chosen).map(s => `<article><h3>Launch ${esc(s.name)} with automatic rules</h3>
@@ -908,6 +944,84 @@ const AtlasPanes = (() => {
         guessing a tag this machine may not be able to hold.</p>`}
 
       ${profiles.map(profile => easyProfile(profile, Boolean(chosen))).join('')}`;
+  }
+
+  /* The "+" on each group. A client that is not in the vetted list, an open
+     frontier model behind an API, Copilot in an editor, a CLI with no hook, a
+     chat product, still gets exact commands: pick what kind it is, fill one
+     field, and the templates from atlas-data.json fill in the rest. */
+  function customClientHTML(groupId) {
+    const cs = CS();
+    if (!cs) return '';
+    const data = A.state.data;
+    const saved = cs.forGroup(groupId);
+    const open = A.state.addingClient === groupId;
+    const savedHTML = saved.map(item => {
+      const result = cs.commands(data, item.kind, item.values);
+      return `<details class="custom-client">
+        <summary><b>${esc(item.name)}</b> <span class="src">${esc((cs.kind(data, item.kind) || {}).label || item.kind)}</span></summary>
+        ${result.ok ? customStepsHTML(result) : `<p class="empty">${esc(result.error)}</p>`}
+        <button type="button" class="text-link" data-custom-remove="${esc(item.id)}">Remove this client</button>
+      </details>`;
+    }).join('');
+    return `<div class="custom-clients">${savedHTML}
+      <button type="button" class="add-client" data-add-client="${esc(groupId)}"
+        aria-expanded="${open}">${open ? 'Close' : '+ Add a client that is not listed'}</button>
+      ${open ? customFormHTML(groupId) : ''}</div>`;
+  }
+
+  function customFormHTML(groupId) {
+    const cs = CS();
+    const data = A.state.data;
+    const draft = A.state.customDraft || {};
+    const kindId = draft.kind || cs.defaultKindFor(data, groupId);
+    const spec = cs.kind(data, kindId) || {};
+    const values = draft.values || {};
+    const fields = (spec.fields || []).map(field => field.options
+      ? `<label class="custom-field">${esc(field.label)}
+          <select data-custom-field="${esc(field.id)}">${field.options.map(option =>
+            `<option value="${esc(option)}"${values[field.id] === option ? ' selected' : ''}>${esc((field.optionLabels || {})[option] || option)}</option>`).join('')}</select></label>`
+      : `<label class="custom-field">${esc(field.label)}
+          <input type="text" data-custom-field="${esc(field.id)}" value="${esc(values[field.id] || '')}"
+            placeholder="${esc(field.placeholder || '')}" autocomplete="off" spellcheck="false"></label>`).join('');
+    const result = A.state.customResult;
+    return `<div class="custom-form" role="group" aria-label="Add a client">
+      <label class="custom-field">What kind of client is it?
+        <select data-custom-kind>${cs.kinds(data).map(k =>
+          `<option value="${esc(k.id)}"${k.id === kindId ? ' selected' : ''}>${esc(k.label)}</option>`).join('')}</select></label>
+      <p class="sub">${esc(spec.plain || '')} <span class="src">For example: ${esc(spec.examples || '')}</span></p>
+      <label class="custom-field">Name it, so you can find it again
+        <input type="text" data-custom-name value="${esc(draft.name || '')}" placeholder="${esc(cs.namePlaceholder(spec))}" maxlength="60"></label>
+      ${fields}
+      <div class="custom-actions">
+        <button type="button" class="add-client" data-custom-generate="${esc(groupId)}">Show the commands</button>
+        ${result && result.ok ? `<button type="button" class="add-client" data-custom-save="${esc(groupId)}">Save to this list</button>` : ''}
+      </div>
+      ${result ? (result.ok ? customStepsHTML(result) : `<p class="custom-error" role="alert">${esc(result.error)}</p>`) : ''}
+    </div>`;
+  }
+
+  function customStepsHTML(result) {
+    const words = command => CS().tokens(command)
+      .map(token => `<span class="cmd-tok">${esc(token)}</span>`).join(' ');
+    return `<ol class="custom-steps">${result.steps.map(step => `<li>
+        <span class="sub">${esc(step.label)}</span>
+        <div class="cmd-line cmd-action"><code>${words(step.command)}</code>
+          <button type="button" class="cmd-copy" data-copy-cmd="${esc(step.command)}"
+            aria-label="Copy: ${esc(step.label)}">Copy</button></div></li>`).join('')}</ol>
+      <p class="sub custom-limit">${esc(result.limit || '')}</p>`;
+  }
+
+  function readCustomDraft() {
+    const form = document.querySelector('.custom-form');
+    const draft = A.state.customDraft || {};
+    if (!form) return draft;
+    const kindSelect = form.querySelector('[data-custom-kind]');
+    const nameInput = form.querySelector('[data-custom-name]');
+    const values = {};
+    form.querySelectorAll('[data-custom-field]').forEach(el => { values[el.dataset.customField] = el.value; });
+    return { kind: kindSelect ? kindSelect.value : draft.kind,
+             name: nameInput ? nameInput.value : draft.name, values };
   }
 
   function easyProfile(profile, hasPlatform) {
@@ -1001,6 +1115,48 @@ const AtlasPanes = (() => {
     });
     document.querySelectorAll('[data-surface]').forEach(input => {
       input.onchange = () => { A.toggleSurface(input.dataset.surface); renderStage(); };
+    });
+    document.querySelectorAll('[data-add-client]').forEach(btn => {
+      btn.onclick = () => {
+        const group = btn.dataset.addClient;
+        const closing = A.state.addingClient === group;
+        A.state.addingClient = closing ? null : group;
+        A.state.customDraft = closing ? null : { kind: CS().defaultKindFor(A.state.data, group), values: {} };
+        A.state.customResult = null;
+        renderStage();
+      };
+    });
+    document.querySelectorAll('[data-custom-kind]').forEach(select => {
+      select.onchange = () => {
+        A.state.customDraft = { ...readCustomDraft(), kind: select.value, values: {} };
+        A.state.customResult = null;
+        renderStage();
+      };
+    });
+    document.querySelectorAll('[data-custom-generate]').forEach(btn => {
+      btn.onclick = () => {
+        const draft = readCustomDraft();
+        A.state.customDraft = draft;
+        A.state.customResult = CS().commands(A.state.data, draft.kind, draft.values);
+        renderStage();
+      };
+    });
+    document.querySelectorAll('[data-custom-save]').forEach(btn => {
+      btn.onclick = () => {
+        const draft = readCustomDraft();
+        const saved = CS().save(A.state.data, { ...draft, group: btn.dataset.customSave });
+        if (saved.ok) {
+          A.state.addingClient = null;
+          A.state.customDraft = null;
+          A.state.customResult = null;
+        } else {
+          A.state.customResult = { ok: false, error: saved.error };
+        }
+        renderStage();
+      };
+    });
+    document.querySelectorAll('[data-custom-remove]').forEach(btn => {
+      btn.onclick = () => { CS().remove(btn.dataset.customRemove); renderStage(); };
     });
     document.querySelectorAll('[data-copy-auto]').forEach(b => {
       b.onclick = async () => { b.textContent = await A.copy(A.autoModeText()) ? 'Copied exact instructions' : 'Select the instructions below to copy'; };
@@ -1348,6 +1504,27 @@ const AtlasPanes = (() => {
     .surface-choice{display:flex;gap:12px;align-items:flex-start;padding:12px 0;cursor:pointer;border-bottom:1px solid var(--line,#555)}
     .surface-choice input{width:20px;height:20px;accent-color:var(--accent,#b65039);flex-shrink:0;margin:4px 0}
     .surface-choice small{display:block;line-height:1.5;margin-top:6px;font-size:13px}
+    .custom-clients{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+    .add-client{align-self:flex-start;min-height:40px;padding:0 14px;border:1px dashed var(--line,#555);
+      border-radius:8px;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer}
+    .add-client:hover,.add-client:focus-visible{border-color:var(--accent,#b65039);border-style:solid;
+      outline:2px solid var(--accent,#b65039);outline-offset:2px}
+    .custom-form{display:flex;flex-direction:column;gap:10px;padding:12px;border:1px solid var(--line,#555);border-radius:8px}
+    .custom-field{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600}
+    .custom-field input,.custom-field select{min-height:40px;padding:0 10px;border:1px solid var(--line,#555);
+      border-radius:6px;background:transparent;color:inherit;font:inherit;font-weight:400}
+    .custom-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .custom-steps{margin:4px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:8px}
+    .custom-error{margin:0;color:var(--accent,#b65039);font-size:13px;font-weight:600}
+    .custom-limit{margin:4px 0 0;font-size:12px}
+    .custom-client summary{cursor:pointer;padding:6px 0}
+    .custom-steps .cmd-tok{display:inline-block;max-width:100%;overflow-wrap:anywhere}
+    .token-limit{margin:12px 0;padding:12px;border:1px solid var(--line,#555);border-radius:8px;
+      display:flex;flex-direction:column;gap:8px}
+    .token-limit h4{margin:0;font-size:14px}
+    .token-spellings{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+    .token-spellings code{display:inline-block;padding:5px 8px;border:1px solid var(--line,#555);border-radius:6px;
+      font:600 12px ui-monospace,"Cascadia Code",monospace}
     .surface-instructions{padding:16px;border:1px solid var(--line,#555);margin:12px 0}
     .store-guide,.auto-mode-guide{margin:20px 0;padding:16px;border:1px solid var(--line,#555);border-radius:8px}
     .store-guide summary,.auto-mode-guide summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:700}

@@ -57,3 +57,4 @@ master_harness/verify_auto_mode.py
 # is the second line of defence, because the failure was silent both times.
 /pip/
 .pip-cache/
+master_harness/super_chain.py

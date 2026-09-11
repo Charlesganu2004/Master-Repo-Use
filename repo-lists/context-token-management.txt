@@ -12,6 +12,14 @@ thedotmack/claude-mem             # persistent observation/search memory for Cla
 ooples/token-optimizer-mcp        # measures token savings per agent; MCP context optimizer
 lucasrosati/claude-code-memory-setup  # Obsidian-backed memory pattern; vendor-neutral technique
 
+JuliusBrussee/caveman             # 104.8k stars, pushed 2026-09-11, release bin-v1.1.6. The original
+                                  # caveman technique that skills/master-caveman restates in our own words.
+                                  # DUAL LICENCE: MIT covers skills/ and most of the repository, but the
+                                  # engine-linked directories (engine, proxy, rewriter, browse, mcp, shrink
+                                  # and others, listed in its LICENSING.md) are BSL-1.1, which is not open
+                                  # source. Only skills/ is relevant here. Tracked for upstream changes in
+                                  # repo-lists/skill-upstreams.json by scripts/skill_upstreams.py.
+
 # --- Research / reference (do not treat as runtime dependencies)
 microsoft/LLMLingua               # prompt compression; last release quiet since 2026-04, still the reference impl
 ZongqianLi/Prompt-Compression-Survey   # static academic survey; lifecycle override keeps it reference-only

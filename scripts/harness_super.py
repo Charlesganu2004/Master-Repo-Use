@@ -110,74 +110,21 @@ import harness_proxy as proxy  # noqa: E402
 import harness_wrap as wrap  # noqa: E402
 import harness_computer as computer  # noqa: E402
 
-# Each pass names the SKILL that carries it and, where the base pipeline already
-# carries that rule, the RULE NUMBER instead of a second copy of the words.
-#
-# The first version wrote all ten rules out in full. It read well and it was
-# wrong: seven of the ten already exist in skill_pipeline.CORE, so the chain was
-# a second copy of most of the standing pipeline. Two copies of one rule is the
-# drift this repository keeps paying for, and it cost 4.3 kB a prompt to carry.
-#
-# So a pass that extends the base points at it, and only a pass that adds
-# something new spells the new thing out. All ten are still named, in the order
-# Charles gave them, because the ORDER is the thing this harness contributes.
-#
-# (label, skill, base_rule or None, when, rule text when base_rule is None)
-PASSES = (
-    ("CAVEMAN", "master-caveman", 1, "before reading the request", ""),
-    ("FULL OUTPUT", "master-full-output", 2, "before reading the request", ""),
-    ("ANTI-SLOP", "master-anti-slop", 3, "before reading the request", ""),
-    ("PLAN", "master-plan", 4, "before producing anything", ""),
-    ("DESIGN", "master-design-taste", 5, "before producing anything", ""),
+# The chain itself lives in scripts/hooks/super_chain.py, beside the per-prompt
+# hook, so the hook can inject it without importing every harness on every turn.
+# Re-exported here under the names the rest of the code and the tests use; this
+# module adds the commands around the chain, not a second copy of it.
+import super_chain  # noqa: E402
 
-    ("ARCHITECT", "master-architect", None, "before producing anything",
-     "If getting the shape wrong would mean a rewrite rather than an edit, decide the shape first. Name what each piece owns, which way the dependencies point, and where each piece of state lives exactly once. Sort decisions by what they cost to undo and deliberate only over the expensive ones."),
-
-    ("REFACTOR", "master-refactor", 8, "on what you produced", ""),
-
-    ("COMPRESS", "master-token-reducer", None, "throughout, not at the end",
-     "Build a compact retrieval packet before loading detail, and measure the reduction. This is not a step at the end: compressing a finished answer is the least valuable place to do it, because the tokens were already spent getting there."),
-
-    ("REVIEW", "master-review", None, "before answering",
-     "Re-read the original request and count its deliverables against what you produced; name anything that shrank. Then read the work as an adversary: every claim either carries evidence or gets downgraded to what you know. Check the empty case, the error path and the second caller. Report a failure first."),
-
-    ("VERIFY", "verify-before-complete", 11, "before answering", ""),
-)
-
-# The capabilities every super-harness session carries, beyond the enforced set
-# the surface harness already installs.
-EXTRA_SKILLS = ("master-architect", "master-review")
-
-SUPER_BLOCK = """SUPER HARNESS. The chain above is the floor. These passes run on top of it, in this order, on every prompt and every command.
-
-{passes}
-
-TOKEN REDUCTION is not a step in this list even though it appears as one. It applies at every retrieval, every catalog read and every long output. Compressing a finished answer is the least valuable place to do it: the tokens were already spent getting there.
-
-ARCHITECT is before producing and REVIEW is after, on purpose. A plan for the wrong shape builds the wrong thing efficiently, and the person best placed to find the defect is the one who just wrote it and already believes it is right.
-
-NAME the skills, tools, plugins and MCP servers you used. A pass you did not name is a pass the reader cannot check."""
-
-
-def pass_lines() -> str:
-    """The chain, as the model reads it.
-
-    A pass that extends a base rule renders as a pointer to that rule. A pass
-    that adds something renders its own text. Nothing is written twice.
-    """
-    lines = []
-    for index, (label, skill, base_rule, when, rule) in enumerate(PASSES, start=1):
-        body = f"rule {base_rule} above, applied here" if base_rule else rule
-        lines.append(f"S{index}. {label} ({skill}), {when}: {body}")
-    return "\n".join(lines)
-
-
-def super_block() -> str:
-    return SUPER_BLOCK.format(passes=pass_lines())
+PASSES = super_chain.PASSES
+EXTRA_SKILLS = super_chain.EXTRA_SKILLS
+SUPER_BLOCK = super_chain.SUPER_BLOCK
+pass_lines = super_chain.pass_lines
+super_block = super_chain.super_block
 
 
 def context_for(prompt: str, session: str | None = None,
-                capturing: bool = True) -> str:
+                capturing: bool = True, token_enforced: bool = False) -> str:
     """The full super-harness context for one prompt.
 
     Base pipeline first, then the standing goal, then this chain. The order is
@@ -188,8 +135,8 @@ def context_for(prompt: str, session: str | None = None,
     `capturing=False` renders without setting the goal, for the commands that
     exist to SHOW what a prompt would receive.
     """
-    base = goal.context_for(prompt, session, capturing)
-    return base + "\n\n" + super_block()
+    return goal.context_for(prompt, session, capturing, mode="super",
+                            token_enforced=token_enforced)
 
 
 def missing_skills() -> list[str]:
@@ -345,6 +292,10 @@ def main() -> int:
     parser.add_argument("--profile", default="generic", help="wrapper profile for --run")
     parser.add_argument("--out", default="dist/auto-mode")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--mode", choices=("super", "base", "show"),
+                        help="switch this machine's per-prompt hook between the chain and the base layers")
+    parser.add_argument("--token-limit", metavar="N|off",
+                        help="a global answer ceiling for every session that has not set its own")
     # Split on the first standalone "--" BEFORE argparse sees it. REMAINDER was
     # the obvious way to do this and it does not work: argparse consumes the
     # separator itself, so `--run -- python -c "..."` came back as unrecognized
@@ -384,7 +335,39 @@ def main() -> int:
         print("goal cleared. The layers and the chain still apply.")
         return 0
 
+    if args.mode:
+        if args.mode == "show":
+            print(f"mode: {skill_pipeline.harness_mode()}  ({skill_pipeline.mode_path()})")
+            return 0
+        if not skill_pipeline.set_harness_mode(args.mode):
+            print(f"could not write {skill_pipeline.mode_path()}", file=sys.stderr)
+            return 1
+        print(f"mode: {args.mode}. Every prompt on this machine now gets "
+              f"{'the ten-pass chain on top of the layers' if args.mode == 'super' else 'the three layers only'}.")
+        return 0
+
+    if args.token_limit:
+        action, value, _rest = skill_pipeline.parse_token_command(
+            "/token limit " + args.token_limit)
+        if action is None:
+            print("give a number such as 4000 or 4k, or off", file=sys.stderr)
+            return 2
+        skill_pipeline.save_token_limit(value if action == "set" else None)
+        print(f"global token limit: {value:,}" if action == "set"
+              else "global token limit lifted")
+        return 0
+
     if args.install:
+        # Installing THE SUPER HARNESS means the per-prompt hook injects the chain,
+        # so the mode flips first. Without it the install below registers exactly
+        # the hooks the surface harness does, and the chain still never reaches a
+        # Claude Code or Codex prompt, which is the gap this closes.
+        if not args.dry_run:
+            skill_pipeline.set_harness_mode("super")
+            print("mode: super. Every prompt now carries the chain, roughly double the "
+                  "base pipeline per turn; `--mode base` puts it back.")
+        else:
+            print("would set mode: super")
         hooked = surface.resolve(args.install, mechanisms=(surface.HOOK,))
         committed = surface.resolve(args.install, mechanisms=(surface.REPO_FILE,))
         status = surface.install_surfaces(hooked, args.dry_run) if hooked else 0
@@ -399,7 +382,8 @@ def main() -> int:
     if args.bundle:
         ids = surface.resolve(args.bundle,
                               mechanisms=(surface.BUNDLE, surface.REPO_FILE))
-        for line in surface.write_bundles(ids, pathlib.Path(args.out), args.dry_run):
+        for line in surface.write_bundles(ids, pathlib.Path(args.out), args.dry_run,
+                                          mode="super"):
             print(line)
         return 0
 

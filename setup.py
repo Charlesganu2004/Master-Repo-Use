@@ -46,6 +46,9 @@ HARNESS_MODULES = {
     # First, because every other module imports it to find its data.
     "harness_paths.py": ROOT / "scripts" / "harness_paths.py",
     "skill_pipeline.py": ROOT / "scripts" / "hooks" / "skill_pipeline.py",
+    # The chain the hook injects in super mode. Without it an installed hook in
+    # super mode renders nothing extra and says nothing about why.
+    "super_chain.py": ROOT / "scripts" / "hooks" / "super_chain.py",
     # The two guards. Registered alongside the pipeline by every client, and a
     # client config that points at a guard which is not there is a protection
     # that silently never runs.
