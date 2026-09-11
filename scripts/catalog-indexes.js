@@ -7,19 +7,19 @@
 //
 //   monitor   append-only events, written constantly, expired on a TTL. The
 //             queries are "what did this person do recently".
-//   catalog   1120 components across 177 lanes, rewritten wholesale whenever
-//             scripts/build_atlas_data.py runs. Nothing expires. The queries are
+//   catalog   generated component and lane metadata, imported explicitly with
+//             scripts/load_catalog_mongo.py. Nothing expires. The queries are
 //             the ones the atlas interface already makes: filter by family, by
 //             kind, by lane, search by name, and find what a route names.
 //
-// So there is no TTL here, and the write pattern is a full reload rather than a
-// stream. Reload is why every index is created after the load in the loader, and
-// why source_unique has no counterpart: a catalog document has a natural id.
+// There is no TTL here. The importer upserts by natural id without dropping
+// collections or deleting records absent from a later payload. A build alone
+// never writes to MongoDB. Apply this index file explicitly after the import.
 //
 // Safe to re-run. createIndex is idempotent when the spec and options match.
 
 // "Show me this family" and "show me this kind", which is the filter bar on
-// every one of the thirty designs. Family first because it is the coarser cut
+// every design. Family first because it is the coarser cut
 // and a compound index answers a prefix query too: this one alone serves
 // {family} and {family, kind}, so no separate family-only index is needed.
 db.components.createIndex({ family: 1, kind: 1 }, { name: "family_kind" });
@@ -29,10 +29,9 @@ db.components.createIndex({ family: 1, kind: 1 }, { name: "family_kind" });
 // sort stage in memory.
 db.components.createIndex({ lane: 1, order: 1 }, { name: "lane_order" });
 
-// The search box. A text index rather than a regex scan, because a regex without
-// a left anchor cannot use a btree index at all and 1120 documents is enough to
-// notice. Weighted so a name match outranks a description match, which is what
-// somebody typing a name expects.
+// The search box uses token-based text search, weighted so a name match outranks
+// a description match. Verify the actual query plan and latency against the
+// deployed database rather than inferring performance from a catalog count.
 db.components.createIndex(
   { name: "text", detail: "text" },
   { name: "component_search", weights: { name: 10, detail: 2 } });

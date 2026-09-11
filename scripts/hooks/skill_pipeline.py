@@ -71,12 +71,14 @@ the session unusable, and this one is advisory rather than a guard.
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import json
 import os
 import pathlib
 import re
 import sys
 import tempfile
+import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
@@ -159,9 +161,8 @@ def context_for(prompt: str, session: str | None = None,
     and never reached the security lane, which matched two terms and was the one
     that mattered. Declaration order survives only as the tie-break.
 
-    `session` is optional because not every client sends one. Without it the
-    capture below is conservative: it sets a goal when none stands and never
-    replaces one, which is the safe half of the behaviour.
+    `session` selects an isolated store. Without a stable id an inferred goal
+    applies only to this prompt; persisting it would leak across conversations.
 
     `capturing=False` renders without setting anything, for the commands that
     exist to SHOW what a prompt would receive. `--context "refactor the retry
@@ -183,7 +184,7 @@ def context_for(prompt: str, session: str | None = None,
         parts.append(best)   # one lane only; stacking them defeats the budget
     if len(prompt) > 600 or len(MULTI_TASK.findall(prompt)) >= 2:
         parts.append(ORCHESTRATION)
-    goal = standing_goal()
+    goal = standing_goal(session, prompt if capturing else None)
     if goal:
         parts.append(goal)
     return "\n".join(parts)
@@ -293,14 +294,23 @@ def isolated_store():
             STATE_FILE, SEED_FILE = original_state, original_seed
 
 
-def load_goal() -> dict:
+def goal_path(session: str | None = None) -> pathlib.Path:
+    """Do not use client-controlled conversation ids as filesystem paths."""
+    if not session:
+        return STATE_FILE
+    key = hashlib.sha256(session.encode("utf-8")).hexdigest()
+    return STATE_FILE.parent / "sessions" / f"{key}.json"
+
+
+def load_goal(session: str | None = None) -> dict:
     """Runtime state if it exists, else the committed seed, else empty.
 
     Read defensively: this runs on every prompt of every client, so a missing
     file, a hand edit or a half-written save must cost the turn nothing. The
     layers still arrive; only the goal is skipped.
     """
-    for path in (STATE_FILE, SEED_FILE):
+    paths = (goal_path(session), STATE_FILE, SEED_FILE) if session else (STATE_FILE, SEED_FILE)
+    for path in paths:
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
@@ -311,11 +321,16 @@ def load_goal() -> dict:
         merged.update({k: v for k, v in data.items() if k in EMPTY})
         if not isinstance(merged.get("history"), list):
             merged["history"] = []
+        if session and path != goal_path(session):
+            # Only an operator's explicitly global goal is inherited. Old
+            # automatically captured state never becomes a global policy.
+            if merged.get("source") != "explicit" or merged.get("session"):
+                continue
         return merged
     return dict(EMPTY)
 
 
-def save_goal(data: dict) -> bool:
+def save_goal(data: dict, session: str | None = None) -> bool:
     """Write the runtime state. Never raises, never writes the seed.
 
     Returns whether it landed, so a caller can report the truth rather than
@@ -323,14 +338,35 @@ def save_goal(data: dict) -> bool:
     goal for this turn, not a reason to fail the turn.
     """
     data["history"] = data.get("history", [])[-HISTORY_LIMIT:]
+    temporary = None
+    target = goal_path(session)
     try:
-        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        temporary = STATE_FILE.with_suffix(".json.tmp")
-        temporary.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-        temporary.replace(STATE_FILE)     # atomic; a torn read is a lost goal
+        target.parent.mkdir(parents=True, exist_ok=True)
+        # Each writer owns its temporary file. Two simultaneous clients must
+        # never replace or remove one another's shared goal.json.tmp.
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
+                                         dir=target.parent, prefix=target.stem + ".",
+                                         suffix=".tmp", delete=False) as output:
+            temporary = pathlib.Path(output.name)
+            output.write(json.dumps(data, indent=2) + "\n")
+        # Windows briefly denies replacement while another writer replaces the
+        # same target. Retry only this transient permission error, bounded to
+        # 100 ms; a genuinely unwritable store still reports failure.
+        for attempt in range(5):
+            try:
+                temporary.replace(target)
+                break
+            except PermissionError:
+                if attempt == 4:
+                    raise
+                time.sleep(0.01 * (attempt + 1))
         return True
     except OSError:
         return False
+    finally:
+        if temporary is not None:
+            with contextlib.suppress(OSError):
+                temporary.unlink(missing_ok=True)
 
 
 def set_goal(text: str, source: str = "explicit", session: str | None = None,
@@ -342,25 +378,25 @@ def set_goal(text: str, source: str = "explicit", session: str | None = None,
     trace is indistinguishable from one that was never set. Capped, though: an
     unbounded list is what grew the old file to 168 kB.
     """
-    data = load_goal()
+    data = load_goal(session)
     if data.get("goal"):
         data["history"].append({"goal": data["goal"], "set_on": data.get("set_on"),
                                 "source": data.get("source")})
-    data["goal"] = " ".join(text.split())
+    data["goal"] = text
     data["set_on"] = stamp
     data["source"] = source
     data["session"] = session
-    save_goal(data)
+    save_goal(data, session)
     return data
 
 
-def clear_goal() -> dict:
-    data = load_goal()
+def clear_goal(session: str | None = None) -> dict:
+    data = load_goal(session)
     if data.get("goal"):
         data["history"].append({"goal": data["goal"], "set_on": data.get("set_on"),
                                 "source": data.get("source")})
     data.update({"goal": None, "set_on": None, "source": None, "session": None})
-    save_goal(data)
+    save_goal(data, session)
     return data
 
 
@@ -405,31 +441,30 @@ def capture(prompt: str, session: str | None = None) -> None:
                           exactly a session whose objective quietly changed.
       nothing standing    the first prompt that reads as a task becomes it
 
-    A goal captured in an earlier session does not bind a new one: the session
-    id is recorded with it, and a new session's first task replaces a captured
-    goal. An EXPLICIT goal survives the session change, because someone typed it
-    on purpose and only they lift it.
+    Each named session has its own file. Without an id, inferred state cannot
+    safely survive this invocation. A consciously set global CLI goal remains
+    a fallback, but an explicitly set session goal never crosses sessions.
     """
+    if not session:
+        return
     command = parse_command(prompt)
     if command:
         action, text = command
         if action == "set":
             set_goal(text, source="explicit", session=session)
         elif action == "clear":
-            clear_goal()
+            clear_goal(session)
         return
 
     if not looks_like_a_task(prompt):
         return
 
-    data = load_goal()
+    data = load_goal(session)
     standing = data.get("goal")
     if standing:
         if data.get("source") == "explicit":
             return
-        # A captured goal from another session is stale. Same session, leave it.
-        if session is None or data.get("session") in (None, session):
-            return
+        return
     set_goal(prompt, source="captured", session=session)
 
 
@@ -457,22 +492,48 @@ GOAL_ORIGIN = {
                  "and it is lifted the same way: say so, or type goal clear."),
     "explicit": ("It was set deliberately rather than captured, so capture will not "
                  "replace it; only the person who set it lifts it, with goal clear."),
+    "ephemeral": ("No stable session id was supplied: this objective applies to this "
+                  "prompt only and was not saved for another conversation."),
 }
 # Anything else, including a store written by an older version that has no
 # source field at all: say nothing about the origin rather than guessing one.
 GOAL_ORIGIN_UNKNOWN = "It is lifted only by the person who set it, with goal clear."
 
 
-def standing_goal() -> str:
-    data = load_goal()
+def goal_for_context(session: str | None = None, prompt: str | None = None) -> dict:
+    """Select only this session's state, an explicit global goal, or a transient task."""
+    data = load_goal(session)
+    if not session and (data.get("source") != "explicit" or data.get("session")):
+        data = dict(EMPTY)
+    if not data.get("goal") and not session and prompt:
+        command = parse_command(prompt)
+        text = command[1] if command and command[0] == "set" else prompt
+        if (command and command[0] == "set") or (not command and looks_like_a_task(text)):
+            return {**EMPTY, "goal": text, "source": "ephemeral"}
+    return data
+
+
+def goal_excerpt(data: dict, session: str | None = None) -> str:
+    """Bound the injected preview in bytes, never the stored original objective."""
+    flat = " ".join(data["goal"].split())
+    encoded = flat.encode("utf-8")
+    if len(encoded) <= 400:
+        return flat
+    source = ("current user prompt" if data.get("source") == "ephemeral"
+              else str(goal_path(session if data.get("session") else None)))
+    suffix = f" [truncated; full goal: {source}]"
+    allowance = max(0, 400 - len(suffix.encode("utf-8")))
+    return encoded[:allowance].decode("utf-8", errors="ignore").rstrip() + suffix
+
+
+def standing_goal(session: str | None = None, prompt: str | None = None) -> str:
+    data = goal_for_context(session, prompt)
     goal = data.get("goal")
     if not isinstance(goal, str) or not goal.strip():
         return ""
     # One line, and bounded. A goal pasted from a long brief would otherwise sit
     # in front of every prompt for the rest of the session.
-    flat = " ".join(goal.split())
-    if len(flat) > 400:
-        flat = flat[:400].rstrip() + " [truncated]"
+    flat = goal_excerpt(data, session)
     origin = GOAL_ORIGIN.get(data.get("source"), GOAL_ORIGIN_UNKNOWN)
     return GOAL_TEMPLATE.format(goal=flat, origin=origin)
 
@@ -539,6 +600,11 @@ def main() -> int:
     # through context_for, and a goal captured under the wrong session id would
     # be replaced on the next turn rather than carried.
     session = find_session(event)
+    if session:
+        client = ("antigravity" if antigravity else "cursor" if cursor else
+                  "gemini" if gemini else "copilot" if copilot_session or copilot_transform
+                  else "claude")
+        session = f"{client}:{session}"
 
     if cursor:
         # context_for('') rather than CORE, so a Cursor session carries the

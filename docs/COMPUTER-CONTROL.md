@@ -26,19 +26,26 @@ python scripts/harness_computer.py --route browser-rust --repo PATH
 Add `--json` for machine-readable evidence. Every route response includes
 `actionTaken: false`.
 
-## Five harnesses, one conditional route
+## Injection harnesses and the conditional route
 
-The surface, proxy, wrapper and goal harnesses all call the shared prompt
+The surface, proxy, wrapper, goal and super harnesses all call the shared prompt
 pipeline. A computer-control lane in that pipeline tells the model to load
 `master-computer-control` and use this router only when screen, GUI or browser
 work matches. `master-computer-control` also travels in the surface harness's
 enforced skill set, so hooked clients and browser bundles receive the same
 limits. The control lane does not appear on unrelated prompts.
 
+The computer-control router is a separate diagnostic capability, not a
+prompt-injection harness. Its check remains available beneath the harness cards
+and in the command catalog. The package also exposes a CLI alias for that
+diagnostic, so counting installed commands is not a count of injection paths.
+
 ## Support boundary
 
-- OpenAI Computer Use `26.903.61454` is an installed proprietary bundled
-  package on this machine. Only a supported host can expose its live tool.
+- OpenAI Computer Use `26.903.61454` was the proprietary bundled package
+  inspected for the recorded review. It is not a claim about the currently
+  installed version. Run the native route check for local package evidence;
+  only a supported host can expose its live tool.
 - Playwright `v1.63.0` and Playwright MCP `v0.0.80` are Microsoft's official
   routes. The supported language list is JavaScript/TypeScript, Python, Java
   and .NET.

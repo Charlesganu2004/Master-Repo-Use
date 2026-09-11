@@ -43,6 +43,38 @@ import harness_paths  # noqa: E402
 BUILD_TEST = os.environ.get("MASTER_HARNESS_BUILD_TEST") == "1"
 
 
+def sandbox_environment(home: pathlib.Path, scratch: pathlib.Path) -> dict[str, str]:
+    """Keep every install, cache and goal write inside this test's scratch root."""
+    env = dict(os.environ)
+    env.update({
+        "HOME": str(home),
+        "USERPROFILE": str(home),
+        "LOCALAPPDATA": str(home / "local-app-data"),
+        "APPDATA": str(home / "app-data"),
+        "XDG_DATA_HOME": str(home / "data"),
+        "MASTER_REPO_GOAL_DIR": str(scratch / "goal-state"),
+        "PIP_CACHE_DIR": str(scratch / "pip-cache"),
+        "PIP_CONFIG_FILE": os.devnull,
+        "PIP_NO_INDEX": "1",
+    })
+    env.pop("MASTER_REPO_PATH", None)
+    env.pop("PYTHONPATH", None)
+    return env
+
+
+class PackageSandboxEnvironment(unittest.TestCase):
+    def test_all_writable_state_is_scoped_to_the_temporary_directory(self):
+        with tempfile.TemporaryDirectory(prefix="master-package-env-") as directory:
+            scratch = pathlib.Path(directory)
+            env = sandbox_environment(scratch / "home", scratch)
+            for name in ("HOME", "USERPROFILE", "LOCALAPPDATA", "APPDATA",
+                         "XDG_DATA_HOME", "MASTER_REPO_GOAL_DIR", "PIP_CACHE_DIR"):
+                self.assertTrue(pathlib.Path(env[name]).is_relative_to(scratch), name)
+            self.assertNotIn("MASTER_REPO_PATH", env)
+            self.assertNotIn("PYTHONPATH", env)
+            self.assertEqual(env["PIP_NO_INDEX"], "1")
+
+
 class ThePackagingMetadataIsComplete(unittest.TestCase):
     """Cheap checks on the files that decide what the wheel contains."""
 
@@ -171,30 +203,34 @@ class ItWorksWithNoRepositoryAnywhere(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.scratch = tempfile.mkdtemp(prefix="master-harness-pkg-")
+        cls.addClassCleanup(shutil.rmtree, cls.scratch, ignore_errors=True)
         scratch = pathlib.Path(cls.scratch)
         cls.dist = scratch / "dist"
+        cls.project = scratch / "project"
+        cls.home = scratch / "home"
+        cls.project.mkdir()
+        cls.home.mkdir()
 
         # Pin pip's cache into the scratch directory. Without this, a run that
         # overrides HOME leaves pip resolving its cache relative to the working
         # directory, and this test dropped a 1.1 MB pip/cache/ tree into the
         # repository root: untracked, ungitignored, and one careless `git add -A`
         # from being committed. Nothing errored and the test passed.
-        cls.build_env = dict(os.environ)
-        cls.build_env["PIP_CACHE_DIR"] = str(scratch / "pip-cache")
+        cls.build_env = sandbox_environment(cls.home, scratch)
 
-        build = subprocess.run([sys.executable, "-m", "build", "--wheel",
+        build = subprocess.run([sys.executable, "-m", "build", "--wheel", "--no-isolation",
                                 "--outdir", str(cls.dist)],
                                cwd=ROOT, capture_output=True, text=True, timeout=900,
                                env=cls.build_env)
         if build.returncode != 0:
-            raise unittest.SkipTest(f"could not build a wheel:\n{build.stdout[-2000:]}")
+            raise AssertionError(f"could not build a wheel:\n{build.stdout[-2000:]}\n{build.stderr[-2000:]}")
         wheels = list(cls.dist.glob("*.whl"))
         if not wheels:
-            raise unittest.SkipTest("the build produced no wheel")
+            raise AssertionError("the build produced no wheel")
 
         cls.env = scratch / "env"
         subprocess.run([sys.executable, "-m", "venv", str(cls.env)],
-                       capture_output=True, timeout=600, env=cls.build_env)
+                       capture_output=True, timeout=600, env=cls.build_env, check=True)
         cls.bin = cls.env / ("Scripts" if os.name == "nt" else "bin")
         cls.suffix = ".exe" if os.name == "nt" else ""
 
@@ -203,18 +239,10 @@ class ItWorksWithNoRepositoryAnywhere(unittest.TestCase):
                                  capture_output=True, text=True, timeout=900,
                                  env=cls.build_env)
         if install.returncode != 0:
-            raise unittest.SkipTest(f"could not install the wheel:\n{install.stderr[-2000:]}")
+            raise AssertionError(f"could not install the wheel:\n{install.stderr[-2000:]}")
 
         # A directory with no checkout above it, and a home of its own, so
         # nothing this test does can reach the real machine's client configs.
-        cls.project = scratch / "project"
-        cls.home = scratch / "home"
-        cls.project.mkdir()
-        cls.home.mkdir()
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.scratch, ignore_errors=True)
 
     @classmethod
     def exe(cls, name: str) -> str:
@@ -229,11 +257,7 @@ class ItWorksWithNoRepositoryAnywhere(unittest.TestCase):
         return str(cls.bin / f"{name}{cls.suffix}")
 
     def run_command(self, name, *args, cwd=None):
-        env = dict(os.environ)
-        env["HOME"] = str(self.home)
-        env["USERPROFILE"] = str(self.home)
-        env["PIP_CACHE_DIR"] = str(pathlib.Path(self.scratch) / "pip-cache")
-        env.pop("MASTER_REPO_PATH", None)
+        env = sandbox_environment(self.home, pathlib.Path(self.scratch))
         return subprocess.run([self.exe(name), *args], cwd=str(cwd or self.project),
                               capture_output=True, text=True, timeout=600, env=env)
 
@@ -257,9 +281,7 @@ class ItWorksWithNoRepositoryAnywhere(unittest.TestCase):
 
     def test_the_hook_injects_the_layers_and_the_refactor_rule(self):
         event = json.dumps({"input": {"prompt": "refactor the retry module"}})
-        env = dict(os.environ)
-        env["HOME"] = str(self.home)
-        env["USERPROFILE"] = str(self.home)
+        env = sandbox_environment(self.home, pathlib.Path(self.scratch))
         result = subprocess.run([self.exe("master-harness-hook")], input=event,
                                 capture_output=True, text=True, cwd=str(self.project),
                                 timeout=120, env=env)

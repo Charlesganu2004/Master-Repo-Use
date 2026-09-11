@@ -7,6 +7,7 @@
 <title>Store | Master Repo Atlas</title>
 <link rel="stylesheet" href="themes.css">
 <link rel="stylesheet" href="atlas-next.css">
+<link rel="stylesheet" href="atlas-exhibition.css">
 <style>
 /* A query workbench, not a card wall.
    d12 is the card version of this catalog and Charles liked it, so this is
@@ -33,6 +34,12 @@ a{color:var(--accent)}
 }
 .mg-top a.back{color:var(--dim); text-decoration:none; font-size:11px}
 .mg-top a.back:hover{color:var(--accent)}
+.mg-nav{display:flex;gap:8px;flex-wrap:wrap}
+.mg-nav button{min-height:44px;padding:8px 12px;border:1px solid var(--line);
+  border-radius:var(--mg-radius-sm);background:var(--panel);color:var(--ink);cursor:pointer}
+.mg-nav button:hover,.mg-nav button:focus-visible{border-color:var(--accent);outline:2px solid var(--accent);outline-offset:2px}
+.mg-preview-note{margin:0;padding:10px 16px;color:var(--dim);border-bottom:1px solid var(--line)}
+#mgAtlasHost[hidden],#mgPreview[hidden],.mg-nav button[hidden]{display:none}
 .mg-prompt{color:var(--accent); font-weight:700}
 .mg-top h1{margin:0; font-size:13px; font-weight:700; letter-spacing:.02em}
 .mg-top .spacer{flex:1}
@@ -143,10 +150,18 @@ a{color:var(--accent)}
   <span class="mg-stat"><b id="mgDocs">0</b> documents</span>
   <span class="mg-stat"><b id="mgColls">0</b> collections</span>
   <span class="mg-stat"><b id="mgIdx">0</b> indexes</span>
-  <div id="themehost"></div>
+  <nav class="mg-nav" aria-label="Store and full Atlas">
+    <button type="button" id="mgOpenAtlas" disabled>Open full Atlas</button>
+    <button type="button" id="mgOpenCommands" disabled>Command center</button>
+    <button type="button" id="mgReturn" hidden>Return to Mongo preview</button>
+  </nav>
+  <div id="mgThemeHost"></div>
 </header>
 
-<main class="mg-shell">
+<p class="mg-preview-note" role="note">Offline catalog preview, not a connected database.
+  Query plans below illustrate the intended indexes; a live MongoDB explain is needed to verify the actual plan.
+  Open full Atlas for every capability, setup command, harness, filter and description.</p>
+<main class="mg-shell" id="mgPreview">
   <section class="mg-panel">
     <h2>Collections</h2>
     <div class="mg-body" id="mgCollections"></div>
@@ -177,10 +192,13 @@ a{color:var(--accent)}
     </div>
   </section>
 </main>
+<div id="mgAtlasHost" hidden></div>
 
 <script src="atlas-theme.js"></script>
 <script src="atlas-data.js"></script>
 <script src="atlas-core.js"></script>
+<script src="atlas-panes.js"></script>
+<script src="atlas-exhibition.js"></script>
 <script>
 'use strict';
 const A = AtlasCore, T = AtlasTheme;
@@ -188,6 +206,40 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
   m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 
 let store = null, collection = 'components', queryIndex = 0;
+
+function mountFullAtlas() {
+  const host = document.getElementById('mgAtlasHost');
+  const preview = document.getElementById('mgPreview');
+  const back = document.getElementById('mgReturn');
+  const workspace = AtlasExhibition.workspace({
+    skin: 'store', title: 'Store / Full Atlas',
+    note: 'Browse the same capabilities and commands behind this database preview.'
+  });
+  if (!workspace) return;
+  host.appendChild(workspace);
+  let opener = document.getElementById('mgOpenAtlas');
+  function open(tab, button) {
+    opener = button;
+    preview.hidden = true;
+    host.hidden = false;
+    back.hidden = false;
+    AtlasPanes.tab = tab;
+    AtlasPanes.draw();
+    const stage = document.getElementById('stage');
+    if (stage) stage.focus();
+  }
+  [['mgOpenAtlas', 'index'], ['mgOpenCommands', 'commands']].forEach(([id, tab]) => {
+    const button = document.getElementById(id);
+    button.disabled = false;
+    button.onclick = () => open(tab, button);
+  });
+  back.onclick = () => {
+    host.hidden = true;
+    preview.hidden = false;
+    back.hidden = true;
+    opener.focus();
+  };
+}
 
 /* Syntax highlighting written out rather than pulled in. A design that has to
    load a library to colour twelve lines of JSON is a design with a dependency
@@ -306,7 +358,8 @@ function draw() {
 (async function () {
   await A.init('atlas-data.json');
   store = A.state.data.catalogStore;
-  if (T) T.mount(document.getElementById('themehost'), 'viper');
+  if (T) T.mount(document.getElementById('mgThemeHost'), 'viper');
+  mountFullAtlas();
   if (!store) {
     document.getElementById('mgDocument').textContent =
       '// catalogStore missing. Run: python scripts/build_atlas_data.py';

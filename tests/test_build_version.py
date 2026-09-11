@@ -15,50 +15,39 @@ from __future__ import annotations
 
 import json
 import pathlib
-import shutil
 import sys
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
-import build_public_site as builder  # noqa: E402
+sys.path.insert(0, str(ROOT / "tests"))
+from public_site_fixture import IsolatedPublicSite  # noqa: E402
 
 INDEX = ROOT / "index.html"
 ATLAS_RUNTIME = ROOT / "atlas.js"
 
-
-def stage() -> dict:
-    shutil.rmtree(builder.SITE, ignore_errors=True)
-    (builder.SITE / "docs").mkdir(parents=True)
-    shutil.copy(ROOT / "docs" / "catalog-status.svg", builder.PUBLIC_SVG)
-    payload = builder.build()
-    builder.PUBLIC_STATE.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    builder.build_index()
-    assert not builder.build_design_studio()
-    builder.build_version(builder.build_id())
-    return payload
-
-
 class BuildVersionTests(unittest.TestCase):
-    def tearDown(self) -> None:
-        shutil.rmtree(builder.SITE, ignore_errors=True)
+    def setUp(self) -> None:
+        self.site = IsolatedPublicSite()
+        self.addCleanup(self.site.cleanup)
+        self.builder = self.site.builder
 
     def test_source_carries_the_placeholder_to_stamp(self):
         self.assertIn('<meta name="build-id" content="dev">',
                       INDEX.read_text(encoding="utf-8"))
 
     def test_publish_writes_version_json(self):
-        stage()
-        self.assertTrue(builder.PUBLIC_VERSION.exists())
-        data = json.loads(builder.PUBLIC_VERSION.read_text(encoding="utf-8"))
+        self.site.stage(version=True)
+        self.assertTrue(self.builder.PUBLIC_VERSION.exists())
+        data = json.loads(self.builder.PUBLIC_VERSION.read_text(encoding="utf-8"))
         self.assertTrue(data.get("build_id"))
         self.assertTrue(data.get("built_at"))
 
     def test_published_html_is_stamped_with_the_same_id(self):
-        stage()
-        published = builder.PUBLIC_INDEX.read_text(encoding="utf-8")
-        studio = builder.PUBLIC_DESIGN_STUDIO.read_text(encoding="utf-8")
-        identifier = json.loads(builder.PUBLIC_VERSION.read_text(encoding="utf-8"))["build_id"]
+        self.site.stage(version=True)
+        published = self.builder.PUBLIC_INDEX.read_text(encoding="utf-8")
+        studio = self.builder.PUBLIC_DESIGN_STUDIO.read_text(encoding="utf-8")
+        identifier = json.loads(
+            self.builder.PUBLIC_VERSION.read_text(encoding="utf-8"))["build_id"]
         self.assertIn(f'<meta name="build-id" content="{identifier}">', published)
         self.assertIn(f'<meta name="build-id" content="{identifier}">', studio)
         self.assertNotIn('content="dev"', published,
@@ -71,7 +60,7 @@ class BuildVersionTests(unittest.TestCase):
         previous = os.environ.get("GITHUB_SHA")
         os.environ["GITHUB_SHA"] = "a" * 40
         try:
-            self.assertEqual("a" * 12, builder.build_id())
+            self.assertEqual("a" * 12, self.builder.build_id())
         finally:
             if previous is None:
                 os.environ.pop("GITHUB_SHA", None)

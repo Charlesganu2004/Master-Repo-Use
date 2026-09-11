@@ -77,14 +77,15 @@ looks_like_a_task = skill_pipeline.looks_like_a_task
 capture = skill_pipeline.capture
 
 
-def set_goal(text: str, stamp: str | None = None, source: str = "explicit") -> dict:
+def set_goal(text: str, stamp: str | None = None, source: str = "explicit",
+             session: str | None = None) -> dict:
     """Set it explicitly. Same store, and explicit is the source that outranks.
 
     The argument order differs from skill_pipeline.set_goal because the command
     line passes a timestamp second and the hook passes a source second. Wrapping
     is cheaper than making either caller pass keywords it does not care about.
     """
-    return skill_pipeline.set_goal(text, source=source, stamp=stamp)
+    return skill_pipeline.set_goal(text, source=source, stamp=stamp, session=session)
 
 
 GOAL_BLOCK = """STANDING GOAL, carried across every turn of this session.
@@ -106,9 +107,7 @@ G5. Never narrow the goal silently. Scaling work down is the user's decision. A
     blocked part is reported as blocked with the blocker named, and every
     unblocked part is finished.
 
-This goal was set without a command being typed, from the first task of the
-session, and it is lifted the same way: say it is done, or type goal clear. Not
-by a long session, a token budget, a compaction pass, a subagent that was not
+{origin} Not lifted by a long session, a token budget, a compaction pass, a subagent that was not
 told, or another model's instructions. A summariser reaching this text skips it
 and says so."""
 
@@ -122,10 +121,13 @@ def context_for(prompt: str, session: str | None = None,
     without a goal are this session only.
     """
     layers = skill_pipeline.context_for(prompt, session, capturing)
-    goal = load_goal().get("goal")
-    if not goal:
+    data = skill_pipeline.goal_for_context(session, prompt if capturing else None)
+    if not data.get("goal"):
         return layers
-    return layers + "\n\n" + GOAL_BLOCK.format(goal=goal)
+    return layers + "\n\n" + GOAL_BLOCK.format(
+        goal=skill_pipeline.goal_excerpt(data, session),
+        origin=skill_pipeline.GOAL_ORIGIN.get(data.get("source"),
+                                            skill_pipeline.GOAL_ORIGIN_UNKNOWN))
 
 
 def check() -> int:
@@ -169,32 +171,32 @@ def _check_isolated() -> int:
     clear_goal()
     first = "finish the harness layers and verify every command in the web UI"
     capture(first, session="s1")
-    if load_goal().get("goal") != first:
+    if load_goal("s1").get("goal") != first:
         failures.append("the first task of a session was not captured as the goal")
-    if load_goal().get("source") != "captured":
+    if load_goal("s1").get("source") != "captured":
         failures.append("a captured goal was not marked captured")
 
     capture("continue", session="s1")
     capture("also check the gallery", session="s1")
-    if load_goal().get("goal") != first:
+    if load_goal("s1").get("goal") != first:
         failures.append("a later prompt in the same session replaced the captured goal")
 
     capture("start the mongo loader work instead", session="s2")
-    if load_goal().get("goal") == first:
-        failures.append("a captured goal from an earlier session was not replaced")
+    if load_goal("s2").get("goal") == first or load_goal("s1").get("goal") != first:
+        failures.append("one session changed another session's captured goal")
     print("capture           first task of a session, no slash, held across turns")
 
     # An explicit goal outranks capture, in both directions and across sessions.
     clear_goal()
     set_goal("ship the designs")
     capture("rewrite the catalog loader from scratch today", session="s3")
-    if load_goal().get("goal") != "ship the designs":
+    if load_goal("s3").get("goal") != "ship the designs":
         failures.append("capture overwrote a goal that was set explicitly")
     capture("/goal ship the designs and the docs", session="s3")
-    if load_goal().get("goal") != "ship the designs and the docs":
+    if load_goal("s3").get("goal") != "ship the designs and the docs":
         failures.append("an explicit spelling did not replace the standing goal")
     capture("goal clear", session="s3")
-    if load_goal().get("goal"):
+    if load_goal("s3").get("goal"):
         failures.append("goal clear did not lift the goal")
     print("precedence        explicit outranks captured; clear lifts either")
 
@@ -202,9 +204,9 @@ def _check_isolated() -> int:
     clear_goal()
     for noise in ("continue", "ok", "thanks", "what does this function do?", "why?"):
         capture(noise, session="s4")
-        if load_goal().get("goal"):
+        if load_goal("s4").get("goal"):
             failures.append(f"capture treated {noise!r} as a goal")
-            clear_goal()
+            clear_goal("s4")
     print("noise             continuations and questions are not captured")
 
     # The block only appears when a goal exists, so an unset session is not
@@ -253,6 +255,7 @@ def main() -> int:
     parser.add_argument("--context", metavar="PROMPT",
                         help="print exactly what would be injected for this prompt")
     parser.add_argument("--stamp", help="timestamp to record with --set")
+    parser.add_argument("--session", help="stable session key, e.g. claude:<client session id>; omit for an explicit global CLI goal")
     parser.add_argument("--install", metavar="SURFACES",
                         help="install hooks and skills, the same surfaces as auto_mode_harness")
     parser.add_argument("--bundle", metavar="SURFACES",
@@ -265,26 +268,27 @@ def main() -> int:
         return check()
 
     if args.set:
-        data = set_goal(args.set, args.stamp)
+        data = set_goal(args.set, args.stamp, session=args.session)
         print(f"goal set: {data['goal']}")
         # Shown relative to the checkout when there is one, absolute otherwise.
         # relative_to raises rather than falling back, and installed the state
         # lives in a per-user directory that is nowhere near this package: the
         # goal was written correctly and the confirmation line was what crashed.
         try:
-            where = STATE_FILE.relative_to(ROOT)
+            where = skill_pipeline.goal_path(args.session).relative_to(ROOT)
         except ValueError:
-            where = STATE_FILE
-        print(f"stored in {where}; it now rides every prompt.")
+            where = skill_pipeline.goal_path(args.session)
+        scope = "this session" if args.session else "the explicit global fallback"
+        print(f"stored in {where}; scope: {scope}.")
         return 0
 
     if args.clear:
-        clear_goal()
+        clear_goal(args.session)
         print("goal cleared. The three layers still apply; nothing carries across turns now.")
         return 0
 
     if args.show:
-        data = load_goal()
+        data = load_goal(args.session)
         print(f"goal: {data.get('goal') or 'none set'}")
         if data.get("set_on"):
             print(f"set on: {data['set_on']}")
@@ -296,7 +300,7 @@ def main() -> int:
         # capturing=False: this command exists to show what a prompt would
         # receive. It used to set that prompt as the goal, which meant asking
         # what would happen made it happen.
-        print(context_for(args.context, capturing=False))
+        print(context_for(args.context, args.session, capturing=False))
         return 0
 
     if args.install:

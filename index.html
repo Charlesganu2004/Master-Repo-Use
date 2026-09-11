@@ -139,7 +139,7 @@
 
       <article class="harness-note">
         <h3>The part that survives the turn</h3>
-        <p>Every harness carries the same layers. They differ only in how the rules arrive. The goal harness adds the thing none of the others can do: an objective that outlives the turn it was set in.</p>
+        <p>The harnesses share the base layers through different delivery paths. Goal support keeps the session objective; the super harness adds its named review chain. Only configured hooks and requests routed through a harness receive its instructions.</p>
         <p>A long session forgets what it was for. The first prompt states the objective, the next twenty say "continue", and by the end the model is answering the last message rather than serving the goal. Nothing errors, so nothing surfaces it. The goal harness restates the goal before reading each request, checks the answer against the goal rather than the last message, and reports what is left.</p>
         <p class="harness-capture" id="goalCapture"></p>
         <p class="harness-forms">You can still set one deliberately with <code>/goal</code>, <code>\goal</code>, <code>/mastergoal</code> or <code>goal:</code>. All of them work, because people type all of them. A goal set that way is marked explicit and is never replaced by capture; only the person who set it lifts it, with <code>goal clear</code>.</p>

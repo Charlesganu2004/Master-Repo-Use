@@ -293,7 +293,9 @@ class TheGoalSurvivesTheTurn(unittest.TestCase):
         self.assertFalse(pipeline.STATE_FILE.exists())
         pipeline.SEED_FILE.write_text(
             '{"goal": "seeded objective", "history": []}', encoding="utf-8")
-        self.assertIn("seeded objective", pipeline.standing_goal())
+        self.assertEqual(pipeline.load_goal()["goal"], "seeded objective")
+        self.assertNotIn("seeded objective", pipeline.standing_goal(),
+                         "an unscoped historical seed is not a user's global instruction")
 
     def test_a_hook_write_never_touches_the_committed_seed(self):
         """Capture writes on the first prompt of every session. Writing that to
@@ -304,7 +306,8 @@ class TheGoalSurvivesTheTurn(unittest.TestCase):
         before = pipeline.SEED_FILE.read_text(encoding="utf-8")
         pipeline.capture("rebuild the atlas payload and verify it", session="s")
         self.assertEqual(pipeline.SEED_FILE.read_text(encoding="utf-8"), before)
-        self.assertTrue(pipeline.STATE_FILE.exists())
+        self.assertTrue(pipeline.goal_path("s").exists())
+        self.assertFalse(pipeline.STATE_FILE.exists())
 
     def test_the_first_task_of_a_session_becomes_the_goal_with_no_slash(self):
         """The ask, in one test. Charles should not have to type anything for
@@ -314,7 +317,7 @@ class TheGoalSurvivesTheTurn(unittest.TestCase):
         context = pipeline.context_for(first, session="s1")
         self.assertIn("STANDING GOAL", context)
         self.assertIn(first, context)
-        self.assertEqual(pipeline.load_goal()["source"], "captured")
+        self.assertEqual(pipeline.load_goal("s1")["source"], "captured")
 
     def test_a_captured_goal_holds_across_the_turns_after_it(self):
         """Otherwise the goal is just the last message with extra steps, and the
@@ -325,22 +328,23 @@ class TheGoalSurvivesTheTurn(unittest.TestCase):
         for later in ("continue", "also fix the gallery links",
                       "now rebuild the payload and push it"):
             pipeline.capture(later, session="s1")
-        self.assertEqual(pipeline.load_goal()["goal"], first)
+        self.assertEqual(pipeline.load_goal("s1")["goal"], first)
 
-    def test_a_new_session_replaces_a_captured_goal(self):
-        """A goal captured yesterday must not bind today's work."""
+    def test_a_new_session_does_not_replace_another_sessions_goal(self):
+        """The old session must still resume its own objective."""
         pipeline.clear_goal()
         pipeline.capture("finish the harness layers and verify them", session="s1")
         pipeline.capture("load the catalog into mongo and check the indexes",
                          session="s2")
-        self.assertIn("mongo", pipeline.load_goal()["goal"])
+        self.assertIn("mongo", pipeline.load_goal("s2")["goal"])
+        self.assertIn("harness", pipeline.load_goal("s1")["goal"])
 
     def test_an_explicit_goal_is_never_overwritten_by_capture(self):
         """Someone typed it on purpose. Only they lift it."""
         pipeline.clear_goal()
         pipeline.set_goal("ship the designs", source="explicit", session="s1")
-        pipeline.capture("rewrite the catalog loader from scratch", session="s2")
-        self.assertEqual(pipeline.load_goal()["goal"], "ship the designs")
+        pipeline.capture("rewrite the catalog loader from scratch", session="s1")
+        self.assertEqual(pipeline.load_goal("s1")["goal"], "ship the designs")
 
     def test_capture_ignores_continuations_and_questions(self):
         """A wrong yes rides in front of every prompt for the rest of the
@@ -349,7 +353,7 @@ class TheGoalSurvivesTheTurn(unittest.TestCase):
                       "what does this function do?", "why is it slow?"):
             pipeline.clear_goal()
             pipeline.capture(noise, session="s")
-            self.assertIsNone(pipeline.load_goal()["goal"], noise)
+            self.assertIsNone(pipeline.load_goal("s")["goal"], noise)
 
     def test_the_history_is_capped_so_the_store_cannot_grow_without_bound(self):
         """The old store reached 168 kB because history was unbounded and every

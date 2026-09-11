@@ -11,11 +11,15 @@ import pathlib
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from html.parser import HTMLParser
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tests"))
+from public_site_fixture import IsolatedPublicSite  # noqa: E402
+
 DATA = ROOT / "atlas-data.json"
 DESIGNS = ROOT / "designs"
 INTERACTIVE = [
@@ -151,9 +155,10 @@ class TheDataLayer(unittest.TestCase):
         looks like: prose such as "Finance/Trading" is slug-shaped and harmless,
         while an actual unallowlisted repository name is the thing that matters.
         """
-        published = ROOT / "_site" / "designs" / "atlas-data.json"
-        if not published.exists():
-            self.skipTest("run scripts/build_public_site.py first")
+        with IsolatedPublicSite() as site:
+            site.stage()
+            published_blob = site.builder.PUBLIC_DESIGNS.joinpath(
+                "atlas-data.json").read_text(encoding="utf-8")
         allow, catalog = set(), set()
         for path in (ROOT / "repo-lists").glob("*.txt"):
             for line in path.read_text(encoding="utf-8").splitlines():
@@ -161,18 +166,22 @@ class TheDataLayer(unittest.TestCase):
                 if not re.fullmatch(r"[\w.-]+/[\w.-]+", candidate):
                     continue
                 (allow if path.stem == "public-allowlist" else catalog).add(candidate)
-        blob = published.read_text(encoding="utf-8")
-        leaked = sorted(slug for slug in (catalog - allow) if slug in blob)
+        leaked = sorted(
+            slug for slug in (catalog - allow) if slug in published_blob)
         self.assertFalse(leaked, f"private catalog slugs in published data: {leaked[:8]}")
 
     def test_the_published_artifact_drops_every_private_component(self):
-        published = ROOT / "_site" / "designs" / "atlas-data.json"
-        if not published.exists():
-            self.skipTest("run scripts/build_public_site.py first")
-        data = json.loads(published.read_text(encoding="utf-8"))
-        self.assertTrue(data["meta"].get("redacted"), "published data is not marked redacted")
-        self.assertFalse([c for c in data["components"] if c.get("private")])
-        self.assertEqual(len(data["lanes"]), len(self.d["lanes"]),
+        with IsolatedPublicSite() as site:
+            site.stage()
+            public_data = json.loads(site.builder.PUBLIC_DESIGNS.joinpath(
+                "atlas-data.json").read_text(encoding="utf-8"))
+        self.assertTrue(public_data["meta"].get("redacted"),
+                        "published data is not marked redacted")
+        self.assertFalse([
+            component for component in public_data["components"]
+            if component.get("private")
+        ])
+        self.assertEqual(len(public_data["lanes"]), len(self.d["lanes"]),
                          "lanes should survive redaction; only entries are private")
 
     def test_setup_recipes_are_explicit_and_catalog_clones_are_not_setup(self):

@@ -1112,9 +1112,9 @@ function renderPipeline() {
   const summary = document.getElementById('pipelineSummary');
   if (summary) {
     summary.textContent = pipeline.ruleCount + ' rules in ' +
-      (pipeline.layers || []).length + ' layers, injected ahead of every prompt and ' +
-      'every command, with no slash and no exception. ' + pipeline.byteCount +
-      ' bytes a turn, read from ' + pipeline.source + '.';
+      (pipeline.layers || []).length + ' base layers for configured hooks and routed ' +
+      'requests, with no slash needed on those paths. Web chat uses saved instructions ' +
+      'or a paste bundle. ' + pipeline.byteCount + ' base bytes, read from ' + pipeline.source + '.';
   }
 
   const layers = document.getElementById('pipelineLayers');

@@ -533,10 +533,10 @@ const AtlasPanes = (() => {
       }).join('') || '<p class="empty">Nothing matches the current filters.</p>'}</div>`;
   }
 
-  /* Four harnesses, and the differences are not cosmetic. Each stands in a
+  /* Harness differences are not cosmetic. Each stands in a
      different place, and the place decides what it can enforce, so every card
      leads with the mechanism and carries the limit next to the capability. A
-     list of four similar tools would hide the only thing worth knowing. */
+     list of similar tools would hide the only thing worth knowing. */
   function layersHTML() {
     const p = A.pipeline();
     if (!p) {
@@ -547,8 +547,8 @@ const AtlasPanes = (() => {
     return `<section class="layers" aria-label="The standing pipeline">
       <h3>What arrives on every prompt</h3>
       <p class="sub">${esc(say(
-        'Every time you send a message, the model is handed this list first. You do not type anything. It is the same list in every app on the list below.',
-        `${p.ruleCount} rules in three layers, injected ahead of every prompt and every command, with no slash and no exception. ${p.byteCount} bytes a turn, read from ${p.source}.`))}</p>
+        'Configured hooks and routed requests supply this list without a slash. Web chat needs saved instructions or a pasted bundle. Requests outside those paths are not covered.',
+        `${p.ruleCount} base rules in three layers for supported hooks and routed requests. No slash is needed on those paths. Web chat uses saved instructions or a paste bundle. ${p.byteCount} base bytes, read from ${p.source}.`))}</p>
       ${(p.layers || []).map(layer => `<article class="layer" data-layer="${layer.number}">
         <header class="layer-head">
           <span class="layer-num">Layer ${layer.number}</span>
@@ -739,10 +739,10 @@ const AtlasPanes = (() => {
       </article>`).join('')}</div>
       ${pipelineCommandsHTML()}
       ${computerControlHTML(items)}
-      <p class="sub harness-foot">All ${items.length} inject the same layers, so nothing here
-        changes what the rules say. They differ only in how the rules arrive. The goal harness adds
-        one thing on top: a goal that survives the turn, captured from the first task of the session
-        with nothing typed, and lifted only by the person it belongs to.</p>`;
+      <p class="sub harness-foot">These harnesses share the base layers, with different delivery paths.
+        Goal support keeps the session objective; the super harness adds its named review chain.
+        Only configured hooks and requests routed through a harness receive its instructions.
+        Read each limit before choosing a path.</p>`;
   }
 
   function routesHTML() {
