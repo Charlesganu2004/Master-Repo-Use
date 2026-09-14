@@ -92,7 +92,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 CORE = """Standing pipeline. Three layers, every prompt and every command, no slash and no exception.
 
 LAYER 1, before reading the request:
-1. CAVEMAN. Compress repeatedly-loaded prose with the caveman skills; route commands through rtk. Retrieve matching entries only, never a whole catalog, file tree or log.
+1. GRAPHIFY THEN CAVEMAN. Ask the local code graph first (explain, path, query); reading files is the fallback. Index with local AST parsing only, never the model-backed docs pass, so nothing leaves the machine. Compress repeatedly-loaded prose with the caveman skills; route commands through rtk. Retrieve matching entries only, never a whole catalog, file tree or log.
 2. FULL OUTPUT. No "rest of code", no "similar to above", no skeleton where an implementation was asked for. Out of room means stop at a clean break and say exactly what remains.
 3. ANTI-SLOP. No em dashes. One theme, one accent, one radius scale per surface. No AI-purple, no three-equal-cards, no generic names, no invented precision, no filler verbs, no fake screenshots.
 
@@ -141,7 +141,7 @@ LANES = (
 
     (r"\b(codebase|knowledge.?graph|graphify|call.?graph|blast.?radius|"
      r"unfamiliar|onboard|orient|impact.?analysis|god.?node|trace.?path)\w*",
-     "12. Orienting in code nobody has read end to end: build the graph before grepping it file by file. Load master-graphify, run /graphify . once, then graphify query, path and explain against graph.json. EXTRACTED edges are quotable; INFERRED edges are leads to open first. Code parsing stays local; the docs, PDF and media pass goes to a model, so scope it before pointing it at private material."),
+     "12. Orienting in code nobody has read end to end: run /graphify . once, then query, path and explain against graph.json. EXTRACTED edges are quotable; INFERRED edges are leads to open first."),
 
     (r"\b(pricing|version|latest|current|today|release|changelog|"
      r"model name|quota)\w*",
