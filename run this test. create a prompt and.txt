@@ -1,0 +1,191 @@
+run this test. create a prompt and test and produce a graph and give me the prompt you test too for me to test and verify. I want you to use the super harness vs not using the harness. a super harness that also uses ponytail and caveman vs super harness that does not use caveman but use ponytail instead. and ponytail vs caveman and caveman browse vs playwright vs rustwright/version in rust for playwright. testing time,cost,tokens, loc, efficeny, agents, and quality. 
+
+
+https://github.com/JuliusBrussee/caveman-browse
+
+https://github.com/DietrichGebert/ponytail
+
+also for the super harness verify that it works and do a test to see from two prompts one with the harness and one without the harness the differences in token usage and response and give me a graph showing the difference, the prompt and a prompt for me to try to do the test myself thats slight harder. also add for the super harness that if a user does /token limit and put a digital number the models have to stop at that limit immediaatley and plan around that limit amount. But other then that everything else in the super harness is automatic and happens every time per every prompt and chat, and code session, and everything.
+for the one in client surfaceses there should be a plus for everyone so if a user is using open frontier models oor something like GitHub copilot when I click the plusss it can configure the commands for it to use.
+
+I am looking at the skills and they're not as in depth as the orginal take for example caveman https://github.com/JuliusBrussee/caveman . the orginial is further in depth. and we need to also update the skills. everytime theres a new release that we are automatically updated. and that we make the skills, mcp, tools, and harness all should be very thourgh as the orginal and for the onses we created like the super harness they need to be super thourgh adding in those skills that its using for it and then even more thorugh instructions ands steps.
+
+also question If I move the skills, tools, pluggins, and mcp to the held in mogno db or another form like postgre sql that can viable hold them and maintain them. We can store them as packages there and use GitHub bots to check if the versions we have had any releases or updates and to update those packages for our users and it lets them know to if they are not up to date. Also the ones that are stale or archived we eval and see if worth bringing in house and mataining. If not then we delete them with verifitcation from human in the loop as an GitHub issue to pop up for us to look at and if we approve and delete it then it should also delete on where were storing them too. we also want to create the monitor package/skill for every new skills, mcp, tool, and pluggin a user uses in there set up this that skill,tool,mcp, and pluggin is sent to our GitHub repo to be eval for malware and sql injection and invisible text and anything harmful. if not harmful then we add it to the repo and send it to me stored to where we are storing the others to as packages and turn that one also into a package and then keep it updated based on the release the and upadates that come out about that. Is doing this possible and if is will it work and is there any  flaws in my plan/ logic.give me a plan and artechure diagram too for this.
+
+
+
+
+
+Prompts aligned and those tests still pass. Writing the stable sections of the report narrative now (features, registry, limits), leaving only the data-driven findings for when the runs land:
+
+
+4 background commands completed, 1 failed
+
+Created narrative_static.json, ran a command
++66
+-0
+57 of 60 coding runs are done; judges are queued behind them at six concurrent slots. Preparing the packaging step so it's ready when the data lands:
+
+
+Created package.py, ran a command
++33
+-0
+Checking whether judge agents have actually started, or whether something is blocking them:
+
+
+Ran a command
+Judges have started (they were queued behind the runs). While they work, running the full repo suite to check nothing I added broke anything, and to get fresh verification counts for the report:
+
+
+Ran a command
+1,096 passed, 7 skipped: nothing broken, and the benchmark folder is correctly excluded from collection. Adding a repo test that guards the scoring logic itself, since the whole benchmark rests on those hidden suites discriminating correctly:
+
+
+Background command completed
+· Count Shipped orders with Total > $500
+
+Created test_benchmark_scoring.py, ran a command
++129
+-0
+Six guard tests pass. Checking the runs:
+
+Checked workflow progress
+All 60 coding runs are done and judging is underway (21 of 72). Browser is at 23 of 27. Waiting for both to finish before collecting, since partial data would skew the medians.
+
+running
+Waiting until both workflows finish
+Waiting in the background. Meanwhile, confirming the judge output schema is landing correctly:
+
+Inspected judge output format
+
+Session limit reached
+
+2 background tasks completed
+
+Session limit reached
+
+Background workflow completed
+· Six prompt arms x two coding tasks x five reps on Sonnet 5 in a clean scaffold, each answer blind-judged twice by Opus 5
+· took 10m 59s
+Weekly limit reached
+Turn on usage credits to keep working past your plan limit. Your weekly limit resets at 10:00 PM.
+Edited 9 files
+
+coding_workflow.js
++8
+-2
+
+collect.py
++7
+-2
+
+analyze.py
++3
+-1
+
+README.md
++75
+-0
+
+narrative.json
++30
+-0
+
+Show 4 more
+
+
+
+
+I dont see the desgins and everything else I told you to do when I on the WEb u…
+$token-reducer  no slashes at all needed and it is automatic and used per everything on the back side so the user and mself dont have to do it everytime and it is done everytime by the model and an enforced rule and cannot be deleted. and you have to use it now for everything too.  dont stop until everything is finished goal and rememer we are trying to remove users needing to do the backslashes and this is autmoactilly done and enforced everytime at all times and its layers of things the model has to go through. first layer is caveman and full-output-enforecment and antislope, then plan and design, then agents and a actions and add again caveman , full-output enforcement and antislop and also use what skills,tools,pluggins, and mcps fit the sitatuion for the agents forced for the model to choose and apply. also add a selection thing for web ui that ask what model they are using local and or web and only chat modes and configures commands and everything else to that and groups it. so githubcopilot, gemni code aissit and gemini, claude, chat gpt, and local models (after scan we know what models that is for the system can handle and only give commands for those). and they can do multiple check boxesses.continnue and also you setup for yourself and for the web ui  too add the hook. also is has to always use caveman no mater what, plan skill no matter what, design skill no mater what, and full-output enforcement no matter what and anti slop skills no mater what for every prompt and conversation for chat, cowork, and code and for every model too and do it for your self for every conversation and prompt and set it up for the web ui command for every command it has this too as well add and the skills and tools to and hook. dont stop till everything is finished/full-output-enforcement   go ahead and keep building. Also why is it that ot use the skills I have to "/" use a back slhash then look it up instead of  wehn I type in a prompt it automatically uses all skills and plugins that works and goes through first always a caveman and design and full-output-enforcement and ai token reducer skills/pluggins/tools and the other agents with an aochstrator agent verifying everything? as thats what I want it to do everytime instead of using the backslash and I want the commands on the website to configure that for every model. Also would we need to make that a harness/pluggins or in the global commands for every model to be able to do it automactically without the need for a backslash.  //design-taste-frontend continue
+add spice too it it just doesnt have to be atlas designs and can be drastically differrent redo the last 15 designs
+the 10 new design you added look like rinse and repeat I said to go look at other websites that are cool and have it at 100% view as the what the website is designed aorund view wise and has very cool and high defition and cool graphics for the 10 desgins and use the copy skills and alll the web ui design skills and other skilss to help you. also in the text show me what you mean by indexing and mongodb store. add spice too it it just doesnt have to be atlas designs and can be drastically differrent redo the last 15 designs. this is for the master repo
+
+…
+Tuesday 7:33 AM
+
+Edited pages.yml
++8
+-0
+continue
+
+Tuesday 7:41 AM
+Continuing. I found the direct reason the live site missed design-only updates: the Pages workflow did not watch designs/**. That trigger is now fixed; I’m finishing the non-destructive global installer, the enforcement-status UI, and the distinct design pass before running the full verification.
+
+
+Edited files
+we ran out of token usage but continue this 
+$token-reducer  no slashes at all needed and it is automatic and used per everything on the back side so the user and mself dont have to do it everytime and it is done everytime by the model and an enforced rule and cannot be deleted. and you have to use it now for everything too.  dont stop until everything is finished goal and rememer we are trying to remove users needing to do the backslashes and this is autmoactilly done and enforced everytime at all times and its layers of things the model has to go through. first layer is caveman and full-output-enforecment and antislope, then plan and design, then agents and a actions and add again caveman , full-output enforcement and antislop and also use what skills,tools,pluggins, and mcps fit the sitatuion for the agents forced for the model to choose and apply. also add a selection thing for web ui that ask what model they are using local and or web and only chat modes and configures commands and everything else to that and groups it. so githubcopilot, gemni code aissit and gemini, claude, chat gpt, and local models (after scan we know what models that is for the system can handle and only give commands for those). and they can do multiple check boxesses.continnue and also you setup for yourself and for the web ui  too add the hook. also is has to always use caveman no mater what, plan skill no matter what, design skill no mater what, and full-output enforcement no matter what and anti slop skills no mater what for every prompt and conversation for chat, cowork, and code and for every model too and do it for your self for every conversation and prompt and set it up for the web ui command for every command it has this too as well add and the skills and tools to and hook. dont stop till everything is finished/full-output-enforcement   go ahead and keep building. Also why is it that ot use the skills I have to "/" use a back slhash then look it up instead of  wehn I type in a prompt it automatically uses all skills and plugins that works and goes through first always a caveman and design and full-output-enforcement and ai token reducer skills/pluggins/tools and the other agents with an aochstrator agent verifying everything? as thats what I want it to do everytime instead of using the backslash and I want the commands on the website to configure that for every model. Also would we need to make that a harness/pluggins or in the global commands for every model to be able to do it automactically without the need for a backslash.  //design-taste-frontend continue
+add spice too it it just doesnt have to be atlas designs and can be drastically differrent redo the last 15 designs
+the 10 new design you added look like rinse and repeat I said to go look at other websites that are cool and have it at 100% view as the what the website is designed aorund view wise and has very cool and high defition and cool graphics for the 10 desgins and use the copy skills and alll the web ui design skills and other skilss to help you. also in the text show me what you mean by indexing and mongodb store. add spice too it it just doesnt have to be atlas designs and can be drastically differrent redo the last 15 designs. this is for the master repo
+
+…
+Token-reducer remains active for this resumed turn. The requested design-taste-frontend command is not installed as a callable skill here, so I’m using the available Interface Kit and Last 20% design workflows while keeping its catalog entry untouched. The automatic pipeline itself is already being wired without slash syntax.
+
+
+Loaded a tool, read files, ran a command
+I’m checking current high-end web references now, then translating the ideas into original visual systems rather than copying any site. The design dials are deliberate: different information architectures, interaction patterns, type systems, motion languages, and graphic primitives across the fifteen surfaces.
+
+
+Ran commands, searched the web
+The first visual pass confirmed the complaint: the newer pages had different skins, but the same tabs, setup rail, filters, and inspector dominated all fifteen. I’m replacing their first viewport with fifteen distinct, data-backed experiences and keeping the full Atlas available behind one clear button on every page.
+
+
+Edited files
+
+Edited 5 files
++634
+-17
+Master-Repo-Use/scripts/install_auto_mode.py
+Master-Repo-Use/scripts/
+install_auto_mode.py
++8
+-6
+Master-Repo-Use/scripts/setup-global-ai.ps1
+Master-Repo-Use/scripts/
+setup-global-ai.ps1
++8
+-4
+Master-Repo-Use/scripts/setup-global-ai.sh
+Master-Repo-Use/scripts/
+setup-global-ai.sh
++8
+-7
+
+Show 2 more files
+run this test. create a prompt and test and produce a graph and give me the prompt you test too for me to test and verify. I want you to use the super harness vs not using the harness. a super harness that also uses ponytail and caveman vs super harness that does not use caveman but use ponytail instead. and ponytail vs caveman and caveman browse vs playwright vs rustwright/version in rust for playwright. testing time,cost,tokens, loc, efficeny, agents, and quality.
+https://github.com/JuliusBrussee/caveman-browse
+https://github.com/DietrichGebert/ponytail
+also for the super harness verify that it works and do a test to see from two prompts one with the harness and one without the harness the differences in token usage and response and give me a graph showing the difference, the prompt and a prompt for me to try to do the test myself thats slight harder. also add for the super harness that if a user does /token limit and put a digital number the models have to stop at that limit immediaatley and plan around that limit amount. But other then that everything else in the super harness is automatic and happens every time per every prompt and chat, and code session, and everything.
+for the one in client surfaceses there should be a plus for everyone so if a user is using open frontier models oor something like GitHub copilot when I click the plusss it can configure the commands for it to use.
+I am looking at the skills and they're not as in depth as the orginal take for example caveman  . the orginial is further in depth. and we need to also update the skills. everytime theres a new release that we are automatically updated. and that we make the skills, mcp, tools, and harness all should be very thourgh as the orginal and for the onses we created like the super harness they need to be super thourgh adding in those skills that its using for it and then even more thorugh instructions ands steps.
+also question If I move the skills, tools, pluggins, and mcp to the held in mogno db or another form like postgre sql that can viable hold them and maintain them. We can store them as packages there and use GitHub bots to check if the versions we have had any releases or updates and to update those packages for our users and it lets them know to if they are not up to date. Also the ones that are stale or archived we eval and see if worth bringing in house and mataining. If not then we delete them with verifitcation from human in the loop as an GitHub issue to pop up for us to look at and if we approve and delete it then it should also delete on where were storing them too. we also want to create the monitor package/skill for every new skills, mcp, tool, and pluggin a user uses in there set up this that skill,tool,mcp, and pluggin is sent to our GitHub repo to be eval for malware and sql injection and invisible text and anything harmful. if not harmful then we add it to the repo and send it to me stored to where we are storing the others to as packages and turn that one also into a package and then keep it updated based on the release the and upadates that come out about that. Is doing this possible and if is will it work and is there any  flaws in my plan/ logic.give me a plan and artechure diagram too for this
+
+…
+10:03 AM
+You've hit your usage limit. Upgrade your plan or add credits to continue, or try again later.
+
+
+Goal usage limited
+run this test. create a prompt one complex and one super complex and test and produce a graph and give me the prompt you test too for me to test and verify. I want you to use the super harness vs not using the harness. a super harness that also uses ponytail and caveman vs super harness that does not use caveman but use ponytail instead. and ponytail vs caveman and caveman browse vs playwright vs rustwright/version in rust for playwright. testing time,cost,tokens, loc, efficeny, agents, and quality. give me back the prompt anad graph and any other test files and another two prompts to do test with but on a different frontier model. make sure you can finish it before we run out of tokens for this window of tokens we have for hrs [https://github.com/JuliusBrussee/caveman-browse](https://github.com/JuliusBrussee/caveman-browse) [https://github.com/DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) •
+4m 12s
+
+
+
+
+
+
+
+Outputs
+
+Create a file or site
+
+Sources
+
+I dont see the desgins and everything else I told you to do when I on the WEb u…
+
+github.com/JuliusBrussee/caveman-browse
+
+github.com/DietrichGebert/ponytail
+
+View all
