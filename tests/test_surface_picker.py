@@ -187,8 +187,9 @@ class ThePickerScript(unittest.TestCase):
     def test_the_checkboxes_are_real_checkboxes(self):
         self.assertIn('type="checkbox"', SCRIPT)
 
-    def test_models_above_the_entered_memory_are_not_listed(self):
-        self.assertIn("s.minRamGb <= ram", SCRIPT)
+    def test_models_require_an_explicit_validated_report(self):
+        self.assertIn("catalog.hardwareReport.platform !== catalog.os", SCRIPT)
+        self.assertIn("catalog.hardwareReport.modelIds.includes(s.id)", SCRIPT)
 
     def test_lowering_the_memory_unticks_a_model_that_no_longer_fits(self):
         """Otherwise the tick survives out of sight and the script emits a pull

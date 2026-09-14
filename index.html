@@ -8,6 +8,7 @@
   <meta name="description" content="A high definition interactive atlas for the Master Repo system.">
   <title>Graphite Atlas | Master Repo Use</title>
   <link rel="stylesheet" href="atlas.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23232830'/%3E%3Cpath d='M8 24 16 7 24 24M11 19h10' fill='none' stroke='%23e0a27c' stroke-width='3'/%3E%3C/svg%3E">
   <script src="designs/custom-surfaces.js" defer></script>
 <script src="atlas.js" defer></script>
 </head>
@@ -83,7 +84,7 @@
     <section class="routes-section page-shell" id="setup" aria-labelledby="setupTitle">
       <div class="section-heading route-heading">
         <div><p class="eyebrow">Easy setup</p><h2 id="setupTitle">Tick what you use. It writes only those commands.</h2></div>
-        <p>A CLI on this machine gets a command. A browser product cannot receive one, so it gets the connect step instead of a command that would do nothing. Local models are filtered to what your memory can actually hold.</p>
+        <p>A CLI on this machine gets a command. Hosted products get advisory project instructions, not a claim of native hooks. Local model choices require an explicit local-helper report; this browser cannot scan your hardware.</p>
       </div>
 
       <div class="surface-config">
@@ -95,11 +96,11 @@
           <div class="cfg-field">
             <label class="cfg-label" for="setupRam">System memory</label>
             <div class="ram-input">
-              <input id="setupRam" type="number" min="4" max="256" step="2" value="16"
+              <input id="setupRam" type="number" min="4" max="256" step="2"
                      aria-describedby="setupRamNote">
               <span>GB</span>
             </div>
-            <p class="cfg-note" id="setupRamNote">Decides which local models are offered.</p>
+            <p class="cfg-note" id="setupRamNote">Optional planning estimate only. It does not enable model commands.</p>
           </div>
           <div class="cfg-field">
             <span class="cfg-label" id="setupDepthLabel">Depth</span>
@@ -108,6 +109,15 @@
           </div>
         </div>
 
+        <details class="hardware-report">
+          <summary>Import a local hardware report</summary>
+          <p>From your trusted Master Repo checkout, run this read-only helper locally. It does not install models. Paste only its JSON output, never credentials or private logs. Nothing is uploaded.</p>
+          <pre><code id="setupReportCommand"></code></pre>
+          <label for="setupReport">Hardware report JSON</label>
+          <textarea id="setupReport" rows="5" maxlength="65536" spellcheck="false"></textarea>
+          <button type="button" class="quiet-button" id="setupReportApply">Validate report</button>
+          <p id="setupReportStatus" role="status">No report loaded. Local model commands stay unavailable.</p>
+        </details>
         <div id="surfaceGroups"></div>
       </div>
 

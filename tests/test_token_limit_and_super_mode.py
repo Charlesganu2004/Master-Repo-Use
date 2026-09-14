@@ -129,7 +129,8 @@ class TheRuleTellsTheTruthAboutEnforcement(IsolatedStore):
     def test_it_only_claims_a_hard_stop_where_one_exists(self):
         self.assertIn("hard stop", sp.token_block(2000, enforced=True))
         self.assertNotIn("hard stop", sp.token_block(2000, enforced=False))
-        self.assertIn("on you", sp.token_block(2000, enforced=False))
+        self.assertIn("advisory", sp.token_block(2000, enforced=False))
+        self.assertIn("not a total-token", sp.token_block(2000, enforced=True))
 
 
 class TheProxyEnforcesItForReal(IsolatedStore):

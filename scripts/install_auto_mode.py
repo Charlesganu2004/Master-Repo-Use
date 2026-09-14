@@ -19,6 +19,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import pathlib
@@ -26,6 +27,7 @@ import platform
 import shlex
 import shutil
 import sys
+import uuid
 
 BEGIN = "<!-- MASTER-REPO-USE:BEGIN -->"
 END = "<!-- MASTER-REPO-USE:END -->"
@@ -96,21 +98,60 @@ def describe_platform() -> str:
     return {"Darwin": "macOS", "Windows": "Windows", "Linux": "Linux"}.get(system, system)
 
 
+def preserve_backup(path: pathlib.Path, backup: pathlib.Path | None = None) -> None:
+    """Keep each previous byte sequence, never replace a recovery copy."""
+    if not path.is_file():
+        return
+    destination = backup or path.with_name(path.name + ".bak")
+    if destination.exists():
+        destination = destination.with_name(destination.name + "." + uuid.uuid4().hex)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("xb") as stream:
+        stream.write(path.read_bytes())
+
+
+def accepted_legacy_representation(source: pathlib.Path, destination: pathlib.Path,
+                                   record: object) -> bool:
+    """Accept only explicitly approved, exact-hash SKILL.md newline variants."""
+    if source.name != "SKILL.md" or destination.name != "SKILL.md":
+        return False
+    if not isinstance(record, dict) or record.get("approved") is not True:
+        return False
+    if record.get("kind") != "legacy-line-endings":
+        return False
+    original, installed = source.read_bytes(), destination.read_bytes()
+    if (record.get("source_sha256") != hashlib.sha256(original).hexdigest() or
+            record.get("installed_sha256") != hashlib.sha256(installed).hexdigest()):
+        return False
+    try:
+        original.decode("utf-8")
+        installed.decode("utf-8")
+    except UnicodeDecodeError:
+        return False
+    return original != installed and original.replace(b"\r\n", b"\n") == installed.replace(b"\r\n", b"\n")
+
+
 def upsert_block(path: pathlib.Path, body: str, dry: bool) -> str:
     """Replace the marked block in place, leaving everything else alone."""
-    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    text = path.read_bytes().decode("utf-8") if path.exists() else ""
     block = f"{BEGIN}\n{body.strip()}\n{END}"
+    if text.count(BEGIN) != text.count(END) or text.count(BEGIN) > 1:
+        return "REFUSED: ambiguous managed markers; instructions unchanged"
     if BEGIN in text and END in text:
         start = text.index(BEGIN)
+        if text.index(END) < start:
+            return "REFUSED: reversed managed markers; instructions unchanged"
         stop = text.index(END, start) + len(END)
-        new = text[:start].rstrip() + "\n\n" + block + "\n" + text[stop:].lstrip()
+        new = text[:start] + block + text[stop:]
         action = "would update" if dry else "updated"
     else:
-        new = text.rstrip() + ("\n\n" if text.strip() else "") + block + "\n"
+        new = text + ("\n\n" if text else "") + block + "\n"
         action = "would add" if dry else "added"
     if not dry:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(new, encoding="utf-8")
+        if new != text:
+            preserve_backup(path)
+        path.write_bytes(new.encode("utf-8"))
     return action
 
 
@@ -146,6 +187,8 @@ def upsert_cursor_rule(path: pathlib.Path, body: str, dry: bool) -> str:
     rendered = CURSOR_FRONTMATTER + "\n\n" + remainder
     if not dry:
         path.parent.mkdir(parents=True, exist_ok=True)
+        if rendered != text:
+            preserve_backup(path)
         path.write_text(rendered, encoding="utf-8")
     return action
 
@@ -181,16 +224,55 @@ def install_skill(repo: pathlib.Path, home: pathlib.Path, dry: bool,
                     if p.is_dir() and (p / "SKILL.md").is_file())
     if not skills:
         return "skipped, no SKILL.md found"
-    if dry:
-        return f"would install {len(skills)} into {root}"
     target = home / pathlib.PurePosixPath(root)
-    target.mkdir(parents=True, exist_ok=True)
+    state = home / ".master-repo-auto"
+    manifest = state / ("skills-" + hashlib.sha256(root.encode()).hexdigest() + ".json")
+    try:
+        known = json.loads(manifest.read_text(encoding="utf-8")) if manifest.exists() else {}
+    except (OSError, ValueError):
+        return "REFUSED: installed skill manifest unreadable; no skills changed"
+    if not isinstance(known, dict):
+        return "REFUSED: installed skill manifest must be an object; no skills changed"
+    conflicts = []
+    copies = []
     for skill in skills:
         destination = target / skill.name
-        # Merge in place. Removing the destination first would delete files a
-        # person or another client added to that capability directory, which
-        # contradicts the no-prune guarantee this installer is meant to apply.
-        shutil.copytree(skill, destination, dirs_exist_ok=True)
+        pending = []
+        for source_file in sorted(skill.rglob("*")):
+            if not source_file.is_file():
+                continue
+            relative = source_file.relative_to(source)
+            output = target / relative
+            key = relative.as_posix()
+            digest = hashlib.sha256(source_file.read_bytes()).hexdigest()
+            if output.exists():
+                if output.is_file() and accepted_legacy_representation(source_file, output, known.get(key)):
+                    pending.append((source_file, output, key, known[key]))
+                    continue
+                current = hashlib.sha256(output.read_bytes()).hexdigest() if output.is_file() else None
+                if current != digest and current != known.get(key):
+                    conflicts.append(str(output))
+                    pending = None
+                    break
+            pending.append((source_file, output, key, digest))
+        if pending is not None:
+            copies.extend(pending)
+    if dry:
+        return (f"would install {len(skills)} into {root}; "
+                f"conflicts left unchanged: {', '.join(conflicts) or 'none'}")
+    for source_file, output, key, digest in copies:
+        if isinstance(digest, dict):
+            continue
+        if output.exists() and hashlib.sha256(output.read_bytes()).hexdigest() != digest:
+            preserve_backup(output, state / "backups" / (uuid.uuid4().hex + ".bak"))
+        output.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_file, output)
+        known[key] = digest
+    state.mkdir(parents=True, exist_ok=True)
+    preserve_backup(manifest)
+    manifest.write_text(json.dumps(known, indent=2) + "\n", encoding="utf-8")
+    if conflicts:
+        return "REFUSED: customized skills left unchanged: " + ", ".join(conflicts)
     return (f"merged {len(skills)} into {root} without deleting existing files: "
             + ", ".join(s.name for s in skills))
 
@@ -340,7 +422,7 @@ def _load_hook_file(path: pathlib.Path, dry: bool) -> tuple[dict, str | None]:
             if not isinstance(nested, list) or any(not isinstance(item, dict) for item in nested):
                 return {}, f"REFUSED: hooks.{event} has invalid nested handlers"
     if not dry:
-        path.with_suffix(".json.bak").write_text(raw, encoding="utf-8")
+        preserve_backup(path, path.with_suffix(".json.bak"))
     return data, None
 
 
@@ -436,10 +518,14 @@ def register_copilot_hooks(repo: pathlib.Path, home: pathlib.Path, dry: bool,
     # and the CLI hooks how-to on 2026-09-08.
     def copilot_entry(script: pathlib.Path, *flags: str) -> dict:
         argv = " ".join([f'"{script}"', *flags])
+        executable = sys.executable.replace("'", "''")
+        script_literal = str(script).replace("'", "''")
+        powershell = (f"& '{executable}' '{script_literal}'" +
+                      (" " + " ".join(flags) if flags else ""))
         return {
             "type": "command",
             "bash": f'python3 {argv}',
-            "powershell": f'python {argv}',
+            "powershell": powershell if os.name == "nt" else f'python {argv}',
             "timeoutSec": 15,
         }
 
@@ -596,10 +682,12 @@ def main() -> int:
     print(f"Home     : {home}")
     print(f"Mode     : {'dry run, nothing written' if dry else 'writing'}\n")
 
+    failed = False
     for client, root in SKILL_ROOTS.items():
         if selected(CLIENT_KEYS[client]):
-            print(f"skills   : {client:<12} {install_skill(repo, home, dry, root)}")
-    failed = False
+            result = install_skill(repo, home, dry, root)
+            failed = failed or result.startswith(("REFUSED", "skipped"))
+            print(f"skills   : {client:<12} {result}")
     if not args.no_hook:
         for key, register in (("claude", register_hook), ("antigravity", register_antigravity_hook),
                               ("cursor", register_cursor_hooks), ("copilot", register_copilot_hooks),
@@ -610,7 +698,9 @@ def main() -> int:
                 print(f"{key} hook: {result}")
     for name, rel in CLIENTS.items():
         if instruction_selected(name):
-            print(f"{name:<9}: {upsert_block(home / rel, body, dry)}  ({rel})")
+            result = upsert_block(home / rel, body, dry)
+            failed = failed or result.startswith("REFUSED")
+            print(f"{name:<9}: {result}  ({rel})")
     if selected("cursor"):
         cursor_rule = home / ".cursor" / "rules" / "master-repo-auto.mdc"
         print(f"Cursor   : {upsert_cursor_rule(cursor_rule, body, dry)}  (.cursor/rules/master-repo-auto.mdc)")

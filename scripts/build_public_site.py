@@ -47,6 +47,7 @@ PUBLIC_VERSION = SITE / "version.json"
 PRIVATE_DESIGNS = ROOT / "designs"
 PUBLIC_DESIGNS = SITE / "designs"
 PRIVATE_ATLAS_DATA = ROOT / "atlas-data.json"
+PUBLIC_DESIGN_SUFFIXES = {".html", ".js", ".css", ".json", ".ts", ".jsx", ".tsx"}
 
 # Keys allowed to reach the public artifact. Anything else is dropped by construction.
 ALLOWED_TOP_LEVEL = {"updated", "policy", "counts", "public", "repos"}
@@ -263,9 +264,7 @@ def build_designs() -> list[str]:
             published.unlink()
 
     for source in sorted(PRIVATE_DESIGNS.iterdir()):
-        if source.suffix.lower() not in {
-            ".html", ".js", ".css", ".json", ".ts", ".jsx", ".tsx"
-        } or not source.is_file():
+        if source.suffix.lower() not in PUBLIC_DESIGN_SUFFIXES or not source.is_file():
             continue
         # The two data files are rebuilt from the redacted payload below, never copied.
         if source.name in {"atlas-data.json", "atlas-data.js"}:
@@ -463,6 +462,25 @@ def build() -> dict:
 
 def verify(payload: dict) -> list[str]:
     problems: list[str] = []
+
+    allowed_files = {
+        "index.html", "design-options.html", "design-options.js",
+        "atlas.css", "atlas.js", "version.json", "docs/catalog-status.json",
+        "docs/catalog-status.svg", "docs/hardware-profiles.json",
+    }
+    if PRIVATE_DESIGNS.is_dir():
+        allowed_files.update(
+            "designs/" + source.name for source in PRIVATE_DESIGNS.iterdir()
+            if source.is_file() and source.suffix.lower() in PUBLIC_DESIGN_SUFFIXES
+        )
+    allowed_files.update({"designs/atlas-data.json", "designs/atlas-data.js"})
+    if SITE.is_dir():
+        for published in SITE.rglob("*"):
+            relative = published.relative_to(SITE).as_posix()
+            if published.is_symlink():
+                problems.append(f"public artifact contains a symlink: {relative}")
+            elif published.is_file() and relative not in allowed_files:
+                problems.append(f"unexpected file in public artifact: {relative}")
 
     extra = set(payload) - ALLOWED_TOP_LEVEL
     if extra:

@@ -470,14 +470,22 @@ function renderHardware() {
   if (!state.profiles || !state.profiles.tiers) return;
   const ram = Number(document.getElementById('ramRange').value);
   document.getElementById('ramValue').value = ram + ' GB';
-  const eligible = state.profiles.tiers.filter(function (tier) { return Number(tier.ram_gb) <= ram; });
-  const tier = eligible[eligible.length - 1] || state.profiles.tiers[0];
-  document.getElementById('hardwareStatus').textContent = tier.verdict;
-  document.getElementById('hardwareFits').textContent = tier.fits_total;
-  document.getElementById('hardwareSummary').textContent = tier.summary;
+  const report = catalog.hardwareReport;
+  const models = modelsThatFit();
+  document.getElementById('hardwareStatus').textContent = report ? 'Local report supplied' : 'Report required';
+  document.getElementById('hardwareFits').textContent = report ? models.length : '-';
+  document.getElementById('hardwareSummary').textContent = report
+    ? 'Compatible catalog models from your explicit ' + report.ramGb + ' GB report. The browser validates its format, not the machine itself.'
+    : 'This slider is only a planning estimate. Import a local hardware report in Setup before model compatibility is shown. This browser cannot scan your hardware.';
   const bars = document.getElementById('hardwareBars');
   bars.replaceChildren();
-  const values = Object.entries(tier.fits_by_vendor || {});
+  const vendors = {};
+  models.forEach(function (model) {
+    const detail = (state.profiles.models || []).find(function (entry) { return entry.tag === model.name; });
+    const vendor = detail && detail.vendor || 'Catalog';
+    vendors[vendor] = (vendors[vendor] || 0) + 1;
+  });
+  const values = Object.entries(vendors);
   const maximum = Math.max.apply(null, values.map(function (pair) { return pair[1]; }).concat([1]));
   values.forEach(function (pair, index) {
     const row = el('div', 'result-bar');
@@ -644,6 +652,7 @@ async function loadCatalog() {
   renderSetupControls();
   renderSurfaces();
   renderSetupOutput();
+  renderHardware();
   renderHarness();
   renderStore();
   renderDesignLinks();
@@ -707,9 +716,8 @@ function ramGb() {
    greyed out is an invitation to override it, and the override is exactly the
    mistake this control exists to prevent. */
 function modelsThatFit() {
-  const ram = ramGb();
-  if (!ram) return [];
-  return surfacesIn('local-model').filter(function (s) { return s.minRamGb <= ram; });
+  if (!catalog.hardwareReport || catalog.hardwareReport.platform !== catalog.os) return [];
+  return surfacesIn('local-model').filter(function (s) { return catalog.hardwareReport.modelIds.includes(s.id); });
 }
 
 function pickedIn(group) {
@@ -834,7 +842,7 @@ function wireCustomClients(host) {
       const group = button.getAttribute('data-add-client');
       const closing = addingClient === group;
       addingClient = closing ? null : group;
-      customDraft = closing ? null : { kind: cs.defaultKindFor(catalog.data, group), values: {} };
+      customDraft = closing ? null : cs.draftFor(catalog.data, group, catalog.os);
       customResult = null;
       renderSurfaces();
     });
@@ -888,15 +896,16 @@ function wireCustomClients(host) {
 function renderSurfaces() {
   const host = document.getElementById('surfaceGroups');
   if (!host || !catalog.data) return;
-  const ram = ramGb();
-  host.innerHTML = (catalog.data.surfaceGroups || []).map(function (group) {
-    const items = group.id === 'local-model' ? modelsThatFit() : surfacesIn(group.id);
+  const cs = customSurfaces();
+  if (!cs) return;
+  const restoreFocus = cs.retainFocus(host);
+  host.innerHTML = cs.clientGroups(catalog.data).map(function (group) {
+    const items = group.surfaces.filter(function (s) {
+      return s.group !== 'local-model' || modelsThatFit().some(function (model) { return model.id === s.id; });
+    });
     let body;
-    if (group.id === 'local-model' && !ram) {
-      body = '<p class="group-empty">Enter your system memory above and the tags this machine can hold will appear here.</p>';
-    } else if (!items.length) {
-      body = '<p class="group-empty">Nothing in the vetted list fits ' + escapeHtml(String(ram)) +
-        ' GB. The smallest tag needs 4 GB.</p>';
+    if (!items.length) {
+      body = '<p class="group-empty">No compatible model choices. Import a valid report for this operating system. An empty result is not permission to install a larger model.</p>';
     } else {
       body = '<div class="surface-grid">' + items.map(function (surface) {
         const on = picked.has(surface.id);
@@ -926,6 +935,7 @@ function renderSurfaces() {
       customClientsHtml(group.id) + '</section>';
   }).join('');
   wireCustomClients(host);
+  restoreFocus();
 
   host.querySelectorAll('[data-surface]').forEach(function (box) {
     box.addEventListener('change', function () {
@@ -950,10 +960,18 @@ function renderSetupControls() {
       const button = event.target.closest('[data-setup-os]');
       if (!button) return;
       catalog.os = button.getAttribute('data-setup-os');
+      document.getElementById('setupReportCommand').textContent = customSurfaces().reportCommand(catalog.os);
+      if (catalog.hardwareReport && catalog.hardwareReport.platform !== catalog.os) {
+        catalog.hardwareReport = null;
+        surfacesIn('local-model').forEach(function (model) { picked.delete(model.id); });
+        document.getElementById('setupReportStatus').textContent = 'Operating system changed. Import a matching report.';
+      }
       os.querySelectorAll('[data-setup-os]').forEach(function (other) {
         other.setAttribute('aria-pressed', other === button);
       });
+      renderSurfaces();
       renderSetupOutput();
+      renderHardware();
     });
   }
 
@@ -977,6 +995,23 @@ function renderSetupControls() {
     });
   }
   renderProfileNote();
+
+  const reportButton = document.getElementById('setupReportApply');
+  if (reportButton && !reportButton.dataset.wired) {
+    reportButton.dataset.wired = '1';
+    document.getElementById('setupReportCommand').textContent = customSurfaces().reportCommand(catalog.os);
+    reportButton.addEventListener('click', function () {
+      const result = customSurfaces().validateReport(document.getElementById('setupReport').value, catalog.data, catalog.os);
+      catalog.hardwareReport = result.ok ? result : null;
+      surfacesIn('local-model').forEach(function (model) { picked.delete(model.id); });
+      document.getElementById('setupReportStatus').textContent = result.ok
+        ? 'Report format validated. ' + result.modelIds.length + ' compatible catalog models. Hardware is user-supplied, not browser-attested.'
+        : result.error;
+      renderSurfaces();
+      renderSetupOutput();
+      renderHardware();
+    });
+  }
 
   const ram = document.getElementById('setupRam');
   if (ram && !ram.dataset.wired) {

@@ -63,6 +63,16 @@ import sync_project_skills  # noqa: E402
 
 import skill_pipeline  # noqa: E402
 
+# Surface ids are the harness's vocabulary; --client is the installer's. They
+# overlap enough to look interchangeable and differ exactly where it matters,
+# so the mapping is explicit rather than inferred from a prefix. A surface with
+# no entry passes its own id through and the installer validates it.
+INSTALLER_CLIENTS = {
+    "claude-code": "claude",
+    "gemini-cli": "gemini",
+    "copilot-cli": "copilot",
+}
+
 # The skills that must be present in every auto mode, in the order the pipeline
 # applies them. master-repo-auto is the loader the standing block points at, so
 # it leads. The rest are layers 1 and 2 of the pipeline made available as skills
@@ -375,12 +385,22 @@ def install_surfaces(ids: list[str], dry: bool) -> int:
     if not installer.is_file():
         print(f"installer missing: {installer}", file=sys.stderr)
         return 1
-    command = [sys.executable, str(installer), "--repo", str(project)]
-    if dry:
-        command.append("--dry-run")
+    # One installer run per selected client. The earlier version built a single
+    # command with no --client at all, so the installer fell back to its "all"
+    # default and picking one surface quietly installed six. The ids are already
+    # validated by the caller, and install_auto_mode rejects an unknown --client
+    # itself, so a bad id fails loudly here rather than silently widening.
     print(f"Installing hooks and skills for: {', '.join(ids)}")
-    print(f"  {' '.join(command)}")
-    return subprocess.run(command).returncode
+    failed = 0
+    for surface in ids:
+        client = INSTALLER_CLIENTS.get(surface, surface)
+        command = [sys.executable, str(installer), "--repo", str(project),
+                   "--client", client]
+        if dry:
+            command.append("--dry-run")
+        print(f"  {' '.join(command)}")
+        failed |= subprocess.run(command).returncode
+    return failed
 
 
 def check() -> int:

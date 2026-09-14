@@ -61,11 +61,11 @@ check('every group preselects a kind that names it, so the + never opens blank',
 });
 
 check('Copilot and other IDE agents get the install, not a proxy', () => {
-  const result = CS.commands(data, 'ide', {});
+  const result = CS.commands(data, 'ide', { client: 'copilot', platform: 'windows' });
   assert.ok(result.ok, result.error);
   assert.deepStrictEqual(result.steps.map(s => s.command),
-    ['master-harness-super --install all', 'master-harness-verify']);
-  assert.match(result.limit, /copilot-instructions\.md/);
+    [data.setupRecipes.find(recipe => recipe.id === 'setup-rules-copilot').commands.windows]);
+  assert.match(result.limit, /Only the selected local client/);
 });
 
 check('an open frontier endpoint is quoted into the proxy command', () => {
@@ -156,12 +156,12 @@ check('save, list by group and remove round-trip, and ids never collide', () => 
   const first = CS.save(data, { kind: 'ollama', name: 'Home box', group: 'local-model',
                                 values: { url: 'http://127.0.0.1:11434' } });
   assert.ok(first.ok, first.error);
-  const second = CS.save(data, { kind: 'ide', name: 'Copilot', group: 'web-code', values: {} });
+  const second = CS.save(data, { kind: 'ide', name: 'Copilot', group: 'web-code', values: { client: 'copilot', platform: 'windows' } });
   assert.ok(second.ok, second.error);
   assert.deepStrictEqual(CS.forGroup('local-model').map(c => c.name), ['Home box']);
   assert.ok(CS.remove(first.id));
   // Saving again after a removal must not reuse an id still held by another entry.
-  const third = CS.save(data, { kind: 'ide', name: 'Copilot', group: 'web-code', values: {} });
+  const third = CS.save(data, { kind: 'ide', name: 'Copilot', group: 'web-code', values: { client: 'copilot', platform: 'windows' } });
   assert.ok(third.ok);
   assert.notStrictEqual(third.id, second.id);
   assert.ok(CS.remove(second.id));
@@ -198,8 +198,8 @@ check('a storage that throws leaves the generator working and says so on save', 
   };
   try {
     assert.deepStrictEqual(CS.load(), []);
-    assert.ok(CS.commands(data, 'ide', {}).ok);
-    const result = CS.save(data, { kind: 'ide', name: 'x', group: 'web-code', values: {} });
+    assert.ok(CS.commands(data, 'ide', { client: 'copilot', platform: 'windows' }).ok);
+    const result = CS.save(data, { kind: 'ide', name: 'x', group: 'web-code', values: { client: 'copilot', platform: 'windows' } });
     assert.strictEqual(result.ok, false);
     assert.match(result.error, /would not save/);
   } finally {

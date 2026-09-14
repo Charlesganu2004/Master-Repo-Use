@@ -70,6 +70,9 @@ class IsolatedPublicSite:
         builder.PUBLIC_STATE.write_text(
             json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         builder.build_index()
+        problems = builder.build_profiles()
+        if problems:
+            raise AssertionError("; ".join(problems))
         if design_studio:
             problems = builder.build_design_studio()
             if problems:

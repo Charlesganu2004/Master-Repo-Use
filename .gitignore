@@ -58,3 +58,7 @@ master_harness/verify_auto_mode.py
 /pip/
 .pip-cache/
 master_harness/super_chain.py
+
+# Raw benchmark sessions contain local machine paths. Export reviewed, sanitized
+# reports explicitly; keep the original downloadable archive in session artifacts.
+/benchmarks/private-benchmark-report.zip

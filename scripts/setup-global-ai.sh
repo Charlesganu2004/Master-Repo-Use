@@ -25,11 +25,17 @@ for arg in "$@"; do
 done
 
 writes() { [ "$CLIENT" = "all" ] || [ "$CLIENT" = "$1" ]; }
-# python3 on POSIX, plain python on Git Bash for Windows. Resolved once so a
-# missing interpreter fails here with a clear message, not mid-write.
-PY_BIN="$(command -v python3 || command -v python || true)"
+# A Windows Store alias can exist on PATH without being a working interpreter.
+PY_BIN=""
+for candidate in python3 python; do
+  if command -v "$candidate" >/dev/null 2>&1 &&
+      "$candidate" -c 'import sys; sys.exit(sys.version_info[0] != 3)' >/dev/null 2>&1; then
+    PY_BIN="$(command -v "$candidate")"
+    break
+  fi
+done
 if [ -z "$PY_BIN" ]; then
-  echo "No python interpreter found on PATH (tried python3, python)." >&2
+  echo "No working Python 3 interpreter found on PATH (tried python3, python)." >&2
   exit 1
 fi
 

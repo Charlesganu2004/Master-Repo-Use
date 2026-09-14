@@ -72,6 +72,25 @@ python scripts/sync_project_skills.py
 
 Use `--dry-run` to list the destinations without writing them.
 
+## Skill breadth is not the same as file size
+
+The reviewed Caveman tree at commit
+[`15581d14007fd01fb3f132016741962f34936ca2`](https://github.com/JuliusBrussee/caveman/tree/15581d14007fd01fb3f132016741962f34936ca2)
+contains 35 skill Markdown files totaling 106,890 bytes, including its plugin
+mirror. Its core `skills/caveman/SKILL.md` is 7,022 bytes. The repository's
+`skills/master-caveman/SKILL.md` adaptation was measured at 7,796 UTF-8 bytes and 161
+lines on 2026-09-14. Length alone does not establish equivalent capability or
+instruction quality.
+
+The meaningful difference is family breadth: upstream also separates setup,
+learning, discovery, optimization, compression, management, evidence review and
+delegation capabilities. One house adaptation is not a claim to ship that entire
+family. Several companion skills are already discoverable in the current user's
+Copilot installation, but local availability is not repository adoption.
+Adding further companions requires a separate scope decision, pinned provenance,
+license review and installation checks. Do not pad the adaptation or silently
+install the entire upstream family to make a size comparison look favorable.
+
 ## Why slash commands were previously needed
 
 A slash command is an explicit invocation. The user names a capability, so the
@@ -252,7 +271,7 @@ files.
 
 For Copilot CLI, confirm the marked block in
 `~/.copilot/copilot-instructions.md`, skills under `~/.copilot/skills/`, and
-`userPromptTransformed`, `sessionStart` and `PreToolUse` in
+`userPromptTransformed`, `sessionStart` and `preToolUse` in
 `~/.copilot/hooks/master-repo-auto.json`. For Copilot coding agent, confirm the
 tracked `.github/hooks/master-repo-auto.json` file exists.
 
@@ -264,6 +283,65 @@ Codex skips it until trusted and asks for review again after its definition
 changes.
 
 ## Honest limits
+
+Lane selection attaches only the single best-matching lane. A prompt spanning
+UI and security does not automatically attach both lane blocks. The carried
+standing goal is an unnumbered objective, not an extra numbered pipeline step.
+
+`/token limit N` is a per-response output budget, not a hard ceiling on total
+billed input, output, hidden reasoning, tool or delegated-agent usage. Native
+hooks and hosted-chat paste bundles only provide advisory instructions. A proxy
+can set `max_tokens`, `max_completion_tokens` or Ollama `num_predict`, but the
+upstream must implement that field. No client-independent mechanism can promise
+an exact total-token stop or undeletable rules.
+
+The local proxy accepts an optional `X-Master-Harness-Session` header (1 to 256
+characters) for budget persistence. Use a distinct unpredictable value per
+conversation. The proxy hashes the namespaced identifier for local storage and
+does not forward the header upstream. It is not authentication or tenant
+isolation: keep the proxy on loopback behind the user's own trusted clients.
+Without this header, a prompt budget applies only to that request; configured
+global defaults still apply. `/token limit off` resets only the selected
+conversation. Limits apply even when a payload already contains harness context.
+Invalid number syntax leaves the existing budget unchanged and emits an explicit
+instruction error. Zero retains the documented legacy reset behavior.
+
+### Safe installer refresh and rollback
+
+The shell setup script probes `python3` and then `python` before writing client
+instructions. A command that resolves on `PATH` but cannot execute Python 3
+(such as a Windows Store alias) is rejected; a working fallback is used, or the
+script exits with an explicit error before installation.
+
+Run `python scripts/install_auto_mode.py --client copilot --dry-run` before a
+scoped install. On Windows, newly registered Copilot PowerShell hooks use the
+installer's absolute Python executable, not the Windows Store `python` alias.
+Other operating systems retain the portable platform command.
+
+Instruction changes preserve all bytes outside the owned marker pair and refuse
+ambiguous markers. Existing instruction and hook files receive non-replacing
+backups; subsequent backups have unique suffixes. Skills merge without deleting
+extra files. A differing same-name skill with no matching recorded installation
+hash is a conflict: its entire skill directory stays unchanged, the installer
+reports `REFUSED`, and other non-conflicting skills can still be installed.
+Known managed files may refresh with backups under
+`~/.master-repo-auto/backups/`; installation hashes live beside that directory.
+These hashes track local ownership, not upstream trust or malware clearance.
+Keep backups outside skill discovery roots and review them before rollback.
+
+An explicitly approved legacy `SKILL.md` installation may retain its original
+CRLF/LF representation without being overwritten. The ownership record must
+name both exact hashes and the approval; the installer and verifier independently
+compare the actual files and accept only that newline difference. Missing
+approval, a local edit or a canonical revision change remains a mismatch.
+Verification reports `accepted legacy line-ending representation` as a warning,
+never as exact-byte equality. This exception does not apply to executables or
+configuration files and is not an automatic migration of unknown installations.
+
+`verify_auto_mode.py` checks installed bytes, paths and schemas, not whether a
+running client admitted a hook. Test the actual generated command, then restart
+or reload the client according to its hook lifecycle. Installing does not
+retroactively alter an already-running conversation or enable absent clients.
 
 - The pipeline selects from capabilities the client can actually see. It does
   not install every plugin, MCP server or third-party repository automatically.

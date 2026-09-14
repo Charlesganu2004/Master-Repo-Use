@@ -1,0 +1,4 @@
+# Optional local engine/lint comparisons. Install only in an isolated environment.
+playwright==1.62.0
+rustwright==0.3.0
+ruff==0.16.7

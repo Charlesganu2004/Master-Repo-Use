@@ -92,7 +92,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 CORE = """Standing pipeline. Three layers, every prompt and every command, no slash and no exception.
 
 LAYER 1, before reading the request:
-1. CAVEMAN. Compress repeatedly-loaded prose with the caveman skills; route commands through rtk. Retrieve matching entries only, never a whole catalog, file tree or log.
+1. GRAPHIFY THEN CAVEMAN. Ask the local code graph first (explain, path, query); reading files is the fallback. Index with local AST parsing only, never the model-backed docs pass, so nothing leaves the machine. Compress repeatedly-loaded prose with the caveman skills; route commands through rtk. Retrieve matching entries only, never a whole catalog, file tree or log.
 2. FULL OUTPUT. No "rest of code", no "similar to above", no skeleton where an implementation was asked for. Out of room means stop at a clean break and say exactly what remains.
 3. ANTI-SLOP. No em dashes. One theme, one accent, one radius scale per surface. No AI-purple, no three-equal-cards, no generic names, no invented precision, no filler verbs, no fake screenshots.
 
@@ -141,7 +141,7 @@ LANES = (
 
     (r"\b(codebase|knowledge.?graph|graphify|call.?graph|blast.?radius|"
      r"unfamiliar|onboard|orient|impact.?analysis|god.?node|trace.?path)\w*",
-     "12. Orienting in code nobody has read end to end: build the graph before grepping it file by file. Load master-graphify, run /graphify . once, then graphify query, path and explain against graph.json. EXTRACTED edges are quotable; INFERRED edges are leads to open first. Code parsing stays local; the docs, PDF and media pass goes to a model, so scope it before pointing it at private material."),
+     "12. Orienting in code nobody has read end to end: run /graphify . once, then query, path and explain against graph.json. EXTRACTED edges are quotable; INFERRED edges are leads to open first."),
 
     (r"\b(pricing|version|latest|current|today|release|changelog|"
      r"model name|quota)\w*",
@@ -190,10 +190,15 @@ def context_for(prompt: str, session: str | None = None,
     # lane matching, so "/token limit 3000" never becomes a standing goal and
     # the digits never tip a lane.
     _action, _value, prompt = parse_token_command(prompt)
-    if capturing:
+    invalid_budget = _action is None and re.match(
+        r"^\s*(?:[/\\]token[\s_-]*limit\b|token[\s_-]*limit\s*:)", prompt, re.I)
+    if capturing and not invalid_budget:
         capture(prompt, session)
     lowered = prompt.lower()
     parts = [CORE]
+    if invalid_budget:
+        parts.append("TOKEN LIMIT ERROR: invalid value; existing limit unchanged. "
+                     "Use a nonnegative number, or /token limit off. Do not claim a new limit was set.")
     best, best_score = None, 0
     for pattern, line in LANES:
         score = len(set(re.findall(pattern, lowered)))
@@ -204,7 +209,7 @@ def context_for(prompt: str, session: str | None = None,
     if len(prompt) > 600 or len(MULTI_TASK.findall(prompt)) >= 2:
         parts.append(ORCHESTRATION)
     if include_goal:
-        goal = standing_goal(session, prompt if capturing else None)
+        goal = standing_goal(session, prompt if capturing and not invalid_budget else None)
         if goal:
             parts.append(goal)
     budget = token_block(limit, token_enforced)
@@ -514,7 +519,7 @@ def capture(prompt: str, session: str | None = None) -> None:
 # Behaviour was right and the self-description was wrong, which is the harder
 # kind to notice: nothing errors, and the sentence is only checkable against a
 # field the reader cannot see.
-GOAL_TEMPLATE = """14. STANDING GOAL, carried across turns until the person who set it lifts it.
+GOAL_TEMPLATE = """STANDING GOAL, carried across turns until the person who set it lifts it.
     GOAL: {goal}
     Restate it in one line before reading the request, say which part this turn
     serves, check what you produced against the GOAL rather than the last
@@ -594,11 +599,11 @@ def standing_goal(session: str | None = None, prompt: str | None = None) -> str:
 # model cannot run past. The block says which of the two applies.
 TOKEN_COMMAND = re.compile(
     r"(?:^|(?<=\s))[/\\]token[\s_-]*limit\b[:\s]*"
-    r"(?P<value>off|clear|none|lift|reset|\d[\d,]*(?:\.\d+)?\s*[kKmM]?)(?![\w.])",
+    r"(?P<value>off|clear|none|lift|reset|(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?[ \t]*[kKmM]?)(?![\w.,])",
     re.IGNORECASE)
 TOKEN_COMMAND_COLON = re.compile(
     r"^\s*token[\s_-]*limit\s*:\s*"
-    r"(?P<value>off|clear|none|lift|reset|\d[\d,]*(?:\.\d+)?\s*[kKmM]?)(?![\w.])",
+    r"(?P<value>off|clear|none|lift|reset|(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?[ \t]*[kKmM]?)(?![\w.,])",
     re.IGNORECASE)
 TOKEN_LIFT = {"off", "clear", "none", "lift", "reset"}
 TOKEN_LIMIT_MAX = 10_000_000
@@ -624,9 +629,13 @@ def parse_token_command(prompt: str) -> tuple[str | None, int | None, str]:
         multiplier, raw = 1_000, raw[:-1].strip()
     elif raw.endswith("m"):
         multiplier, raw = 1_000_000, raw[:-1].strip()
+    from decimal import Decimal, InvalidOperation
     try:
-        value = int(float(raw) * multiplier)
-    except ValueError:
+        scaled = Decimal(raw) * multiplier
+        if scaled != scaled.to_integral_value():
+            return None, None, text
+        value = int(min(scaled, TOKEN_LIMIT_MAX))
+    except (InvalidOperation, ValueError):
         return None, None, text
     if value < 1:
         return "clear", None, rest
@@ -659,7 +668,7 @@ def load_token_limit(session: str | None = None) -> int | None:
         limit = data.get("limit")
         if limit is None:
             return None
-        if isinstance(limit, int) and limit > 0:
+        if type(limit) is int and 0 < limit <= TOKEN_LIMIT_MAX:
             return limit
     return None
 
@@ -679,7 +688,9 @@ def resolve_token_limit(prompt: str, session: str | None = None,
     """
     action, value, _rest = parse_token_command(prompt)
     if action is not None and capturing and session:
-        save_token_limit(value if action == "set" else None, session)
+        if not save_token_limit(value if action == "set" else None, session):
+            print("TOKEN LIMIT ERROR: could not persist this session's limit; "
+                  "the command applies to this request only.", file=sys.stderr)
     if action == "set":
         return value
     if action == "clear":
@@ -692,8 +703,13 @@ TOKEN_TEMPLATE = """15. TOKEN LIMIT: {limit} tokens for this response, set with 
     Stop at the last clean break before the limit and end with one line saying exactly what was left out and how to ask for it. Never run past it to finish a thought. FULL OUTPUT still forbids placeholders inside what you do deliver. {enforcement}
     Lift it with /token limit off."""
 
-TOKEN_ENFORCED = "This client also sets max_tokens to the limit, so it is a hard stop."
-TOKEN_INSTRUCTED = "This client cannot cap tokens itself, so holding to it is on you."
+TOKEN_ENFORCED = ("This proxy sets the API output-token cap (max_tokens, "
+                  "max_completion_tokens or num_predict). It is a hard stop only "
+                  "when the upstream implements that field, not a total-token or "
+                  "billing cap across input, reasoning, tools, agents or requests.")
+TOKEN_INSTRUCTED = ("This client cannot cap tokens itself. This is advisory, not "
+                    "an enforced output or total-token billing limit; do not claim "
+                    "precise counting or guaranteed enforcement.")
 
 
 def token_block(limit: int | None, enforced: bool = False) -> str:

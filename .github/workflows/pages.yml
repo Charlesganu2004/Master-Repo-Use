@@ -9,6 +9,11 @@ on:
       - 'index.html'
       - 'atlas.css'
       - 'atlas.js'
+      - 'tests/pages_smoke.cjs'
+      - 'tests/test_frontend_reports.py'
+      - 'scripts/local_model_advisor.py'
+      - 'scripts/install_auto_mode.py'
+      - 'scripts/hooks/**'
       # The gallery is published by build_public_site.py. Without this path a
       # design-only commit reaches main but leaves Pages serving the old gallery.
       - 'designs/**'

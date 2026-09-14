@@ -29,7 +29,7 @@ const AtlasPanes = (() => {
     if (typeof window === 'undefined' || window.CustomSurfaces) return;
     const script = document.createElement('script');
     script.src = 'custom-surfaces.js';
-    script.onload = () => { if (tab === 'easy') renderStage(); };
+    script.onload = () => { setupUI(); if (tab === 'easy') renderStage(); };
     document.head.appendChild(script);
   })();
 
@@ -83,10 +83,10 @@ const AtlasPanes = (() => {
       <div class="step${chosen ? '' : ' locked'}">
         <span class="num">2</span>
         <div class="stepbody">
-          <div class="steplabel">Scan it</div>
+          <div class="steplabel">Local hardware helper</div>
           ${chosen
             ? `<button class="scan" id="scanbtn" title="Click to copy">${esc(scan)}</button>
-               <div class="osnote">Run this, then type the numbers below.</div>`
+               <div class="osnote">Run this locally, then type estimates below. This browser cannot scan hardware; estimates never enable model commands.</div>`
             : '<div class="osnote">Pick your system first and the right scan command appears here.</div>'}
         </div>
       </div>
@@ -109,10 +109,25 @@ const AtlasPanes = (() => {
           <div class="verdictline">
             ${mem
               ? `<b>${esc(tier.label)}</b> · ${esc(tier.verdict)}`
-              : 'Enter RAM to see what this machine can host.'}
+              : 'Optional planning estimate, not a compatibility report.'}
           </div>
         </div>
-      </div>`;
+      </div>
+      <details class="hardware-report">
+        <summary>Import local report for model choices</summary>
+        <p>Run from your trusted Master Repo checkout. Read-only; no model installs. Paste only the JSON output, never credentials. Nothing is uploaded.</p>
+        <pre><code>${esc(CS() ? CS().reportCommand(A.effectivePlatform()) : 'Loading helper command...')}</code></pre>
+        <label for="hardwareReport">Hardware report JSON</label>
+        <textarea id="hardwareReport" rows="5" maxlength="65536" spellcheck="false"></textarea>
+        <button type="button" class="add-client" id="hardwareReportApply">Validate report</button>
+        <p role="status">${esc(A.state.hardwareReportStatus)}</p>
+      </details>`;
+
+    host.querySelector('#hardwareReportApply').onclick = () => {
+      A.importHardwareReport(host.querySelector('#hardwareReport').value);
+      draw();
+      document.getElementById('hardwareReportApply').focus({ preventScroll: true });
+    };
 
     host.querySelectorAll('[data-os]').forEach(b => {
       b.onclick = () => { A.setPlatform(b.dataset.os); draw(); };
@@ -232,7 +247,7 @@ const AtlasPanes = (() => {
     host.innerHTML = orientationHTML() + `
       <div class="frow">
         <label class="flabel" for="fq">Search</label>
-        <input class="fsearch" id="fq" type="text" placeholder="name, owner, lane or description"
+        <input class="fsearch" id="fq" type="text" aria-label="Filter components" placeholder="name, owner, lane or description"
           value="${esc(A.state.query)}">
         <span class="fcount">${c.visibleComponents} of ${c.components}</span>
         ${c.filters ? `<button class="fclear" id="fclear">clear ${c.filters} filter(s)</button>` : ''}
@@ -418,11 +433,29 @@ const AtlasPanes = (() => {
     A.TABS.forEach(t => {
       const b = document.createElement('button');
       b.className = 'tab';
+      b.dataset.tab = t.id;
+      b.id = 'atlas-tab-' + t.id;
+      b.tabIndex = t.id === tab ? 0 : -1;
+      b.setAttribute('aria-controls', 'stage');
       b.innerHTML = esc(t.label) + (t.id === 'basket' && basket ? ` <i class="badge">${basket}</i>` : '');
       b.title = t.hint;
       b.setAttribute('role', 'tab');
       b.setAttribute('aria-selected', String(t.id === tab));
-      b.onclick = () => { tab = t.id; draw(); };
+      const choose = id => {
+        tab = id;
+        draw();
+        document.getElementById('atlas-tab-' + id).focus({ preventScroll: true });
+      };
+      b.onclick = () => choose(t.id);
+      b.onkeydown = event => {
+        const index = A.TABS.findIndex(item => item.id === t.id);
+        const keys = { ArrowRight: (index + 1) % A.TABS.length,
+          ArrowLeft: (index + A.TABS.length - 1) % A.TABS.length,
+          Home: 0, End: A.TABS.length - 1 };
+        if (!(event.key in keys)) return;
+        event.preventDefault();
+        choose(A.TABS[keys[event.key]].id);
+      };
       host.appendChild(b);
     });
   }
@@ -794,18 +827,19 @@ const AtlasPanes = (() => {
   }
 
   function hardwareHTML() {
-    const mem = A.usableMemory();
     const chosen = A.platform();
-    return `<h2>What this machine can carry</h2>
+    const compatible = A.availableSurfaces().filter(surface => surface.group === 'local-model');
+    return `<h2>Hardware reference and local report</h2>
       <p class="sub">${chosen
-        ? `Reading as ${esc(chosen.label)}. ${esc(chosen.note)}`
-        : 'Choose your operating system in step 1 for an accurate reading.'}</p>
+        ? `Target: ${esc(chosen.label)}. ${esc(chosen.note)}`
+        : 'Choose your operating system in step 1.'} Reference tiers are estimates, not a browser scan.</p>
+      <p class="sub">${esc(A.state.hardwareReportStatus)}</p>
       <div class="grid">${A.state.data.hardware.map(t => {
-        const active = mem && A.tierFor(mem).id === t.id;
-        return `<div class="lane-card${active ? ' active' : ''}">
-          <b>${esc(t.label)}${active ? ' · this machine' : ''}</b>
+        const models = t.models.filter(tag => compatible.some(surface => surface.name === tag));
+        return `<div class="lane-card">
+          <b>${esc(t.label)} · reference tier</b>
           <p><b class="verdict">${esc(t.verdict)}</b><br>${esc(t.detail)}</p>
-          ${t.models.length ? `<span class="src">${t.models.map(esc).join(' · ')}</span>` : ''}
+          ${models.length ? `<span class="src">In your report: ${models.map(esc).join(' · ')}</span>` : ''}
         </div>`;
       }).join('')}</div>
       <div class="sec">How the numbers are read</div>
@@ -919,13 +953,13 @@ const AtlasPanes = (() => {
       is the same reviewed recipes the Build tab uses, ordered so each step has what the
       next one needs.</p>
 
-      <div class="surface-groups">${(A.state.data.surfaceGroups || []).map(group => `<fieldset>
+      <div class="surface-groups">${(CS() ? CS().clientGroups(A.state.data) : []).map(group => `<fieldset>
         <legend>${esc(group.name)}</legend><p class="sub">${esc(group.note)}</p>
-        ${available.filter(s => s.group === group.id).map(s => `<label class="surface-choice">
+        ${available.filter(s => group.surfaces.some(member => member.id === s.id)).map(s => `<label class="surface-choice">
           <input type="checkbox" data-surface="${esc(s.id)}" ${A.state.surfaceIds.includes(s.id) ? 'checked' : ''}>
           <span><b>${esc(s.name)}</b><small>${esc(s.detail)}</small>
           <small>${esc((s.enforcement || {}).label)}: ${esc((s.enforcement || {}).detail)}</small></span></label>`).join('')
-          || '<p class="empty">Enter scan results above. Only models within the recorded RAM requirement are offered.</p>'}
+          || '<p class="empty">Import a validated local report above. Only compatible models explicitly listed in it are offered.</p>'}
         ${customClientHTML(group.id)}</fieldset>`).join('')}</div>
       ${selected.filter(s => s.runs === 'connect').map(s => `<article class="surface-instructions"><h3>${esc(s.name)}</h3>
         <p>${esc(s.detail)}</p><p>Save the protected instructions in <b>${esc(s.target)}</b>.</p></article>`).join('')}
@@ -938,10 +972,7 @@ const AtlasPanes = (() => {
       ${chosen ? '' : `<p class="empty">Choose your operating system in step 1 first. Every
         profile writes a different script for each system, so there is nothing to show until
         you pick one.</p>`}
-      ${tier ? `<p class="sub">Model steps resolve to the ${esc(tier.label)} tier:
-        ${esc((tier.models || []).join(', ') || 'no tags at this size')}.</p>`
-        : `<p class="sub">No RAM entered in step 3, so the model steps stay empty rather than
-        guessing a tag this machine may not be able to hold.</p>`}
+      <p class="sub">Model steps include only checked models from the imported report. Hardware estimates do not enable model commands. Hosted saved instructions are advisory, not native prompt hooks.</p>
 
       ${profiles.map(profile => easyProfile(profile, Boolean(chosen))).join('')}`;
   }
@@ -1121,7 +1152,7 @@ const AtlasPanes = (() => {
         const group = btn.dataset.addClient;
         const closing = A.state.addingClient === group;
         A.state.addingClient = closing ? null : group;
-        A.state.customDraft = closing ? null : { kind: CS().defaultKindFor(A.state.data, group), values: {} };
+        A.state.customDraft = closing ? null : CS().draftFor(A.state.data, group, A.effectivePlatform());
         A.state.customResult = null;
         renderStage();
       };
@@ -1571,6 +1602,9 @@ const AtlasPanes = (() => {
   function renderStage() {
     const stage = document.getElementById('stage');
     if (stage) {
+      stage.setAttribute('role', 'tabpanel');
+      stage.setAttribute('aria-labelledby', 'atlas-tab-' + tab);
+      const restoreFocus = CS() ? CS().retainFocus(stage) : () => {};
       if (tab === 'map') {
         if (hooks.renderMap) hooks.renderMap(stage);
       } else {
@@ -1591,6 +1625,7 @@ const AtlasPanes = (() => {
         stage.appendChild(pane);
         wirePane();
       }
+      restoreFocus();
     }
   }
 

@@ -91,6 +91,22 @@ class TheDataLayer(unittest.TestCase):
     def test_data_file_exists_and_parses(self):
         self.assertTrue(DATA.exists(), "run scripts/build_atlas_data.py")
 
+    def test_layer_rule_names_preserve_commas(self):
+        check = subprocess.run(
+            [sys.executable, "-B", "-c",
+             "import sys; sys.path.insert(0, 'scripts'); "
+             "import build_atlas_data as builder; "
+             "name = 'GRAPHIFY, THEN CAVEMAN'; "
+             "body = 'Ask the local code graph first.'; "
+             "rule = builder.LAYER_RULE.fullmatch('1. ' + name + '. ' + body); "
+             "assert rule is not None, 'Comma-bearing rule was not parsed'; "
+             "assert rule.group('name') == name; "
+             "assert rule.group('body') == body; "
+             "builder.layer_rules()"],
+            cwd=ROOT, capture_output=True, text=True,
+        )
+        self.assertEqual(check.returncode, 0, check.stderr)
+
     def test_meets_the_lane_floor(self):
         self.assertGreaterEqual(len(self.d["lanes"]), MIN_LANES)
 

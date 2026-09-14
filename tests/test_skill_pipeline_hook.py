@@ -239,8 +239,16 @@ class TheInjectedBlockStaysCheap(unittest.TestCase):
                          bytes. Asked for directly, and placed in layer 3
                          because a refactor is something done to what was just
                          written rather than something planned in advance.
+            2200 bytes   2026-09-14: graphify placed ahead of caveman in rule 1,
+                         about 90 bytes. Asked for directly. The graph answers a
+                         code question for a fraction of the tokens a whole-file
+                         read costs, so it belongs first in layer 1 rather than
+                         in a lane that only attaches when the prompt happens to
+                         mention a codebase. Paying 90 bytes on every prompt to
+                         avoid whole-file reads on the ones that touch code is
+                         the trade, and it is a decision rather than a drift.
         """
-        self.assertLess(len(pipeline.CORE.encode("utf-8")), 2000,
+        self.assertLess(len(pipeline.CORE.encode("utf-8")), 2200,
                         "the always-injected core grew past what was agreed")
 
     def test_every_lane_has_a_probe_so_none_goes_unmeasured(self):
@@ -260,6 +268,14 @@ class TheInjectedBlockStaysCheap(unittest.TestCase):
             3600 bytes   2026-09-10: the real worst case, measured properly, is
                          3464 bytes. The 3000 above was never true; the test
                          passed only because of the order it ran in.
+            3700 bytes   2026-09-14: graphify leads rule 1, about 200 bytes, and
+                         the core rides every lane so every lane pays it. Bought
+                         deliberately: a graph query answers a code question for
+                         a fraction of what a whole-file read costs, so the rise
+                         is meant to be repaid many times over on any prompt that
+                         touches code. The conditional graph lane was trimmed of
+                         what rule 1 now states, so the net rise is 200 rather
+                         than 400, and the worst lane is refactor at 3648.
 
         WHY THE OLD NUMBER WAS WRONG, because it is the more useful half of this
         ledger. run() used one module-level store shared by the whole file, so
@@ -296,7 +312,7 @@ class TheInjectedBlockStaysCheap(unittest.TestCase):
                 sizes[lane] = len(text.encode("utf-8"))
 
         worst_lane = max(sizes, key=sizes.get)
-        self.assertLess(sizes[worst_lane], 3600,
+        self.assertLess(sizes[worst_lane], 3700,
                         f"the worst-case injection is too large per turn: "
                         f"{worst_lane} lane at {sizes[worst_lane]} bytes")
 
