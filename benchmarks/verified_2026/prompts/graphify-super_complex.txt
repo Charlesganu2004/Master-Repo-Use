@@ -1,0 +1,49 @@
+Work only on this synthetic Python 3.12+ task. Use the standard library.
+Do not access files, network, subprocesses, environment variables, or credentials.
+Do not delegate. Return exactly one JSON object with keys solution (complete Python
+source), tests (complete unittest source importing solution), and explanation.
+No Markdown fences. Preserve validation, correctness, and error handling in every
+arm. No tools are available. These common safety and output rules apply even to
+the bare arm; bare means no additional benchmark harness instructions.
+
+GRAPHIFY (master-graphify). Build a queryable knowledge graph of a codebase
+instead of reading it file by file, then ask it questions.
+
+Install once: uv tool install graphifyy, then graphify install, then /graphify . to index.
+Query with: explain <symbol>, path <a> <b>, query "<question>".
+
+EXTRACTED edges come from deterministic AST parsing and stay on this machine.
+INFERRED edges are weaker; never report one as established fact.
+The docs, PDF and media pass sends content to a model and therefore leaves the
+machine: scope a run to code unless the content is cleared for that.
+Pin the upstream default branch v8, never main, which is 1,734 commits stale.
+
+For this synthetic task no repository exists and nothing is indexed. Record that
+graphify is unavailable here and solve the task directly. Do not describe graph
+output you did not produce.
+
+Implement class Limiter(limits, window, clock) with
+acquire(request), snapshot(), restore(state). limits is a nonempty dict of
+nonempty string keys to positive integer capacities (not bool). window is a
+positive finite number (not bool). clock is callable. request is a nonempty dict
+of known keys to positive integer weights (not bool), each at most that key's
+capacity. Invalid arguments raise ValueError without changing state.
+Every acquire reads the clock exactly once while holding a lock. Clock must
+return a finite number (not bool), at least the last accepted clock value;
+invalid/backward readings raise ValueError and do not change state. An accepted
+clock reading updates the last value even if capacity denies the request.
+Active events have timestamp strictly greater than now-window; equality expires.
+acquire returns bool, and atomically records ALL requested weights at now only
+if EVERY key has capacity. Denied calls record no weights. Operations must be
+thread-safe and requests for disjoint keys must have independent capacity.
+snapshot reads no clock and returns a detached JSON-compatible dict with exactly
+last and events. last is null initially, otherwise the most recent accepted clock
+value. events maps every configured key to its insertion-ordered list of
+[timestamp, weight] pairs. Expire ALL keys at each accepted acquire clock reading,
+including denied requests. restore validates a state without reading the clock:
+exact keys, all configured event keys, last null only when all lists empty;
+finite nonnegative-or-negative timestamps are allowed, ordered nondecreasing,
+greater than last-window and at most last, positive integer weights, per-key
+sum at most capacity. Invalid restore raises ValueError atomically. Deep-copy
+inputs and snapshots. Include boundary, rollback, and concurrent unittest tests.
+No background threads, persistence, sleep, or external dependencies.

@@ -1,0 +1,41 @@
+Work only on this synthetic Python 3.12+ task. Use the standard library.
+Do not access files, network, subprocesses, environment variables, or credentials.
+Do not delegate. Return exactly one JSON object with keys solution (complete Python
+source), tests (complete unittest source importing solution), and explanation.
+No Markdown fences. Preserve validation, correctness, and error handling in every
+arm. No tools are available. These common safety and output rules apply even to
+the bare arm; bare means no additional benchmark harness instructions.
+
+GRAPHIFY (master-graphify). Build a queryable knowledge graph of a codebase
+instead of reading it file by file, then ask it questions.
+
+Install once: uv tool install graphifyy, then graphify install, then /graphify . to index.
+Query with: explain <symbol>, path <a> <b>, query "<question>".
+
+EXTRACTED edges come from deterministic AST parsing and stay on this machine.
+INFERRED edges are weaker; never report one as established fact.
+The docs, PDF and media pass sends content to a model and therefore leaves the
+machine: scope a run to code unless the content is cleared for that.
+Pin the upstream default branch v8, never main, which is 1,734 commits stale.
+
+For this synthetic task no repository exists and nothing is indexed. Record that
+graphify is unavailable here and solve the task directly. Do not describe graph
+output you did not produce.
+
+Implement class Ledger(balances) with apply(operations), snapshot().
+balances is a dict of nonempty string account IDs to nonnegative integer cents;
+bool is not an integer for this contract. Copy constructor input; invalid input
+raises ValueError. Operations is a list of dictionaries, each containing exactly
+id, source, target, amount. IDs are nonempty strings, accounts must exist, source
+and target differ, amount is a positive integer (not bool). apply validates and
+executes the entire list atomically in list order, returning a list of booleans.
+True means a new transfer committed; False means an exact replay of an already
+committed operation ID. A reused ID with different source, target, or amount
+raises ValueError. Identical IDs within one batch follow this same rule. A new
+transfer must not overdraw source. Any invalid item or insufficient funds raises
+ValueError and rolls back both balances and the idempotency history for the
+entire batch. Retrying an exact committed operation succeeds as False even when
+its original source no longer has enough money. snapshot returns a detached
+dict of balances. Empty batches return []. Input dictionaries must not mutate.
+Include unittest tests for atomic rollback and idempotency. Avoid persistence
+and concurrency, which are not required for this task.
