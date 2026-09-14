@@ -222,6 +222,20 @@ class TheClientSelectorWorks(unittest.TestCase):
             self.skipTest("bash is not available")
         if not (ROOT / ".git").exists():
             self.skipTest("the script refuses to run outside a checkout")
+        # The script needs a working Python 3 on the PATH bash sees, and on
+        # Windows that PATH often carries only the Store aliases, which resolve
+        # but refuse to run. Skipping names the missing dependency instead of
+        # reporting a script defect, the same way the bash check above does.
+        # test_broken_python3_alias_uses_working_python still covers the alias
+        # behaviour itself, because it supplies its own interpreter.
+        probe = subprocess.run(
+            ["bash", "-c",
+             'for c in python3 python; do command -v "$c" >/dev/null 2>&1 && '
+             '"$c" -c "import sys; sys.exit(sys.version_info[0] != 3)" '
+             '>/dev/null 2>&1 && exit 0; done; exit 1'],
+            capture_output=True, text=True)
+        if probe.returncode != 0:
+            self.skipTest("bash has no working python3 or python on PATH")
 
     def run_setup(self, client: str):
         home = pathlib.Path(tempfile.mkdtemp(prefix=f"mru-{client}-"))

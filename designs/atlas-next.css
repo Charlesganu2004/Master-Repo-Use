@@ -556,3 +556,6 @@ body.atlas-next ::-webkit-scrollbar-thumb:hover{background:var(--ink)}
   .atlas-next .an-wheel{grid-template-columns:minmax(0,1fr)}
   .atlas-next .an-items{columns:1}
 }
+@media (max-width: 900px) {
+  .next-compiler .compiler-shell .activity { grid-row: 1; height: auto; max-height: 100dvh; }
+}

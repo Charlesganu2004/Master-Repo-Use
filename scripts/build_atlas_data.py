@@ -658,7 +658,7 @@ LAYER_HEADER = re.compile(r"^LAYER (?P<number>\d), (?P<when>[^:]+):$")
 # this: a rule the hook injects and the page does not show is drift that no
 # amount of reading the page reveals.
 LAYER_RULE = re.compile(
-    r"^(?P<number>\d+)\. (?P<name>[A-Z][A-Z0-9 \-]*[A-Z0-9])[.:]?\s+(?P<body>.+)$")
+    r"^(?P<number>\d+)\. (?P<name>[A-Z][A-Z0-9, \-]*[A-Z0-9])[.:]?\s+(?P<body>.+)$")
 
 LAYER_PLAIN = {
     1: ("Before it reads what you asked",

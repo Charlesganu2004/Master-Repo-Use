@@ -694,3 +694,11 @@ html[data-theme="light"] .harness-check code { background: #14161a; }
   font: 600 11px "Cascadia Code", monospace; font-variant-ligatures: none;
 }
 #packageInstall .harness-check { margin-top: 8px; }
+/* Report inputs remain local; long shell commands scroll inside their panel. */
+.hardware-report { margin-block: 24px; padding: 16px; border: 1px solid var(--line, #555); }
+.hardware-report summary { cursor: pointer; min-height: 44px; font-weight: 600; }
+.hardware-report p { max-width: 65ch; }
+.hardware-report pre { max-width: 100%; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.hardware-report textarea { display: block; width: 100%; box-sizing: border-box; margin-block: 8px 16px; color: inherit; background: transparent; border: 1px solid currentColor; padding: 8px; }
+.hardware-report :is(button, textarea, summary):focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+.surface-pick:focus-within { outline: 2px solid var(--orange); outline-offset: 3px; }

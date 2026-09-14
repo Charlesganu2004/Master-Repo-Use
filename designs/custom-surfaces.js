@@ -29,7 +29,16 @@
   var QUOTED = { url: true };
 
   function kinds(data) {
-    return (data && data.customSurfaceKinds) || [];
+    return ((data && data.customSurfaceKinds) || []).map(function (spec) {
+      if (spec.id !== 'ide') return spec;
+      return Object.assign({}, spec, {
+        fields: [{ id: 'client', label: 'Supported local installer',
+          options: ['copilot', 'gemini', 'claude', 'codex', 'antigravity', 'cursor'] },
+          { id: 'platform', label: 'Command operating system', options: ['windows', 'macos', 'linux', 'wsl'] }],
+        steps: [],
+        limit: 'Uses the same reviewed per-platform recipe as the selected client checkbox. Only the selected local client is configured. Hooks are installed only where supported; hosted chat and IDE services still need their documented project instructions.'
+      });
+    });
   }
 
   function kind(data, id) {
@@ -39,6 +48,8 @@
   }
 
   function defaultKindFor(data, groupId) {
+    groupId = { copilot: 'local-client', gemini: 'local-client', claude: 'local-client',
+      chatgpt: 'web-chat', open: 'local-model', other: 'local-client' }[groupId] || groupId;
     var list = kinds(data);
     for (var i = 0; i < list.length; i++) {
       if ((list[i].defaultFor || []).indexOf(groupId) !== -1) return list[i].id;
@@ -80,6 +91,15 @@
         return { ok: false, error: field.label + ' has characters that are not allowed here.' };
       }
       filled[field.id] = QUOTED[field.id] ? '"' + raw + '"' : raw;
+    }
+    if (kindId === 'ide') {
+      var recipe = ((data && data.setupRecipes) || []).find(function (item) {
+        return item.id === 'setup-rules-' + filled.client && item.kind === 'setup' && item.state === 'ready';
+      });
+      var nativeCommand = recipe && recipe.commands && recipe.commands[filled.platform];
+      if (!nativeCommand) return { ok: false, error: 'No reviewed setup recipe for this client and operating system.' };
+      return { ok: true, steps: [{ label: 'Configure only ' + filled.client + ' on ' + filled.platform,
+        command: nativeCommand }], limit: spec.limit, label: spec.label };
     }
     var steps = spec.steps.map(function (step) {
       var command = step.command.replace(/\{(\w+)\}/g, function (whole, name) {
@@ -142,13 +162,95 @@
   }
 
   function forGroup(groupId) {
-    return load().filter(function (item) { return item.group === groupId; });
+    return load().filter(function (item) {
+      if (item.group === groupId) return true;
+      var values = item.values || {};
+      var branded = { 'local-model': 'open', 'local-client': 'other', 'web-code': 'other',
+        'web-chat': /claude/.test(values.product || '') ? 'claude'
+          : /gemini/.test(values.product || '') ? 'gemini' : 'chatgpt' }[item.group];
+      if (branded === 'other' && ['copilot', 'gemini', 'claude'].indexOf(values.client) !== -1) branded = values.client;
+      return branded === groupId;
+    });
+  }
+
+  function clientGroups(data) {
+    var groups = [
+      { id: 'copilot', name: 'GitHub Copilot', note: 'Select CLI, IDE chat, or coding-agent modes independently.' },
+      { id: 'gemini', name: 'Gemini and Gemini Code Assist', note: 'CLI hooks and hosted Code Assist instructions are different mechanisms.' },
+      { id: 'claude', name: 'Claude', note: 'Select Claude Code, hosted chat, or Cowork. Hosted instructions are advisory.' },
+      { id: 'chatgpt', name: 'ChatGPT and Codex', note: 'Choose hosted chat, Codex web, or the local Codex client.' },
+      { id: 'open', name: 'Local and open models', note: 'No browser hardware scan. Import a local report to enable compatible model choices, or configure an endpoint with +.' },
+      { id: 'other', name: 'Other clients', note: 'Additional supported clients remain available; nothing is installed by default.' }
+    ];
+    groups.forEach(function (group) { group.surfaces = []; });
+    ((data && data.surfaces) || []).forEach(function (surface) {
+      var id = surface.group === 'local-model' ? 'open'
+        : /^copilot/.test(surface.id) ? 'copilot'
+        : /^gemini/.test(surface.id) ? 'gemini'
+        : /^claude/.test(surface.id) ? 'claude'
+        : /^(chatgpt|codex)/.test(surface.id) ? 'chatgpt' : 'other';
+      groups.find(function (group) { return group.id === id; }).surfaces.push(surface);
+    });
+    return groups;
+  }
+
+  function draftFor(data, groupId, platform) {
+    var values = { platform: ['windows', 'macos', 'linux', 'wsl'].indexOf(platform) !== -1 ? platform : 'windows' };
+    if (['copilot', 'gemini', 'claude'].indexOf(groupId) !== -1) values.client = groupId;
+    if (groupId === 'chatgpt') values.product = 'chatgpt';
+    return { kind: defaultKindFor(data, groupId), values: values };
+  }
+
+  function validateReport(text, data, platform) {
+    try {
+      if (typeof text !== 'string' || text.length > 65536) throw new Error('Report must be JSON under 64 KiB.');
+      var report = JSON.parse(text);
+      if (!report || report.schema !== 'atlas.hardware.v1' ||
+          ['windows', 'linux', 'wsl', 'macos'].indexOf(report.platform) === -1 ||
+          typeof report.ramGb !== 'number' || !Number.isFinite(report.ramGb) ||
+          report.ramGb <= 0 || report.ramGb > 8192 ||
+          !Array.isArray(report.compatibleModels) || report.compatibleModels.length > 500 ||
+          report.compatibleModels.some(function (tag) { return typeof tag !== 'string' || !/^[a-zA-Z0-9_.:-]{1,100}$/.test(tag); })) {
+        throw new Error('Invalid local report schema, platform, RAM, or model tags.');
+      }
+      if (platform && platform !== report.platform) throw new Error('Report platform does not match the selected operating system.');
+      var tags = new Set(report.compatibleModels);
+      var ids = ((data && data.surfaces) || []).filter(function (surface) {
+        return surface.group === 'local-model' && tags.has(surface.name) &&
+          Number.isFinite(surface.minRamGb) && surface.minRamGb <= report.ramGb;
+      }).map(function (surface) { return surface.id; });
+      return { ok: true, platform: report.platform, ramGb: report.ramGb, modelIds: ids };
+    } catch (error) {
+      return { ok: false, error: error.message };
+    }
+  }
+
+  function reportCommand(platform) {
+    var python = platform === 'windows' ? 'python' : 'python3';
+    return python + ' -c "import json,platform; from scripts import local_model_advisor as a; d=a.load_profiles(); r=a.total_ram_gb(); k=a.platform_key(); g,v=a.gpu_vram_gb(); b=a.usable_gb(r,d[\'formula\'],k,v); p=\'wsl\' if \'microsoft\' in platform.release().lower() else k; print(json.dumps(dict(schema=\'atlas.hardware.v1\',platform=p,ramGb=r,compatibleModels=[m[\'tag\'] for m in d[\'models\'] if a.fits(m,b,d[\'formula\'],r)])))"';
+  }
+
+  function retainFocus(host) {
+    var active = document.activeElement;
+    var attributes = ['data-surface', 'data-add-client', 'data-custom-kind',
+      'data-custom-field', 'data-custom-generate', 'data-custom-save'];
+    var key = host.contains(active) && attributes.find(function (name) { return active.hasAttribute(name); });
+    var value = key && active.getAttribute(key);
+    return function () {
+      if (!key) return;
+      var target = Array.from(host.querySelectorAll('[' + key + ']')).find(function (node) {
+        return node.getAttribute(key) === value;
+      });
+      if (target) target.focus({ preventScroll: true });
+    };
   }
 
   var api = { kinds: kinds, kind: kind, defaultKindFor: defaultKindFor,
               namePlaceholder: namePlaceholder, tokens: tokens,
               commands: commands, load: load, save: save, remove: remove,
-              forGroup: forGroup, STORAGE_KEY: STORAGE_KEY };
+              forGroup: forGroup, clientGroups: clientGroups, draftFor: draftFor,
+              validateReport: validateReport, reportCommand: reportCommand,
+              retainFocus: retainFocus, STORAGE_KEY: STORAGE_KEY };
   if (typeof window !== 'undefined') window.CustomSurfaces = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })();

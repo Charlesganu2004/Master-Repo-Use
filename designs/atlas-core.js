@@ -64,6 +64,8 @@ const AtlasCore = (() => {
     suggestions: load('atlas.suggestions', []),
     profileClient: load('atlas.profileClient', 'all'),
     surfaceIds: load('atlas.surfaceIds', null),
+    hardwareReport: null,
+    hardwareReportStatus: 'No local report imported. Model commands remain unavailable.',
   };
 
   function load(key, fallback) {
@@ -167,6 +169,10 @@ const AtlasCore = (() => {
 
   function setPlatform(id) {
     state.platform = PLATFORMS.some(p => p.id === id) ? id : null;
+    if (state.hardwareReport && state.hardwareReport.platform !== state.platform) {
+      state.hardwareReport = null;
+      state.hardwareReportStatus = 'Operating system changed. Import a matching report.';
+    }
     save('atlas.platform', state.platform);
     emit();
     return platform();
@@ -234,6 +240,9 @@ const AtlasCore = (() => {
     if (!component || !platformId) return null;
     const recipe = setupRecipeFor(component);
     if (!recipe || recipe.kind !== 'setup' || recipe.state !== 'ready') return null;
+    const model = (state.data.surfaces || []).find(surface =>
+      surface.group === 'local-model' && surface.setupRecipe === recipe.id);
+    if (model && !availableSurfaces().some(surface => surface.id === model.id)) return null;
     const command = recipe.commands && recipe.commands[platformId];
     if (typeof command !== 'string' || !command.trim()) return null;
     if (/REVIEWED_VERSION|<[^>]+>/.test(command)) return null;
@@ -278,6 +287,26 @@ const AtlasCore = (() => {
     save('atlas.hw', state.hw);
     emit();
     return state.hw;
+  }
+
+  function importHardwareReport(text) {
+    const validator = typeof window !== 'undefined' && window.CustomSurfaces;
+    const result = validator ? validator.validateReport(text, state.data, state.platform)
+      : { ok: false, error: 'Report validator has not loaded. Reload and try again.' };
+    state.hardwareReport = result.ok ? result : null;
+    state.hardwareReportStatus = result.ok
+      ? `Report format validated: ${result.modelIds.length} compatible catalog models. User-supplied hardware, not browser-attested.`
+      : result.error;
+    if (result.ok) {
+      state.platform = result.platform;
+      state.hw.ram = result.ramGb;
+      save('atlas.platform', state.platform);
+      save('atlas.hw', state.hw);
+    }
+    const modelIds = new Set(((state.data && state.data.surfaces) || []).filter(s => s.group === 'local-model').map(s => s.id));
+    if (Array.isArray(state.surfaceIds)) state.surfaceIds = state.surfaceIds.filter(id => !modelIds.has(id));
+    emit();
+    return result;
   }
 
   /** The memory a local model can actually draw on, given the platform. */
@@ -589,7 +618,8 @@ const AtlasCore = (() => {
   function modelRecipesForTier() {
     const tier = currentTier();
     if (!tier || !tier.models || !tier.models.length) return [];
-    return tier.models.map(recipeForTag).filter(Boolean);
+    const allowed = new Set(availableSurfaces().filter(surface => surface.group === 'local-model').map(surface => surface.setupRecipe));
+    return tier.models.map(recipeForTag).filter(recipe => recipe && allowed.has(recipe.id));
   }
 
   function allModelRecipes() {
@@ -599,9 +629,9 @@ const AtlasCore = (() => {
   }
 
   function availableSurfaces() {
-    const ram = Number(state.hw.ram) || 0;
+    const report = state.hardwareReport;
     return ((state.data && state.data.surfaces) || []).filter(s =>
-      s.group !== 'local-model' || (ram > 0 && ram >= s.minRamGb));
+      s.group !== 'local-model' || (report && report.platform === state.platform && report.modelIds.includes(s.id)));
   }
 
   function selectedSurfaces() {
@@ -881,7 +911,7 @@ const AtlasCore = (() => {
     setPlatform, platform, scanCommand, commandFor,
     effectivePlatform, platformIsSuggested, suggestPlatform, chosenPlatform,
     setupRecipeFor, setupCommandFor, setupStateFor, canBuild,
-    setHardware, usableMemory, tierFor, currentTier, routesForMachine,
+    setHardware, importHardwareReport, usableMemory, tierFor, currentTier, routesForMachine,
     profiles, profileClients, setProfileClient, resolveProfile, profileScriptFor,
     availableSurfaces, selectedSurfaces, toggleSurface, autoModeText,
     harnesses, pipeline, goalPolicy, superChain, packageInfo,

@@ -390,13 +390,22 @@
     ].filter(function (entry) { return !entry[1]; }).map(function (entry) { return entry[0]; });
     if (missing.length) dependencyNotice('Missing shared runtime: ' + missing.join(', ') + '.');
 
-    const legacy = Array.from(document.body.children).filter(function (node) {
+    let legacy = Array.from(document.body.children).filter(function (node) {
       return node !== root && node.tagName !== 'SCRIPT';
     });
     legacy.forEach(function (node) { node.hidden = true; node.dataset.atlasLegacy = 'true'; });
 
     let lastOpener = root.querySelector('[data-open-atlas]');
     const revealAtlas = function (requestedTab, opener) {
+      // Earlier concepts kept the workspace in off-screen drawers or fixed HUDs.
+      // Reuse the responsive workspace without changing the concept's own scene.
+      if (!legacy.some(function (node) { return node.classList.contains('atlas-workspace'); }) &&
+          window.AtlasCore && window.AtlasPanes) {
+        legacy.forEach(function (node) { node.remove(); });
+        const scene = SCENES[root.dataset.scene];
+        legacy = [workspace({ skin: root.dataset.scene, title: scene.title,
+          eyebrow: 'D' + scene.number + ' / Full Atlas', note: 'Filters, setup, commands and Build, on every screen.' })];
+      }
       lastOpener = opener || lastOpener;
       root.classList.add('ex-collapsed');
       document.body.classList.add('exhibition-full-atlas');
