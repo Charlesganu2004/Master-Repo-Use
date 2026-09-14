@@ -339,11 +339,15 @@ def main() -> int:
         if args.mode == "show":
             print(f"mode: {skill_pipeline.harness_mode()}  ({skill_pipeline.mode_path()})")
             return 0
+        if args.dry_run:
+            print(f"would set mode: {args.mode} ({skill_pipeline.mode_path()})")
+            return 0
         if not skill_pipeline.set_harness_mode(args.mode):
             print(f"could not write {skill_pipeline.mode_path()}", file=sys.stderr)
             return 1
-        print(f"mode: {args.mode}. Every prompt on this machine now gets "
-              f"{'the ten-pass chain on top of the layers' if args.mode == 'super' else 'the three layers only'}.")
+        print(f"mode: {args.mode} saved at {skill_pipeline.mode_path()}. "
+              "Applies only to hooks using this state store; running clients "
+              "must admit the hook before it affects a prompt.")
         return 0
 
     if args.token_limit:
@@ -352,7 +356,12 @@ def main() -> int:
         if action is None:
             print("give a number such as 4000 or 4k, or off", file=sys.stderr)
             return 2
-        skill_pipeline.save_token_limit(value if action == "set" else None)
+        if args.dry_run:
+            print(f"would set global token limit: {value if action == 'set' else 'off'}")
+            return 0
+        if not skill_pipeline.save_token_limit(value if action == "set" else None):
+            print("could not persist global token limit", file=sys.stderr)
+            return 1
         print(f"global token limit: {value:,}" if action == "set"
               else "global token limit lifted")
         return 0

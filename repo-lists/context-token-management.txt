@@ -19,6 +19,14 @@ JuliusBrussee/caveman             # 104.8k stars, pushed 2026-09-11, release bin
                                   # and others, listed in its LICENSING.md) are BSL-1.1, which is not open
                                   # source. Only skills/ is relevant here. Tracked for upstream changes in
                                   # repo-lists/skill-upstreams.json by scripts/skill_upstreams.py.
+                                  # Browser benchmark companion JuliusBrussee/caveman-browse is unavailable:
+                                  # no verified executable was obtained. Its pinned LICENSE at
+                                  # d3d9eb4217f50712584a2165a81e7f5ca7e48f79 is BSL-1.1, not the skill's MIT.
+                                  # Copying/redistribution retain BSL notices; the Additional Use Grant
+                                  # permits first-party self-hosting, not a third-party hosted/managed/
+                                  # embedded service. Change Date 2030-06-21; Change License Apache-2.0.
+                                  # Exact terms and registry implications: docs/CAPABILITY-REGISTRY-ARCHITECTURE.md,
+                                  # Intake and publication. Metadata/license audit is not security clearance.
 
 # --- Research / reference (do not treat as runtime dependencies)
 microsoft/LLMLingua               # prompt compression; last release quiet since 2026-04, still the reference impl

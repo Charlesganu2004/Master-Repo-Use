@@ -32,7 +32,7 @@ It reaches each surface by whatever that surface supports:
     any CLI with no hook               the wrapper: `master-harness-super --run -- <cmd>`
     ChatGPT, Claude.ai, Gemini web     a paste bundle: `master-harness-super --bundle chatgpt`
 
-A chat product has no hook, so for those the bundle IS the enforcement: it holds
+A chat product has no local hook, so the bundle provides advisory instructions: it holds
 the layers, the chain, the token-limit rule and every skill below, inline.
 
 ## The order, and why it is fixed
@@ -171,9 +171,19 @@ When a limit applies:
 Full output still applies inside what you deliver: a limit shortens the answer,
 it never licenses a placeholder inside it.
 
-What enforces it: through the proxy the harness sets `max_tokens` (or Ollama's
-`num_predict`) to the limit, which is a hard stop. Everywhere else the harness
-can only instruct, so the model holds to it. The injected rule says which.
+What enforces it: through the proxy the harness sets `max_tokens`,
+`max_completion_tokens` or Ollama's `num_predict` to the limit. This caps output
+only when the upstream honors that API field. It does not cap total input,
+hidden reasoning, tools, agents, billing or cumulative session usage.
+Everywhere else the harness can only instruct: adherence is advisory, not a
+guarantee that the model can count its own tokens. The injected rule says which.
+
+For proxy budget persistence, pass a distinct `X-Master-Harness-Session` header
+per conversation. Without a stable header the command applies only to the
+current request. The local identifier is not authentication; the proxy remains
+a loopback tool, not a multi-tenant service. `/token limit off` resets the
+selected conversation. Invalid values retain the previous limit and report an
+error; zero remains a legacy reset.
 
 ## The standing goal
 

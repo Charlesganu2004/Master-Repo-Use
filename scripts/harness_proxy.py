@@ -97,9 +97,9 @@ def already_injected(messages: list) -> bool:
 
 # One seam, same reasoning as harness_wrap: the super harness spawns this file
 # as a subprocess, so it needs a flag rather than a rebound attribute.
-def _proxy_context(prompt: str) -> str:
-    """The pipeline, telling the model its token limit is a hard stop here."""
-    return skill_pipeline.context_for(prompt, token_enforced=True)
+def _proxy_context(prompt: str, session: str | None = None) -> str:
+    """Describe the output-only cap forwarded to a supporting upstream."""
+    return skill_pipeline.context_for(prompt, session, capturing=False, token_enforced=True)
 
 
 CONTEXT = _proxy_context
@@ -109,7 +109,7 @@ def use_super_context() -> None:
     """Inject the super harness's chain instead of the base pipeline."""
     global CONTEXT
     import harness_super
-    CONTEXT = lambda prompt: harness_super.context_for(prompt, capturing=False,
+    CONTEXT = lambda prompt, session=None: harness_super.context_for(prompt, session, capturing=False,
                                                        token_enforced=True)
 
 
@@ -139,28 +139,28 @@ def cap_tokens(payload: dict, limit: int | None, path: str = "") -> bool:
         options = payload.get("options")
         options = options if isinstance(options, dict) else {}
         current = options.get("num_predict")
-        if isinstance(current, int) and 0 <= current <= limit:
+        if type(current) is int and 0 <= current <= limit:
             return False
         options["num_predict"] = limit
         payload["options"] = options
         return True
     key = "max_completion_tokens" if "max_completion_tokens" in payload else "max_tokens"
     current = payload.get(key)
-    if isinstance(current, int) and 0 < current <= limit:
+    if type(current) is int and 0 < current <= limit:
         return False
     payload[key] = limit
     return True
 
 
-def inject(payload: dict, path: str = "") -> tuple[dict, bool]:
+def inject(payload: dict, path: str = "", session: str | None = None) -> tuple[dict, bool]:
     """Put the pipeline in front. Returns the payload and whether it changed."""
     messages = payload.get("messages")
     if isinstance(messages, list):
-        if already_injected(messages):
-            return payload, False
         text = last_user_text(messages)
-        cap_tokens(payload, skill_pipeline.resolve_token_limit(text, None, capturing=False), path)
-        context = CONTEXT(text)
+        capped = cap_tokens(payload, skill_pipeline.resolve_token_limit(text, session), path)
+        if already_injected(messages):
+            return payload, capped
+        context = CONTEXT(text, session)
         # Ahead of the caller's own system message rather than replacing it. The
         # caller's instructions are theirs; these are the standing rules, and the
         # order says which one frames the other.
@@ -169,11 +169,11 @@ def inject(payload: dict, path: str = "") -> tuple[dict, bool]:
 
     prompt = payload.get("prompt")
     if isinstance(prompt, str):
+        capped = cap_tokens(payload, skill_pipeline.resolve_token_limit(prompt, session), path)
         existing = payload.get("system")
         if isinstance(existing, str) and MARKER in existing:
-            return payload, False
-        cap_tokens(payload, skill_pipeline.resolve_token_limit(prompt, None, capturing=False), path)
-        context = CONTEXT(prompt)
+            return payload, capped
+        context = CONTEXT(prompt, session)
         payload["system"] = context + (("\n\n" + existing) if isinstance(existing, str) and existing else "")
         return payload, True
 
@@ -210,7 +210,12 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 payload = json.loads(raw.decode("utf-8"))
                 if isinstance(payload, dict):
-                    payload, changed = inject(payload, path)
+                    session_id = self.headers.get("X-Master-Harness-Session")
+                    if session_id is not None and not 1 <= len(session_id.strip()) <= 256:
+                        self.send_error(400, "invalid harness session identifier")
+                        return
+                    session = "proxy:" + session_id.strip() if session_id is not None else None
+                    payload, changed = inject(payload, path, session)
                     raw = json.dumps(payload).encode("utf-8")
             except (ValueError, UnicodeDecodeError):
                 # Not JSON we understand. Forward it untouched rather than
@@ -234,7 +239,8 @@ class Handler(BaseHTTPRequestHandler):
     def _forward(self, path, raw, started, changed, method="POST"):
         url = self.upstream.rstrip("/") + self.path
         headers = {k: v for k, v in self.headers.items()
-                   if k.lower() not in ("host", "content-length", "connection")}
+                   if k.lower() not in ("host", "content-length", "connection",
+                                        "x-master-harness-session")}
         request = urllib.request.Request(url, data=raw, headers=headers, method=method)
         try:
             with urllib.request.urlopen(request, timeout=600) as response:

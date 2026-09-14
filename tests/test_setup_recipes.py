@@ -19,7 +19,9 @@ import pathlib
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
+from unittest.mock import patch
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -242,6 +244,21 @@ class TheClientSelectorWorks(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr[-400:])
         self.assertEqual(written, set(self.FILES))
 
+    def test_broken_python3_alias_uses_working_python(self):
+        with tempfile.TemporaryDirectory(prefix="mru-python-alias-") as directory:
+            bin_path = pathlib.Path(directory)
+            broken = bin_path / "python3"
+            broken.write_text("#!/bin/sh\nexit 49\n", encoding="utf-8")
+            working = bin_path / "python"
+            executable = pathlib.Path(sys.executable).as_posix()
+            working.write_text(f'#!/bin/sh\nexec "{executable}" "$@"\n', encoding="utf-8")
+            broken.chmod(0o755)
+            working.chmod(0o755)
+            with patch.dict(os.environ, {"PATH": str(bin_path) + os.pathsep + os.environ["PATH"]}):
+                proc, written = self.run_setup("copilot")
+            self.assertEqual(proc.returncode, 0, proc.stderr[-400:])
+            self.assertEqual(written, {"copilot"})
+
     def test_gpt_is_an_accepted_alias_for_codex(self):
         proc, written = self.run_setup("gpt")
         self.assertEqual(proc.returncode, 0, proc.stderr[-400:])
@@ -282,9 +299,11 @@ class TheSetupScriptsAreWellFormed(unittest.TestCase):
             self.assertNotIn("\\n", line, f"line {number}: {line.strip()[:70]}")
 
     def test_the_interpreter_is_resolved_not_assumed(self):
-        """Git Bash on Windows has python but no python3."""
+        """A discovered command may still be a broken Windows Store alias."""
         source = (ROOT / "scripts" / "setup-global-ai.sh").read_text(encoding="utf-8")
-        self.assertIn("command -v python3 || command -v python", source)
+        self.assertIn("for candidate in python3 python", source)
+        self.assertIn('command -v "$candidate"', source)
+        self.assertIn('sys.exit(sys.version_info[0] != 3)', source)
 
     def test_the_powershell_script_validates_its_client_argument(self):
         source = (ROOT / "scripts" / "setup-global-ai.ps1").read_text(encoding="utf-8")

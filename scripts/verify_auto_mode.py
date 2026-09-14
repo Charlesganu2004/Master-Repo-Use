@@ -9,6 +9,7 @@ hook, refreshes a skill, creates a backup, or changes trust state.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import pathlib
 import sys
@@ -20,6 +21,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 # keeps them under the repository; a pip install keeps them in the package.
 # Both are complete installs and both must verify.
 import harness_paths  # noqa: E402
+from install_auto_mode import accepted_legacy_representation  # noqa: E402
 
 
 BEGIN = "<!-- MASTER-REPO-USE:BEGIN -->"
@@ -218,6 +220,24 @@ class Verifier:
             return
         missing: list[str] = []
         changed: list[str] = []
+        legacy: list[str] = []
+        known = {}
+        try:
+            root = destination_root.relative_to(self.home).as_posix()
+            manifest = self.home / ".master-repo-auto" / (
+                "skills-" + hashlib.sha256(root.encode()).hexdigest() + ".json")
+            if manifest.is_file():
+                known = json.loads(manifest.read_text(encoding="utf-8"))
+                if not isinstance(known, dict):
+                    self.failed(scope, label, "installed skill manifest must be an object")
+                    return
+        except ValueError:
+            if destination_root.is_relative_to(self.home):
+                self.failed(scope, label, "installed skill manifest is invalid")
+                return
+        except OSError:
+            self.failed(scope, label, "installed skill manifest is unreadable")
+            return
         files = 0
         for skill in self.skills:
             for source in skill.rglob("*"):
@@ -231,7 +251,11 @@ class Verifier:
                     continue
                 try:
                     if source.read_bytes() != destination.read_bytes():
-                        changed.append(relative.as_posix())
+                        if accepted_legacy_representation(source, destination,
+                                                          known.get(relative.as_posix())):
+                            legacy.append(relative.as_posix())
+                        else:
+                            changed.append(relative.as_posix())
                 except OSError as exc:
                     changed.append(f"{relative.as_posix()} ({exc})")
         if missing or changed:
@@ -241,6 +265,10 @@ class Verifier:
             if changed:
                 details.append("different " + self._compact(changed))
             self.failed(scope, label, "; ".join(details))
+            return
+        if legacy:
+            self.warned(scope, label, "accepted legacy line-ending representation: " +
+                        self._compact(legacy) + "; all other source files match exactly")
             return
         self.passed(scope, label, f"{len(self.skills)} skills and {files} source files match")
 

@@ -5,6 +5,10 @@ adds MongoDB/PostgreSQL query plans, consent and rollout gates. Matching
 [PDF](registry-plan-2026-09-14/registry-architecture.pdf) and
 [architecture diagram](registry-plan-2026-09-14/registry-architecture.svg) are
 available. These remain design artifacts, not a deployed database service.
+The supplement's Markdown and SVG retain the original export's CRLF bytes under
+two narrowly scoped Git attributes so their recorded exact-byte hashes remain
+valid after checkout. The PDF is unchanged; other repository text keeps the
+normal LF policy.
 
 Status: architecture for Charles to review, not a deployed service. No database,
 GitHub App, client watcher, telemetry upload, automatic update or deletion is
@@ -184,6 +188,26 @@ build identity, not freedom from vulnerabilities.
 Treat AI-assisted reviewers as advisory: they cannot authorize publication or
 execute instructions from scanned files. Sanitize rendered reports and tool
 descriptions; scan text remains untrusted data after it is stored.
+
+License review must distinguish mirroring a package from operating its functionality
+for other users, and record separate licenses for a skill and its engine. For example,
+the Caveman skill's pinned [MIT LICENSE scope](https://raw.githubusercontent.com/JuliusBrussee/caveman/15581d14007fd01fb3f132016741962f34936ca2/LICENSE)
+does not extend to its engine-linked directories. The separate caveman-browse
+[pinned LICENSE](https://raw.githubusercontent.com/JuliusBrussee/caveman-browse/d3d9eb4217f50712584a2165a81e7f5ca7e48f79/LICENSE)
+is BSL-1.1, not MIT. Its text permits copying, modification, redistribution and
+non-production use, with the license conspicuously displayed on every copy;
+mirrored or redistributed copies remain subject to those terms. Its Additional
+Use Grant permits production use for internal evaluation, local development,
+CI testing, integration, and self-hosted use for one's own first-party traffic.
+Offering the work or its functionality to third parties as a hosted, managed or
+embedded service requires a separate commercial license. The stated Change Date
+is **2030-06-21** and Change License is **Apache License, Version 2.0**; the text
+also provides the earlier fourth-anniversary trigger for a specific version.
+Do not infer that operating a package registry grants permission to operate a
+restricted engine as a service. Record and review the proposed use separately.
+The benchmark could not obtain a verified caveman-browse executable; its metadata
+and licensing audit is not malware or CVE clearance. GitHub's inferred license
+metadata does not supersede these pinned license files.
 
 Use parameterized SQL and validated, allowlisted NoSQL query construction in
 the service itself. Scanning a package for injection is not a substitute for
