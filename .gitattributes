@@ -25,3 +25,7 @@
 *.dll  binary
 *.woff binary
 *.woff2 binary
+
+# Preserve the reviewed document bytes recorded in their provenance manifest.
+docs/registry-plan-2026-09-14/registry-architecture.md -text whitespace=cr-at-eol
+docs/registry-plan-2026-09-14/registry-architecture.svg -text whitespace=cr-at-eol
