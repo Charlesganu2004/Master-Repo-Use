@@ -75,6 +75,7 @@ Routine maintenance is **GitHub-first and deterministic**, never an automatic pa
 - `github/copilot-sdk`
 - `github/awesome-copilot`
 - `github/github-mcp-server`
+- `Graphify-Labs/graphify`, read its `v8` branch rather than `main`. Wrapped by `skills/master-graphify`.
 - `openai/codex`
 - `D-Ogi/WatermarkRemover-AI`, only for media the user owns or is authorized to modify.
 

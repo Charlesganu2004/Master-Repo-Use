@@ -139,6 +139,10 @@ LANES = (
      r"skill pack|marketplace|mcp server)\w*",
      "12. Adding anything third-party: run the dep-audit path first. Catalogued is not vetted, and scripts/install_catalog_skill.py is the reviewed route into a skill root."),
 
+    (r"\b(codebase|knowledge.?graph|graphify|call.?graph|blast.?radius|"
+     r"unfamiliar|onboard|orient|impact.?analysis|god.?node|trace.?path)\w*",
+     "12. Orienting in code nobody has read end to end: build the graph before grepping it file by file. Load master-graphify, run /graphify . once, then graphify query, path and explain against graph.json. EXTRACTED edges are quotable; INFERRED edges are leads to open first. Code parsing stays local; the docs, PDF and media pass goes to a model, so scope it before pointing it at private material."),
+
     (r"\b(pricing|version|latest|current|today|release|changelog|"
      r"model name|quota)\w*",
      "12. This asks for something that changes: retrieve it, do not recall it. Cite what you read."),

@@ -76,6 +76,7 @@ ENFORCED_SKILLS = (
     "master-plan",
     "master-design-taste",
     "master-computer-control",
+    "master-graphify",
     "master-refactor",
     "master-refactor-ui",
     "master-architect",

@@ -1095,6 +1095,7 @@ EXTRA_STAGES = [
     ("skills", "master-plan", "master-plan", "State the read and the approach before producing anything.", None),
     ("skills", "master-design-taste", "master-design-taste", "Design read and dials before any visible surface is built.", None),
     ("skills", "master-goal", "master-goal", "The goal survives the turn, and only the person who set it lifts it.", None),
+    ("skills", "master-graphify", "master-graphify", "Query a knowledge graph of the repository instead of grepping it file by file.", None),
     ("skills", "verify-before-complete", "verify-before-complete", "Run the check and quote real output before claiming a result.", None),
     ("skills", "cite-or-abstain", "cite-or-abstain", "Cite what was read, or say the claim is unverified.", None),
     ("skills", "scope-guard", "scope-guard", "Deliver the scope asked for, no wider and no narrower.", None),

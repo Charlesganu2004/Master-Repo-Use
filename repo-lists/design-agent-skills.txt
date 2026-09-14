@@ -14,7 +14,20 @@ Cocoon-AI/architecture-diagram-generator    # dark-themed system architecture di
 nicobailon/visual-explainer                 # HTML pages for architecture overviews and visual diffs
 Agents365-ai/drawio-skill                   # draw.io diagrams from natural language
 supabase/agent-skills                       # editorial diagram types without Mermaid
-Graphify-Labs/graphify                      # renamed from safishamsi/graphify
+Graphify-Labs/graphify                      # renamed from safishamsi/graphify. Verified 2026-09-14:
+                                            # 116.6k stars, Apache-2.0, pushed 2d. Parses a repo into
+                                            # a queryable knowledge graph, tree-sitter AST and no
+                                            # vector store, and every edge is tagged EXTRACTED or
+                                            # INFERRED. Installed from PyPI as graphifyy, so nothing
+                                            # here executes a clone. Wrapped by skills/master-graphify.
+                                            # READ v8, NOT main. v8 is the default branch; main is
+                                            # 1,734 commits behind it and holds 36 commits v8 lacks,
+                                            # so a raw URL built by habit serves a stale repository
+                                            # that still looks current.
+                                            # ONE CAUTION: code parsing is local and model-free, but
+                                            # the semantic pass over docs, PDFs, images and video
+                                            # goes to the assistant's model or a configured API key.
+                                            # Scope the run before pointing it at private material.
 
 # --- Design systems and UI judgement (skills that decide whether generated UI is any good, not just whether it renders)
 VoltAgent/awesome-claude-design             # 68 ready-to-use DESIGN.md system files
