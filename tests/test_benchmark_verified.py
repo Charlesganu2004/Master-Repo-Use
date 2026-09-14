@@ -119,10 +119,18 @@ class BenchmarkProtocolTests(unittest.TestCase):
         self.assertEqual(result["model_calls_started"], 0)
         self.assertEqual(result["status"], "blocked-before-execution")
 
-    def test_six_arms_two_tasks(self):
-        self.assertEqual(len(tasks.ARMS), 6)
+    def test_eight_arms_two_tasks(self):
+        """Eight, not six. graphify and super_graphify were added when graphify
+        became rule 1 of the installed pipeline: an arm that ships enforced on
+        every prompt has to be measurable, and super_graphify is the pairing the
+        repository actually ships. The count is asserted so a ninth arm is a
+        decision rather than a drift, and uniqueness is asserted because a
+        duplicated name would silently halve a cell's sample."""
+        self.assertEqual(len(tasks.ARMS), 8)
         self.assertEqual(len(tasks.TASKS), 2)
-        self.assertEqual(len(set(tasks.ARMS)), 6)
+        self.assertEqual(len(set(tasks.ARMS)), 8)
+        self.assertIn("graphify", tasks.ARMS)
+        self.assertIn("super_graphify", tasks.ARMS)
 
     def test_common_safety_every_arm(self):
         for arm in tasks.ARMS:

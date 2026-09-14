@@ -80,6 +80,7 @@ HOOK_FILES = ("skill_pipeline.py", "no_prune_guard.py", "no_compress_guard.py")
 REQUIRED_SKILLS = (
     "master-repo-auto",
     "master-caveman",
+    "master-graphify",
     "master-token-reducer",
     "master-full-output",
     "master-anti-slop",

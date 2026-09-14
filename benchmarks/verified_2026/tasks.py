@@ -1,7 +1,28 @@
 """Synthetic tasks. No repository or user content is sent to a provider."""
 
 ARMS = ("bare", "super", "super_ponytail_caveman",
-        "super_ponytail_nocaveman", "ponytail", "caveman")
+        "super_ponytail_nocaveman", "ponytail", "caveman",
+        "graphify", "super_graphify")
+
+# The graphify arm's instruction, kept here so the arm and the committed prompt
+# files in prompts/ are generated from one source and cannot drift apart. It
+# mirrors rule 1 of the installed pipeline: local graph first, reads as the
+# fallback, local AST parsing only.
+GRAPHIFY = """GRAPHIFY (master-graphify). Build a queryable knowledge graph of a codebase
+instead of reading it file by file, then ask it questions.
+
+Install once: uv tool install graphifyy, then graphify install, then /graphify . to index.
+Query with: explain <symbol>, path <a> <b>, query "<question>".
+
+EXTRACTED edges come from deterministic AST parsing and stay on this machine.
+INFERRED edges are weaker; never report one as established fact.
+The docs, PDF and media pass sends content to a model and therefore leaves the
+machine: scope a run to code unless the content is cleared for that.
+Pin the upstream default branch v8, never main, which is 1,734 commits stale.
+
+For this synthetic task no repository exists and nothing is indexed. Record that
+graphify is unavailable here and solve the task directly. Do not describe graph
+output you did not produce."""
 
 COMMON = """Work only on this synthetic Python 3.12+ task. Use the standard library.
 Do not access files, network, subprocesses, environment variables, or credentials.
@@ -78,7 +99,7 @@ frontier model in a fresh session, not a continuation of the original task."""
 }
 
 
-def compose(task, arm, super_context="", ponytail="", caveman=""):
+def compose(task, arm, super_context="", ponytail="", caveman="", graphify=""):
     """Compose explicit instruction ablations without modifying installed skills."""
     if task not in TASKS or arm not in ARMS:
         raise ValueError("unknown task or arm")
@@ -92,6 +113,12 @@ def compose(task, arm, super_context="", ponytail="", caveman=""):
         parts.append(ponytail)
     if arm in ("super_ponytail_caveman", "caveman"):
         parts.append(caveman)
+    # graphify rides ahead of the task the same way it leads layer 1 of the
+    # installed pipeline, so the arm measures the real ordering rather than a
+    # block bolted on at the end. super_graphify is the pairing that matters:
+    # the harness the repository actually ships now carries both.
+    if "graphify" in arm:
+        parts.append(graphify or GRAPHIFY)
     parts.append(TASKS[task])
     return "\n\n".join(parts)
 
