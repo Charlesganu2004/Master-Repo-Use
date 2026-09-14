@@ -84,6 +84,7 @@ LANE_PROBES = {
     "refactor": "refactor the duplicated dead code and reduce the technical debt",
     "install": "install an npm package dependency from the marketplace",
     "changes": "what is the latest model pricing version released today",
+    "graph": "orient in this unfamiliar codebase and build a knowledge graph to trace the path between two modules",
 }
 
 

@@ -16,6 +16,19 @@ addyosmani/agent-skills       # already catalogued in design-agent-skills
 mattpocock/skills             # already catalogued in design-agent-skills
 sedarged/Agent-skills-ecosystem   # 0 stars, NO LICENCE, 151d. An index of the ecosystem.
                               # LINK ONLY, and treat its entries as unverified.
+testdouble/han                # verified 2026-09-14: 263 stars, MIT, 3d. A real plugin
+                              # marketplace manifest rather than a single pack: 13 plugins for
+                              # solo and small-team product engineering, split into planning,
+                              # coding, documentation, research, GitHub, reporting and
+                              # communication layers over a shared han-core agent roster.
+                              # Claude Code: /plugin marketplace add testdouble/han then
+                              # /plugin install han@han. Codex: codex plugin marketplace add
+                              # testdouble/han, then add each package by name, because Codex
+                              # supports no meta-plugin and resolves no dependencies, so
+                              # han-communication has to go in alongside anything that writes
+                              # prose. COST NOTE: its skills dispatch swarms of subagents by
+                              # design, so a single run is worth more than a single call. Read
+                              # docs/sizing.md before pointing it at a large task.
 
 # --- Individual skills that do a specific job (single-purpose skills, each solving one named problem)
 mvanhorn/last30days-skill     # 61.2k stars, MIT, 2d. CORRECTED 2026-09-04: this researches a
