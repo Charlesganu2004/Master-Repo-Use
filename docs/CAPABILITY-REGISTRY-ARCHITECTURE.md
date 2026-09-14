@@ -1,5 +1,11 @@
 # Managed capability registry: proposal
 
+The [2026-09-14 database and indexing supplement](registry-plan-2026-09-14/registry-architecture.md)
+adds MongoDB/PostgreSQL query plans, consent and rollout gates. Matching
+[PDF](registry-plan-2026-09-14/registry-architecture.pdf) and
+[architecture diagram](registry-plan-2026-09-14/registry-architecture.svg) are
+available. These remain design artifacts, not a deployed database service.
+
 Status: architecture for Charles to review, not a deployed service. No database,
 GitHub App, client watcher, telemetry upload, automatic update or deletion is
 enabled by this document. The existing [MongoDB catalog plan](MONGODB-PLAN.md)

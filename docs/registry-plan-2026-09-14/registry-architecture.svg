@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="960" viewBox="0 0 1280 960" role="img" aria-labelledby="title description">
+  <title id="title">Proposed capability registry with reviewed updates and local fallback</title>
+  <desc id="description">Consented metadata and upstream release checks enter a non-installable quarantine. Isolated validation and human review authorize Git manifests. A publisher coordinates one metadata database, immutable artifacts, and verified local clients. A separately approved retirement process creates tombstones and reconciles cleanup. Public Pages only receives sanitized presentation data. No service is deployed by this proposal.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#62758f"/>
+    </marker>
+    <style>
+      text { font-family: system-ui, "Segoe UI", sans-serif; fill: #142940; }
+      .heading { font-size: 29px; font-weight: 720; }
+      .sub { font-size: 16px; fill: #52677b; }
+      .label { font-size: 18px; font-weight: 700; }
+      .body { font-size: 15px; fill: #344c64; }
+      .small { font-size: 14px; fill: #52677b; }
+      .flow { fill: none; stroke: #62758f; stroke-width: 2; marker-end: url(#arrow); }
+      .optional { stroke-dasharray: 6 5; }
+      .box { fill: #fff; stroke: #c4d1df; stroke-width: 1.5; rx: 13; }
+      .review { fill: #fff8e8; stroke: #cdb46e; stroke-width: 1.5; rx: 13; }
+      .good { fill: #eef8f5; stroke: #77ad9a; stroke-width: 1.5; rx: 13; }
+    </style>
+  </defs>
+  <rect width="1280" height="960" fill="#f5f8fc"/>
+  <text x="44" y="49" class="heading">Index capabilities. Preserve working installations.</text>
+  <text x="44" y="79" class="sub">Proposed architecture · one metadata backend · no automatic trust or destructive synchronization</text>
+
+  <rect x="44" y="115" width="348" height="100" class="box"/>
+  <text x="63" y="146" class="label">Consented local discovery</text>
+  <text x="63" y="171" class="body">Identity, version, digest, permissions</text>
+  <text x="63" y="194" class="small">No secrets, conversations, or source upload</text>
+
+  <rect x="466" y="115" width="348" height="100" class="box"/>
+  <text x="485" y="146" class="label">Upstream release monitor</text>
+  <text x="485" y="171" class="body">Poll permitted APIs; controlled webhooks</text>
+  <text x="485" y="194" class="small">Pin immutable revision and artifact digest</text>
+
+  <rect x="888" y="115" width="348" height="100" class="review"/>
+  <text x="907" y="146" class="label">Human retirement decision</text>
+  <text x="907" y="171" class="body">Keep, replace, adopt, or retire</text>
+  <text x="907" y="194" class="small">Approval bound to exact target and action</text>
+
+  <path d="M218 215 V244 H368 V270" class="flow"/>
+  <path d="M640 215 V244 H520 V270" class="flow"/>
+  <rect x="234" y="270" width="406" height="100" class="review"/>
+  <text x="255" y="301" class="label">Quarantine: not installable</text>
+  <text x="255" y="326" class="body">Untrusted candidate bytes stay separate</text>
+  <text x="255" y="349" class="small">Deduplicate; preserve provenance and license</text>
+
+  <path d="M640 320 H716" class="flow"/>
+  <rect x="716" y="270" width="348" height="100" class="review"/>
+  <text x="735" y="301" class="label">Isolated validation + review</text>
+  <text x="735" y="326" class="body">Inspect, test, compare permissions</text>
+  <text x="735" y="349" class="small">Scan result is evidence, not a safety proof</text>
+
+  <path d="M890 370 V425" class="flow"/>
+  <rect x="716" y="425" width="348" height="108" class="good"/>
+  <text x="735" y="456" class="label">Approved Git manifests</text>
+  <text x="735" y="482" class="body">Full definitions, pinned versions, policies</text>
+  <text x="735" y="507" class="small">Desired release state; review and audit trail</text>
+
+  <path d="M1062 215 V240 H1186 V479 H1064" class="flow optional"/>
+  <text x="1080" y="402" class="small">Approved</text>
+  <text x="1080" y="422" class="small">tombstones</text>
+
+  <path d="M716 479 H640" class="flow"/>
+  <rect x="234" y="425" width="406" height="108" class="box"/>
+  <text x="255" y="456" class="label">Publisher + reconciliation</text>
+  <text x="255" y="482" class="body">Verify artifacts; publish signed snapshot</text>
+  <text x="255" y="507" class="small">Durable outbox, retries, explicit pending state</text>
+
+  <path d="M335 533 V569 H218 V605" class="flow"/>
+  <path d="M537 533 V569 H640 V605" class="flow"/>
+  <rect x="44" y="605" width="348" height="113" class="box"/>
+  <text x="63" y="636" class="label">One metadata database</text>
+  <text x="63" y="662" class="body">MongoDB or PostgreSQL + JSONB</text>
+  <text x="63" y="687" class="small">Search, dependencies, approvals, tombstones</text>
+  <text x="63" y="706" class="small">Not the only copy of runnable capabilities</text>
+
+  <rect x="466" y="605" width="348" height="113" class="box"/>
+  <text x="485" y="636" class="label">Immutable artifact storage</text>
+  <text x="485" y="662" class="body">Complete package bytes keyed by digest</text>
+  <text x="485" y="687" class="small">Authorized downloads; checked provenance</text>
+  <text x="485" y="706" class="small">Retention and shared-reference-aware cleanup</text>
+
+  <path d="M640 479 H680 V576 H1062 V605" class="flow optional"/>
+  <rect x="888" y="605" width="348" height="113" class="box"/>
+  <text x="907" y="636" class="label">Public Pages projection</text>
+  <text x="907" y="662" class="body">Explicitly public presentation only</text>
+  <text x="907" y="687" class="small">No private catalogue or telemetry</text>
+  <text x="907" y="706" class="small">Existing privacy tests remain mandatory</text>
+
+  <path d="M218 718 V757 H335 V796" class="flow"/>
+  <path d="M640 718 V757 H537 V796" class="flow"/>
+  <rect x="234" y="796" width="580" height="112" class="good"/>
+  <text x="255" y="827" class="label">Verified local installations</text>
+  <text x="255" y="853" class="body">Host-specific files, version pins, opt-in activation, rollback</text>
+  <text x="255" y="878" class="small">Known-good local mode survives database outages.</text>
+  <text x="255" y="897" class="small">Revocation freshness and offline limitations are explicit.</text>
+
+  <text x="888" y="811" class="small">Trust boundary:</text>
+  <text x="888" y="835" class="small">Untrusted candidates never become</text>
+  <text x="888" y="857" class="small">active merely because they were found.</text>
+  <text x="44" y="941" class="small">Design only · 2026-09-14 · No database, monitoring service, or upload has been activated.</text>
+</svg>

@@ -1,0 +1,16 @@
+{
+  "status": "proposal-not-deployed",
+  "markdown": "registry-architecture.md",
+  "markdown_sha256": "ca18dee3edb2ac4113c5da92c4f44abc4bcc4ea7234eb367647f6d72ed5740c0",
+  "diagram": "registry-architecture.svg",
+  "diagram_sha256": "495ae8b8290ac77e2f570f1825e8c27f0b03b0443cc84fe1b5fe68b368b44d7c",
+  "html": "registry-architecture.html",
+  "html_sha256": "9df33907f94b688b5af65786f4c860a21937fb59a9f8f1b75146d144be3762a4",
+  "markdown_renderer": "Markdown 3.10.3",
+  "pdf": "registry-architecture.pdf",
+  "pdf_sha256": "f859a197e8e18ac120f69f1746c8f7a8e8721a7b113a8ed0a4d9fe78aa79a0b9",
+  "chromium": "151.0.7922.34",
+  "playwright": "1.62.1",
+  "section_count": 17,
+  "diagram_loaded": true
+}
