@@ -1,15 +1,22 @@
-This confirms the full chain. Answer:
+## Prompt → injected context
 
-**Prompt → injected context pipeline**
+**Hook file:** `scripts/hooks/skill_pipeline.py` — this is Claude Code's `UserPromptSubmit` hook (per its own docstring: "This hook is mechanism 3. Claude Code's UserPromptSubmit and Antigravity's...").
 
-- **Hook file:** `scripts/hooks/skill_pipeline.py` — the `UserPromptSubmit` hook (invoked via its `main()` at L840).
-- **Function that builds the context:** `context_for()` (L158) inside that file. It assembles the core block plus at most one skill lane and fan-out advice, calling `capture()`, `resolve_token_limit()` / `parse_token_command()`, `standing_goal()`, `harness_mode()`, `token_block()`, and `chain_block()`.
-- **File that adds the super harness chain on top:** `context_for()` calls `chain_block()` (also in `skill_pipeline.py`, L757), which lazily imports `scripts/hooks/super_chain.py` and appends its `super_block()` output — so the super-mode chain is layered on only when `super_chain` is importable (base mode pays nothing).
+**Function that builds the context:** `context_for(prompt, session=None, capturing=True, include_goal=True, mode=None, token_enforced=False)` (line 158). It assembles the core context plus at most one topic "lane" (chosen by number of matched terms, not declaration order) plus fan-out advice for large prompts, plus the standing goal (unless `include_goal=False`). The hook calls it near the bottom (`additionalContext = context_for(prompt, session)`) and emits it via `hookEventName: "UserPromptSubmit"` / `additionalContext` in the JSON response.
 
-**Three most-connected symbols (god nodes)**
+**File adding the super harness chain on top:** `super_chain.py`, pulled in by `chain_block()` (line 773) inside `skill_pipeline.py`:
+```python
+def chain_block() -> str:
+    """The super chain, imported only in super mode so base mode pays nothing."""
+    import super_chain
+    return super_chain.super_block()
+```
+`context_for` is called with `mode="base"` in super mode, and `chain_block()` appends the ten-pass super chain block afterward — kept as a lazy import so non-super runs never pay for it.
 
-1. `run()` — 51 edges — `tests/test_no_compress_guard.py`
-2. `run()` — 42 edges — `tests/test_no_prune_guard.py`
-3. `Verifier` — 38 edges — `scripts/verify_auto_mode.py`
+## Three most-connected symbols (god nodes)
 
-(Runners-up: `build()` — 28 edges — `scripts/build_atlas_data.py`; `IsolatedPublicSite` — 28 edges — `tests/public_site_fixture.py`.)
+| Rank | Symbol | Degree | Defined in |
+|---|---|---|---|
+| 1 | `run()` | 51 edges | `tests/test_no_compress_guard.py` |
+| 2 | `run()` | 42 edges | `tests/test_no_prune_guard.py` |
+| 3 | `Verifier` | 38 edges | `scripts/verify_auto_mode.py` |

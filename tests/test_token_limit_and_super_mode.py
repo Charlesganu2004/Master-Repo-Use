@@ -126,6 +126,21 @@ class TheRuleTellsTheTruthAboutEnforcement(IsolatedStore):
                        "what was left out", "/token limit off"):
             self.assertIn(phrase, block)
 
+    def test_the_rule_gives_a_word_budget_because_a_model_cannot_count_tokens(self):
+        """Eleven of sixteen measured answers went past a 600-token ceiling when
+        the rule stated only the token count. It now also states words."""
+        block = sp.token_block(600)
+        self.assertIn("about 450 words", block)
+        self.assertIn("budget 450 words", block)
+        self.assertEqual(sp.word_budget(400), 300)
+        self.assertEqual(sp.word_budget(2000), 1500)
+        self.assertGreaterEqual(sp.word_budget(1), 10)
+
+    def test_the_rule_bans_what_usually_blows_the_budget(self):
+        block = sp.token_block(600)
+        for phrase in ("No preamble", "no closing summary", "highest-value part"):
+            self.assertIn(phrase, block)
+
     def test_it_only_claims_a_hard_stop_where_one_exists(self):
         self.assertIn("hard stop", sp.token_block(2000, enforced=True))
         self.assertNotIn("hard stop", sp.token_block(2000, enforced=False))

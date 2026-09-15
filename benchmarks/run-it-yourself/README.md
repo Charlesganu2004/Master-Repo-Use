@@ -81,3 +81,22 @@ stayed inside 600 tokens, and what it missed.
 with local paths replaced by `<repo>` and `<graphify>`. When you run setup, they
 are rewritten with your own paths, so expect a local diff there. That is the
 generator doing its job, not a change to the test.
+
+## What the ceiling actually does, measured twice
+
+The first sixteen runs showed answers going past the 600-token ceiling: 5 of 16
+stayed inside it. Rule 15 was then rewritten to state a word budget as well as a
+token count (a model cannot count its own tokens while writing) and to ban the
+preamble and closing summary that usually push a capped answer over. The same
+sixteen runs were repeated with the new rule:
+
+| | Within 600 | Median answer | Facts right |
+| --- | --- | --- | --- |
+| Rule stating tokens only | 5/16 | 720 tokens | 106/120 |
+| Rule with a word budget | 5/16 | 662 tokens | 112/120 |
+
+Shorter answers and more facts, and the same compliance. As an instruction the
+ceiling is advisory, and this is the honest limit of it: on the proxy path it is
+a real `max_tokens` and holds absolutely, and everywhere else it asks a model to
+respect a number it cannot see. Both runs are here: `results/runs-rule-v1.json`
+is the first, `results/runs.json` the second.

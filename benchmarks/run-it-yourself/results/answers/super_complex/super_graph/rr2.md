@@ -1,19 +1,21 @@
-All five files confirmed present. Answer complete.
+scripts/harness_paths.py clearly has the widest blast radius (29 affected nodes at depth 2 vs single digits for the others), consistent with it defining path helpers (`repo_root()`, `harness_modules_dir()`, `hooks_dir()`) imported across the harness family.
 
-**Five harnesses — entry scripts** (from `tests/test_harness_family.py` `INJECTION_SCRIPTS`, confirmed on disk):
-1. auto-mode-harness → `scripts/auto_mode_harness.py`
-2. harness-proxy → `scripts/harness_proxy.py`
-3. harness-wrap → `scripts/harness_wrap.py`
-4. harness-goal → `scripts/harness_goal.py`
-5. harness-super → `scripts/harness_super.py`
+**Goal restated:** five harnesses' entry scripts; top-3 connected symbols + files; caller of `Verifier`; single highest-impact file.
 
-**Three most-connected symbols** (graphify `god-nodes --top`, by degree):
-1. `run()` — degree 51 — `tests/test_no_compress_guard.py`
-2. `run()` — degree 42 — `tests/test_no_prune_guard.py`
-3. `Verifier` (class) — degree 38 — `scripts/verify_auto_mode.py:L101`
+**Five harnesses (from `tests/test_harness_family.py` `INJECTION_SCRIPTS`, entry = same-named script, ordered least→most reach):**
+1. auto-mode-harness — `scripts/auto_mode_harness.py`
+2. harness-proxy — `scripts/harness_proxy.py`
+3. harness-wrap — `scripts/harness_wrap.py`
+4. harness-goal — `scripts/harness_goal.py`
+5. harness-super — `scripts/harness_super.py` (calls the other four)
 
-**Verifier's caller**: `graphify explain "Verifier"` shows only one inbound edge to the class itself — `verify_auto_mode.py` `[contains]` at L101, i.e. it's instantiated/driven at module level in `scripts/verify_auto_mode.py` (its own `.run()` method, L640, is what executes the checks; `affected` confirms `.run()` and `.add()` are the only nodes referencing/calling into it at depth 1).
+**Three most connected symbols** (graphify `god-nodes --top 8 --json`):
+1. `run()` — 51 edges — `tests/test_no_compress_guard.py`
+2. `run()` — 42 edges — `tests/test_no_prune_guard.py`
+3. `Verifier` (class) — 38 edges — `scripts/verify_auto_mode.py:101`
 
-**Highest-impact single file**: `scripts/verify_auto_mode.py` — it defines the graph's 3rd-highest-degree symbol (`Verifier`, 38 edges, 17+ outgoing method connections all local to this file), so changing it would affect the most callers/dependents of any single file in the codebase.
+**Verifier's caller:** `main()` in `scripts/verify_auto_mode.py:707` — `verifier = Verifier(pathlib.Path(args.repo), pathlib.Path(args.home), clients, installed_only=args.installed_only)`, then `verifier.run()`.
 
-Skills/tools used: graphify (god-nodes, explain, affected, query — local AST graph, no model calls), Grep, Read, Bash (read-only ls/cat). Goal status: fully unblocked — all four goal parts delivered, nothing deferred.
+**Highest-impact file:** `scripts/harness_paths.py` — `graphify affected` at depth 2 returns 29 dependents (vs. single digits for `verify_auto_mode.py`, `harness_super.py`, `auto_mode_harness.py`), since it supplies the shared path helpers (`repo_root()`, `harness_modules_dir()`, `hooks_dir()`) that the harness scripts and tests import.
+
+Tools used: graphify (`god-nodes`, `explain`, `affected`), Grep/Read for the two lookups graphify's node-matching couldn't disambiguate (harness list, Verifier's exact call site) — no model-backed docs pass, all local. Goal check: all four parts answered, nothing blocked, nothing left outstanding.

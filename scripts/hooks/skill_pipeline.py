@@ -698,8 +698,10 @@ def resolve_token_limit(prompt: str, session: str | None = None,
     return load_token_limit(session)
 
 
-TOKEN_TEMPLATE = """15. TOKEN LIMIT: {limit} tokens for this response, set with /token limit. A ceiling, not a target.
+TOKEN_TEMPLATE = """15. TOKEN LIMIT: {limit} tokens for this response, set with /token limit. A ceiling, not a target. That is about {words} words, so budget {words} words and check the count as you write: a model cannot count its own tokens, which is why this rule gives you words instead.
     Plan to fit before writing: choose the most valuable COMPLETE result that fits in {limit} tokens and produce only that. Cut repetition, then examples, then explanation, then breadth; keep the answer itself, the code that was asked for, and any warning that matters.
+    Spend the budget on the answer. No preamble, no restating the question, no narration of what you are about to do, no closing summary of what you just said, no offers of further help. Those four are where a capped answer usually goes over.
+    If the request asks for more than fits, answer the highest-value part completely and say in one line what you left out. An answer that covers everything and runs past the ceiling is a failed answer, not a thorough one.
     Stop at the last clean break before the limit and end with one line saying exactly what was left out and how to ask for it. Never run past it to finish a thought. FULL OUTPUT still forbids placeholders inside what you do deliver. {enforcement}
     Lift it with /token limit off."""
 
@@ -712,10 +714,24 @@ TOKEN_INSTRUCTED = ("This client cannot cap tokens itself. This is advisory, not
                     "precise counting or guaranteed enforcement.")
 
 
+# A token is about 0.75 words of English prose. The rule states a word budget as
+# well as the token ceiling because a model cannot count its own tokens while
+# writing, and the first version of this rule was exceeded on eleven of sixteen
+# measured answers. Rounded down to a round number: a budget that looks computed
+# to the token invites arithmetic instead of brevity.
+WORDS_PER_TOKEN = 0.75
+
+
+def word_budget(limit: int) -> int:
+    words = int(limit * WORDS_PER_TOKEN)
+    step = 50 if words >= 200 else 10
+    return max(step, (words // step) * step)
+
+
 def token_block(limit: int | None, enforced: bool = False) -> str:
     if not limit:
         return ""
-    return TOKEN_TEMPLATE.format(limit=f"{limit:,}",
+    return TOKEN_TEMPLATE.format(limit=f"{limit:,}", words=f"{word_budget(limit):,}",
                                  enforcement=TOKEN_ENFORCED if enforced else TOKEN_INSTRUCTED)
 
 

@@ -134,6 +134,27 @@ def browser_section() -> str:
             + "<h3>What one page costs to read</h3>" + table(["Page view", "Bytes", "Tokens (o200k)"], rows))
 
 
+def ceiling_section() -> str:
+    """Did rewriting rule 15 make the ceiling hold? Measured, not assumed."""
+    import statistics as stats
+    before = load(KIT / "results" / "runs-rule-v1.json")
+    after = load(KIT / "results" / "runs.json")
+    if not before or not after:
+        return '<p class="missing">Only one version of the rule has been run.</p>'
+    rows = []
+    for name, data in (("Rule stating the token ceiling only", before),
+                       ("Rule also stating a word budget, and banning preamble and summary", after)):
+        done = [r for r in data if r.get("completed")]
+        harness = [r for r in done if r["arm"] in ("base_graph", "super_graph")]
+        rows.append(([name, len(done), f"{sum(r['withinLimit'] for r in done)}/{len(done)}",
+                      f"{stats.median(r['answerTokens'] for r in done):,.0f}",
+                      f"{sum(r['score']['found'] for r in done)}/{sum(r['score']['expected'] for r in done)}",
+                      f"{sum(r['withinLimit'] for r in harness)}/{len(harness)}",
+                      f"{stats.median(r['answerTokens'] for r in harness):,.0f}"], False))
+    return table(["Version of rule 15", "Runs", "Within 600", "Median answer tokens", "Facts right",
+                  "Harness arms within", "Harness median tokens"], rows)
+
+
 def main() -> None:
     doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Harness metrics</title>
 <style>
@@ -169,6 +190,12 @@ time is first to last timestamp of the run. Highlighted rows are the harness arm
 {kit_section()}
 {figure(KIT / "charts" / "kit_results.png", "The 600-token test: facts right, ceiling compliance, cost and time")}
 
+<h2 class="part">1b. Does the ceiling hold? Rewriting the rule, measured</h2>
+<p>The first run showed answers going past a 600-token ceiling. Rule 15 was rewritten to state a word budget as
+well as a token count, and to ban the preamble and closing summary that usually blow a capped answer. The same
+sixteen runs were repeated. The rewrite made answers shorter and more accurate; it did not make the ceiling hold.
+Through the proxy the limit is a hard max_tokens and this question does not arise.</p>
+{ceiling_section()}
 <h2 class="part">2. graphify across the harnesses, capped at 400 tokens</h2>
 <p>Five arms, two questions, three runs each. g1 is the question a graph answers; g2 is the control a grep answers.</p>
 {graphify_section()}

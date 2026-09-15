@@ -1,17 +1,18 @@
-I have everything needed to answer precisely.
+I have everything needed.
 
-## How a prompt becomes injected context
+**Prompt → injected context flow**
 
-- **Hook file:** `scripts/hooks/skill_pipeline.py` (a UserPromptSubmit hook — its `main()` prints `{"hookSpecificOutput": {"additionalContext": ...}}`).
-- **Function that builds the context:** `context_for(prompt, session=None, ...)` at `scripts/hooks/skill_pipeline.py:158`. It assembles the injected block in order: `CORE` text, an optional single best-matching skill "lane," an `ORCHESTRATION` note for large/multi-task prompts, the standing goal (`standing_goal()`), a token-limit block (`token_block()`), and finally — only in super mode — the chain block.
-- **File that adds the super harness chain on top:** `scripts/hooks/super_chain.py`. Inside `context_for`, when `(mode or harness_mode()) == "super"`, it calls `chain_block()` (`skill_pipeline.py:757`), which lazily imports `super_chain` and returns `super_chain.super_block()` (defined in `scripts/hooks/super_chain.py:84`), appending that block last so base mode never pays the cost of loading it.
+- Hook file: `scripts/hooks/skill_pipeline.py`
+- Function that builds the injected context: `context_for()` (defined at L158 in that file). It calls `chain_block()` (L757) to assemble the block content.
+- The user's live prompt is fed in via `last_user_text()` in `scripts/harness_proxy.py` (L74), called from that file's `inject()` (L155/159) — this is "the newest user turn, which is what the pipeline scores its lanes against."
+- Super harness chain addition: `scripts/hooks/super_chain.py` — `chain_block()` imports/invokes it only in super mode ("The super chain, imported only in super mode so base mode pays nothing"), layering the ten-pass super-harness chain on top of the base injected context built by `context_for()`.
 
-## Three most connected symbols (god nodes)
+Flow: `harness_proxy.py:inject()` → `last_user_text()` (grabs newest prompt) → `skill_pipeline.py:context_for()` (builds base context) → `chain_block()` → conditionally pulls in `super_chain.py` when super mode is active.
 
-1. `run()` — 51 edges
-2. `run()` — 42 edges (a second, distinct `run()` symbol elsewhere in the repo)
-3. `Verifier` — 38 edges
+**Three most connected symbols (god nodes)**
 
-(Runner-up: `build()` with 28 edges, tied with `IsolatedPublicSite`.)
+1. `run()` — 51 edges — `tests/test_no_compress_guard.py`
+2. `run()` — 42 edges — `tests/test_no_prune_guard.py`
+3. `Verifier` — 38 edges — `scripts/verify_auto_mode.py`
 
-Note: `graphify god-nodes` reports only the symbol name, edge count, and rank — it doesn't include each node's defining file in that output, and the two `run()` entries aren't disambiguated by path in the CLI result. To name the exact source file for each of these three, they'd need to be looked up individually (e.g. `graphify explain "run"` / `graphify explain "Verifier"` per candidate, or a grep for `def run(` / `class Verifier`), since multiple same-named `run()` functions exist across the repo (e.g. under `scripts/`, `master_harness/`, and test/benchmark harness files).
+(Runners-up: `build()` in `scripts/build_atlas_data.py`, 28 edges; `IsolatedPublicSite` in `tests/public_site_fixture.py`, 28 edges.)

@@ -1,13 +1,22 @@
-All findings confirmed via graphify + Grep/Read (read-only, evidence quoted).
+**Goal (restated):** trace prompt→injected-context (hook file, context-building function, super-harness-chain file) + name the 3 most-connected symbols and their files. This turn answers all of it.
+**Tools used:** graphify (query/god-nodes/explain, local AST graph, no model calls) for retrieval; Bash grep/sed and Read to quote exact lines as evidence.
 
-**Hook → context chain**
-- Hook file: `scripts/hooks/skill_pipeline.py` — this is "mechanism 3" (line 19: "This hook is mechanism 3. Claude Code's UserPromptSubmit and Antigravity's..."), invoked on `UserPromptSubmit` (confirmed at line 884: `"hookEventName": "UserPromptSubmit"`).
-- Function that builds the injected context: `context_for(prompt, session=None, capturing=True, include_goal=True, mode=None, token_enforced=False)`, defined at `scripts/hooks/skill_pipeline.py:158`. Its docstring states the mechanism directly: "The core, plus at most one lane, plus fan-out advice... `mode` overrides the machine's configured mode for one call; **the super harness passes "base" and appends the chain itself, after the goal.**" It's called at the JSON-emit sites (lines 846, 869) as `context_for(prompt, session)`, defaulting to `CORE` (defined line 92) when the prompt is empty.
-- File that adds the super harness chain on top: `scripts/hooks/super_chain.py`. Its own header explains the split (lines 5-10): `harness_wrap` "imports every other harness... fine for a command and wrong for a per-prompt hook: skill_pipeline runs on every prompt of every client... So the definition lives here, beside the hook, with no imports beyond the [stdlib]." It defines `SUPER_BLOCK` (line 60, the "SUPER HARNESS. The chain above is the floor..." text seen in this very prompt), built by `pass_lines()` (line 71) and assembled by `super_block()` (line 84).
+**Prompt → injected context**
+- **Hook file:** `scripts/hooks/skill_pipeline.py`. Its own docstring says so: "*This hook is mechanism 3. Claude Code's UserPromptSubmit and Antigravity's…*" (L19). `main()` (L826) is the entrypoint; e.g. L856: `print(json.dumps({"additional_context": context_for(find_prompt(event), session)}))`.
+- **Function that builds the context:** `context_for(prompt, session=None, capturing=True, include_goal=True, mode=None, token_enforced=False)` at `skill_pipeline.py:158`. It assembles: the core layers, the best-matching lane, an orchestration note, the standing goal, the token-limit block, and then (L218-221):
+```python
+if (mode or harness_mode()) == "super":
+    chain = chain_block()
+    if chain:
+        parts.append(chain)
+```
+- **File that adds the super-harness chain on top:** `scripts/hooks/super_chain.py`. `chain_block()` (`skill_pipeline.py:773`) lazily imports it — "*imported only in super mode so base mode pays nothing*" — and returns `super_chain.super_block()` (`super_chain.py:84`).
 
-**Three most-connected symbols (graphify god-nodes --top)**
-1. `run()` — degree 51 — `tests/test_no_compress_guard_run.py` (id `tests_test_no_compress_guard_run`)
-2. `run()` — degree 42 — `tests/test_no_prune_guard_run.py`
-3. `Verifier` — degree 38 — `scripts/verify_auto_mode.py`
+**Three most-connected symbols** (`graphify god-nodes --top 5`, ranked by edge degree):
+1. `run()` — `tests/test_no_compress_guard.py:24` (51 edges)
+2. `run()` — `tests/test_no_prune_guard.py:22` (42 edges)
+3. `Verifier` — `scripts/verify_auto_mode.py:101` (38 edges)
 
-GOAL check: all four parts (hook file, context-building function, super-chain file, top-3 connected symbols+files) are done — none blocked. Tools used: graphify (god-nodes query), Grep, Read — no files modified. Left out to fit the 600-token cap: the 4th/5th god-nodes (`build()` in scripts/build_atlas_data.py, `IsolatedPublicSite` in tests/public_site_fixture.py) and the full `context_for` lane-matching logic (lines 202+) — ask if you want either.
+Caveat worth flagging (Layer-3 review): #1 and #2 are two *different* functions that happen to share the name `run()`, each local to its own guard test file — not one shared, widely-imported symbol. So "most connected" here reflects two structurally busy test files rather than a single hub. `Verifier` (`scripts/verify_auto_mode.py`) is the first genuinely cross-referenced class-level symbol.
+
+**Status:** Both parts of the standing goal are answered and complete this turn — nothing blocked. Goal stays standing (not lifted); say "goal clear" to lift it.

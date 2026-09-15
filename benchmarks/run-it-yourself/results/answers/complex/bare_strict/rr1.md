@@ -1,21 +1,16 @@
-## Prompt → injected context
+Based on the source files (not graphify-out):
 
-**Hook file:** `scripts/hooks/skill_pipeline.py` — this is the `UserPromptSubmit`/`PreInvocation`/`userPromptTransformed` handler wired into Claude Code, Antigravity, Cursor, Gemini, and Copilot (see `main()`, lines 810‑888, which branches on `--antigravity`/`--cursor`/`--gemini`/`--copilot-*` flags and prints each client's expected JSON shape).
+**Prompt → injected context pipeline**
 
-**Function that builds the context:** `context_for(prompt, session=None, capturing=True, include_goal=True, mode=None, token_enforced=False)` (lines 158‑222). It assembles the injected string by concatenating, in order:
-- `CORE` — the mandatory 3‑layer pipeline text (caveman/full‑output/anti‑slop → plan/design → capabilities/agents/refactor/re‑apply/verify)
-- the single best‑matching `LANES` regex entry (security, UI, refactor, etc.)
-- `ORCHESTRATION` advice on long/multi‑task prompts
-- `standing_goal(...)` if a goal is captured/set
-- `token_block(...)` if a `/token limit` is active
-- `chain_block()` **only if** `harness_mode() == "super"`
+- **Hook file:** `scripts/hooks/skill_pipeline.py` — the `UserPromptSubmit` hook (also serving Cursor/Copilot/Gemini/Antigravity variants) that Claude Code invokes on every prompt.
+- **Function that builds the context:** `context_for(prompt, session=None, ...)` (defined at line 158 of that file). It assembles `CORE` (the three-layer standing pipeline text), picks at most one matching `LANES` entry, adds orchestration advice for multi-part prompts, appends the `standing_goal(...)` block, appends a `token_block(...)` if a limit is set, and — only when the harness is in super mode — appends `chain_block()`. `main()` calls `context_for(prompt, session)` directly and emits it as `hookSpecificOutput.additionalContext` (or the client-specific equivalent key).
 
-**File that adds the super‑harness chain:** `scripts/hooks/super_chain.py`. `context_for` calls its own local helper `chain_block()` (lines 757‑764), which lazily `import super_chain` and returns `super_chain.super_block()`. That function formats the `PASSES` tuple (CAVEMAN, FULL OUTPUT, ANTI‑SLOP, PLAN, DESIGN, ARCHITECT, REFACTOR, COMPRESS, REVIEW, VERIFY) into the `SUPER_BLOCK` template and appends it after the goal/token blocks — kept in its own module specifically so base‑mode sessions never pay the import cost.
+**Super-harness chain file**
 
-## Three most-connected symbols
+- **`scripts/hooks/super_chain.py`** — defines `super_block()` (and `PASSES`/`SUPER_BLOCK`). `context_for`'s `chain_block()` helper imports this module lazily and calls `super_chain.super_block()`, appending its text after everything else *only* when `harness_mode() == "super"` — literally layering the ten-pass chain "on top of" the base three-layer context. (`scripts/harness_super.py` and `master_harness/harness_super.py` merely re-export/wrap this same module for the CLI; the chain itself is authored in `super_chain.py`.)
 
-Ranked by actual `import` statements found via grep across `scripts/`, `master_harness/`, and `tests/` (not graphify):
+**Three most-connected symbols** (by distinct-file reference count under `scripts/`, `master_harness/`, and `tests/`, excluding the generated `build/lib/` copy and `graphify-out/`):
 
-1. **`skill_pipeline`** — module defined in `scripts/hooks/skill_pipeline.py` — imported by 18 files (`auto_mode_harness.py`, `build_atlas_data.py`, `harness_ab_test.py`, `harness_goal.py`, `harness_proxy.py`, `harness_super.py`, `harness_wrap.py`, and their `master_harness/` mirrors, plus 6 test files). It's the shared context/goal/token/mode engine every harness entry point depends on.
-2. **`harness_paths`** — module defined in `scripts/harness_paths.py` — imported by 11 files (`auto_mode_harness.py`, `harness_computer.py`, `install_auto_mode.py`, `verify_auto_mode.py`, `skill_pipeline.py` itself, mirrors, and `tests/test_package.py`). Supplies `state_dir()`, `seed_path()`, `repo_root()` etc. used for all cross-client path resolution.
-3. **`harness_super`** — module defined in `scripts/harness_super.py` — imported by 9 files (`build_atlas_data.py`, `harness_ab_test.py`, `harness_proxy.py`, `harness_wrap.py`, mirrors, and 3 test files). Re-exports the super chain and mode switch for the install/serve/route commands.
+1. **`context_for`** — defined independently at three composition levels: `scripts/hooks/skill_pipeline.py` (base), `scripts/harness_goal.py` (adds the goal block), `scripts/harness_super.py` (adds the chain). Referenced/called from ~21 files (hooks, CLI wrappers, harness_ab_test.py, and a dozen tests).
+2. **`harness_paths`** (module) — defined in `scripts/harness_paths.py`, providing `state_dir()`, `seed_path()`, `skills_dir()`, `hooks_dir()`, etc. Imported by ~20 files across the hooks, install/verify scripts, and tests as the shared path-resolution utility.
+3. **`load_goal`** — defined in `scripts/hooks/skill_pipeline.py`; read by `harness_goal.py`, `harness_super.py`, the CLI, and 6+ tests (~12 files) as the single source of standing-goal state.

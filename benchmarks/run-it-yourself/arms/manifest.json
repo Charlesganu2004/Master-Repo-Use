@@ -11,12 +11,12 @@
         "sha256": "320d8ccf32c3f0b25c28086125c2b18764b3461e7d9d7541dfafbf3f251bf119"
       },
       "base_graph": {
-        "bytes": 4916,
-        "sha256": "55b5ed72d34c198bbe9e572648255babb1ac809ba5cae1fef9c347410a3a4f27"
+        "bytes": 5546,
+        "sha256": "6b3e70f0f6d94c56e19e52538d41368e5ecfefdad461c03aba706a764a977e34"
       },
       "super_graph": {
-        "bytes": 7328,
-        "sha256": "9817981f0de1b029ebcedf400386344d08035a7b5eb817587b7635838a4dcfd6"
+        "bytes": 7958,
+        "sha256": "2cf14ead3b34989f80608f9e9d4b5dde4bc77cd22f521118b79759442fee9ed2"
       }
     },
     "super_complex": {
@@ -29,12 +29,12 @@
         "sha256": "ea618928138f212b6e0b5928a7f0619a50400a3c5c9a62b746752fc6760868ba"
       },
       "base_graph": {
-        "bytes": 5012,
-        "sha256": "2fbc9011a93e0caba7e76f56d2cf41f488704016ec72218b7d136d413bc048cc"
+        "bytes": 5642,
+        "sha256": "9a4e455a63b51af0127bd743f3ef92cb0e8bc94066a72494f4e40173b086f9be"
       },
       "super_graph": {
-        "bytes": 7424,
-        "sha256": "1cae4a76eb2e95e1182c5e7cb7b9334ceb303683681ef84de4e3a45ba8b41236"
+        "bytes": 8054,
+        "sha256": "f5079e6574e6f33751b7ab58df126bb11176f8cd0d459f2cbb2b2517b8d4c922"
       }
     }
   }

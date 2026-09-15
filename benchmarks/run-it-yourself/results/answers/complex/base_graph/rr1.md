@@ -1,15 +1,15 @@
-GOAL: trace prompt→injected-context path + name top-3 connected symbols. This turn answers both; nothing blocked.
+GOAL restated: trace prompt→injected-context (hook file + builder function), the file adding the super-harness chain, and the 3 most-connected symbols with their files. This turn answers all parts in full.
 
-**Prompt → injected context:**
-- Hook file: `scripts/hooks/skill_pipeline.py`
-- Context-building function: `context_for()` (L158) — assembles the injected block; `chain_block()` (L757) composes the final chain output appended to context.
-- Super-harness-chain file: `scripts/hooks/super_chain.py`, via `super_block()` (L84), which builds the "ten named passes on top of the three layers" block that `skill_pipeline.py` layers on.
+**Prompt → injected context**
+- Hook file: `scripts/hooks/skill_pipeline.py` — registered as Claude Code's `UserPromptSubmit` hook (confirmed at line 19: "This hook is mechanism 3. Claude Code's UserPromptSubmit and Antigravity's...").
+- Builder function: `context_for(prompt, session=...)` at `scripts/hooks/skill_pipeline.py:158`. It's called from `scripts/auto_mode_harness.py:885` (`context_for(prompt, session) if prompt.strip() else CORE`) which then emits `{"hookEventName": "UserPromptSubmit", "additionalContext": context}` (lines 900-901) — this is the actual stdout JSON Claude Code reads to inject context.
 
-**Top 3 most-connected symbols (from `graphify god-nodes --top 3 --json`):**
-1. `run()` — 51 edges — `tests/test_no_compress_guard.py`
-2. `run()` — 42 edges — `tests/test_no_prune_guard.py`
-3. `Verifier` — 38 edges — `scripts/verify_auto_mode.py`
+**Super-harness chain**
+- File: `scripts/super_chain.py` — imported lazily ("only in super mode so base mode pays nothing", line 774) by `auto_mode_harness.py`, via `super_chain.super_block()` (line 780), which is what gets appended as `"## The super harness, on every prompt"` (line 232). `skill_pipeline.py` also pulls `super_chain.EXTRA_SKILLS` when mode is super (line 245).
 
-(Note: `scripts/hooks/skill_pipeline.py` itself also has degree 38, tied with `Verifier` but ranked 4th by the tool.)
+**Three most-connected symbols (graphify god-nodes, by graph degree)**
+1. `run()` — degree 51 — `tests/test_no_compress_guard.py`
+2. `run()` — degree 42 — `tests/test_no_prune_guard.py`
+3. `Verifier` — degree 38 — `scripts/verify_auto_mode.py`
 
-Done: both GOAL parts answered with evidence from graphify. Left out: full 18+ remaining contains-edges list for skill_pipeline.py (truncated by budget) — ask for `graphify explain "scripts/hooks/skill_pipeline.py" --budget 100` to see the rest.
+Nothing blocked; all four requested items (hook file, builder function, super-chain file, top-3 connected symbols+files) resolved with direct source evidence.

@@ -956,11 +956,20 @@ def super_chain_payload() -> dict:
             "plain": "Type /token limit and a number at the start of a message. The model "
                      "plans its answer to fit, stops at the last clean break, and says "
                      "what it left out. It stays for the rest of the session until you "
-                     "type /token limit off.",
-            "technical": "Adds rule 15 to every prompt in the session. Through the proxy "
-                         "it is also a hard cap: max_tokens, max_completion_tokens or "
-                         "Ollama's num_predict, whichever the API takes, never raising a "
-                         "lower cap the caller already set. Elsewhere it is an instruction.",
+                     "type /token limit off. Through the proxy it is a hard stop. "
+                     "Everywhere else it is an instruction, and an instruction can be "
+                     "missed: measured on 16 answers at a 600-token ceiling, 5 stayed "
+                     "inside it. Use the proxy when the ceiling has to hold.",
+            "technical": "Adds rule 15 to every prompt in the session, stating both the "
+                         "token ceiling and the word budget it works out to, because a "
+                         "model cannot count its own tokens while writing. Through the "
+                         "proxy it is also a hard cap: max_tokens, max_completion_tokens "
+                         "or Ollama's num_predict, whichever the API takes, never raising "
+                         "a lower cap the caller already set. Elsewhere it is advisory. "
+                         "Adding the word budget cut the median answer from 720 to 662 "
+                         "tokens against a 600 ceiling and raised the facts recalled, but "
+                         "compliance stayed near a third; benchmarks/run-it-yourself holds "
+                         "the runs.",
             "spellings": [spelling for spelling, _expected in spellings],
             "rule": skill_pipeline.token_block(2000, enforced=False),
         },

@@ -1,15 +1,13 @@
-Confirmed. Now the direct answer.
+Confirmed — GOAL fully traced this turn.
 
-**Prompt → injected context trace**
+**Prompt → injected context chain:**
+- Hook file: `scripts/hooks/skill_pipeline.py`
+- Function that builds the injected context: `context_for()` (defined L158) — builds "the core, plus at most one lane, plus fan-out advice," reading the standing goal and token limit.
+- File that adds the super harness chain on top: `scripts/hooks/skill_pipeline.py` itself contains `chain_block()` (L773), which imports `super_chain` (same dir) and calls `super_chain.super_block()` — appended after the goal block when in super mode. Entry point is `scripts/harness_proxy.py`, whose `inject()` (L155) calls `CONTEXT(text, session)`; in super mode `use_super_context()` (L108) swaps `CONTEXT` to `harness_super.context_for(...)`, so `harness_super.py` is the file layering the super chain over the base pipeline's `context_for`.
 
-- Hook file: `scripts/hooks/skill_pipeline.py` — registered as the `UserPromptSubmit` hook; it prints `{"hookSpecificOutput": {"additionalContext": ...}}` (line 867/883).
-- Function that builds the context: `context_for(prompt, session=None, ...)` at `scripts/hooks/skill_pipeline.py:158` — called at line 869 as `context_for(prompt, session)`, falling back to `CORE` for empty prompts.
-- File that adds the super harness chain on top: `scripts/hooks/super_chain.py`. `skill_pipeline.py`'s own `chain_block()` (line 757) lazily `import super_chain` and calls `super_chain.super_block()` (line 761/764) — done only in super mode, "with no imports beyond the standard library," per that file's docstring, so base mode pays nothing.
+**Top 3 most connected symbols (by graph degree):**
+1. `run()` — degree 51 — `tests/test_no_compress_guard_run.py` (actually `tests_test_no_compress_guard_run` id → file `tests/test_no_compress_guard.py`, function `run`)
+2. `run()` — degree 42 — `tests/test_no_prune_guard.py`
+3. `Verifier` — degree 38 — `scripts/verify_auto_mode.py`
 
-**Three most-connected symbols (graphify god-nodes --top 3 --json)**
-
-1. `run()` — 51 edges — `tests/test_no_compress_guard.py`
-2. `run()` — 42 edges — `tests/test_no_prune_guard.py`
-3. `Verifier` — 38 edges — `scripts/verify_auto_mode.py`
-
-GOAL check: both parts of the standing goal are done — hook/function/super-chain file traced, and the three top god-nodes named with their files. Nothing blocked. Left out to fit the 600-token cap: the internals of `context_for`'s skill-selection logic and `super_block()`'s own chain contents — ask if you want those expanded.
+Not lifted: goal stays standing per master-goal rules until you say "goal clear."

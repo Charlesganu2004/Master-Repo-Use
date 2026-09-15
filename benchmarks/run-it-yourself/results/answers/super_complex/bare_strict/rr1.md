@@ -1,15 +1,20 @@
-**Five harnesses (entry scripts, from `tests/test_harness_family.py::INJECTION_SCRIPTS`):**
-1. auto-mode-harness → `scripts/auto_mode_harness.py`
-2. harness-proxy → `scripts/harness_proxy.py`
-3. harness-wrap → `scripts/harness_wrap.py`
-4. harness-goal → `scripts/harness_goal.py`
-5. harness-super → `scripts/harness_super.py` (calls the other four)
+All five confirmed as standalone entry points with `if __name__ == "__main__"` guards.
 
-**Three most connected symbols** (verified by reading each file, counting call sites — no graph tool used):
-1. `run()` in `tests/test_no_compress_guard.py:24` — a local helper invoked ~67 times by the test methods in that file.
-2. `run()` in `tests/test_no_prune_guard.py:22` — invoked ~46 times by that file's tests.
-3. `Verifier` class in `scripts/verify_auto_mode.py:101` — a large class whose ~10+ methods (`add`, `passed`, `failed`, `warned`, `skipped`, `_read_text`, `_read_json`, `_check_instruction`, `_canonical_skills`, `_check_skill_tree`, …) call each other constantly, giving it the highest internal edge count of any class in the repo.
+**The five harnesses and their entry scripts** (from source docstrings, all in `scripts/`, mirrored in `master_harness/`):
 
-**Verifier's caller:** `main()` in the same file, `scripts/verify_auto_mode.py:707` (`verifier = Verifier(...)`, then `verifier.run()`).
+1. **Surface harness** — `scripts/auto_mode_harness.py` (installs the pipeline via hooks on Claude Code, Codex, Gemini CLI, Cursor, etc.)
+2. **Proxy harness** — `scripts/harness_proxy.py` (OpenAI/Ollama-compatible proxy injecting the pipeline into every request)
+3. **Wrapper harness** — `scripts/harness_wrap.py` (wraps any CLI with no hook mechanism)
+4. **Goal harness** — `scripts/harness_goal.py` (surface harness plus a standing goal that survives the turn)
+5. **Super harness** — `scripts/harness_super.py` (calls the other four, adding a longer 10-pass chain)
 
-**Highest-impact file:** `scripts/harness_paths.py` — its `repo_root()` is called directly by 15 other functions in that same module (`skills_dir`, `block_path`, `state_dir`, `hook_command`, `harness_command`, `describe`, etc.), and the module itself is imported by most of the harness scripts and tests (`auto_mode_harness.py`, `harness_goal.py`, `harness_super.py`, `harness_computer.py`, `skill_pipeline.py`, `install_auto_mode.py`, `verify_auto_mode.py`), so changing it would ripple to the most callers of any file in the repository.
+(`harness_computer.py` and `harness_paths.py` are explicitly *not* harnesses — the former self-describes as "a capability router, not another model harness," the latter is a shared path-resolution utility all harnesses call into.)
+
+**Three most-connected symbols:**
+- `run` — defined in `tests/test_no_compress_guard.py` (helper invoked 67 times in that file)
+- `run` — defined in `tests/test_no_prune_guard.py` (helper invoked 46 times in that file)
+- `Verifier` — class defined in `scripts/verify_auto_mode.py` (a large class whose many methods — `add`, `passed`, `failed`, `warned`, `skipped`, `_read_text`, `_read_json`, etc. — call each other internally, and which is also referenced by `tests/test_verify_auto_mode.py` and `tests/test_install_preservation.py`)
+
+**Verifier's caller:** In `scripts/verify_auto_mode.py`, function **`main`** builds `verifier = Verifier(...)` and calls `verifier.run()` (line ~707).
+
+**Single highest-impact file:** `scripts/verify_auto_mode.py` — it defines the densely-interconnected `Verifier` class (dozens of internal call edges) and is imported/exercised by two separate test files, so a change there ripples to the most callers of any file in the repo.

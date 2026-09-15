@@ -1,19 +1,17 @@
-Confirmed: `main()` in scripts/verify_auto_mode.py instantiates and calls `Verifier`.
+## Answer
 
-## Five harnesses and entry scripts
-1. **auto-mode-harness** → `scripts/auto_mode_harness.py`
-2. **harness-proxy** → `scripts/harness_proxy.py`
-3. **harness-wrap** → `scripts/harness_wrap.py`
-4. **harness-goal** → `scripts/harness_goal.py`
-5. **harness-super** → `scripts/harness_super.py`
+**Five harnesses and their entry scripts** (from `tests/test_harness_family.py`):
+1. `auto-mode-harness` → `scripts/auto_mode_harness.py`
+2. `harness-proxy` → `scripts/harness_proxy.py`
+3. `harness-wrap` → `scripts/harness_wrap.py`
+4. `harness-goal` → `scripts/harness_goal.py`
+5. `harness-super` → `scripts/harness_super.py`
 
-## Three most connected symbols (by graph degree)
+**Three most connected symbols** (graphify `god-nodes`, by degree):
 1. `run()` — degree 51 — `tests/test_no_compress_guard.py`
 2. `run()` — degree 42 — `tests/test_no_prune_guard.py`
-3. `Verifier` (class) — degree 38 — `scripts/verify_auto_mode.py`
+3. `Verifier` (class) — degree 38 — `scripts/verify_auto_mode.py` (line 101)
 
-## Verifier's caller
-`main()` in `scripts/verify_auto_mode.py` constructs `Verifier(...)` and calls `verifier.run()`.
+**Function calling `Verifier`:** `main()` in `scripts/verify_auto_mode.py` (line 680) — it constructs `Verifier(...)` at line 707 and calls `verifier.run()`.
 
-## Highest-impact single file
-`scripts/verify_auto_mode.py` — it defines the highest-degree non-test symbol (`Verifier`, degree 38) and is the module most tests and tooling reach into to validate every harness's installed state; changing it would ripple to the most callers.
+**Highest-impact file:** `scripts/harness_paths.py` — it defines the shared path/module-resolution logic imported directly by `auto_mode_harness.py`, `harness_computer.py`, `install_auto_mode.py`, and `verify_auto_mode.py`, and via those, transitively reached by roughly 20 downstream callers/functions across the harness family — more than any other single file in the graph.
