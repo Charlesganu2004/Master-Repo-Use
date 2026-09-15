@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Northwind Checkout</title>
+<style>body{font:14px system-ui;margin:0}form{display:grid;gap:8px;max-width:420px}
+nav ul,footer ul{display:flex;gap:12px;list-style:none}.error{color:#b00}</style></head>
+<body>
+<header><h1>Northwind Checkout</h1><nav aria-label="Main"><ul><li><a href="#dashboard">Dashboard</a></li><li><a href="#orders">Orders</a></li><li><a href="#customers">Customers</a></li><li><a href="#products">Products</a></li><li><a href="#inventory">Inventory</a></li><li><a href="#returns">Returns</a></li><li><a href="#reports">Reports</a></li><li><a href="#marketing">Marketing</a></li><li><a href="#settings">Settings</a></li><li><a href="#help">Help</a></li></ul></nav></header>
+<aside aria-label="Promotion"><p>Free returns for 60 days. Members save more.</p>
+<button type="button">Join now</button><button type="button">Learn more</button></aside>
+<main><h2>Your cart</h2>
+<ul aria-label="Cart"><li>Standing desk, $649.00</li><li>Desk lamp, $49.00</li></ul>
+<form id="checkout" novalidate>
+<label>Full name <input name="name" autocomplete="name" required></label>
+<label>Email <input name="email" type="email" autocomplete="email" required></label>
+<label>Street address <input name="street" autocomplete="street-address" required></label>
+<label>City <input name="city" autocomplete="address-level2" required></label>
+<label>Postcode <input name="postcode" autocomplete="postal-code" required></label>
+<label>Shipping method <select name="shipping">
+<option>Standard</option><option>Express</option><option>Overnight</option></select></label>
+<label>Coupon code <input name="coupon"></label>
+<label><input type="checkbox" name="terms"> I accept the terms</label>
+<button type="submit">Place order</button>
+<p class="error" role="alert" id="error"></p>
+</form>
+<output id="confirmation" role="status"></output>
+</main>
+<footer><ul><li><a href="#f0">About</a></li><li><a href="#f1">Careers</a></li><li><a href="#f2">Press</a></li><li><a href="#f3">Status</a></li><li><a href="#f4">Privacy</a></li><li><a href="#f5">Terms</a></li><li><a href="#f6">Cookies</a></li><li><a href="#f7">Accessibility</a></li><li><a href="#f8">Contact</a></li><li><a href="#f9">Partners</a></li><li><a href="#f10">Affiliates</a></li><li><a href="#f11">Developers</a></li><li><a href="#f12">API</a></li><li><a href="#f13">Changelog</a></li></ul></footer>
+<script>
+function fnv1a(s){let h=0x811c9dc5;for(const b of new TextEncoder().encode(s)){h^=b;h=Math.imul(h,0x01000193)>>>0;}
+return h.toString(16).toUpperCase().padStart(8,'0');}
+document.getElementById('checkout').addEventListener('submit',function(e){
+  e.preventDefault();const f=e.target;const need=['name','email','street','city','postcode'];
+  const missing=need.filter(n=>!f[n].value.trim());
+  if(missing.length){document.getElementById('error').textContent='Missing: '+missing.join(', ');return;}
+  if(!f.terms.checked){document.getElementById('error').textContent='Accept the terms to continue';return;}
+  document.getElementById('error').textContent='';
+  const code='CONF-'+fnv1a([f.name.value.trim(),f.email.value.trim(),f.shipping.value,f.coupon.value.trim()].join('|'));
+  document.getElementById('confirmation').textContent='Order placed. Confirmation code: '+code;
+});
+</script>
+</body></html>

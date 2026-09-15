@@ -1,0 +1,66 @@
+# test_solution.py
+import threading
+import unittest
+from solution import RateLimiter
+
+
+class TestRateLimiter(unittest.TestCase):
+    def test_allows_up_to_limit_then_blocks(self):
+        rl = RateLimiter(limit=3, window=10.0, clock=lambda: 0.0)
+        self.assertEqual([rl.allow("a") for _ in range(5)], [True, True, True, False, False])
+
+    def test_keys_independent(self):
+        rl = RateLimiter(limit=1, window=10.0, clock=lambda: 0.0)
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+        self.assertTrue(rl.allow("b"))
+
+    def test_window_slides_open_after_expiry(self):
+        t = [0.0]
+        rl = RateLimiter(limit=2, window=5.0, clock=lambda: t[0])
+        self.assertTrue(rl.allow("k"))
+        self.assertTrue(rl.allow("k"))
+        self.assertFalse(rl.allow("k"))
+        t[0] = 4.999
+        self.assertFalse(rl.allow("k"))  # still inside window
+        t[0] = 5.0
+        self.assertTrue(rl.allow("k"))  # oldest call now exactly window-old, expires
+
+    def test_partial_expiry_not_full_reset(self):
+        t = [0.0]
+        rl = RateLimiter(limit=2, window=10.0, clock=lambda: t[0])
+        self.assertTrue(rl.allow("k"))
+        t[0] = 1.0
+        self.assertTrue(rl.allow("k"))
+        t[0] = 2.0
+        self.assertFalse(rl.allow("k"))
+        t[0] = 10.5
+        self.assertTrue(rl.allow("k"))  # first call (t=0) expired, second (t=1) still counts
+        t[0] = 10.9
+        self.assertFalse(rl.allow("k"))
+        t[0] = 11.1
+        self.assertTrue(rl.allow("k"))  # second call (t=1) now expired too
+
+    def test_concurrent_callers_same_key_respect_limit(self):
+        limit = 100
+        rl = RateLimiter(limit=limit, window=1000.0)
+        results = []
+        results_lock = threading.Lock()
+
+        def worker():
+            r = rl.allow("shared")
+            with results_lock:
+                results.append(r)
+
+        threads = [threading.Thread(target=worker) for _ in range(500)]
+        for th in threads:
+            th.start()
+        for th in threads:
+            th.join()
+
+        self.assertEqual(sum(results), limit)
+        self.assertEqual(len(results), 500)
+
+
+if __name__ == "__main__":
+    unittest.main()

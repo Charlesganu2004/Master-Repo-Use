@@ -1,0 +1,81 @@
+# test_solution.py
+import unittest
+
+from solution import parse_duration
+
+
+class ParseDurationValid(unittest.TestCase):
+    def test_hours_minutes(self):
+        self.assertEqual(parse_duration('1h30m'), 5400)
+
+    def test_seconds_only(self):
+        self.assertEqual(parse_duration('45s'), 45)
+
+    def test_days_hours(self):
+        self.assertEqual(parse_duration('2d4h'), 187200)
+
+    def test_single_day(self):
+        self.assertEqual(parse_duration('1d'), 86400)
+
+    def test_zero(self):
+        self.assertEqual(parse_duration('0s'), 0)
+
+    def test_all_units(self):
+        self.assertEqual(parse_duration('1d2h3m4s'), 93784)
+
+    def test_multi_digit(self):
+        self.assertEqual(parse_duration('100s'), 100)
+
+
+class ParseDurationMalformed(unittest.TestCase):
+    def test_empty_string(self):
+        with self.assertRaises(ValueError):
+            parse_duration('')
+
+    def test_wrong_order(self):
+        with self.assertRaises(ValueError):
+            parse_duration('1h1d')
+
+    def test_unknown_unit(self):
+        with self.assertRaises(ValueError):
+            parse_duration('1x')
+
+    def test_duplicate_unit(self):
+        with self.assertRaises(ValueError):
+            parse_duration('1d1d')
+
+    def test_negative_number(self):
+        with self.assertRaises(ValueError):
+            parse_duration('-5s')
+
+    def test_missing_unit(self):
+        with self.assertRaises(ValueError):
+            parse_duration('5')
+
+    def test_decimal_number(self):
+        with self.assertRaises(ValueError):
+            parse_duration('5.5h')
+
+    def test_unit_no_number(self):
+        with self.assertRaises(ValueError):
+            parse_duration('d')
+
+    def test_wrong_case(self):
+        with self.assertRaises(ValueError):
+            parse_duration('1D')
+
+    def test_whitespace(self):
+        with self.assertRaises(ValueError):
+            parse_duration(' 1h')
+        with self.assertRaises(ValueError):
+            parse_duration('1h ')
+
+    def test_non_string_input(self):
+        with self.assertRaises(ValueError):
+            parse_duration(None)
+        with self.assertRaises(ValueError):
+            parse_duration(90)
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -1,0 +1,87 @@
+# test_solution.py
+"""Unit tests for RateLimiter."""
+import unittest
+from concurrent.futures import ThreadPoolExecutor
+
+from solution import RateLimiter
+
+
+class FakeClock:
+    """Manually advanceable clock, so window-sliding is deterministic."""
+
+    def __init__(self, start=0.0):
+        self.t = start
+
+    def __call__(self):
+        return self.t
+
+    def advance(self, dt):
+        self.t += dt
+
+
+class TestRateLimiterBasics(unittest.TestCase):
+    def test_allows_up_to_limit_then_blocks(self):
+        rl = RateLimiter(3, 10, clock=FakeClock())
+        results = [rl.allow("a") for _ in range(5)]
+        self.assertEqual(results, [True, True, True, False, False])
+
+    def test_window_slides_to_admit_new_calls(self):
+        clock = FakeClock()
+        rl = RateLimiter(2, 5, clock=clock)
+        self.assertTrue(rl.allow("k"))
+        self.assertTrue(rl.allow("k"))
+        self.assertFalse(rl.allow("k"))
+        clock.advance(5.0001)  # oldest calls now outside the window
+        self.assertTrue(rl.allow("k"))
+
+    def test_partial_expiry_frees_exactly_one_slot(self):
+        clock = FakeClock()
+        rl = RateLimiter(2, 5, clock=clock)
+        rl.allow("k")           # t=0
+        clock.advance(3)
+        rl.allow("k")           # t=3
+        clock.advance(2.0001)   # t=5.0001: first call (t=0) now expired
+        self.assertTrue(rl.allow("k"))   # slot freed by expiry
+        self.assertFalse(rl.allow("k"))  # but limit (2) reached again
+
+    def test_keys_are_independent(self):
+        rl = RateLimiter(1, 10, clock=FakeClock())
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+        self.assertTrue(rl.allow("b"))  # unaffected by key "a"
+
+    def test_invalid_limit_or_window_rejected(self):
+        with self.assertRaises(ValueError):
+            RateLimiter(0, 10)
+        with self.assertRaises(ValueError):
+            RateLimiter(5, 0)
+
+
+class TestRateLimiterConcurrency(unittest.TestCase):
+    def test_concurrent_callers_never_exceed_limit(self):
+        # Real clock, window wide enough that it can't expire mid-test.
+        limit = 10
+        rl = RateLimiter(limit, window=100)
+
+        with ThreadPoolExecutor(max_workers=50) as pool:
+            results = list(pool.map(lambda _: rl.allow("shared-key"), range(500)))
+
+        self.assertEqual(sum(results), limit)
+
+    def test_concurrent_callers_distinct_keys_each_get_own_limit(self):
+        limit = 5
+        rl = RateLimiter(limit, window=100)
+        keys = [f"key-{i % 4}" for i in range(400)]
+
+        with ThreadPoolExecutor(max_workers=40) as pool:
+            results = list(pool.map(rl.allow, keys))
+
+        per_key_allowed = {}
+        for key, allowed in zip(keys, results):
+            per_key_allowed[key] = per_key_allowed.get(key, 0) + int(allowed)
+        for key in set(keys):
+            self.assertEqual(per_key_allowed[key], limit)
+
+
+if __name__ == "__main__":
+    unittest.main()

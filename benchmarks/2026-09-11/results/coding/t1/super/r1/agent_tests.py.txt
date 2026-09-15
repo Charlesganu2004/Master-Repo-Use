@@ -1,0 +1,88 @@
+# test_solution.py
+import unittest
+
+from solution import parse_duration
+
+
+class TestParseDurationValid(unittest.TestCase):
+    def test_single_units(self):
+        self.assertEqual(parse_duration("45s"), 45)
+        self.assertEqual(parse_duration("10m"), 600)
+        self.assertEqual(parse_duration("3h"), 10800)
+        self.assertEqual(parse_duration("5d"), 432000)
+
+    def test_combined_units(self):
+        self.assertEqual(parse_duration("1h30m"), 5400)
+        self.assertEqual(parse_duration("2d4h"), 2 * 86400 + 4 * 3600)
+        self.assertEqual(
+            parse_duration("1d2h3m4s"), 86400 + 2 * 3600 + 3 * 60 + 4
+        )
+
+    def test_zero_value(self):
+        self.assertEqual(parse_duration("0s"), 0)
+
+    def test_leading_zeros(self):
+        self.assertEqual(parse_duration("01h"), 3600)
+
+    def test_large_numbers(self):
+        self.assertEqual(parse_duration("100d"), 100 * 86400)
+
+
+class TestParseDurationInvalid(unittest.TestCase):
+    def test_empty_string(self):
+        with self.assertRaises(ValueError):
+            parse_duration("")
+
+    def test_no_units_just_digits(self):
+        with self.assertRaises(ValueError):
+            parse_duration("30")
+
+    def test_bare_unit_no_digits(self):
+        with self.assertRaises(ValueError):
+            parse_duration("h")
+
+    def test_wrong_order(self):
+        with self.assertRaises(ValueError):
+            parse_duration("30m1h")
+
+    def test_repeated_unit(self):
+        with self.assertRaises(ValueError):
+            parse_duration("1h1h")
+        with self.assertRaises(ValueError):
+            parse_duration("1d1d")
+
+    def test_unknown_unit(self):
+        with self.assertRaises(ValueError):
+            parse_duration("10x")
+
+    def test_decimal_value(self):
+        with self.assertRaises(ValueError):
+            parse_duration("1.5h")
+
+    def test_negative_value(self):
+        with self.assertRaises(ValueError):
+            parse_duration("-5s")
+
+    def test_whitespace(self):
+        with self.assertRaises(ValueError):
+            parse_duration(" 1h")
+        with self.assertRaises(ValueError):
+            parse_duration("1h ")
+
+    def test_uppercase_unit(self):
+        with self.assertRaises(ValueError):
+            parse_duration("1H")
+
+    def test_non_string_input(self):
+        with self.assertRaises(ValueError):
+            parse_duration(None)
+        with self.assertRaises(ValueError):
+            parse_duration(123)
+
+    def test_error_message_mentions_offender(self):
+        with self.assertRaisesRegex(ValueError, "30m1h"):
+            parse_duration("30m1h")
+
+
+if __name__ == "__main__":
+    unittest.main()

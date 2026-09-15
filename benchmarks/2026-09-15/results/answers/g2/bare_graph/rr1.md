@@ -1,0 +1,1 @@
+The class `Verifier` is defined in `<repo>\scripts\verify_auto_mode.py` (line 101), and it is instantiated/called by `main()` in that same file (`scripts/verify_auto_mode.py:707`).

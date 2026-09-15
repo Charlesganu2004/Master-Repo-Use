@@ -1,0 +1,3 @@
+The `Verifier` class is defined in `scripts/verify_auto_mode.py` (line 101), and it is instantiated/called by the `main()` function in that same file (line 707: `verifier = Verifier(pathlib.Path(args.repo), pathlib.Path(args.home), ...)`).
+
+Note: an identical copy also exists in `build/lib/master_harness/verify_auto_mode.py` (likely a packaged build artifact), where `main()` similarly calls `Verifier(...)`.

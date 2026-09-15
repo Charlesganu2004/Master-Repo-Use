@@ -1,0 +1,49 @@
+# test_solution.py
+import unittest
+
+from solution import parse_duration
+
+
+class ParseDurationTests(unittest.TestCase):
+    def test_single_units(self):
+        self.assertEqual(parse_duration('45s'), 45)
+        self.assertEqual(parse_duration('30m'), 1800)
+        self.assertEqual(parse_duration('2h'), 7200)
+        self.assertEqual(parse_duration('3d'), 259200)
+
+    def test_combined_units(self):
+        self.assertEqual(parse_duration('1h30m'), 5400)
+        self.assertEqual(parse_duration('2d4h'), 187200)
+        self.assertEqual(parse_duration('1d2h3m4s'), 93784)
+
+    def test_zero_value(self):
+        self.assertEqual(parse_duration('0s'), 0)
+
+    def test_malformed_raises_value_error(self):
+        bad_inputs = [
+            '',            # empty
+            'abc',         # no digits/units
+            '30',          # missing unit
+            '30m1h',       # wrong order
+            '1h1h',        # repeated unit
+            '1.5h',        # non-integer
+            '-5s',         # negative
+            '5x',          # unknown unit
+            '1h30ms',      # trailing garbage
+            '1D',          # wrong case
+            '  ',          # whitespace only
+        ]
+        for text in bad_inputs:
+            with self.subTest(text=text):
+                with self.assertRaises(ValueError):
+                    parse_duration(text)
+
+    def test_non_string_raises_value_error(self):
+        for value in (None, 5, 3.5):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    parse_duration(value)
+
+
+if __name__ == '__main__':
+    unittest.main()

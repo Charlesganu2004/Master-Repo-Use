@@ -1,0 +1,82 @@
+{
+  "repo": "<repo>",
+  "limit": 400,
+  "tasks": {
+    "g1": {
+      "name": "Architectural hubs",
+      "prompt": "In the repository at {REPO}, name the three most connected symbols (the architectural hubs) and the file each one is defined in. Give the three as a short list.",
+      "truth": {
+        "kind": "symbols",
+        "expect": [
+          {
+            "symbol": "run",
+            "file": "tests/test_no_compress_guard.py"
+          },
+          {
+            "symbol": "run",
+            "file": "tests/test_no_prune_guard.py"
+          },
+          {
+            "symbol": "Verifier",
+            "file": "scripts/verify_auto_mode.py"
+          }
+        ],
+        "source": "graphify god-nodes --top 3 --json against the repository graph"
+      }
+    },
+    "g2": {
+      "name": "Definition and caller",
+      "prompt": "In the repository at {REPO}, which file defines the class Verifier, and which function calls it? Answer with the file path and the calling function.",
+      "truth": {
+        "kind": "definition",
+        "expect": [
+          {
+            "symbol": "Verifier",
+            "file": "scripts/verify_auto_mode.py",
+            "caller": "main"
+          }
+        ],
+        "source": "graphify affected \"Verifier\" --depth 1 against the repository graph"
+      }
+    }
+  },
+  "tool_card": "graphify 0.9.61 is installed on this machine and the repository's graph is already built. Run it from the repository root:\n\n  \"{GRAPHIFY}\" <command>\n\nCommands: query \"<question>\" [--budget N], path \"A\" \"B\", explain \"X\", affected \"X\" [--depth N], god-nodes [--top N] [--json]. The default graph is graphify-out/graph.json in the folder you run it from; pass --graph for another. Indexing and querying are local: they parse the code and read the graph file, and call no model.",
+  "delivery": "Answer the question directly. Do not create or modify any files, and do not use the Skill tool.",
+  "limit_plain": "Your entire answer must be at most 400 tokens.",
+  "limit_command": "/token limit 400 ",
+  "arms": {
+    "bare_nograph": {
+      "label": "No harness, no graphify",
+      "harness": null,
+      "graphify": false
+    },
+    "bare_graph": {
+      "label": "No harness, graphify offered",
+      "harness": null,
+      "graphify": true
+    },
+    "base_graph": {
+      "label": "Base harness + graphify",
+      "harness": "base",
+      "graphify": true
+    },
+    "super_graph": {
+      "label": "Super harness + graphify",
+      "harness": "super",
+      "graphify": true
+    },
+    "bare_strict": {
+      "label": "No harness, graphify forbidden",
+      "harness": null,
+      "graphify": false,
+      "forbid_graphify": true
+    }
+  },
+  "notes": [
+    "The four other harnesses (surface, proxy, wrapper, goal) deliver the same base pipeline text through different mechanisms; base_graph stands for all four, and super_graph adds the ten-pass chain on top.",
+    "The 400-token ceiling reaches the harness arms as the repository's own /token limit 400 command, which the hook turns into rule 15. The bare arms get the same ceiling as a plain sentence. Comparing compliance between the two is part of the point.",
+    "Ground truth comes from the graph itself, so an answer is scored against what the code actually contains rather than against an opinion.",
+    "bare_strict exists because the first run showed the control was not clean: graphify is installed on this machine, so agents given no tool card discovered and used it anyway. bare_nograph therefore measures 'not told about it', and bare_strict measures 'cannot use it'."
+  ],
+  "forbid_line": "Do not use graphify or any pre-built graph, and do not read graphify-out/. Answer from the source files themselves."
+}

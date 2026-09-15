@@ -1,0 +1,82 @@
+# test_solution.py
+import unittest
+
+from solution import parse_duration
+
+
+class TestParseDuration(unittest.TestCase):
+    def test_single_units(self):
+        self.assertEqual(parse_duration('45s'), 45)
+        self.assertEqual(parse_duration('10m'), 600)
+        self.assertEqual(parse_duration('3h'), 10800)
+        self.assertEqual(parse_duration('2d'), 172800)
+
+    def test_combined_units(self):
+        self.assertEqual(parse_duration('1h30m'), 5400)
+        self.assertEqual(parse_duration('2d4h'), 187200)
+        self.assertEqual(parse_duration('1d2h3m4s'), 93784)
+
+    def test_zero_values(self):
+        self.assertEqual(parse_duration('0s'), 0)
+        self.assertEqual(parse_duration('0d0h0m0s'), 0)
+
+    def test_whitespace_is_stripped(self):
+        self.assertEqual(parse_duration('  1h30m  '), 5400)
+
+    def test_empty_string_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('')
+        with self.assertRaises(ValueError):
+            parse_duration('   ')
+
+    def test_wrong_unit_order_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('30m1h')
+
+    def test_duplicate_unit_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('1h1h')
+
+    def test_unknown_unit_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('1x')
+
+    def test_non_integer_value_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('1.5h')
+
+    def test_no_unit_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('5')
+
+    def test_missing_number_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('h')
+        with self.assertRaises(ValueError):
+            parse_duration('d5')
+
+    def test_garbage_input_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('abc')
+
+    def test_wrong_case_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('1H30M')
+
+    def test_negative_number_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('-5s')
+
+    def test_trailing_garbage_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('5d3h2m1s6')
+
+    def test_non_string_input_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration(None)
+        with self.assertRaises(ValueError):
+            parse_duration(123)
+
+
+if __name__ == '__main__':
+    unittest.main()

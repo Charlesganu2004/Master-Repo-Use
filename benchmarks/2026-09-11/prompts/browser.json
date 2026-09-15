@@ -1,0 +1,23 @@
+{
+  "base": "http://localhost:8777/benchmarks/2026-09-11/fixtures",
+  "tasks": {
+    "lookup": "Open {BASE}/orders.html and report the Total shown for order ORD-10173.",
+    "count": "Open {BASE}/orders.html and count the orders whose Status is Shipped and whose Total is more than $500. Report the number.",
+    "checkout": "Open {BASE}/checkout.html and place an order with Full name Ada Lovelace, Email ada@example.com, Street address 12 Analytical Way, City London, Postcode N1 9GU, Shipping method Express and Coupon code SAVE10, accepting the terms. Report the confirmation code the page shows."
+  },
+  "footer": "Work only through the tool described above, from the terminal. Do not read or write any files yourself, and do not use the Skill tool. End your answer with one line of the form `ANSWER: <value>`.",
+  "tools": {
+    "playwright": "You have Microsoft Playwright for Python 1.62 (sync API) installed. Run a script by piping it to this interpreter:\n\n\"{PY}\" - <<'EOF'\nfrom playwright.sync_api import sync_playwright\nwith sync_playwright() as p:\n    browser = p.chromium.launch(channel=\"msedge\", headless=True)\n    page = browser.new_page()\n    ...\n    browser.close()\nEOF\n\nIt drives the installed Microsoft Edge. The whole Playwright sync API is available: page.goto, locators (get_by_role, get_by_label, locator(...)), locator.aria_snapshot() for an accessibility snapshot, fill, select_option, check, click, inner_text and evaluate. Each script starts a fresh browser, so do a whole flow inside one script.",
+    "rustwright": "You have Rustwright 0.3 for Python installed: Playwright's API on a Rust engine, a drop-in for Playwright where only the import changes. Run a script by piping it to this interpreter, with the browser path set:\n\nRUSTWRIGHT_CHROMIUM=\"{EDGE}\" \"{PY}\" - <<'EOF'\nfrom rustwright.sync_api import sync_playwright\nwith sync_playwright() as p:\n    browser = p.chromium.launch(headless=True)\n    page = browser.new_page()\n    ...\n    browser.close()\nEOF\n\nIt drives the installed Microsoft Edge. The Playwright sync API is available: page.goto, locators (get_by_role, get_by_label, locator(...)), locator.aria_snapshot() for an accessibility snapshot, fill, select_option, check, click, inner_text and evaluate. Each script starts a fresh browser, so do a whole flow inside one script.",
+    "caveman-browse": "You have caveman-browse 1.0 installed as a command-line tool. Every command needs the same environment, so run each one with this prefix:\n\nCAVEMAN_HOME=\"{HOME}\" CAVEMAN_BROWSE_PORT={PORT} CAVEMAN_BROWSE_CHROME=\"{EDGE}\" \"{CB}\" <command>\n\nCommands:\n  snapshot <url> [query] [-i]\n  act <uid> <click|type|select|scroll|wait> [text or option]\n  eval \"<javascript expression>\"\n  recover <handle> [query]\n  close\n\nThese are the command-line forms of the four tools in its own guide, quoted below. Two differences from the guide, which describes the MCP server: on the command line, snapshot always navigates to the url, so it reloads the page and clears anything typed into it; and the browser stays open between commands until you run close. It drives the installed Microsoft Edge. Run close when you finish.\n\n--- caveman-browse guide ---\n{CAVEMAN_BROWSE_GUIDE}"
+  },
+  "caveman_browse_guide": {
+    "url": "https://raw.githubusercontent.com/JuliusBrussee/caveman-browse/d3d9eb4217f50712584a2165a81e7f5ca7e48f79/skills/caveman-browse/SKILL.md",
+    "licence": "BSL-1.1, fetched at run time and not redistributed here"
+  },
+  "notes": [
+    "Each tool gets its own agent-facing documentation. Playwright needs none quoted: the model already knows it. caveman-browse is new, so its official guide is quoted, as its plugin would inject it.",
+    "The two command-line differences stated in the caveman-browse card were measured, not assumed: a snapshot without a url attaches to a blank target, and a snapshot with the url reloads the page.",
+    "Every run gets its own CAVEMAN_HOME and port, so concurrent caveman-browse runs cannot share a session."
+  ]
+}

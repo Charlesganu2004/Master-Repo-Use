@@ -1,0 +1,557 @@
+{
+  "runs": [
+    {
+      "tool": "caveman-browse",
+      "task": "lookup",
+      "round": 0,
+      "seconds": 2.189,
+      "answer": "$1,066.33",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "lookup",
+      "round": 0,
+      "seconds": 3.387,
+      "launchSeconds": 2.735,
+      "answer": "$1,066.33",
+      "clientMiB": 177.2,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "lookup",
+      "round": 0,
+      "seconds": 1.309,
+      "launchSeconds": 0.698,
+      "answer": "$1,066.33",
+      "clientMiB": 47.6,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "count",
+      "round": 0,
+      "seconds": 1.701,
+      "answer": "27",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "count",
+      "round": 0,
+      "seconds": 1.287,
+      "launchSeconds": 0.693,
+      "answer": "27",
+      "clientMiB": 160.7,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "count",
+      "round": 0,
+      "seconds": 1.291,
+      "launchSeconds": 0.706,
+      "answer": "27",
+      "clientMiB": 48.8,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "checkout",
+      "round": 0,
+      "seconds": 42.238,
+      "answer": "CONF-8BF61509",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "checkout",
+      "round": 0,
+      "seconds": 1.627,
+      "launchSeconds": 0.557,
+      "answer": "CONF-8BF61509",
+      "clientMiB": 194.8,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "checkout",
+      "round": 0,
+      "seconds": 1.478,
+      "launchSeconds": 0.656,
+      "answer": "CONF-8BF61509",
+      "clientMiB": 51.2,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "lookup",
+      "round": 1,
+      "seconds": 1.633,
+      "answer": "$1,066.33",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "lookup",
+      "round": 1,
+      "seconds": 1.457,
+      "launchSeconds": 0.816,
+      "answer": "$1,066.33",
+      "clientMiB": 162.6,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "lookup",
+      "round": 1,
+      "seconds": 1.398,
+      "launchSeconds": 0.689,
+      "answer": "$1,066.33",
+      "clientMiB": 51.1,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "count",
+      "round": 1,
+      "seconds": 1.501,
+      "answer": "27",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "count",
+      "round": 1,
+      "seconds": 4.828,
+      "launchSeconds": 0.66,
+      "answer": "27",
+      "clientMiB": 164.3,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "count",
+      "round": 1,
+      "seconds": 1.169,
+      "launchSeconds": 0.557,
+      "answer": "27",
+      "clientMiB": 50.7,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "checkout",
+      "round": 1,
+      "seconds": 42.177,
+      "answer": "CONF-8BF61509",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "checkout",
+      "round": 1,
+      "seconds": 1.619,
+      "launchSeconds": 0.572,
+      "answer": "CONF-8BF61509",
+      "clientMiB": 196.6,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "checkout",
+      "round": 1,
+      "seconds": 1.427,
+      "launchSeconds": 0.617,
+      "answer": "CONF-8BF61509",
+      "clientMiB": 52.0,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "lookup",
+      "round": 2,
+      "seconds": 1.593,
+      "answer": "$1,066.33",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "lookup",
+      "round": 2,
+      "seconds": 1.243,
+      "launchSeconds": 0.624,
+      "answer": "$1,066.33",
+      "clientMiB": 164.4,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "lookup",
+      "round": 2,
+      "seconds": 1.214,
+      "launchSeconds": 0.639,
+      "answer": "$1,066.33",
+      "clientMiB": 51.7,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "count",
+      "round": 2,
+      "seconds": 1.577,
+      "answer": "27",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "count",
+      "round": 2,
+      "seconds": 1.188,
+      "launchSeconds": 0.622,
+      "answer": "27",
+      "clientMiB": 163.3,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "count",
+      "round": 2,
+      "seconds": 1.165,
+      "launchSeconds": 0.54,
+      "answer": "27",
+      "clientMiB": 52.2,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "checkout",
+      "round": 2,
+      "seconds": 42.091,
+      "answer": "CONF-8BF61509",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "checkout",
+      "round": 2,
+      "seconds": 1.441,
+      "launchSeconds": 0.509,
+      "answer": "CONF-8BF61509",
+      "clientMiB": 198.1,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "checkout",
+      "round": 2,
+      "seconds": 1.415,
+      "launchSeconds": 0.604,
+      "answer": "CONF-8BF61509",
+      "clientMiB": 52.3,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "lookup",
+      "round": 3,
+      "seconds": 1.545,
+      "answer": "$1,066.33",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "lookup",
+      "round": 3,
+      "seconds": 1.147,
+      "launchSeconds": 0.588,
+      "answer": "$1,066.33",
+      "clientMiB": 174.5,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "lookup",
+      "round": 3,
+      "seconds": 1.182,
+      "launchSeconds": 0.593,
+      "answer": "$1,066.33",
+      "clientMiB": 51.7,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "count",
+      "round": 3,
+      "seconds": 1.462,
+      "answer": "27",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "count",
+      "round": 3,
+      "seconds": 1.163,
+      "launchSeconds": 0.577,
+      "answer": "27",
+      "clientMiB": 163.9,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "count",
+      "round": 3,
+      "seconds": 1.094,
+      "launchSeconds": 0.599,
+      "answer": "27",
+      "clientMiB": 52.2,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "checkout",
+      "round": 3,
+      "seconds": 42.065,
+      "answer": "CONF-8BF61509",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "checkout",
+      "round": 3,
+      "seconds": 1.464,
+      "launchSeconds": 0.5,
+      "answer": "CONF-8BF61509",
+      "clientMiB": 198.3,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "checkout",
+      "round": 3,
+      "seconds": 1.492,
+      "launchSeconds": 0.581,
+      "answer": "CONF-8BF61509",
+      "clientMiB": 53.5,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "lookup",
+      "round": 4,
+      "seconds": 1.425,
+      "answer": "$1,066.33",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "lookup",
+      "round": 4,
+      "seconds": 1.199,
+      "launchSeconds": 0.597,
+      "answer": "$1,066.33",
+      "clientMiB": 174.8,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "lookup",
+      "round": 4,
+      "seconds": 1.157,
+      "launchSeconds": 0.6,
+      "answer": "$1,066.33",
+      "clientMiB": 51.7,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "count",
+      "round": 4,
+      "seconds": 1.48,
+      "answer": "27",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "count",
+      "round": 4,
+      "seconds": 1.166,
+      "launchSeconds": 0.598,
+      "answer": "27",
+      "clientMiB": 165.1,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "count",
+      "round": 4,
+      "seconds": 1.095,
+      "launchSeconds": 0.589,
+      "answer": "27",
+      "clientMiB": 50.8,
+      "correct": true
+    },
+    {
+      "tool": "caveman-browse",
+      "task": "checkout",
+      "round": 4,
+      "seconds": 42.13,
+      "answer": "CONF-8BF61509",
+      "clientMiB": null,
+      "correct": true
+    },
+    {
+      "tool": "playwright",
+      "task": "checkout",
+      "round": 4,
+      "seconds": 1.442,
+      "launchSeconds": 0.508,
+      "answer": "CONF-8BF61509",
+      "clientMiB": 195.4,
+      "correct": true
+    },
+    {
+      "tool": "rustwright",
+      "task": "checkout",
+      "round": 4,
+      "seconds": 1.342,
+      "launchSeconds": 0.534,
+      "answer": "CONF-8BF61509",
+      "clientMiB": 51.6,
+      "correct": true
+    }
+  ],
+  "summary": {
+    "caveman-browse:lookup": {
+      "medianSeconds": 1.593,
+      "minSeconds": 1.425,
+      "maxSeconds": 2.189,
+      "correct": 5,
+      "runs": 5,
+      "medianClientMiB": null
+    },
+    "caveman-browse:count": {
+      "medianSeconds": 1.501,
+      "minSeconds": 1.462,
+      "maxSeconds": 1.701,
+      "correct": 5,
+      "runs": 5,
+      "medianClientMiB": null
+    },
+    "caveman-browse:checkout": {
+      "medianSeconds": 42.13,
+      "minSeconds": 42.065,
+      "maxSeconds": 42.238,
+      "correct": 5,
+      "runs": 5,
+      "medianClientMiB": null
+    },
+    "playwright:lookup": {
+      "medianSeconds": 1.243,
+      "minSeconds": 1.147,
+      "maxSeconds": 3.387,
+      "correct": 5,
+      "runs": 5,
+      "medianClientMiB": 174.5
+    },
+    "playwright:count": {
+      "medianSeconds": 1.188,
+      "minSeconds": 1.163,
+      "maxSeconds": 4.828,
+      "correct": 5,
+      "runs": 5,
+      "medianClientMiB": 163.9
+    },
+    "playwright:checkout": {
+      "medianSeconds": 1.464,
+      "minSeconds": 1.441,
+      "maxSeconds": 1.627,
+      "correct": 5,
+      "runs": 5,
+      "medianClientMiB": 196.6
+    },
+    "rustwright:lookup": {
+      "medianSeconds": 1.214,
+      "minSeconds": 1.157,
+      "maxSeconds": 1.398,
+      "correct": 5,
+      "runs": 5,
+      "medianClientMiB": 51.7
+    },
+    "rustwright:count": {
+      "medianSeconds": 1.165,
+      "minSeconds": 1.094,
+      "maxSeconds": 1.291,
+      "correct": 5,
+      "runs": 5,
+      "medianClientMiB": 50.8
+    },
+    "rustwright:checkout": {
+      "medianSeconds": 1.427,
+      "minSeconds": 1.342,
+      "maxSeconds": 1.492,
+      "correct": 5,
+      "runs": 5,
+      "medianClientMiB": 52.0
+    }
+  },
+  "views": {
+    "playwright:orders:full": {
+      "bytes": 63820,
+      "tokens": 20097
+    },
+    "playwright:checkout:full": {
+      "bytes": 2505,
+      "tokens": 740
+    },
+    "rustwright:orders:full": {
+      "bytes": 63872,
+      "tokens": 20111
+    },
+    "rustwright:checkout:full": {
+      "bytes": 2532,
+      "tokens": 743
+    },
+    "caveman-browse:orders:full": {
+      "bytes": 43264,
+      "tokens": 12485
+    },
+    "caveman-browse:orders:query": {
+      "bytes": 84,
+      "tokens": 25
+    },
+    "caveman-browse:orders:interactive": {
+      "bytes": 292,
+      "tokens": 80
+    },
+    "caveman-browse:checkout:full": {
+      "bytes": 2168,
+      "tokens": 652
+    },
+    "caveman-browse:checkout:interactive": {
+      "bytes": 296,
+      "tokens": 80
+    }
+  },
+  "loc": {
+    "caveman-browse": 38,
+    "playwright": 22,
+    "rustwright": 22
+  },
+  "note": "Rustwright runs the Playwright task functions unchanged; its LOC is Playwright's by construction. caveman-browse LOC includes the snapshot parsing a script needs, because its interface is a text view, not a DOM API."
+}

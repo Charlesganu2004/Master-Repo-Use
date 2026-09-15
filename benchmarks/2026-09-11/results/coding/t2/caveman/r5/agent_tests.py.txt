@@ -1,0 +1,92 @@
+# test_solution.py
+import threading
+import unittest
+from concurrent.futures import ThreadPoolExecutor
+
+from solution import RateLimiter
+
+
+class FakeClock:
+    def __init__(self, start=0.0):
+        self.t = start
+
+    def __call__(self):
+        return self.t
+
+    def advance(self, dt):
+        self.t += dt
+
+
+class TestRateLimiterBasics(unittest.TestCase):
+    def test_allows_up_to_limit_then_blocks(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=3, window=10, clock=clock)
+        results = [rl.allow("a") for _ in range(5)]
+        self.assertEqual(results, [True, True, True, False, False])
+
+    def test_resets_after_window_elapses(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=2, window=5, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+        clock.advance(5.0001)
+        self.assertTrue(rl.allow("a"))
+
+    def test_sliding_not_fixed_bucket(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=2, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))    # t=0
+        clock.advance(1)
+        self.assertTrue(rl.allow("a"))    # t=1, window full: [0, 1]
+        clock.advance(1)
+        self.assertFalse(rl.allow("a"))   # t=2, still full
+        clock.advance(8.0001)
+        self.assertTrue(rl.allow("a"))    # t=10.0001, t=0 expired, [1] -> allow
+
+    def test_independent_keys(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=1, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("b"))
+        self.assertFalse(rl.allow("a"))
+        self.assertFalse(rl.allow("b"))
+
+    def test_invalid_args(self):
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=0, window=10)
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=1, window=0)
+
+
+class TestRateLimiterConcurrency(unittest.TestCase):
+    def test_concurrent_callers_enforce_limit_exactly(self):
+        limit = 10
+        num_threads = 50
+        rl = RateLimiter(limit=limit, window=2.0)
+        barrier = threading.Barrier(num_threads)
+
+        def worker():
+            barrier.wait()
+            return rl.allow("shared-key")
+
+        with ThreadPoolExecutor(max_workers=num_threads) as pool:
+            results = list(pool.map(lambda _: worker(), range(num_threads)))
+
+        self.assertEqual(sum(results), limit)
+
+    def test_concurrent_distinct_keys_do_not_interfere(self):
+        limit = 5
+        rl = RateLimiter(limit=limit, window=2.0)
+
+        def worker(key):
+            return sum(rl.allow(key) for _ in range(limit + 5))
+
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            results = list(pool.map(worker, [f"key-{i}" for i in range(8)]))
+
+        self.assertTrue(all(r == limit for r in results))
+
+
+if __name__ == "__main__":
+    unittest.main()

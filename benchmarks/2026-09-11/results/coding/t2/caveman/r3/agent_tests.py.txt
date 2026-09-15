@@ -1,0 +1,86 @@
+# test_solution.py
+import threading
+import time
+import unittest
+from concurrent.futures import ThreadPoolExecutor
+
+from solution import RateLimiter
+
+
+class FakeClock:
+    """Manually-advanced clock for deterministic window-boundary tests."""
+
+    def __init__(self, start: float = 0.0) -> None:
+        self._now = start
+
+    def __call__(self) -> float:
+        return self._now
+
+    def advance(self, seconds: float) -> None:
+        self._now += seconds
+
+
+class RateLimiterBasicTests(unittest.TestCase):
+    def test_allows_up_to_limit_then_denies(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=3, window=10, clock=clock)
+        results = [rl.allow("a") for _ in range(5)]
+        self.assertEqual(results, [True, True, True, False, False])
+
+    def test_calls_expire_after_window(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=2, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+
+        clock.advance(10.001)  # push both earlier calls out of the window
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+
+    def test_partial_expiry_slides_window(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=2, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))   # t=0
+        clock.advance(6)
+        self.assertTrue(rl.allow("a"))   # t=6, both in window -> full
+        self.assertFalse(rl.allow("a"))  # t=6, still full
+        clock.advance(4.001)             # t=10.001, t=0 call expires
+        self.assertTrue(rl.allow("a"))   # only t=6 call counts -> allowed
+        self.assertFalse(rl.allow("a"))  # now two calls in window again
+
+    def test_keys_are_independent(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=1, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+        self.assertTrue(rl.allow("b"))  # separate key, own budget
+
+    def test_rejects_bad_config(self):
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=0, window=1)
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=1, window=0)
+
+
+class RateLimiterConcurrencyTests(unittest.TestCase):
+    def test_concurrent_callers_never_exceed_limit(self):
+        limit = 10
+        thread_count = 50
+        rl = RateLimiter(limit=limit, window=5.0, clock=time.monotonic)
+        barrier = threading.Barrier(thread_count)
+
+        def call():
+            barrier.wait()  # line every thread up, hit allow() at once
+            return rl.allow("shared-key")
+
+        with ThreadPoolExecutor(max_workers=thread_count) as pool:
+            results = list(pool.map(lambda _: call(), range(thread_count)))
+
+        self.assertEqual(results.count(True), limit)
+        self.assertEqual(results.count(False), thread_count - limit)
+
+
+if __name__ == "__main__":
+    unittest.main()

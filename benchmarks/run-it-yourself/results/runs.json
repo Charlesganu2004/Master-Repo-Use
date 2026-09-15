@@ -1,0 +1,326 @@
+[
+ {
+  "task": "complex",
+  "arm": "bare_graph",
+  "rep": "r1",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 730,
+  "withinLimit": false,
+  "costUsd": 0.17853,
+  "seconds": 42.6,
+  "toolCalls": 10,
+  "graphifyCalls": 4,
+  "score": {
+   "found": 3,
+   "expected": 6,
+   "missed": [
+    "hub 1",
+    "hub 2",
+    "hub 3"
+   ]
+  },
+  "answer": "I have everything needed to answer precisely.\n\n## How a prompt becomes injected context\n\n- **Hook file:** `scripts/hooks/skill_pipeline.py` (a UserPromptSubmit hook \u2014 its `main()` prints `{\"hookSpecificOutput\": {\"additionalContext\": ...}}`).\n- **Function that builds the context:** `context_for(prompt, session=None, ...)` at `scripts/hooks/skill_pipeline.py:158`. It assembles the injected block in order: `CORE` text, an optional single best-matching skill \"lane,\" an `ORCHESTRATION` note for large/multi-task prompts, the standing goal (`standing_goal()`), a token-limit block (`token_block()`), and finally \u2014 only in super mode \u2014 the chain block.\n- **File that adds the super harness chain on top:** `scripts/hooks/super_chain.py`. Inside `context_for`, when `(mode or harness_mode()) == \"super\"`, it calls `chain_block()` (`skill_pipeline.py:757`), which lazily imports `super_chain` and returns `super_chain.super_block()` (defined in `scripts/hooks/super_chain.py:84`), appending that block last so base mode never pays the cost of loading it.\n\n## Three most connected symbols (god nodes)\n\n1. `run()` \u2014 51 edges\n2. `run()` \u2014 42 edges (a second, distinct `run()` symbol elsewhere in the repo)\n3. `Verifier` \u2014 38 edges\n\n(Runner-up: `build()` with 28 edges, tied with `IsolatedPublicSite`.)\n\nNote: `graphify god-nodes` reports only the symbol name, edge count, and rank \u2014 it doesn't include each node's defining file in that output, and the two `run()` entries aren't disambiguated by path in the CLI result. To name the exact source file for each of these three, they'd need to be looked up individually (e.g. `graphify explain \"run\"` / `graphify explain \"Verifier\"` per candidate, or a grep for `def run(` / `class Verifier`), since multiple same-named `run()` functions exist across the repo (e.g. under `scripts/`, `master_harness/`, and test/benchmark harness files)."
+ },
+ {
+  "task": "complex",
+  "arm": "bare_graph",
+  "rep": "r2",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 499,
+  "withinLimit": true,
+  "costUsd": 0.08296,
+  "seconds": 43.1,
+  "toolCalls": 9,
+  "graphifyCalls": 7,
+  "score": {
+   "found": 6,
+   "expected": 6,
+   "missed": []
+  },
+  "answer": "This confirms the full chain. Answer:\n\n**Prompt \u2192 injected context pipeline**\n\n- **Hook file:** `scripts/hooks/skill_pipeline.py` \u2014 the `UserPromptSubmit` hook (invoked via its `main()` at L840).\n- **Function that builds the context:** `context_for()` (L158) inside that file. It assembles the core block plus at most one skill lane and fan-out advice, calling `capture()`, `resolve_token_limit()` / `parse_token_command()`, `standing_goal()`, `harness_mode()`, `token_block()`, and `chain_block()`.\n- **File that adds the super harness chain on top:** `context_for()` calls `chain_block()` (also in `skill_pipeline.py`, L757), which lazily imports `scripts/hooks/super_chain.py` and appends its `super_block()` output \u2014 so the super-mode chain is layered on only when `super_chain` is importable (base mode pays nothing).\n\n**Three most-connected symbols (god nodes)**\n\n1. `run()` \u2014 51 edges \u2014 `tests/test_no_compress_guard.py`\n2. `run()` \u2014 42 edges \u2014 `tests/test_no_prune_guard.py`\n3. `Verifier` \u2014 38 edges \u2014 `scripts/verify_auto_mode.py`\n\n(Runners-up: `build()` \u2014 28 edges \u2014 `scripts/build_atlas_data.py`; `IsolatedPublicSite` \u2014 28 edges \u2014 `tests/public_site_fixture.py`.)"
+ },
+ {
+  "task": "complex",
+  "arm": "bare_strict",
+  "rep": "r1",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 1678,
+  "withinLimit": false,
+  "costUsd": 0.36018,
+  "seconds": 117.2,
+  "toolCalls": 16,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 3,
+   "expected": 6,
+   "missed": [
+    "hub 1",
+    "hub 2",
+    "hub 3"
+   ]
+  },
+  "answer": "## Prompt \u2192 injected context\n\n**Hook file:** `scripts/hooks/skill_pipeline.py` \u2014 this is the `UserPromptSubmit`/`PreInvocation`/`userPromptTransformed` handler wired into Claude Code, Antigravity, Cursor, Gemini, and Copilot (see `main()`, lines 810\u2011888, which branches on `--antigravity`/`--cursor`/`--gemini`/`--copilot-*` flags and prints each client's expected JSON shape).\n\n**Function that builds the context:** `context_for(prompt, session=None, capturing=True, include_goal=True, mode=None, token_enforced=False)` (lines 158\u2011222). It assembles the injected string by concatenating, in order:\n- `CORE` \u2014 the mandatory 3\u2011layer pipeline text (caveman/full\u2011output/anti\u2011slop \u2192 plan/design \u2192 capabilities/agents/refactor/re\u2011apply/verify)\n- the single best\u2011matching `LANES` regex entry (security, UI, refactor, etc.)\n- `ORCHESTRATION` advice on long/multi\u2011task prompts\n- `standing_goal(...)` if a goal is captured/set\n- `token_block(...)` if a `/token limit` is active\n- `chain_block()` **only if** `harness_mode() == \"super\"`\n\n**File that adds the super\u2011harness chain:** `scripts/hooks/super_chain.py`. `context_for` calls its own local helper `chain_block()` (lines 757\u2011764), which lazily `import super_chain` and returns `super_chain.super_block()`. That function formats the `PASSES` tuple (CAVEMAN, FULL OUTPUT, ANTI\u2011SLOP, PLAN, DESIGN, ARCHITECT, REFACTOR, COMPRESS, REVIEW, VERIFY) into the `SUPER_BLOCK` template and appends it after the goal/token blocks \u2014 kept in its own module specifically so base\u2011mode sessions never pay the import cost.\n\n## Three most-connected symbols\n\nRanked by actual `import` statements found via grep across `scripts/`, `master_harness/`, and `tests/` (not graphify):\n\n1. **`skill_pipeline`** \u2014 module defined in `scripts/hooks/skill_pipeline.py` \u2014 imported by 18 files (`auto_mode_harness.py`, `build_atlas_data.py`, `harness_ab_test.py`, `harness_goal.py`, `harness_proxy.py`, `harness_super.py`, `harness_wrap.py`, and their `master_harness/` mirrors, plus 6 test files). It's the shared context/goal/token/mode engine every harness entry point depends on.\n2. **`harness_paths`** \u2014 module defined in `scripts/harness_paths.py` \u2014 imported by 11 files (`auto_mode_harness.py`, `harness_computer.py`, `install_auto_mode.py`, `verify_auto_mode.py`, `skill_pipeline.py` itself, mirrors, and `tests/test_package.py`). Supplies `state_dir()`, `seed_path()`, `repo_root()` etc. used for all cross-client path resolution.\n3. **`harness_super`** \u2014 module defined in `scripts/harness_super.py` \u2014 imported by 9 files (`build_atlas_data.py`, `harness_ab_test.py`, `harness_proxy.py`, `harness_wrap.py`, mirrors, and 3 test files). Re-exports the super chain and mode switch for the install/serve/route commands."
+ },
+ {
+  "task": "complex",
+  "arm": "bare_strict",
+  "rep": "r2",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 2254,
+  "withinLimit": false,
+  "costUsd": 0.26931,
+  "seconds": 113.5,
+  "toolCalls": 22,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 3,
+   "expected": 6,
+   "missed": [
+    "hub 1",
+    "hub 2",
+    "hub 3"
+   ]
+  },
+  "answer": "## Prompt \u2192 injected context path\n\n**Hook file:** `scripts/hooks/skill_pipeline.py` \u2014 this is the file wired into every client's per-prompt hook (Claude Code/Codex `UserPromptSubmit`, Gemini `BeforeAgent`, Copilot `userPromptTransformed`/session, Cursor's hook config), per `.github/hooks/master-repo-auto.json` and the docstring at line 19: *\"This hook is mechanism 3. Claude Code's UserPromptSubmit and Antigravity's [PreInvocation]...\"*.\n\n**Function that builds the context:** `context_for(prompt, session=None, capturing=True, include_goal=True, mode=None, token_enforced=False)`, defined at line 158. It assembles a list of parts \u2014 `CORE` (the standing pipeline), an optional single best-matching `LANES` entry (e.g. security/dependency/orientation advice), an `ORCHESTRATION` line for multi-task prompts, the `standing_goal(...)`, a `token_block(...)` budget, and \u2014 only when the machine's mode is `\"super\"` \u2014 the result of `chain_block()` \u2014 then joins them with `\"\\n\"`. `main()` (line 810) reads the incoming event, extracts `prompt`/`session` via `find_prompt`/`find_session`, calls `context_for(prompt, session)`, and emits it as `additionalContext`/`hookSpecificOutput.additionalContext` in the shape each client expects.\n\n**File that layers the super-harness chain on top:** `scripts/hooks/super_chain.py`. `context_for` calls `chain_block()` (line 757 in `skill_pipeline.py`), which lazily imports `super_chain` and returns `super_chain.super_block()` \u2014 kept in its own module (per its docstring) specifically so base-mode sessions never pay the import cost, and so there is exactly one copy of the ten-pass chain (`PASSES`) shared by every client instead of duplicating it inside the hot-path hook.\n\n## Three most-connected symbols (by cross-file import/reference count, excluding `graphify-out/` and the `build/` mirror)\n\nComputed directly from `grep`-counted distinct files doing `import X` / `from X import`:\n\n1. **`skill_pipeline`** (module) \u2014 imported by 19 distinct files (tests, `super_chain.py`, `install_auto_mode.py`, CLI, benchmarks harness, etc.) \u2014 defined in `scripts/hooks/skill_pipeline.py` (mirrored for packaging in `master_harness/skill_pipeline.py`).\n2. **`auto_mode_harness`** (module) \u2014 9 direct importers, 27 total file references \u2014 defined in `scripts/auto_mode_harness.py` (mirrored in `master_harness/auto_mode_harness.py`, which has since diverged from the `scripts/` copy).\n3. **`harness_paths`** (module) \u2014 9 direct importers, 20 total file references \u2014 defined in `scripts/harness_paths.py` (identical mirror at `master_harness/harness_paths.py`); it centralizes the runtime-state path logic (`.auto-mode/`) used by `skill_pipeline.py`, `auto_mode_harness.py`, and the verify/install scripts."
+ },
+ {
+  "task": "complex",
+  "arm": "base_graph",
+  "rep": "r1",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 761,
+  "withinLimit": false,
+  "costUsd": 0.10034,
+  "seconds": 38.5,
+  "toolCalls": 6,
+  "graphifyCalls": 5,
+  "score": {
+   "found": 6,
+   "expected": 6,
+   "missed": []
+  },
+  "answer": "GOAL: trace prompt\u2192injected-context path + name top-3 connected symbols. This turn answers both; nothing blocked.\n\n**Prompt \u2192 injected context:**\n- Hook file: `scripts/hooks/skill_pipeline.py`\n- Context-building function: `context_for()` (L158) \u2014 assembles the injected block; `chain_block()` (L757) composes the final chain output appended to context.\n- Super-harness-chain file: `scripts/hooks/super_chain.py`, via `super_block()` (L84), which builds the \"ten named passes on top of the three layers\" block that `skill_pipeline.py` layers on.\n\n**Top 3 most-connected symbols (from `graphify god-nodes --top 3 --json`):**\n1. `run()` \u2014 51 edges \u2014 `tests/test_no_compress_guard.py`\n2. `run()` \u2014 42 edges \u2014 `tests/test_no_prune_guard.py`\n3. `Verifier` \u2014 38 edges \u2014 `scripts/verify_auto_mode.py`\n\n(Note: `scripts/hooks/skill_pipeline.py` itself also has degree 38, tied with `Verifier` but ranked 4th by the tool.)\n\nDone: both GOAL parts answered with evidence from graphify. Left out: full 18+ remaining contains-edges list for skill_pipeline.py (truncated by budget) \u2014 ask for `graphify explain \"scripts/hooks/skill_pipeline.py\" --budget 100` to see the rest."
+ },
+ {
+  "task": "complex",
+  "arm": "base_graph",
+  "rep": "r2",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 556,
+  "withinLimit": true,
+  "costUsd": 0.08657,
+  "seconds": 46.0,
+  "toolCalls": 10,
+  "graphifyCalls": 5,
+  "score": {
+   "found": 6,
+   "expected": 6,
+   "missed": []
+  },
+  "answer": "Confirmed. Now the direct answer.\n\n**Prompt \u2192 injected context trace**\n\n- Hook file: `scripts/hooks/skill_pipeline.py` \u2014 registered as the `UserPromptSubmit` hook; it prints `{\"hookSpecificOutput\": {\"additionalContext\": ...}}` (line 867/883).\n- Function that builds the context: `context_for(prompt, session=None, ...)` at `scripts/hooks/skill_pipeline.py:158` \u2014 called at line 869 as `context_for(prompt, session)`, falling back to `CORE` for empty prompts.\n- File that adds the super harness chain on top: `scripts/hooks/super_chain.py`. `skill_pipeline.py`'s own `chain_block()` (line 757) lazily `import super_chain` and calls `super_chain.super_block()` (line 761/764) \u2014 done only in super mode, \"with no imports beyond the standard library,\" per that file's docstring, so base mode pays nothing.\n\n**Three most-connected symbols (graphify god-nodes --top 3 --json)**\n\n1. `run()` \u2014 51 edges \u2014 `tests/test_no_compress_guard.py`\n2. `run()` \u2014 42 edges \u2014 `tests/test_no_prune_guard.py`\n3. `Verifier` \u2014 38 edges \u2014 `scripts/verify_auto_mode.py`\n\nGOAL check: both parts of the standing goal are done \u2014 hook/function/super-chain file traced, and the three top god-nodes named with their files. Nothing blocked. Left out to fit the 600-token cap: the internals of `context_for`'s skill-selection logic and `super_block()`'s own chain contents \u2014 ask if you want those expanded."
+ },
+ {
+  "task": "complex",
+  "arm": "super_graph",
+  "rep": "r1",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 886,
+  "withinLimit": false,
+  "costUsd": 0.11562,
+  "seconds": 42.9,
+  "toolCalls": 8,
+  "graphifyCalls": 4,
+  "score": {
+   "found": 6,
+   "expected": 6,
+   "missed": []
+  },
+  "answer": "GOAL restated: trace prompt\u2192injected-context path (hook file, context-building function, super-harness-chain file) and name the 3 most-connected symbols with their defining files. This turn delivers both parts.\n\n**Injected-context path**\n- Hook file: `scripts/hooks/skill_pipeline.py` (this is the `UserPromptSubmit` hook; its own docstring says \"This hook is mechanism 3. Claude Code's UserPromptSubmit and Antigravity's...\").\n- Context-building function: `context_for(prompt: str, session: str | None = None, ...)` at line 158 of that file \u2014 called from `main()` (line 810), output as `hookSpecificOutput.additionalContext` for `UserPromptSubmit` (lines 867-885).\n- Super-harness-chain file: `scripts/hooks/super_chain.py`, added on top via `chain_block()` (skill_pipeline.py line 757), which lazily `import super_chain` and returns `super_chain.super_block()` \u2014 \"imported only in super mode so base mode pays nothing.\" `super_chain.py` defines `SUPER_BLOCK`, `pass_lines()`, and `super_block()` (lines 60-84), and its header comment states it \"lives here, beside the hook\" so base-mode sessions don't pay the cost of importing every harness.\n\n**Three most-connected symbols (graphify god-nodes, by graph degree)**\n1. `run()` \u2014 degree 51 \u2014 defined in `tests/test_no_compress_guard.py`\n2. `run()` \u2014 degree 42 \u2014 defined in `tests/test_no_prune_guard.py`\n3. `Verifier` \u2014 degree 38 \u2014 defined in `scripts/verify_auto_mode.py`\n\nTools used: graphify (`god-nodes --json`, `explain`) for the connectivity ranking; Grep/Bash for the hook/context/chain trace since graphify's `query` truncated at the 400-token budget before reaching those specific symbols.\n\nStatus: both GOAL parts complete, nothing blocked. Left out at the 600-token ceiling: node counts/degree for ranks 4-5 (`build()` deg 28, `IsolatedPublicSite` deg 28) and the full `context_for()` body \u2014 ask for either by name if wanted."
+ },
+ {
+  "task": "complex",
+  "arm": "super_graph",
+  "rep": "r2",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 916,
+  "withinLimit": false,
+  "costUsd": 0.09933,
+  "seconds": 40.7,
+  "toolCalls": 10,
+  "graphifyCalls": 2,
+  "score": {
+   "found": 4,
+   "expected": 6,
+   "missed": [
+    "hub 1",
+    "hub 2"
+   ]
+  },
+  "answer": "All findings confirmed via graphify + Grep/Read (read-only, evidence quoted).\n\n**Hook \u2192 context chain**\n- Hook file: `scripts/hooks/skill_pipeline.py` \u2014 this is \"mechanism 3\" (line 19: \"This hook is mechanism 3. Claude Code's UserPromptSubmit and Antigravity's...\"), invoked on `UserPromptSubmit` (confirmed at line 884: `\"hookEventName\": \"UserPromptSubmit\"`).\n- Function that builds the injected context: `context_for(prompt, session=None, capturing=True, include_goal=True, mode=None, token_enforced=False)`, defined at `scripts/hooks/skill_pipeline.py:158`. Its docstring states the mechanism directly: \"The core, plus at most one lane, plus fan-out advice... `mode` overrides the machine's configured mode for one call; **the super harness passes \"base\" and appends the chain itself, after the goal.**\" It's called at the JSON-emit sites (lines 846, 869) as `context_for(prompt, session)`, defaulting to `CORE` (defined line 92) when the prompt is empty.\n- File that adds the super harness chain on top: `scripts/hooks/super_chain.py`. Its own header explains the split (lines 5-10): `harness_wrap` \"imports every other harness... fine for a command and wrong for a per-prompt hook: skill_pipeline runs on every prompt of every client... So the definition lives here, beside the hook, with no imports beyond the [stdlib].\" It defines `SUPER_BLOCK` (line 60, the \"SUPER HARNESS. The chain above is the floor...\" text seen in this very prompt), built by `pass_lines()` (line 71) and assembled by `super_block()` (line 84).\n\n**Three most-connected symbols (graphify god-nodes --top)**\n1. `run()` \u2014 degree 51 \u2014 `tests/test_no_compress_guard_run.py` (id `tests_test_no_compress_guard_run`)\n2. `run()` \u2014 degree 42 \u2014 `tests/test_no_prune_guard_run.py`\n3. `Verifier` \u2014 degree 38 \u2014 `scripts/verify_auto_mode.py`\n\nGOAL check: all four parts (hook file, context-building function, super-chain file, top-3 connected symbols+files) are done \u2014 none blocked. Tools used: graphify (god-nodes query), Grep, Read \u2014 no files modified. Left out to fit the 600-token cap: the 4th/5th god-nodes (`build()` in scripts/build_atlas_data.py, `IsolatedPublicSite` in tests/public_site_fixture.py) and the full `context_for` lane-matching logic (lines 202+) \u2014 ask if you want either."
+ },
+ {
+  "task": "super_complex",
+  "arm": "bare_graph",
+  "rep": "r1",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 488,
+  "withinLimit": true,
+  "costUsd": 0.13572,
+  "seconds": 44.5,
+  "toolCalls": 12,
+  "graphifyCalls": 5,
+  "score": {
+   "found": 9,
+   "expected": 9,
+   "missed": []
+  },
+  "answer": "All five data points confirmed. Now I have everything needed.\n\n## The five harnesses and their entry scripts\n\n| Harness | Entry script |\n|---|---|\n| Surface harness | `scripts/auto_mode_harness.py` |\n| Proxy harness | `scripts/harness_proxy.py` |\n| Wrapper harness | `scripts/harness_wrap.py` |\n| Goal harness | `scripts/harness_goal.py` |\n| Super harness | `scripts/harness_super.py` (calls the other four rather than reimplementing them) |\n\n## Three most connected symbols (by graph degree)\n\n1. `run()` \u2014 degree 51 \u2014 defined in `tests/test_no_compress_guard.py`\n2. `run()` \u2014 degree 42 \u2014 defined in `tests/test_no_prune_guard.py`\n3. `Verifier` \u2014 degree 38 \u2014 defined in `scripts/verify_auto_mode.py:101`\n\n## Function calling `Verifier`\n\n`main()` in `scripts/verify_auto_mode.py:680` constructs/drives the `Verifier` class (which itself dispatches to its own methods like `.run()`, `.add()`, `._check_home_client()`, etc.).\n\n## Highest-impact file\n\n`scripts/verify_auto_mode.py` \u2014 it defines `Verifier`, the third-most-connected symbol in the whole graph (38 connections, almost entirely internal check methods it owns), so a change there would ripple through the most callers/checks of any single file."
+ },
+ {
+  "task": "super_complex",
+  "arm": "bare_graph",
+  "rep": "r2",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 444,
+  "withinLimit": true,
+  "costUsd": 0.09948,
+  "seconds": 42.2,
+  "toolCalls": 8,
+  "graphifyCalls": 4,
+  "score": {
+   "found": 9,
+   "expected": 9,
+   "missed": []
+  },
+  "answer": "Confirmed: `main()` in scripts/verify_auto_mode.py instantiates and calls `Verifier`.\n\n## Five harnesses and entry scripts\n1. **auto-mode-harness** \u2192 `scripts/auto_mode_harness.py`\n2. **harness-proxy** \u2192 `scripts/harness_proxy.py`\n3. **harness-wrap** \u2192 `scripts/harness_wrap.py`\n4. **harness-goal** \u2192 `scripts/harness_goal.py`\n5. **harness-super** \u2192 `scripts/harness_super.py`\n\n## Three most connected symbols (by graph degree)\n1. `run()` \u2014 degree 51 \u2014 `tests/test_no_compress_guard.py`\n2. `run()` \u2014 degree 42 \u2014 `tests/test_no_prune_guard.py`\n3. `Verifier` (class) \u2014 degree 38 \u2014 `scripts/verify_auto_mode.py`\n\n## Verifier's caller\n`main()` in `scripts/verify_auto_mode.py` constructs `Verifier(...)` and calls `verifier.run()`.\n\n## Highest-impact single file\n`scripts/verify_auto_mode.py` \u2014 it defines the highest-degree non-test symbol (`Verifier`, degree 38) and is the module most tests and tooling reach into to validate every harness's installed state; changing it would ripple to the most callers."
+ },
+ {
+  "task": "super_complex",
+  "arm": "bare_strict",
+  "rep": "r1",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 1380,
+  "withinLimit": false,
+  "costUsd": 0.6684,
+  "seconds": 227.3,
+  "toolCalls": 38,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 9,
+   "expected": 9,
+   "missed": []
+  },
+  "answer": "**Five harnesses (entry scripts, from `tests/test_harness_family.py::INJECTION_SCRIPTS`):**\n1. auto-mode-harness \u2192 `scripts/auto_mode_harness.py`\n2. harness-proxy \u2192 `scripts/harness_proxy.py`\n3. harness-wrap \u2192 `scripts/harness_wrap.py`\n4. harness-goal \u2192 `scripts/harness_goal.py`\n5. harness-super \u2192 `scripts/harness_super.py` (calls the other four)\n\n**Three most connected symbols** (verified by reading each file, counting call sites \u2014 no graph tool used):\n1. `run()` in `tests/test_no_compress_guard.py:24` \u2014 a local helper invoked ~67 times by the test methods in that file.\n2. `run()` in `tests/test_no_prune_guard.py:22` \u2014 invoked ~46 times by that file's tests.\n3. `Verifier` class in `scripts/verify_auto_mode.py:101` \u2014 a large class whose ~10+ methods (`add`, `passed`, `failed`, `warned`, `skipped`, `_read_text`, `_read_json`, `_check_instruction`, `_canonical_skills`, `_check_skill_tree`, \u2026) call each other constantly, giving it the highest internal edge count of any class in the repo.\n\n**Verifier's caller:** `main()` in the same file, `scripts/verify_auto_mode.py:707` (`verifier = Verifier(...)`, then `verifier.run()`).\n\n**Highest-impact file:** `scripts/harness_paths.py` \u2014 its `repo_root()` is called directly by 15 other functions in that same module (`skills_dir`, `block_path`, `state_dir`, `hook_command`, `harness_command`, `describe`, etc.), and the module itself is imported by most of the harness scripts and tests (`auto_mode_harness.py`, `harness_goal.py`, `harness_super.py`, `harness_computer.py`, `skill_pipeline.py`, `install_auto_mode.py`, `verify_auto_mode.py`), so changing it would ripple to the most callers of any file in the repository."
+ },
+ {
+  "task": "super_complex",
+  "arm": "bare_strict",
+  "rep": "r2",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 2566,
+  "withinLimit": false,
+  "costUsd": 0.31173,
+  "seconds": 126.6,
+  "toolCalls": 25,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 7,
+   "expected": 9,
+   "missed": [
+    "hub 1",
+    "hub 2"
+   ]
+  },
+  "answer": "## Five harnesses and their entry scripts\n\n1. **Surface harness** \u2014 `scripts/auto_mode_harness.py` (`if __name__ == \"__main__\"` \u2192 `main()`)\n2. **Proxy harness** \u2014 `scripts/harness_proxy.py`\n3. **Wrap harness** \u2014 `scripts/harness_wrap.py`\n4. **Goal harness** \u2014 `scripts/harness_goal.py`\n5. **Computer harness** \u2014 `scripts/harness_computer.py`\n\nEach is mirrored (built/packaged copy) under `master_harness/<same name>.py` and dispatched via `master_harness/cli.py`/`master_harness/_loader.py`'s `HARNESSES` dict. A sixth file, `scripts/harness_super.py`, is the meta-harness that imports and calls these five rather than reimplementing them (its own docstring: \"installs the surfaces, serves the proxy, wraps a command, carries the standing goal and routes computer control, by CALLING the four[/five] rather than reimplementing any of them\").\n\n## Three most-connected symbols\n\n1. **`repo_root()`** \u2014 defined in `scripts/harness_paths.py` (mirrored in `master_harness/harness_paths.py`). Nearly every other function in that same module calls it first to resolve the checkout root (14 internal call sites), plus external callers in `master_harness/_loader.py` and `tests/test_package.py`.\n2. **`hooks_dir()`** \u2014 defined in `scripts/harness_paths.py`. Called ~16 times from `install_auto_mode.py` and `verify_auto_mode.py` (both the `scripts/` and `master_harness/` copies) to locate hook scripts.\n3. **`skills_dir()`** \u2014 defined in `scripts/harness_paths.py`. Called from `auto_mode_harness.py`, `harness_computer.py`, `install_auto_mode.py`, and `verify_auto_mode.py` to locate the skills source directory.\n\nAll three live in the same file, `scripts/harness_paths.py`, which is imported by roughly 20 files across `scripts/`, `master_harness/`, and `tests/`.\n\n## `Verifier` caller\n\n`class Verifier` is defined in `scripts/verify_auto_mode.py` (mirrored in `master_harness/verify_auto_mode.py`). It is instantiated and invoked by `main()` in that same file (`scripts/verify_auto_mode.py:707`, `verifier = Verifier(...); return print_report(verifier.run())`), which is the function run when the `verify` harness alias executes.\n\n## Highest-impact file\n\nIf changed, **`scripts/harness_paths.py`** (and its packaged mirror `master_harness/harness_paths.py`) would affect the most callers, since it is the single module every harness, installer, and verifier imports to resolve paths like the repo root, skills directory, and hooks directory."
+ },
+ {
+  "task": "super_complex",
+  "arm": "base_graph",
+  "rep": "r1",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 697,
+  "withinLimit": false,
+  "costUsd": 0.14241,
+  "seconds": 49.3,
+  "toolCalls": 9,
+  "graphifyCalls": 3,
+  "score": {
+   "found": 9,
+   "expected": 9,
+   "missed": []
+  },
+  "answer": "Confirmed: five harnesses, each with its entry script.\n\n## Five harnesses and entry scripts (from `designs/atlas-data.json` \u2192 `harnesses[]`, verified against `INJECTION_SCRIPTS` in `tests/test_harness_family.py`)\n\n1. **auto-mode-harness** \u2192 `scripts/auto_mode_harness.py`\n2. **harness-proxy** \u2192 `scripts/harness_proxy.py`\n3. **harness-wrap** \u2192 `scripts/harness_wrap.py`\n4. **harness-goal** \u2192 `scripts/harness_goal.py`\n5. **harness-super** \u2192 `scripts/harness_super.py`\n\n## Three most connected symbols (graphify `god-nodes --top`, by degree)\n\n1. `run()` \u2014 degree 51 \u2014 `tests/test_no_compress_guard.py`\n2. `run()` \u2014 degree 42 \u2014 `tests/test_no_prune_guard.py`\n3. `Verifier` \u2014 degree 38 \u2014 `scripts/verify_auto_mode.py:101`\n\n## Verifier caller\n\n`Verifier` is instantiated and driven by **`main()`** in `scripts/verify_auto_mode.py` (line 707: `verifier = Verifier(...)`, then `verifier.run()`; `main()` is defined at line 680 and invoked from `if __name__ == \"__main__\":` at line 712).\n\n## Highest-blast-radius file\n\n`scripts/build_atlas_data.py` (containing `build()`, degree 28, plus `script_lanes()`/`lane()`/`pick()` all in the top-connected set) would affect the most callers if changed, since it generates the shared `designs/atlas-data.json` that the harness list, the god-node rankings, and most test suites all read from.\n\n**GOAL status:** all parts of the standing GOAL are answered above (5 harnesses + entries, top-3 symbols + files, Verifier's caller, highest-impact file). Nothing blocked. Left out due to the 600-token cap: the other ~15 god-node symbols beyond the top 3, and full call chains for `run()` in the two guard tests."
+ },
+ {
+  "task": "super_complex",
+  "arm": "base_graph",
+  "rep": "r2",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 710,
+  "withinLimit": false,
+  "costUsd": 0.09209,
+  "seconds": 40.5,
+  "toolCalls": 9,
+  "graphifyCalls": 3,
+  "score": {
+   "found": 9,
+   "expected": 9,
+   "missed": []
+  },
+  "answer": "Found the 5: harness-surface (`scripts/auto_mode_harness.py`), harness-proxy (`scripts/harness_proxy.py`), harness-wrap (`scripts/harness_wrap.py`), harness-goal (`scripts/harness_goal.py`), harness-super (`scripts/harness_super.py`).\n\n**GOAL restated:** name each of 5 harnesses' entry scripts; name 3 most-connected symbols + defining file; name the function calling `Verifier`; state which single file's change hits the most callers. This turn: finished data-gathering via graphify god-nodes/explain + grep confirmation.\n\n**5 harnesses (entry scripts):**\n1. harness-surface \u2014 `scripts/auto_mode_harness.py`\n2. harness-proxy \u2014 `scripts/harness_proxy.py`\n3. harness-wrap \u2014 `scripts/harness_wrap.py`\n4. harness-goal \u2014 `scripts/harness_goal.py`\n5. harness-super \u2014 `scripts/harness_super.py`\n\n**3 most-connected symbols (by graph degree):**\n1. `run()` \u2014 `tests/test_no_compress_guard.py` (degree 51)\n2. `run()` \u2014 `tests/test_no_prune_guard.py` (degree 42)\n3. `Verifier` class \u2014 `scripts/verify_auto_mode.py` (degree 38)\n\n**Verifier caller:** `main()` in `scripts/verify_auto_mode.py:680` instantiates and runs it \u2014 `verifier = Verifier(...)` at line 707.\n\n**Most-impactful file:** `scripts/verify_auto_mode.py` \u2014 it defines the `Verifier` class (38 connections, 3rd-most-connected symbol repo-wide) called from its own `main()`, and is the subject of both guard tests (`test_no_compress_guard`, `test_no_prune_guard`), so changing it would ripple to the most callers/tests.\n\nDone: all four parts answered. Nothing blocked. Left out (ask for detail if wanted): full list of 118 nodes from the truncated harness query, and the other 18 unlisted `Verifier` connections."
+ },
+ {
+  "task": "super_complex",
+  "arm": "super_graph",
+  "rep": "r1",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 580,
+  "withinLimit": true,
+  "costUsd": 0.17367,
+  "seconds": 53.0,
+  "toolCalls": 12,
+  "graphifyCalls": 4,
+  "score": {
+   "found": 9,
+   "expected": 9,
+   "missed": []
+  },
+  "answer": "All 5 harness entry scripts confirmed via designs/atlas-data.json.\n\n**5 harnesses \u2014 entry scripts:**\n1. Surface harness \u2192 `scripts/auto_mode_harness.py`\n2. Proxy harness \u2192 `scripts/harness_proxy.py`\n3. Wrapper harness \u2192 `scripts/harness_wrap.py`\n4. Goal harness \u2192 `scripts/harness_goal.py`\n5. Super harness \u2192 `scripts/harness_super.py` (calls the other four rather than reimplementing them)\n\n**3 most-connected symbols (graphify god-nodes, by degree):**\n1. `run()` \u2014 degree 51 \u2014 `tests/test_no_compress_guard.py`\n2. `run()` \u2014 degree 42 \u2014 `tests/test_no_prune_guard.py`\n3. `Verifier` (class) \u2014 degree 38 \u2014 `scripts/verify_auto_mode.py:101`\n\n**Verifier's caller:** `main()` in `scripts/verify_auto_mode.py` instantiates it \u2014 `verifier = Verifier(...)` at line 707 (edge confirmed: `main() --calls--> Verifier`).\n\n**Highest-impact file:** `tests/test_no_compress_guard.py` \u2014 its `run()` is the single most-connected symbol in the graph (degree 51), so changing it would ripple to the most callers/dependents repo-wide.\n\nTools used: graphify (god-nodes, query, explain \u2014 local graph, no model calls) per S1/Layer1; Grep/ls for the two narrow lookups graphify's budget truncated (harness file list, Verifier() call site) rather than re-querying repeatedly. Goal check: all four parts answered, none blocked. Nothing left outstanding on this goal for the current turn."
+ },
+ {
+  "task": "super_complex",
+  "arm": "super_graph",
+  "rep": "r2",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 662,
+  "withinLimit": false,
+  "costUsd": 0.09417,
+  "seconds": 42.0,
+  "toolCalls": 7,
+  "graphifyCalls": 4,
+  "score": {
+   "found": 8,
+   "expected": 9,
+   "missed": [
+    "Verifier's caller"
+   ]
+  },
+  "answer": "All five files confirmed present. Answer complete.\n\n**Five harnesses \u2014 entry scripts** (from `tests/test_harness_family.py` `INJECTION_SCRIPTS`, confirmed on disk):\n1. auto-mode-harness \u2192 `scripts/auto_mode_harness.py`\n2. harness-proxy \u2192 `scripts/harness_proxy.py`\n3. harness-wrap \u2192 `scripts/harness_wrap.py`\n4. harness-goal \u2192 `scripts/harness_goal.py`\n5. harness-super \u2192 `scripts/harness_super.py`\n\n**Three most-connected symbols** (graphify `god-nodes --top`, by degree):\n1. `run()` \u2014 degree 51 \u2014 `tests/test_no_compress_guard.py`\n2. `run()` \u2014 degree 42 \u2014 `tests/test_no_prune_guard.py`\n3. `Verifier` (class) \u2014 degree 38 \u2014 `scripts/verify_auto_mode.py:L101`\n\n**Verifier's caller**: `graphify explain \"Verifier\"` shows only one inbound edge to the class itself \u2014 `verify_auto_mode.py` `[contains]` at L101, i.e. it's instantiated/driven at module level in `scripts/verify_auto_mode.py` (its own `.run()` method, L640, is what executes the checks; `affected` confirms `.run()` and `.add()` are the only nodes referencing/calling into it at depth 1).\n\n**Highest-impact single file**: `scripts/verify_auto_mode.py` \u2014 it defines the graph's 3rd-highest-degree symbol (`Verifier`, 38 edges, 17+ outgoing method connections all local to this file), so changing it would affect the most callers/dependents of any single file in the codebase.\n\nSkills/tools used: graphify (god-nodes, explain, affected, query \u2014 local AST graph, no model calls), Grep, Read, Bash (read-only ls/cat). Goal status: fully unblocked \u2014 all four goal parts delivered, nothing deferred."
+ }
+]

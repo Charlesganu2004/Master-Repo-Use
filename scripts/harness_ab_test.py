@@ -62,15 +62,22 @@ sys.path.insert(0, str(ROOT / "scripts" / "hooks"))
 import skill_pipeline  # noqa: E402
 import harness_super  # noqa: E402
 
-DEFAULT_PROMPT = ("Write a Python function that parses a human duration string such as "
-                  "'1h30m', '45s' or '2d4h' into a number of seconds. Reject malformed "
-                  "input with a clear error. Include unit tests.")
+# The same two prompts the live benchmark used, word for word, so a run of this
+# script is comparable with benchmarks/2026-09-11. They name the interface
+# because the benchmark scores every answer with one hidden test suite.
+DEFAULT_PROMPT = ("Write a Python function parse_duration(text) that converts a human "
+                  "duration string such as '1h30m', '45s' or '2d4h' into an integer number "
+                  "of seconds. Units are d, h, m and s; each appears at most once and in "
+                  "that order. Raise ValueError with a clear message for malformed input. "
+                  "Include unit tests.")
 
-HARDER_PROMPT = ("Implement a thread-safe sliding-window rate limiter in Python that "
-                 "allows N requests per T seconds per key. Include unit tests, one of "
-                 "which exercises concurrent callers, then write a three-sentence note "
-                 "on why you chose the data structure, and finish by listing any edge "
-                 "case you did not handle.")
+HARDER_PROMPT = ("Implement a thread-safe sliding-window rate limiter in Python: a class "
+                 "RateLimiter(limit, window, clock=time.monotonic) whose allow(key) method "
+                 "returns True and records the call if that key has had fewer than `limit` "
+                 "allowed calls in the last `window` seconds, and returns False otherwise. "
+                 "Include unit tests, one of which exercises concurrent callers. Then write "
+                 "a three-sentence note on why you chose the data structure, and finish by "
+                 "listing any edge case you did not handle.")
 
 # A rough rule of thumb for English prose and code, used ONLY by --measure and
 # labelled as an estimate wherever it appears. --run replaces it with the counts

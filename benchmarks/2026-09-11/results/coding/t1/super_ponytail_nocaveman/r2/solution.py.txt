@@ -1,0 +1,26 @@
+# solution.py
+import re
+
+_PATTERN = re.compile(r"^(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$")
+_SECONDS_PER_UNIT = (86400, 3600, 60, 1)  # d, h, m, s
+
+
+def parse_duration(text: str) -> int:
+    """Convert a duration string like '1h30m', '45s', or '2d4h' into seconds.
+
+    Units are d, h, m, s; each may appear at most once, and only in that
+    order. Raises ValueError for empty input, missing/duplicated/out-of-order
+    units, non-digit values, or any other malformed text.
+    """
+    match = _PATTERN.fullmatch(text) if text else None
+    if not match or not any(match.groups()):
+        raise ValueError(
+            f"invalid duration string {text!r}: expected digits followed by "
+            "units d, h, m, s in that order, e.g. '1h30m'"
+        )
+
+    return sum(
+        int(value) * unit_seconds
+        for value, unit_seconds in zip(match.groups(), _SECONDS_PER_UNIT)
+        if value is not None
+    )

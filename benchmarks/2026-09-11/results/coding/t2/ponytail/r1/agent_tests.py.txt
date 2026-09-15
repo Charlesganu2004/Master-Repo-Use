@@ -1,0 +1,66 @@
+# test_solution.py
+import threading
+import unittest
+
+from solution import RateLimiter
+
+
+class FakeClock:
+    """Deterministic, manually-advanced clock for tests."""
+
+    def __init__(self, start=0.0):
+        self._t = start
+
+    def __call__(self):
+        return self._t
+
+    def advance(self, dt):
+        self._t += dt
+
+
+class RateLimiterTests(unittest.TestCase):
+    def test_allows_up_to_limit_then_blocks(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=3, window=10, clock=clock)
+        results = [rl.allow("a") for _ in range(5)]
+        self.assertEqual(results, [True, True, True, False, False])
+
+    def test_window_slides_to_allow_more_calls(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=2, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        clock.advance(5)
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))  # 2 calls already within the last 10s
+        clock.advance(5.001)  # first call is now just outside the window
+        self.assertTrue(rl.allow("a"))
+
+    def test_keys_are_independent(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=1, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+        self.assertTrue(rl.allow("b"))
+
+    def test_concurrent_callers_never_exceed_limit(self):
+        clock = FakeClock()  # frozen clock: every thread races inside the same window
+        rl = RateLimiter(limit=10, window=10, clock=clock)
+        n_threads = 100
+        results = [None] * n_threads
+        barrier = threading.Barrier(n_threads)
+
+        def worker(i):
+            barrier.wait()  # release all threads at once to maximize contention
+            results[i] = rl.allow("shared-key")
+
+        threads = [threading.Thread(target=worker, args=(i,)) for i in range(n_threads)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        self.assertEqual(sum(1 for r in results if r), 10)
+
+
+if __name__ == "__main__":
+    unittest.main()

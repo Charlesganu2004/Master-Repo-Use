@@ -1,0 +1,71 @@
+# test_solution.py
+import unittest
+
+from solution import parse_duration
+
+
+class ParseDurationTests(unittest.TestCase):
+    def test_single_units(self):
+        self.assertEqual(parse_duration("45s"), 45)
+        self.assertEqual(parse_duration("5m"), 300)
+        self.assertEqual(parse_duration("3h"), 10800)
+        self.assertEqual(parse_duration("2d"), 172800)
+
+    def test_combined_units(self):
+        self.assertEqual(parse_duration("1h30m"), 5400)
+        self.assertEqual(parse_duration("2d4h"), 187200)
+        self.assertEqual(parse_duration("1d2h3m4s"), 93784)
+
+    def test_zero_value(self):
+        self.assertEqual(parse_duration("0s"), 0)
+
+    def test_large_numbers(self):
+        self.assertEqual(parse_duration("100d"), 100 * 86400)
+
+    def test_empty_string_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("")
+
+    def test_unknown_unit_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("1x")
+
+    def test_wrong_order_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("30m1h")
+
+    def test_duplicate_unit_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("1h1h")
+
+    def test_decimal_number_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("1.5h")
+
+    def test_negative_number_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("-5s")
+
+    def test_missing_number_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("h")
+
+    def test_missing_unit_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("100")
+
+    def test_whitespace_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration(" 1h")
+        with self.assertRaises(ValueError):
+            parse_duration("1h ")
+
+    def test_non_string_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration(5)
+        with self.assertRaises(ValueError):
+            parse_duration(None)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,110 @@
+# test_solution.py
+import threading
+import unittest
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
+
+from solution import RateLimiter
+
+
+class FakeClock:
+    """A controllable, thread-safe clock for deterministic tests."""
+
+    def __init__(self, start: float = 0.0):
+        self._lock = threading.Lock()
+        self._now = start
+
+    def __call__(self) -> float:
+        with self._lock:
+            return self._now
+
+    def advance(self, seconds: float) -> None:
+        with self._lock:
+            self._now += seconds
+
+
+class RateLimiterBasicTests(unittest.TestCase):
+    def test_allows_up_to_limit(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=3, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+
+    def test_keys_are_independent(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=1, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+        self.assertTrue(rl.allow("b"))  # different key, unaffected by "a"
+
+    def test_window_slides_and_frees_capacity(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=2, window=5, clock=clock)
+        self.assertTrue(rl.allow("a"))       # t=0
+        clock.advance(3)
+        self.assertTrue(rl.allow("a"))       # t=3
+        self.assertFalse(rl.allow("a"))      # t=3, both slots still in window
+
+        clock.advance(2.001)                 # t=5.001: t=0 call has expired
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+
+    def test_exactly_at_window_boundary_is_expired(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=1, window=5, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        clock.advance(5)  # call is now exactly `window` seconds old
+        self.assertTrue(rl.allow("a"))  # boundary call has expired, slot freed
+
+    def test_invalid_arguments_raise(self):
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=0, window=10)
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=5, window=0)
+
+
+class RateLimiterConcurrencyTests(unittest.TestCase):
+    def test_concurrent_callers_never_exceed_limit(self):
+        """Many threads race on one key at a frozen instant; exactly `limit`
+        should win, proving the check-then-record step is atomic."""
+        limit = 50
+        clock = FakeClock()  # frozen: every caller lands in the same instant
+        rl = RateLimiter(limit=limit, window=10, clock=clock)
+
+        num_threads = 400
+        barrier = threading.Barrier(num_threads)
+
+        def worker(_):
+            barrier.wait()  # release all threads at once to maximize contention
+            return rl.allow("shared-key")
+
+        with ThreadPoolExecutor(max_workers=num_threads) as pool:
+            results = list(pool.map(worker, range(num_threads)))
+
+        self.assertEqual(sum(results), limit)
+        self.assertEqual(results.count(False), num_threads - limit)
+
+    def test_concurrent_callers_across_multiple_keys(self):
+        """Concurrent traffic on independent keys should each be capped at
+        `limit` without cross-key interference or lost updates."""
+        limit = 10
+        clock = FakeClock()
+        rl = RateLimiter(limit=limit, window=10, clock=clock)
+        keys = [f"key-{i}" for i in range(5)]
+
+        def worker(key):
+            return key, rl.allow(key)
+
+        calls = keys * 30  # 30 attempts per key, interleaved across threads
+        with ThreadPoolExecutor(max_workers=32) as pool:
+            results = list(pool.map(worker, calls))
+
+        allowed_per_key = Counter(key for key, allowed in results if allowed)
+        for key in keys:
+            self.assertEqual(allowed_per_key[key], limit)
+
+
+if __name__ == "__main__":
+    unittest.main()

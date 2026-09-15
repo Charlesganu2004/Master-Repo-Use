@@ -1,0 +1,50 @@
+{
+  "limit": 600,
+  "repo": "the repository you run this in",
+  "tasks": {
+    "complex": {
+      "name": "Complex: trace the injection path and name the hubs",
+      "prompt": "In this repository, trace how a user's prompt becomes injected context: name the hook file that does it, the function inside it that builds the context, and the file that adds the super harness chain on top. Then name the three most connected symbols in the repository and the file each is defined in.",
+      "truth": {
+        "expect": [
+          {"label": "hook file", "any": ["skill_pipeline.py"]},
+          {"label": "context builder", "any": ["context_for"]},
+          {"label": "chain source", "any": ["super_chain.py", "harness_super.py"]},
+          {"label": "hub 1", "all": ["run", "test_no_compress_guard.py"]},
+          {"label": "hub 2", "all": ["run", "test_no_prune_guard.py"]},
+          {"label": "hub 3", "all": ["Verifier", "verify_auto_mode.py"]}
+        ],
+        "source": "the repository's own hook, and graphify god-nodes --top 3 against its graph"
+      }
+    },
+    "super_complex": {
+      "name": "Super complex: map all five harnesses, then the blast radius",
+      "prompt": "In this repository there are five harnesses. For each one, name its entry script. Then name the three most connected symbols in the repository with the file each is defined in, and for the class Verifier name the function that calls it. Finish with one sentence saying which single file, if changed, would affect the most callers.",
+      "truth": {
+        "expect": [
+          {"label": "surface harness", "any": ["auto_mode_harness.py"]},
+          {"label": "proxy harness", "any": ["harness_proxy.py"]},
+          {"label": "wrapper harness", "any": ["harness_wrap.py"]},
+          {"label": "goal harness", "any": ["harness_goal.py"]},
+          {"label": "super harness", "any": ["harness_super.py"]},
+          {"label": "hub 1", "all": ["run", "test_no_compress_guard.py"]},
+          {"label": "hub 2", "all": ["run", "test_no_prune_guard.py"]},
+          {"label": "hub 3", "all": ["Verifier", "verify_auto_mode.py"]},
+          {"label": "Verifier's caller", "all": ["main"]}
+        ],
+        "source": "scripts/build_atlas_data.py HARNESSES, and graphify god-nodes and affected against the graph"
+      }
+    }
+  },
+  "arms": {
+    "bare_strict": {"label": "No harness, graphify forbidden", "harness": null, "graphify": false, "forbid_graphify": true},
+    "bare_graph": {"label": "No harness, graphify offered", "harness": null, "graphify": true},
+    "base_graph": {"label": "Base harness + graphify", "harness": "base", "graphify": true},
+    "super_graph": {"label": "Super harness + graphify", "harness": "super", "graphify": true}
+  },
+  "tool_card": "graphify is installed and this repository's graph is already built. Run it from the repository root:\n\n  \"{GRAPHIFY}\" <command>\n\nCommands: query \"<question>\" [--budget N], path \"A\" \"B\", explain \"X\", affected \"X\" [--depth N], god-nodes [--top N] [--json]. The default graph is graphify-out/graph.json in the folder you run it from. Indexing and querying are local: they read the code and the graph file, and call no model.",
+  "delivery": "Answer the question directly. Do not create or modify any files, and do not use the Skill tool.",
+  "limit_plain": "Your entire answer must be at most 600 tokens.",
+  "limit_command": "/token limit 600 ",
+  "forbid_line": "Do not use graphify or any pre-built graph, and do not read graphify-out/. Answer from the source files themselves."
+}

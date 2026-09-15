@@ -1,0 +1,74 @@
+# solution.py
+"""A thread-safe sliding-window rate limiter."""
+
+import threading
+import time
+from collections import deque
+from typing import Callable, Deque, Dict, Hashable
+
+
+class RateLimiter:
+    """Sliding-window rate limiter.
+
+    Allows at most `limit` calls per key within any trailing `window`-second
+    interval. Thread-safe: many threads may call `allow` concurrently, for
+    the same or different keys, without corrupting internal state or
+    over/under-counting allowed calls.
+    """
+
+    def __init__(
+        self,
+        limit: int,
+        window: float,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        if limit <= 0:
+            raise ValueError("limit must be a positive integer")
+        if window <= 0:
+            raise ValueError("window must be positive")
+
+        self._limit = limit
+        self._window = window
+        self._clock = clock
+
+        # One deque of allowed-call timestamps per key, always holding at
+        # most `limit` entries (older entries are pruned on every check).
+        self._calls: Dict[Hashable, Deque[float]] = {}
+
+        # Guards both dict-level operations (creating a key's deque) and
+        # mutation of a deque's contents. A single lock keeps the
+        # implementation simple and obviously correct; see the note at the
+        # bottom of the module for the per-key-lock alternative.
+        self._lock = threading.Lock()
+
+    def allow(self, key: Hashable) -> bool:
+        """Return True and record the call if `key` is under its limit.
+
+        A call counts against `key` if it landed in the half-open interval
+        (now - window, now]; anything older has aged out of the window.
+        """
+        now = self._clock()
+        cutoff = now - self._window
+
+        with self._lock:
+            timestamps = self._calls.get(key)
+            if timestamps is None:
+                timestamps = deque()
+                self._calls[key] = timestamps
+
+            while timestamps and timestamps[0] <= cutoff:
+                timestamps.popleft()
+
+            if len(timestamps) < self._limit:
+                timestamps.append(now)
+                return True
+
+            return False
+
+
+# Note on scaling: this implementation serializes all keys behind one lock,
+# which is simplest and correct but limits throughput under heavy
+# multi-key contention. A sharded design (e.g. a lock per key, or N locks
+# selected by hash(key) % N) would let unrelated keys proceed in parallel;
+# it wasn't necessary here, but is the natural next step if profiling shows
+# lock contention.

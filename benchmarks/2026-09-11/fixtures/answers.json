@@ -1,0 +1,23 @@
+{
+  "lookup": {
+    "order": "ORD-10173",
+    "total": "$1,066.33"
+  },
+  "count": {
+    "status": "Shipped",
+    "over": 500,
+    "count": 27
+  },
+  "checkout": {
+    "input": {
+      "name": "Ada Lovelace",
+      "email": "ada@example.com",
+      "street": "12 Analytical Way",
+      "city": "London",
+      "postcode": "N1 9GU",
+      "shipping": "Express",
+      "coupon": "SAVE10"
+    },
+    "code": "CONF-8BF61509"
+  }
+}

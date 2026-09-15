@@ -1,0 +1,66 @@
+# test_solution.py
+import unittest
+
+from solution import parse_duration
+
+
+class ParseDurationValid(unittest.TestCase):
+    def test_single_units(self):
+        self.assertEqual(parse_duration("45s"), 45)
+        self.assertEqual(parse_duration("1m"), 60)
+        self.assertEqual(parse_duration("1h"), 3600)
+        self.assertEqual(parse_duration("1d"), 86400)
+
+    def test_combos(self):
+        self.assertEqual(parse_duration("1h30m"), 5400)
+        self.assertEqual(parse_duration("2d4h"), 187200)
+        self.assertEqual(parse_duration("1d2h3m4s"), 93784)
+
+    def test_zero_and_leading_zeros(self):
+        self.assertEqual(parse_duration("0s"), 0)
+        self.assertEqual(parse_duration("007s"), 7)
+
+
+class ParseDurationMalformed(unittest.TestCase):
+    def assertRaisesVE(self, text):
+        with self.assertRaises(ValueError):
+            parse_duration(text)
+
+    def test_empty(self):
+        self.assertRaisesVE("")
+
+    def test_no_unit(self):
+        self.assertRaisesVE("10")
+
+    def test_wrong_order(self):
+        self.assertRaisesVE("1m1h")
+        self.assertRaisesVE("30m1h")
+
+    def test_duplicate_unit(self):
+        self.assertRaisesVE("1h2h")
+        self.assertRaisesVE("1d2d3h")
+
+    def test_negative(self):
+        self.assertRaisesVE("-5s")
+
+    def test_wrong_case(self):
+        self.assertRaisesVE("1H")
+
+    def test_whitespace(self):
+        self.assertRaisesVE(" 1h")
+
+    def test_missing_digit(self):
+        self.assertRaisesVE("d5h")
+        self.assertRaisesVE("h")
+
+    def test_garbage(self):
+        self.assertRaisesVE("abc")
+        self.assertRaisesVE("1x")
+        self.assertRaisesVE("10hh")
+
+    def test_non_string(self):
+        self.assertRaisesVE(None)
+
+
+if __name__ == "__main__":
+    unittest.main()

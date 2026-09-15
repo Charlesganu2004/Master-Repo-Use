@@ -1,0 +1,1 @@
+The `Verifier` class is defined in `<repo>\scripts\verify_auto_mode.py` (line 101), and it is instantiated/called by the `main()` function in that same file (line 707: `verifier = Verifier(pathlib.Path(args.repo), pathlib.Path(args.home), clients, installed_only=args.installed_only)`).

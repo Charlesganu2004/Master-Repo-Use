@@ -1,0 +1,24 @@
+# solution.py
+import re
+
+# ponytail: one anchored regex enforces d/h/m/s each-at-most-once, correct order
+_PATTERN = re.compile(
+    r'^(?:(?P<days>\d+)d)?(?:(?P<hours>\d+)h)?(?:(?P<minutes>\d+)m)?(?:(?P<seconds>\d+)s)?$'
+)
+
+
+def parse_duration(text):
+    """Parse a duration string like '1h30m', '45s', '2d4h' into seconds.
+
+    Units d, h, m, s are each optional but may appear at most once and
+    must occur in that order. Raises ValueError on malformed input.
+    """
+    if not isinstance(text, str) or not text:
+        raise ValueError(f"invalid duration: {text!r}")
+
+    match = _PATTERN.match(text)
+    if not match or not any(match.groups()):
+        raise ValueError(f"invalid duration: {text!r}")
+
+    days, hours, minutes, seconds = (int(g) if g else 0 for g in match.groups())
+    return days * 86400 + hours * 3600 + minutes * 60 + seconds

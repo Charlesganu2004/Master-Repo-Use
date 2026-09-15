@@ -1,0 +1,103 @@
+# test_solution.py
+"""Unit tests for RateLimiter."""
+import threading
+
+import pytest
+
+from solution import RateLimiter
+
+
+class FakeClock:
+    """Manually-advanced clock for deterministic window tests."""
+
+    def __init__(self):
+        self.t = 0.0
+
+    def __call__(self):
+        return self.t
+
+
+def test_allows_up_to_limit_then_blocks():
+    fc = FakeClock()
+    rl = RateLimiter(limit=3, window=10, clock=fc)
+    assert [rl.allow("a") for _ in range(3)] == [True, True, True]
+    assert rl.allow("a") is False
+
+
+def test_sliding_window_expiry():
+    fc = FakeClock()
+    rl = RateLimiter(limit=2, window=10, clock=fc)
+    assert rl.allow("a") is True   # t=0
+    fc.t = 5
+    assert rl.allow("a") is True   # t=5, 2 calls in window
+    fc.t = 9.999
+    assert rl.allow("a") is False  # both prior calls still in window
+    fc.t = 10.0
+    assert rl.allow("a") is True   # call at t=0 now exactly window-old, expires
+
+
+def test_keys_are_independent():
+    fc = FakeClock()
+    rl = RateLimiter(limit=1, window=10, clock=fc)
+    assert rl.allow("a") is True
+    assert rl.allow("a") is False
+    assert rl.allow("b") is True   # separate budget, unaffected by "a"
+
+
+def test_invalid_constructor_args_raise():
+    with pytest.raises(ValueError):
+        RateLimiter(limit=0, window=10)
+    with pytest.raises(ValueError):
+        RateLimiter(limit=5, window=0)
+
+
+def test_concurrent_callers_respect_limit():
+    """500 threads race the same key; exactly `limit` may win, no over/under count."""
+    limit = 50
+    rl = RateLimiter(limit=limit, window=5)
+    results = []
+    results_lock = threading.Lock()
+    n_threads = 500
+    barrier = threading.Barrier(n_threads)
+
+    def worker():
+        barrier.wait()  # maximize contention: all threads call allow() near-simultaneously
+        allowed = rl.allow("shared-key")
+        with results_lock:
+            results.append(allowed)
+
+    threads = [threading.Thread(target=worker) for _ in range(n_threads)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert sum(results) == limit
+    assert len(results) == n_threads
+
+
+def test_concurrent_callers_different_keys_each_get_own_budget():
+    limit = 10
+    rl = RateLimiter(limit=limit, window=5)
+    n_keys = 20
+    calls_per_key = 15
+    results = {k: [] for k in range(n_keys)}
+    results_lock = threading.Lock()
+
+    def worker(key):
+        allowed = rl.allow(key)
+        with results_lock:
+            results[key].append(allowed)
+
+    threads = [
+        threading.Thread(target=worker, args=(k,))
+        for k in range(n_keys)
+        for _ in range(calls_per_key)
+    ]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    for k in range(n_keys):
+        assert sum(results[k]) == limit

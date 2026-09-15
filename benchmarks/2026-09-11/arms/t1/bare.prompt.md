@@ -1,0 +1,3 @@
+Write a Python function parse_duration(text) that converts a human duration string such as '1h30m', '45s' or '2d4h' into an integer number of seconds. Units are d, h, m and s; each appears at most once and in that order. Raise ValueError with a clear message for malformed input. Include unit tests.
+
+Deliver your answer the way you normally would to the person who asked. Put the complete implementation in one ```python block whose first line is `# solution.py`, and your tests in one ```python block whose first line is `# test_solution.py`. You may run Python to check your work, for example with `python - <<'EOF'`, but do not create or modify files and do not read any files. Do not use the Skill tool.

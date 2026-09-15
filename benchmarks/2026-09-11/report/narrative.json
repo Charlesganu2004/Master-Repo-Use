@@ -1,0 +1,30 @@
+{
+  "lede": "PLACEHOLDER, written after the results.",
+  "summary": ["PLACEHOLDER"],
+  "asked": [
+    "<b>A live test of the super harness against no harness</b>, with the prompts and a graph: Part A.",
+    "<b>Super with ponytail and caveman against super with ponytail but no caveman</b>, and <b>ponytail against caveman</b>: Part A.",
+    "<b>caveman-browse against Playwright against a Rust Playwright</b>: Part B. The Rust one is Rustwright, from Skyvern.",
+    "<b>The prompts, including a slightly harder one to run yourself</b>: Part C.",
+    "<b>Does the super harness work, is it automatic, and does /token limit stop the model</b>: Part D.",
+    "<b>The + on client surfaces</b>, and <b>skills as deep as their originals with automatic upstream tracking</b>: Part D.",
+    "<b>Moving skills, tools, plugins and MCP into MongoDB or PostgreSQL</b>, whether it works, its flaws, a plan and an architecture diagram: Part E."
+  ],
+  "method": ["PLACEHOLDER"],
+  "coding_findings": ["PLACEHOLDER"],
+  "combo_findings": ["PLACEHOLDER"],
+  "browser_method": ["PLACEHOLDER"],
+  "browser_findings": ["PLACEHOLDER"],
+  "reproduce": ["PLACEHOLDER"],
+  "verification": ["PLACEHOLDER"],
+  "token_limit": ["PLACEHOLDER"],
+  "plus": ["PLACEHOLDER"],
+  "skills": ["PLACEHOLDER"],
+  "registry_answer": ["PLACEHOLDER"],
+  "registry_flaws": ["PLACEHOLDER"],
+  "registry_plan": ["PLACEHOLDER"],
+  "registry_decisions": ["PLACEHOLDER"],
+  "limits": ["PLACEHOLDER"],
+  "blocked": ["PLACEHOLDER"],
+  "files": ["PLACEHOLDER"]
+}

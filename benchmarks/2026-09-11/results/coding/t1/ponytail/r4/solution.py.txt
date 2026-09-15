@@ -1,0 +1,23 @@
+# solution.py
+import re
+
+_PATTERN = re.compile(r'^(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$')
+_MULTIPLIERS = (86400, 3600, 60, 1)  # seconds per unit, matching group order d,h,m,s
+
+
+def parse_duration(text):
+    """Convert a duration string like '1h30m', '45s', '2d4h' into seconds.
+
+    Units d, h, m, s are each optional but, if present, must appear at
+    most once and in that order (d before h before m before s).
+    Raises ValueError on any other format.
+    """
+    if not isinstance(text, str):
+        raise ValueError(f"Duration must be a string, got {type(text).__name__}")
+
+    match = _PATTERN.match(text)
+    groups = match.groups() if match else None
+    if not match or all(g is None for g in groups):
+        raise ValueError(f"Invalid duration string: {text!r}")
+
+    return sum(int(g) * mult for g, mult in zip(groups, _MULTIPLIERS) if g is not None)

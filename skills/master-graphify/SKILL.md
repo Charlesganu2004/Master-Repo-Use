@@ -58,6 +58,31 @@ graphify query "how does auth work"   # scoped subgraph for a plain question
 Requires Python 3.10 or newer. Registers for Claude Code, Cursor, Codex, Gemini
 CLI, GitHub Copilot and others through `graphify install`.
 
+## Many projects on one machine
+
+One graph per folder answers questions inside that folder. A question that
+crosses repositories ("where else did I implement this", "which project already
+solves that") needs them connected, which is a separate step and the reason
+`scripts/graphify_local.py` exists:
+
+```bash
+python scripts/graphify_local.py --discover      # find the code projects here
+python scripts/graphify_local.py --index all     # index each, then merge
+python scripts/graphify_local.py --status        # what is indexed, how fresh
+python scripts/graphify_local.py --query "where is a rate limiter implemented"
+```
+
+Indexing is `graphify extract --code-only`: local AST parsing, no API key, and
+the model-backed pass over docs and media is never reached from here. Each
+project keeps its own `graphify-out/graph.json`, so `graphify query` works from
+inside that folder with no arguments, and every graph is also merged into
+`~/.graphify/global-graph.json`, which is what `--query` reads.
+
+The registry of folders lives at `~/.graphify/projects.json`, outside this
+repository, because it is this machine's layout rather than a project fact.
+Re-run `--index all` after real changes; on one machine ten projects took about
+thirty seconds in total.
+
 ## Read the edge tag before repeating the answer
 
 Every edge carries its provenance, and the two are not equally trustworthy:

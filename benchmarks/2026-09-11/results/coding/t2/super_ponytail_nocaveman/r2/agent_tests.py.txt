@@ -1,0 +1,81 @@
+# test_solution.py
+"""Unit tests for RateLimiter."""
+
+import threading
+import time
+import unittest
+
+from solution import RateLimiter
+
+
+class FakeClock:
+    """Manually advanceable clock so window-edge behavior is deterministic."""
+
+    def __init__(self, start: float = 0.0) -> None:
+        self.t = start
+
+    def __call__(self) -> float:
+        return self.t
+
+    def advance(self, dt: float) -> None:
+        self.t += dt
+
+
+class RateLimiterTest(unittest.TestCase):
+    def test_allows_up_to_limit_then_blocks(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=3, window=10, clock=clock)
+        results = [rl.allow("a") for _ in range(5)]
+        self.assertEqual(results, [True, True, True, False, False])
+
+    def test_window_slides_and_frees_capacity(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=2, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))       # t=0
+        clock.advance(4)
+        self.assertTrue(rl.allow("a"))       # t=4, 2 calls in window
+        self.assertFalse(rl.allow("a"))      # t=4, limit hit
+        clock.advance(6.001)                 # t=10.001, t=0 call now expires
+        self.assertTrue(rl.allow("a"))       # only the t=4 call still counts
+        self.assertFalse(rl.allow("a"))
+
+    def test_keys_are_independent(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=1, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+        self.assertTrue(rl.allow("b"))
+
+    def test_rejects_invalid_limit_or_window(self):
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=0, window=1)
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=1, window=0)
+
+    def test_concurrent_callers_never_exceed_limit(self):
+        """200 threads hit the same key at once; a Barrier lines them up to
+        maximize contention. Exactly `limit` must win — proving the lock
+        actually serializes read-evict-append instead of letting two threads
+        both read len(q) < limit before either appends."""
+        limit = 10
+        n_threads = 200
+        rl = RateLimiter(limit=limit, window=60, clock=time.monotonic)
+        start_gate = threading.Barrier(n_threads)
+        results = [None] * n_threads
+
+        def worker(i):
+            start_gate.wait()
+            results[i] = rl.allow("shared-key")
+
+        threads = [threading.Thread(target=worker, args=(i,)) for i in range(n_threads)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        self.assertEqual(sum(1 for r in results if r), limit)
+        self.assertEqual(sum(1 for r in results if not r), n_threads - limit)
+
+
+if __name__ == "__main__":
+    unittest.main()

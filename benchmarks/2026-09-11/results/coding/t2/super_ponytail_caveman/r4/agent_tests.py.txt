@@ -1,0 +1,72 @@
+# test_solution.py
+import threading
+import unittest
+
+from solution import RateLimiter
+
+
+class FakeClock:
+    def __init__(self, start=0.0):
+        self.t = start
+
+    def __call__(self):
+        return self.t
+
+    def advance(self, dt):
+        self.t += dt
+
+
+class RateLimiterTests(unittest.TestCase):
+    def test_allows_up_to_limit(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=3, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+
+    def test_keys_independent(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=1, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("b"))
+        self.assertFalse(rl.allow("a"))
+
+    def test_window_slides(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=2, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))       # t=0
+        clock.advance(5)
+        self.assertTrue(rl.allow("a"))       # t=5, both within window -> 2 calls
+        self.assertFalse(rl.allow("a"))      # limit hit
+        clock.advance(5.1)                   # t=10.1, cutoff=0.1, t=0 call expires
+        self.assertTrue(rl.allow("a"))       # room for one more
+        self.assertFalse(rl.allow("a"))
+
+    def test_rejects_bad_args(self):
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=-1, window=10)
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=5, window=0)
+
+    def test_concurrent_callers_enforce_limit(self):
+        rl = RateLimiter(limit=10, window=10.0)
+        results = []
+        results_lock = threading.Lock()
+
+        def worker():
+            r = rl.allow("shared")
+            with results_lock:
+                results.append(r)
+
+        threads = [threading.Thread(target=worker) for _ in range(200)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        self.assertEqual(sum(results), 10)
+
+
+if __name__ == "__main__":
+    unittest.main()

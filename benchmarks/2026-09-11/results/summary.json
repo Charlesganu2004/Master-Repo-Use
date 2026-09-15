@@ -1,0 +1,1282 @@
+{
+ "coding": {
+  "t1:bare": {
+   "task": "t1",
+   "arm": "bare",
+   "n": 5,
+   "promptVerified": true,
+   "costUsd": 0.13549,
+   "costRange": [
+    0.08671,
+    0.20118
+   ],
+   "costTotal": 0.6804,
+   "seconds": 70.8,
+   "secondsRange": [
+    57.9,
+    105.9
+   ],
+   "tokensTotal": 136843,
+   "outputTokens": 6534,
+   "outputRange": [
+    5703,
+    8534
+   ],
+   "cacheRead": 124172,
+   "cacheWrite": 9460,
+   "inputFresh": 6,
+   "firstCallContext": 40261,
+   "apiCalls": 3,
+   "toolCalls": 2,
+   "toolRange": [
+    1,
+    6
+   ],
+   "skillCalls": 0,
+   "fileToolCalls": 0,
+   "solutionLoc": 19,
+   "locRange": [
+    16,
+    44
+   ],
+   "testLoc": 61,
+   "proseWords": 121,
+   "proseRange": [
+    97,
+    145
+   ],
+   "emDashes": 6,
+   "hiddenPassRate": 1.0,
+   "fullyCorrect": 5,
+   "ownTestsGreen": 5,
+   "judgeOverall": 8.5,
+   "judgeRange": [
+    8.0,
+    9.0
+   ],
+   "judge": {
+    "correctness": 8.75,
+    "code_quality": 8.5,
+    "test_quality": 8.5,
+    "instruction_following": 9.5,
+    "communication": 7.75
+   },
+   "threeSentenceNote": null,
+   "listsUnhandled": null,
+   "costPerCorrect": 0.1361,
+   "judgePerDollar": 62.7,
+   "judgeCostUsd": 0.7589,
+   "vsBare": {
+    "costUsd": 0.0,
+    "seconds": 0.0,
+    "outputTokens": 0.0,
+    "solutionLoc": 0.0,
+    "proseWords": 0.0,
+    "tokensTotal": 0.0
+   }
+  },
+  "t1:super": {
+   "task": "t1",
+   "arm": "super",
+   "n": 5,
+   "promptVerified": true,
+   "costUsd": 0.15001,
+   "costRange": [
+    0.07431,
+    0.17808
+   ],
+   "costTotal": 0.6483,
+   "seconds": 66.7,
+   "secondsRange": [
+    48.9,
+    101.0
+   ],
+   "tokensTotal": 96246,
+   "outputTokens": 6418,
+   "outputRange": [
+    2634,
+    9910
+   ],
+   "cacheRead": 84132,
+   "cacheWrite": 9336,
+   "inputFresh": 4,
+   "firstCallContext": 42068,
+   "apiCalls": 2,
+   "toolCalls": 1,
+   "toolRange": [
+    1,
+    5
+   ],
+   "skillCalls": 0,
+   "fileToolCalls": 0,
+   "solutionLoc": 20,
+   "locRange": [
+    13,
+    36
+   ],
+   "testLoc": 65,
+   "proseWords": 134,
+   "proseRange": [
+    56,
+    159
+   ],
+   "emDashes": 13,
+   "hiddenPassRate": 1.0,
+   "fullyCorrect": 5,
+   "ownTestsGreen": 5,
+   "judgeOverall": 8.0,
+   "judgeRange": [
+    8.0,
+    8.0
+   ],
+   "judge": {
+    "correctness": 9.0,
+    "code_quality": 8.5,
+    "test_quality": 8.5,
+    "instruction_following": 9.0,
+    "communication": 5.5
+   },
+   "threeSentenceNote": null,
+   "listsUnhandled": null,
+   "costPerCorrect": 0.1297,
+   "judgePerDollar": 53.3,
+   "judgeCostUsd": 0.6453,
+   "vsBare": {
+    "costUsd": 10.7,
+    "seconds": -5.8,
+    "outputTokens": -1.8,
+    "solutionLoc": 5.3,
+    "proseWords": 10.7,
+    "tokensTotal": -29.7
+   }
+  },
+  "t1:super_ponytail_caveman": {
+   "task": "t1",
+   "arm": "super_ponytail_caveman",
+   "n": 5,
+   "promptVerified": true,
+   "costUsd": 0.08953,
+   "costRange": [
+    0.06563,
+    0.13026
+   ],
+   "costTotal": 0.47,
+   "seconds": 49.4,
+   "secondsRange": [
+    40.1,
+    51.2
+   ],
+   "tokensTotal": 149530,
+   "outputTokens": 4065,
+   "outputRange": [
+    2920,
+    4641
+   ],
+   "cacheRead": 140611,
+   "cacheWrite": 4272,
+   "inputFresh": 6,
+   "firstCallContext": 45784,
+   "apiCalls": 3,
+   "toolCalls": 2,
+   "toolRange": [
+    1,
+    3
+   ],
+   "skillCalls": 0,
+   "fileToolCalls": 0,
+   "solutionLoc": 15,
+   "locRange": [
+    10,
+    21
+   ],
+   "testLoc": 51,
+   "proseWords": 42,
+   "proseRange": [
+    18,
+    91
+   ],
+   "emDashes": 6,
+   "hiddenPassRate": 1.0,
+   "fullyCorrect": 5,
+   "ownTestsGreen": 5,
+   "judgeOverall": 8.0,
+   "judgeRange": [
+    8.0,
+    8.0
+   ],
+   "judge": {
+    "correctness": 9.0,
+    "code_quality": 8.5,
+    "test_quality": 8.25,
+    "instruction_following": 9.0,
+    "communication": 6.0
+   },
+   "threeSentenceNote": null,
+   "listsUnhandled": null,
+   "costPerCorrect": 0.094,
+   "judgePerDollar": 89.4,
+   "judgeCostUsd": 0.3951,
+   "vsBare": {
+    "costUsd": -33.9,
+    "seconds": -30.2,
+    "outputTokens": -37.8,
+    "solutionLoc": -21.1,
+    "proseWords": -65.3,
+    "tokensTotal": 9.3
+   }
+  },
+  "t1:super_ponytail_nocaveman": {
+   "task": "t1",
+   "arm": "super_ponytail_nocaveman",
+   "n": 5,
+   "promptVerified": true,
+   "costUsd": 0.14592,
+   "costRange": [
+    0.10845,
+    0.16455
+   ],
+   "costTotal": 0.6855,
+   "seconds": 78.1,
+   "secondsRange": [
+    60.9,
+    98.5
+   ],
+   "tokensTotal": 193986,
+   "outputTokens": 7840,
+   "outputRange": [
+    3942,
+    10200
+   ],
+   "cacheRead": 166086,
+   "cacheWrite": 9908,
+   "inputFresh": 8,
+   "firstCallContext": 43816,
+   "apiCalls": 4,
+   "toolCalls": 3,
+   "toolRange": [
+    1,
+    4
+   ],
+   "skillCalls": 0,
+   "fileToolCalls": 0,
+   "solutionLoc": 15,
+   "locRange": [
+    10,
+    36
+   ],
+   "testLoc": 56,
+   "proseWords": 115,
+   "proseRange": [
+    97,
+    246
+   ],
+   "emDashes": 18,
+   "hiddenPassRate": 1.0,
+   "fullyCorrect": 5,
+   "ownTestsGreen": 5,
+   "judgeOverall": 7.5,
+   "judgeRange": [
+    7.5,
+    7.5
+   ],
+   "judge": {
+    "correctness": 8.5,
+    "code_quality": 8.0,
+    "test_quality": 8.5,
+    "instruction_following": 8.5,
+    "communication": 5.0
+   },
+   "threeSentenceNote": null,
+   "listsUnhandled": null,
+   "costPerCorrect": 0.1371,
+   "judgePerDollar": 51.4,
+   "judgeCostUsd": 0.3724,
+   "vsBare": {
+    "costUsd": 7.7,
+    "seconds": 10.3,
+    "outputTokens": 20.0,
+    "solutionLoc": -21.1,
+    "proseWords": -5.0,
+    "tokensTotal": 41.8
+   }
+  },
+  "t1:ponytail": {
+   "task": "t1",
+   "arm": "ponytail",
+   "n": 5,
+   "promptVerified": true,
+   "costUsd": 0.09004,
+   "costRange": [
+    0.03064,
+    0.18517
+   ],
+   "costTotal": 0.4638,
+   "seconds": 42.0,
+   "secondsRange": [
+    28.9,
+    57.5
+   ],
+   "tokensTotal": 132964,
+   "outputTokens": 3961,
+   "outputRange": [
+    819,
+    5088
+   ],
+   "cacheRead": 128232,
+   "cacheWrite": 5221,
+   "inputFresh": 6,
+   "firstCallContext": 42144,
+   "apiCalls": 3,
+   "toolCalls": 2,
+   "toolRange": [
+    1,
+    3
+   ],
+   "skillCalls": 0,
+   "fileToolCalls": 0,
+   "solutionLoc": 11,
+   "locRange": [
+    10,
+    18
+   ],
+   "testLoc": 40,
+   "proseWords": 34,
+   "proseRange": [
+    30,
+    51
+   ],
+   "emDashes": 4,
+   "hiddenPassRate": 1.0,
+   "fullyCorrect": 5,
+   "ownTestsGreen": 5,
+   "judgeOverall": 8.5,
+   "judgeRange": [
+    8.5,
+    8.5
+   ],
+   "judge": {
+    "correctness": 9.0,
+    "code_quality": 9.0,
+    "test_quality": 8.0,
+    "instruction_following": 9.0,
+    "communication": 7.5
+   },
+   "threeSentenceNote": null,
+   "listsUnhandled": null,
+   "costPerCorrect": 0.0928,
+   "judgePerDollar": 94.4,
+   "judgeCostUsd": 0.3321,
+   "vsBare": {
+    "costUsd": -33.5,
+    "seconds": -40.7,
+    "outputTokens": -39.4,
+    "solutionLoc": -42.1,
+    "proseWords": -71.9,
+    "tokensTotal": -2.8
+   }
+  },
+  "t1:caveman": {
+   "task": "t1",
+   "arm": "caveman",
+   "n": 5,
+   "promptVerified": true,
+   "costUsd": 0.09134,
+   "costRange": [
+    0.05885,
+    0.09571
+   ],
+   "costTotal": 0.4223,
+   "seconds": 40.2,
+   "secondsRange": [
+    33.0,
+    55.4
+   ],
+   "tokensTotal": 138901,
+   "outputTokens": 3398,
+   "outputRange": [
+    2099,
+    5280
+   ],
+   "cacheRead": 130003,
+   "cacheWrite": 4983,
+   "inputFresh": 6,
+   "firstCallContext": 42156,
+   "apiCalls": 3,
+   "toolCalls": 2,
+   "toolRange": [
+    1,
+    3
+   ],
+   "skillCalls": 0,
+   "fileToolCalls": 0,
+   "solutionLoc": 16,
+   "locRange": [
+    12,
+    18
+   ],
+   "testLoc": 51,
+   "proseWords": 24,
+   "proseRange": [
+    10,
+    59
+   ],
+   "emDashes": 1,
+   "hiddenPassRate": 1.0,
+   "fullyCorrect": 5,
+   "ownTestsGreen": 5,
+   "judgeOverall": 8.0,
+   "judgeRange": [
+    8.0,
+    8.0
+   ],
+   "judge": {
+    "correctness": 8.0,
+    "code_quality": 8.5,
+    "test_quality": 8.0,
+    "instruction_following": 9.0,
+    "communication": 5.5
+   },
+   "threeSentenceNote": null,
+   "listsUnhandled": null,
+   "costPerCorrect": 0.0845,
+   "judgePerDollar": 87.6,
+   "judgeCostUsd": 0.271,
+   "vsBare": {
+    "costUsd": -32.6,
+    "seconds": -43.2,
+    "outputTokens": -48.0,
+    "solutionLoc": -15.8,
+    "proseWords": -80.2,
+    "tokensTotal": 1.5
+   }
+  },
+  "t2:bare": {
+   "task": "t2",
+   "arm": "bare",
+   "n": 5,
+   "promptVerified": true,
+   "costUsd": 0.1372,
+   "costRange": [
+    0.09188,
+    0.17958
+   ],
+   "costTotal": 0.6587,
+   "seconds": 65.1,
+   "secondsRange": [
+    56.8,
+    102.2
+   ],
+   "tokensTotal": 94853,
+   "outputTokens": 7828,
+   "outputRange": [
+    6344,
+    11875
+   ],
+   "cacheRead": 80632,
+   "cacheWrite": 10381,
+   "inputFresh": 4,
+   "firstCallContext": 40318,
+   "apiCalls": 2,
+   "toolCalls": 1,
+   "toolRange": [
+    1,
+    3
+   ],
+   "skillCalls": 0,
+   "fileToolCalls": 0,
+   "solutionLoc": 34,
+   "locRange": [
+    29,
+    34
+   ],
+   "testLoc": 79,
+   "proseWords": 296,
+   "proseRange": [
+    223,
+    323
+   ],
+   "emDashes": 11,
+   "hiddenPassRate": 1.0,
+   "fullyCorrect": 5,
+   "ownTestsGreen": 5,
+   "judgeOverall": 9.0,
+   "judgeRange": [
+    9.0,
+    9.0
+   ],
+   "judge": {
+    "correctness": 9.0,
+    "code_quality": 9.0,
+    "test_quality": 8.5,
+    "instruction_following": 10.0,
+    "communication": 8.5
+   },
+   "threeSentenceNote": 1.0,
+   "listsUnhandled": 1.0,
+   "costPerCorrect": 0.1317,
+   "judgePerDollar": 65.6,
+   "judgeCostUsd": 0.319,
+   "vsBare": {
+    "costUsd": 0.0,
+    "seconds": 0.0,
+    "outputTokens": 0.0,
+    "solutionLoc": 0.0,
+    "proseWords": 0.0,
+    "tokensTotal": 0.0
+   }
+  },
+  "t2:super": {
+   "task": "t2",
+   "arm": "super",
+   "n": 5,
+   "promptVerified": true,
+   "costUsd": 0.13469,
+   "costRange": [
+    0.10242,
+    0.21308
+   ],
+   "costTotal": 0.748,
+   "seconds": 89.4,
+   "secondsRange": [
+    62.5,
+    127.3
+   ],
+   "tokensTotal": 188269,
+   "outputTokens": 7115,
+   "outputRange": [
+    5713,
+    13451
+   ],
+   "cacheRead": 164939,
+   "cacheWrite": 12265,
+   "inputFresh": 8,
+   "firstCallContext": 42171,
+   "apiCalls": 4,
+   "toolCalls": 3,
+   "toolRange": [
+    1,
+    4
+   ],
+   "skillCalls": 0,
+   "fileToolCalls": 0,
+   "solutionLoc": 33,
+   "locRange": [
+    25,
+    34
+   ],
+   "testLoc": 75,
+   "proseWords": 305,
+   "proseRange": [
+    292,
+    347
+   ],
+   "emDashes": 16,
+   "hiddenPassRate": 1.0,
+   "fullyCorrect": 5,
+   "ownTestsGreen": 5,
+   "judgeOverall": 8.0,
+   "judgeRange": [
+    8.0,
+    8.0
+   ],
+   "judge": {
+    "correctness": 8.0,
+    "code_quality": 9.0,
+    "test_quality": 8.0,
+    "instruction_following": 9.5,
+    "communication": 8.0
+   },
+   "threeSentenceNote": 1.0,
+   "listsUnhandled": 1.0,
+   "costPerCorrect": 0.1496,
+   "judgePerDollar": 59.4,
+   "judgeCostUsd": 0.3185,
+   "vsBare": {
+    "costUsd": -1.8,
+    "seconds": 37.3,
+    "outputTokens": -9.1,
+    "solutionLoc": -2.9,
+    "proseWords": 3.0,
+    "tokensTotal": 98.5
+   }
+  },
+  "t2:super_ponytail_caveman": {
+   "task": "t2",
+   "arm": "super_ponytail_caveman",
+   "n": 5,
+   "promptVerified": true,
+   "costUsd": 0.1321,
+   "costRange": [
+    0.02778,
+    0.18421
+   ],
+   "costTotal": 0.6316,
+   "seconds": 76.5,
+   "secondsRange": [
+    48.7,
+    82.2
+   ],
+   "tokensTotal": 211542,
+   "outputTokens": 6477,
+   "outputRange": [
+    4,
+    8134
+   ],
+   "cacheRead": 195863,
+   "cacheWrite": 8507,
+   "inputFresh": 8,
+   "firstCallContext": 45887,
+   "apiCalls": 4,
+   "toolCalls": 3,
+   "toolRange": [
+    1,
+    5
+   ],
+   "skillCalls": 0,
+   "fileToolCalls": 0,
+   "solutionLoc": 25,
+   "locRange": [
+    25,
+    26
+   ],
+   "testLoc": 59,
+   "proseWords": 208,
+   "proseRange": [
+    155,
+    254
+   ],
+   "emDashes": 6,
+   "hiddenPassRate": 1.0,
+   "fullyCorrect": 5,
+   "ownTestsGreen": 5,
+   "judgeOverall": 7.5,
+   "judgeRange": [
+    7.5,
+    7.5
+   ],
+   "judge": {
+    "correctness": 8.5,
+    "code_quality": 8.0,
+    "test_quality": 7.0,
+    "instruction_following": 9.0,
+    "communication": 5.5
+   },
+   "threeSentenceNote": 1.0,
+   "listsUnhandled": 1.0,
+   "costPerCorrect": 0.1263,
+   "judgePerDollar": 56.8,
+   "judgeCostUsd": 0.2249,
+   "vsBare": {
+    "costUsd": -3.7,
+    "seconds": 17.5,
+    "outputTokens": -17.3,
+    "solutionLoc": -26.5,
+    "proseWords": -29.7,
+    "tokensTotal": 123.0
+   }
+  },
+  "t2:super_ponytail_nocaveman": {
+   "task": "t2",
+   "arm": "super_ponytail_nocaveman",
+   "n": 5,
+   "promptVerified": true,
+   "costUsd": 0.1704,
+   "costRange": [
+    0.08463,
+    0.22642
+   ],
+   "costTotal": 0.8002,
+   "seconds": 107.5,
+   "secondsRange": [
+    74.4,
+    123.1
+   ],
+   "tokensTotal": 201430,
+   "outputTokens": 7929,
+   "outputRange": [
+    5146,
+    10698
+   ],
+   "cacheRead": 169844,
+   "cacheWrite": 23649,
+   "inputFresh": 8,
+   "firstCallContext": 43919,
+   "apiCalls": 4,
+   "toolCalls": 3,
+   "toolRange": [
+    1,
+    5
+   ],
+   "skillCalls": 0,
+   "fileToolCalls": 0,
+   "solutionLoc": 25,
+   "locRange": [
+    25,
+    31
+   ],
+   "testLoc": 56,
+   "proseWords": 315,
+   "proseRange": [
+    257,
+    397
+   ],
+   "emDashes": 31,
+   "hiddenPassRate": 1.0,
+   "fullyCorrect": 5,
+   "ownTestsGreen": 5,
+   "judgeOverall": 8.0,
+   "judgeRange": [
+    8.0,
+    8.0
+   ],
+   "judge": {
+    "correctness": 9.0,
+    "code_quality": 8.0,
+    "test_quality": 8.0,
+    "instruction_following": 8.5,
+    "communication": 7.0
+   },
+   "threeSentenceNote": 1.0,
+   "listsUnhandled": 1.0,
+   "costPerCorrect": 0.16,
+   "judgePerDollar": 46.9,
+   "judgeCostUsd": 0.2817,
+   "vsBare": {
+    "costUsd": 24.2,
+    "seconds": 65.1,
+    "outputTokens": 1.3,
+    "solutionLoc": -26.5,
+    "proseWords": 6.4,
+    "tokensTotal": 112.4
+   }
+  },
+  "t2:ponytail": {
+   "task": "t2",
+   "arm": "ponytail",
+   "n": 5,
+   "promptVerified": true,
+   "costUsd": 0.10437,
+   "costRange": [
+    0.05826,
+    0.13573
+   ],
+   "costTotal": 0.5029,
+   "seconds": 56.5,
+   "secondsRange": [
+    44.5,
+    59.3
+   ],
+   "tokensTotal": 95204,
+   "outputTokens": 4415,
+   "outputRange": [
+    3109,
+    6099
+   ],
+   "cacheRead": 84398,
+   "cacheWrite": 18527,
+   "inputFresh": 4,
+   "firstCallContext": 42201,
+   "apiCalls": 2,
+   "toolCalls": 1,
+   "toolRange": [
+    1,
+    2
+   ],
+   "skillCalls": 0,
+   "fileToolCalls": 0,
+   "solutionLoc": 25,
+   "locRange": [
+    23,
+    26
+   ],
+   "testLoc": 48,
+   "proseWords": 177,
+   "proseRange": [
+    143,
+    210
+   ],
+   "emDashes": 18,
+   "hiddenPassRate": 1.0,
+   "fullyCorrect": 5,
+   "ownTestsGreen": 5,
+   "judgeOverall": 8.0,
+   "judgeRange": [
+    8.0,
+    8.0
+   ],
+   "judge": {
+    "correctness": 8.5,
+    "code_quality": 7.5,
+    "test_quality": 7.5,
+    "instruction_following": 9.0,
+    "communication": 7.0
+   },
+   "threeSentenceNote": 1.0,
+   "listsUnhandled": 1.0,
+   "costPerCorrect": 0.1006,
+   "judgePerDollar": 76.7,
+   "judgeCostUsd": 0.2987,
+   "vsBare": {
+    "costUsd": -23.9,
+    "seconds": -13.2,
+    "outputTokens": -43.6,
+    "solutionLoc": -26.5,
+    "proseWords": -40.2,
+    "tokensTotal": 0.4
+   }
+  },
+  "t2:caveman": {
+   "task": "t2",
+   "arm": "caveman",
+   "n": 5,
+   "promptVerified": true,
+   "costUsd": 0.11173,
+   "costRange": [
+    0.09295,
+    0.17773
+   ],
+   "costTotal": 0.6129,
+   "seconds": 52.8,
+   "secondsRange": [
+    45.0,
+    79.3
+   ],
+   "tokensTotal": 141286,
+   "outputTokens": 5575,
+   "outputRange": [
+    4642,
+    7379
+   ],
+   "cacheRead": 129822,
+   "cacheWrite": 19437,
+   "inputFresh": 6,
+   "firstCallContext": 42213,
+   "apiCalls": 3,
+   "toolCalls": 2,
+   "toolRange": [
+    1,
+    4
+   ],
+   "skillCalls": 0,
+   "fileToolCalls": 0,
+   "solutionLoc": 26,
+   "locRange": [
+    0,
+    36
+   ],
+   "testLoc": 64,
+   "proseWords": 134,
+   "proseRange": [
+    109,
+    167
+   ],
+   "emDashes": 4,
+   "hiddenPassRate": 1.0,
+   "fullyCorrect": 4,
+   "ownTestsGreen": 4,
+   "judgeOverall": 8.0,
+   "judgeRange": [
+    8.0,
+    8.0
+   ],
+   "judge": {
+    "correctness": 8.5,
+    "code_quality": 8.5,
+    "test_quality": 8.0,
+    "instruction_following": 9.5,
+    "communication": 6.0
+   },
+   "threeSentenceNote": 1.0,
+   "listsUnhandled": 1.0,
+   "costPerCorrect": 0.1532,
+   "judgePerDollar": 71.6,
+   "judgeCostUsd": 0.2917,
+   "vsBare": {
+    "costUsd": -18.6,
+    "seconds": -18.9,
+    "outputTokens": -28.8,
+    "solutionLoc": -23.5,
+    "proseWords": -54.7,
+    "tokensTotal": 49.0
+   }
+  }
+ },
+ "browser": {
+  "agent": {
+   "lookup:caveman-browse": {
+    "task": "lookup",
+    "tool": "caveman-browse",
+    "n": 3,
+    "correct": 3,
+    "declined": 0,
+    "costUsd": 0.13057,
+    "costRange": [
+     0.12121,
+     0.20594
+    ],
+    "tokensTotal": 287444,
+    "outputTokens": 2104,
+    "seconds": 42.6,
+    "secondsRange": [
+     41.5,
+     115.5
+    ],
+    "toolCalls": 5,
+    "apiCalls": 6,
+    "codeLines": 5,
+    "answers": [
+     "$1,066.33",
+     "$1,066.33",
+     "$1,066.33"
+    ]
+   },
+   "lookup:playwright": {
+    "task": "lookup",
+    "tool": "playwright",
+    "n": 3,
+    "correct": 3,
+    "declined": 0,
+    "costUsd": 0.05716,
+    "costRange": [
+     0.05204,
+     0.18712
+    ],
+    "tokensTotal": 93327,
+    "outputTokens": 671,
+    "seconds": 14.6,
+    "secondsRange": [
+     13.8,
+     110.8
+    ],
+    "toolCalls": 1,
+    "apiCalls": 2,
+    "codeLines": 13,
+    "answers": [
+     "$1,066.33",
+     "$1,066.33",
+     "$1,066.33"
+    ]
+   },
+   "lookup:rustwright": {
+    "task": "lookup",
+    "tool": "rustwright",
+    "n": 3,
+    "correct": 3,
+    "declined": 0,
+    "costUsd": 0.05958,
+    "costRange": [
+     0.05795,
+     0.21851
+    ],
+    "tokensTotal": 94410,
+    "outputTokens": 1142,
+    "seconds": 21.6,
+    "secondsRange": [
+     17.2,
+     98.4
+    ],
+    "toolCalls": 1,
+    "apiCalls": 2,
+    "codeLines": 15,
+    "answers": [
+     "$1,066.33",
+     "$1,066.33",
+     "$1,066.33"
+    ]
+   },
+   "count:caveman-browse": {
+    "task": "count",
+    "tool": "caveman-browse",
+    "n": 3,
+    "correct": 3,
+    "declined": 0,
+    "costUsd": 0.11193,
+    "costRange": [
+     0.09528,
+     0.22174
+    ],
+    "tokensTotal": 225155,
+    "outputTokens": 2391,
+    "seconds": 38.2,
+    "secondsRange": [
+     37.9,
+     63.2
+    ],
+    "toolCalls": 3,
+    "apiCalls": 4,
+    "codeLines": 3,
+    "answers": [
+     "27",
+     "27",
+     "27"
+    ]
+   },
+   "count:playwright": {
+    "task": "count",
+    "tool": "playwright",
+    "n": 3,
+    "correct": 3,
+    "declined": 0,
+    "costUsd": 0.06635,
+    "costRange": [
+     0.04182,
+     0.08593
+    ],
+    "tokensTotal": 127450,
+    "outputTokens": 1012,
+    "seconds": 25.1,
+    "secondsRange": [
+     23.8,
+     45.9
+    ],
+    "toolCalls": 2,
+    "apiCalls": 3,
+    "codeLines": 34,
+    "answers": [
+     "27",
+     "27",
+     "27"
+    ]
+   },
+   "count:rustwright": {
+    "task": "count",
+    "tool": "rustwright",
+    "n": 3,
+    "correct": 3,
+    "declined": 0,
+    "costUsd": 0.07799,
+    "costRange": [
+     0.05066,
+     0.15408
+    ],
+    "tokensTotal": 128697,
+    "outputTokens": 1849,
+    "seconds": 59.0,
+    "secondsRange": [
+     52.7,
+     63.7
+    ],
+    "toolCalls": 2,
+    "apiCalls": 3,
+    "codeLines": 44,
+    "answers": [
+     "27",
+     "27",
+     "27"
+    ]
+   },
+   "checkout:caveman-browse": {
+    "task": "checkout",
+    "tool": "caveman-browse",
+    "n": 2,
+    "correct": 2,
+    "declined": 0,
+    "costUsd": 0.314945,
+    "costRange": [
+     0.2351,
+     0.39479
+    ],
+    "tokensTotal": 907141.5,
+    "outputTokens": 7487.5,
+    "seconds": 237.35,
+    "secondsRange": [
+     130.0,
+     344.7
+    ],
+    "toolCalls": 17.5,
+    "apiCalls": 18.5,
+    "codeLines": 16.0,
+    "answers": [
+     "CONF-8BF61509",
+     "CONF-8BF61509"
+    ]
+   },
+   "checkout:playwright": {
+    "task": "checkout",
+    "tool": "playwright",
+    "n": 2,
+    "correct": 2,
+    "declined": 0,
+    "costUsd": 0.16874,
+    "costRange": [
+     0.07702,
+     0.26046
+    ],
+    "tokensTotal": 382499.5,
+    "outputTokens": 4201.0,
+    "seconds": 124.9,
+    "secondsRange": [
+     24.9,
+     224.9
+    ],
+    "toolCalls": 7.0,
+    "apiCalls": 8.0,
+    "codeLines": 31.0,
+    "answers": [
+     "CONF-8BF61509",
+     "CONF-8BF61509"
+    ]
+   },
+   "checkout:rustwright": {
+    "task": "checkout",
+    "tool": "rustwright",
+    "n": 1,
+    "correct": 1,
+    "declined": 2,
+    "costUsd": 0.23873,
+    "costRange": [
+     0.23873,
+     0.23873
+    ],
+    "tokensTotal": 617578,
+    "outputTokens": 4896,
+    "seconds": 100.0,
+    "secondsRange": [
+     100.0,
+     100.0
+    ],
+    "toolCalls": 11,
+    "apiCalls": 12,
+    "codeLines": 26,
+    "answers": [
+     "CONF-8BF61509"
+    ]
+   }
+  },
+  "engine": {
+   "caveman-browse:lookup": {
+    "medianSeconds": 1.593,
+    "minSeconds": 1.425,
+    "maxSeconds": 2.189,
+    "correct": 5,
+    "runs": 5,
+    "medianClientMiB": null
+   },
+   "caveman-browse:count": {
+    "medianSeconds": 1.501,
+    "minSeconds": 1.462,
+    "maxSeconds": 1.701,
+    "correct": 5,
+    "runs": 5,
+    "medianClientMiB": null
+   },
+   "caveman-browse:checkout": {
+    "medianSeconds": 42.13,
+    "minSeconds": 42.065,
+    "maxSeconds": 42.238,
+    "correct": 5,
+    "runs": 5,
+    "medianClientMiB": null
+   },
+   "playwright:lookup": {
+    "medianSeconds": 1.243,
+    "minSeconds": 1.147,
+    "maxSeconds": 3.387,
+    "correct": 5,
+    "runs": 5,
+    "medianClientMiB": 174.5
+   },
+   "playwright:count": {
+    "medianSeconds": 1.188,
+    "minSeconds": 1.163,
+    "maxSeconds": 4.828,
+    "correct": 5,
+    "runs": 5,
+    "medianClientMiB": 163.9
+   },
+   "playwright:checkout": {
+    "medianSeconds": 1.464,
+    "minSeconds": 1.441,
+    "maxSeconds": 1.627,
+    "correct": 5,
+    "runs": 5,
+    "medianClientMiB": 196.6
+   },
+   "rustwright:lookup": {
+    "medianSeconds": 1.214,
+    "minSeconds": 1.157,
+    "maxSeconds": 1.398,
+    "correct": 5,
+    "runs": 5,
+    "medianClientMiB": 51.7
+   },
+   "rustwright:count": {
+    "medianSeconds": 1.165,
+    "minSeconds": 1.094,
+    "maxSeconds": 1.291,
+    "correct": 5,
+    "runs": 5,
+    "medianClientMiB": 50.8
+   },
+   "rustwright:checkout": {
+    "medianSeconds": 1.427,
+    "minSeconds": 1.342,
+    "maxSeconds": 1.492,
+    "correct": 5,
+    "runs": 5,
+    "medianClientMiB": 52.0
+   }
+  },
+  "views": {
+   "playwright:orders:full": {
+    "bytes": 63820,
+    "tokens": 20097
+   },
+   "playwright:checkout:full": {
+    "bytes": 2505,
+    "tokens": 740
+   },
+   "rustwright:orders:full": {
+    "bytes": 63872,
+    "tokens": 20111
+   },
+   "rustwright:checkout:full": {
+    "bytes": 2532,
+    "tokens": 743
+   },
+   "caveman-browse:orders:full": {
+    "bytes": 43264,
+    "tokens": 12485
+   },
+   "caveman-browse:orders:query": {
+    "bytes": 84,
+    "tokens": 25
+   },
+   "caveman-browse:orders:interactive": {
+    "bytes": 292,
+    "tokens": 80
+   },
+   "caveman-browse:checkout:full": {
+    "bytes": 2168,
+    "tokens": 652
+   },
+   "caveman-browse:checkout:interactive": {
+    "bytes": 296,
+    "tokens": 80
+   }
+  },
+  "engineLoc": {
+   "caveman-browse": 38,
+   "playwright": 22,
+   "rustwright": 22
+  }
+ },
+ "manifestContextBytes": {
+  "t1": {
+   "bare": 0,
+   "super": 5266,
+   "super_ponytail_caveman": 15696,
+   "super_ponytail_nocaveman": 10255,
+   "ponytail": 5252,
+   "caveman": 5174
+  },
+  "t2": {
+   "bare": 0,
+   "super": 5325,
+   "super_ponytail_caveman": 15755,
+   "super_ponytail_nocaveman": 10314,
+   "ponytail": 5252,
+   "caveman": 5174
+  }
+ }
+}

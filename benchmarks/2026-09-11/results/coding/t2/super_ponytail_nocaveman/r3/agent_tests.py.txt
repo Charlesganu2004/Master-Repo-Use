@@ -1,0 +1,89 @@
+# test_solution.py
+import threading
+import unittest
+
+from solution import RateLimiter
+
+
+class FakeClock:
+    """Manually advanced clock for deterministic window tests."""
+
+    def __init__(self, start=0.0):
+        self._now = start
+
+    def __call__(self):
+        return self._now
+
+    def advance(self, seconds):
+        self._now += seconds
+
+
+class RateLimiterTests(unittest.TestCase):
+    def test_allows_up_to_limit_then_blocks(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=3, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))  # 4th call within window is blocked
+
+    def test_calls_expire_after_window(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=2, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+        clock.advance(10.001)  # slide past the window
+        self.assertTrue(rl.allow("a"))  # old calls have expired
+
+    def test_partial_expiry_slides_window(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=2, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))    # t=0
+        clock.advance(6)
+        self.assertTrue(rl.allow("a"))    # t=6
+        clock.advance(5)                  # t=11, the t=0 call has expired
+        self.assertTrue(rl.allow("a"))    # only t=6 still counts
+        self.assertFalse(rl.allow("a"))   # now t=6 and t=11 both in window
+
+    def test_keys_are_independent(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=1, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+        self.assertTrue(rl.allow("b"))  # unrelated key, own budget
+
+    def test_invalid_arguments_raise(self):
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=0, window=10)
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=5, window=0)
+
+    def test_concurrent_callers_never_exceed_limit(self):
+        # Freeze the clock so every thread races through the exact same
+        # window, stressing the check-then-record critical section.
+        limit = 20
+        threads_n = 200
+        rl = RateLimiter(limit=limit, window=10, clock=lambda: 0.0)
+        results = []
+        results_lock = threading.Lock()
+        barrier = threading.Barrier(threads_n)
+
+        def worker():
+            barrier.wait()  # line everyone up to maximize contention
+            result = rl.allow("shared-key")
+            with results_lock:
+                results.append(result)
+
+        threads = [threading.Thread(target=worker) for _ in range(threads_n)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        self.assertEqual(sum(results), limit)
+        self.assertEqual(len(results), threads_n)
+
+
+if __name__ == "__main__":
+    unittest.main()

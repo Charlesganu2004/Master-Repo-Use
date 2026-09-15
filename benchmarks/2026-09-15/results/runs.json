@@ -1,0 +1,842 @@
+[
+ {
+  "task": "g1",
+  "arm": "bare_graph",
+  "rep": "r1",
+  "agentId": "a1549a248847f34d3",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 1,
+  "withinLimit": true,
+  "outputTokens": 830,
+  "tokensTotal": 169405,
+  "costUsd": 0.05417,
+  "seconds": 28.0,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "graphifyCalls": 3,
+  "score": {
+   "found": 3,
+   "expected": 3,
+   "hits": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ],
+   "missed": []
+  },
+  "answerChars": 300,
+  "answer": "The three architectural hubs (highest-degree nodes in the graph):\n\n1. **`run()`** \u2014 51 edges \u2014 defined in `tests/test_no_compress_guard.py` (L24)\n2. **`run()`** \u2014 42 edges \u2014 defined in `tests/test_no_prune_guard.py` (L22)\n3. **`Verifier`** \u2014 38 edges \u2014 defined in `scripts/verify_auto_mode.py` (L101)"
+ },
+ {
+  "task": "g1",
+  "arm": "bare_graph",
+  "rep": "r2",
+  "agentId": "a801dcaafb8c1cc26",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 200,
+  "withinLimit": true,
+  "outputTokens": 664,
+  "tokensTotal": 165862,
+  "costUsd": 0.04439,
+  "seconds": 20.7,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "graphifyCalls": 3,
+  "score": {
+   "found": 3,
+   "expected": 3,
+   "hits": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ],
+   "missed": []
+  },
+  "answerChars": 393,
+  "answer": "The three architectural hubs (most connected symbols):\n\n1. **`run()`** \u2014 51 edges \u2014 defined in `<repo>\\tests\\test_no_compress_guard.py`\n2. **`run()`** \u2014 42 edges \u2014 defined in `<repo>\\tests\\test_no_prune_guard.py`\n3. **`Verifier`** \u2014 38 edges \u2014 defined in `<repo>\\scripts\\verify_auto_mode.py`"
+ },
+ {
+  "task": "g1",
+  "arm": "bare_graph",
+  "rep": "r3",
+  "agentId": "ac3c2ff40d48a01a8",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 128,
+  "withinLimit": true,
+  "outputTokens": 805,
+  "tokensTotal": 168948,
+  "costUsd": 0.05348,
+  "seconds": 21.2,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "graphifyCalls": 3,
+  "score": {
+   "found": 3,
+   "expected": 3,
+   "hits": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ],
+   "missed": []
+  },
+  "answerChars": 252,
+  "answer": "Three most connected symbols (architectural hubs):\n\n1. **`run()`** (51 edges) \u2014 `tests/test_no_compress_guard.py` (L24)\n2. **`run()`** (42 edges) \u2014 `tests/test_no_prune_guard.py` (L22)\n3. **`Verifier`** (38 edges) \u2014 `scripts/verify_auto_mode.py` (L101)"
+ },
+ {
+  "task": "g1",
+  "arm": "bare_nograph",
+  "rep": "r1",
+  "agentId": "a8be6ccea8b74068f",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 335,
+  "withinLimit": true,
+  "outputTokens": 9579,
+  "tokensTotal": 987234,
+  "costUsd": 0.43758,
+  "seconds": 159.3,
+  "apiCalls": 19,
+  "toolCalls": 18,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 3,
+   "expected": 3,
+   "hits": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ],
+   "missed": []
+  },
+  "answerChars": 820,
+  "answer": "Confirmed by cross-checking against the extracted graph in `graphify-out/graph.json` (3,488 nodes / 6,206 edges) \u2014 computing degree centrality over code relations (calls, method, inherits, uses, references), excluding pure `contains`/`rationale_for` edges and unresolved external-library nodes:\n\n1. **`run()`** \u2014 `tests/test_no_compress_guard.py` (line 24) \u2014 degree 50, the shared test-runner helper invoked by nearly every guard test case in that file.\n2. **`run()`** \u2014 `tests/test_no_prune_guard.py` (line 22) \u2014 degree 41, the equivalent helper for the no-prune guard suite.\n3. **`Verifier`** \u2014 `scripts/verify_auto_mode.py` (line 101) \u2014 degree 37, a class whose methods drive ~36 outbound calls orchestrating the auto-mode verification checks.\n\n(Runner-up: `build()` in `scripts/build_atlas_data.py:2502`, degree 27.)"
+ },
+ {
+  "task": "g1",
+  "arm": "bare_nograph",
+  "rep": "r2",
+  "agentId": "a4204f05d6c993bad",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 610,
+  "withinLimit": false,
+  "outputTokens": 8511,
+  "tokensTotal": 914500,
+  "costUsd": 0.33105,
+  "seconds": 131.2,
+  "apiCalls": 17,
+  "toolCalls": 16,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 0,
+   "expected": 3,
+   "hits": [],
+   "missed": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ]
+  },
+  "answerChars": 1482,
+  "answer": "These are genuine, legitimate cross-file hubs (confirmed by inspecting their actual edges \u2014 `IsolatedPublicSite` is imported and used as a setup fixture by six separate test modules; `TradeProposal` is the shared data object referenced by every module in its plugin). Based on cross-file connectivity in the repo's dependency graph (`graphify-out/graph.json`), the three architectural hubs are:\n\n1. **`IsolatedPublicSite`** \u2014 defined in `benchmarks/2026-09-15/tests/public_site_fixture.py`. A test fixture class imported/used by 6 different test files (`test_atlas_designs.py`, `test_build_version.py`, `test_public_allowlist.py`, `test_public_context_exclusion.py`, `test_public_site_privacy.py`, `build_pages_preview.py`).\n\n2. **`TradeProposal`** \u2014 defined in `benchmarks/2026-09-15/plugins/robinhood-trading-agent/src/robinhood_trading_agent/risk.py`. The shared trade-order data object referenced across `broker.py`, `cli.py`, and `robinhood_crypto.py` in that plugin.\n\n3. **`TradeProposal`** \u2014 defined in `benchmarks/2026-09-15/plugins/autonomous-day-trading-agent/src/autonomous_day_trading_agent/risk.py`. Same pattern as above (paired closely with its sibling `RiskGate` class in the same file), wired through that plugin's `broker.py`/`cli.py`/`strategy.py`.\n\n(Note: paths are relative to the `benchmarks/2026-09-15` snapshot inside the repo; a near-identical `TradeProposal`/`RiskGate` pair also exists in the `quantum-trading-agent` plugin, just slightly less connected.)"
+ },
+ {
+  "task": "g1",
+  "arm": "bare_nograph",
+  "rep": "r3",
+  "agentId": "a4a554e38898751b2",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 1780,
+  "withinLimit": false,
+  "outputTokens": 9777,
+  "tokensTotal": 816012,
+  "costUsd": 0.31724,
+  "seconds": 156.1,
+  "apiCalls": 15,
+  "toolCalls": 14,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 0,
+   "expected": 3,
+   "hits": [],
+   "missed": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ]
+  },
+  "answerChars": 1539,
+  "answer": "Three architectural hubs, ranked by call/import fan-in across the repo:\n\n1. **`context_for()`** \u2014 `<repo>\\scripts\\hooks\\skill_pipeline.py`\n   The base hook-context builder. `harness_goal.py`'s `context_for` wraps it (`skill_pipeline.context_for(...)`), and `harness_super.py`'s `context_for` wraps that in turn \u2014 a three-deep delegation chain. Referenced across 15 files (~75 call sites): all harness variants (`auto_mode_harness`, `harness_ab_test`, `harness_goal`, `harness_proxy`, `harness_super`, `harness_wrap`) plus ~9 test files.\n\n2. **`capture()`** \u2014 `<repo>\\scripts\\hooks\\skill_pipeline.py`\n   The prompt-submit hook entrypoint that sets/updates the standing goal. Same file as above, which overall has the highest module-level fan-in in the repo (26 files import `skill_pipeline`).\n\n3. **`build()`** \u2014 `<repo>\\scripts\\build_atlas_data.py`\n   The catalog aggregator: internally fans out to call 12 lane-producer functions (`stage_lanes`, `model_setup_lane`, `catalog_lanes`, `script_lanes`, `skill_lanes`, `agent_lanes`, etc.) and fans back in as the data source used by `build_public_site.py`, `load_catalog_mongo.py`, and ~10 test files (`test_atlas_designs.py`, `test_custom_surfaces.py`, `test_harness_super.py`, etc.).\n\nRunner-up: `harness_paths.py` (13 files import it) supplies the shared `repo_root()`/`skills_dir()` primitives used throughout the harness family, but its per-symbol fan-in is lower than the three above."
+ },
+ {
+  "task": "g1",
+  "arm": "bare_strict",
+  "rep": "r1",
+  "agentId": "a20291f64bb52e3cd",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 775,
+  "withinLimit": false,
+  "outputTokens": 11484,
+  "tokensTotal": 963471,
+  "costUsd": 0.3918,
+  "seconds": 157.8,
+  "apiCalls": 18,
+  "toolCalls": 17,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 0,
+   "expected": 3,
+   "hits": [],
+   "missed": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ]
+  },
+  "answerChars": 1858,
+  "answer": "Good \u2014 this confirms `harness_super` is referenced from `harness_proxy.py`, `harness_wrap.py`, `skill_pipeline.py`, `super_chain.py`, `build_atlas_data.py`, `harness_ab_test.py`, `setup.py`, and its own file. Combined with the earlier evidence, the three clearest hubs (highest fan-in/out across the codebase, verified by direct grep on non-test source) are:\n\n1. **`repo_root()`** (and the `harness_paths` module built on it) \u2014 defined in `scripts/harness_paths.py` (mirrored at `master_harness/harness_paths.py`). It's the base primitive every other function in that file calls internally (16 internal call sites), and the module itself is imported by nearly every harness surface: `auto_mode_harness.py`, `harness_computer.py`, `harness_goal.py`, `harness_super.py`, `install_auto_mode.py`, `verify_auto_mode.py`, `skill_pipeline.py`, `resources.py`, `_loader.py`, `cli.py`.\n\n2. **`context_for()`** \u2014 defined in `scripts/hooks/skill_pipeline.py` (mirrored `master_harness/skill_pipeline.py`). It assembles the injected context block and is called (directly or via the `harness_goal.context_for`/`harness_super.context_for` wrappers) from `auto_mode_harness.py`, `harness_goal.py`, `harness_proxy.py`, `harness_super.py`, `harness_wrap.py`, `harness_ab_test.py`, and `build_atlas_data.py`.\n\n3. **`harness_super` module** (its `context_for`/chain functions) \u2014 defined in `scripts/harness_super.py`. It's the orchestration layer invoked by `harness_proxy.py`, `harness_wrap.py`, `skill_pipeline.py`, `super_chain.py`, `harness_ab_test.py`, and `build_atlas_data.py`, and it in turn drives `harness_computer`, `harness_proxy`, and `harness_wrap` as subprocesses.\n\n(Note: `master_harness/` and `scripts/` contain near-duplicate copies of these modules by design \u2014 see `master_harness/resources.py`'s docstring \u2014 so the canonical definitions live in `scripts/`.)"
+ },
+ {
+  "task": "g1",
+  "arm": "bare_strict",
+  "rep": "r2",
+  "agentId": "a668d97b5c88d6d70",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 1059,
+  "withinLimit": false,
+  "outputTokens": 10875,
+  "tokensTotal": 724721,
+  "costUsd": 0.29923,
+  "seconds": 150.5,
+  "apiCalls": 14,
+  "toolCalls": 13,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 0,
+   "expected": 3,
+   "hits": [],
+   "missed": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ]
+  },
+  "answerChars": 1648,
+  "answer": "**Three architectural hubs** (by cross-file reference count in the `master_harness` source, excluding `build/` copies and `graphify-out/`):\n\n1. **`load_goal`** \u2014 defined in `<repo>\\master_harness\\skill_pipeline.py`. Called from `harness_goal.py`, `harness_super.py`, and 6 test files (`test_harness_family.py`, `test_goal_session_isolation.py`, `test_harness_super.py`, `test_budget_boundaries.py`, `test_refactor_layer.py`, `test_token_limit_and_super_mode.py`) \u2014 ~59 references, the busiest symbol in the tree.\n\n2. **`repo_root`** \u2014 defined in `<repo>\\master_harness\\harness_paths.py`. This is the mode-detection primitive the module's own docstring calls out (\"Every harness asks this module and gets a path\"); it's called internally by `skills_dir`, `skill_path`, `state_dir`, `block_path`, and `project_dir` in the same file, and re-exported through `resources.py` and `_loader.py` for the rest of the package and tests \u2014 ~38 references.\n\n3. **`skills_dir`** \u2014 also defined in `harness_paths.py`, built on top of `repo_root`. Consumed by `auto_mode_harness.py`, `harness_computer.py`, `install_auto_mode.py`, `verify_auto_mode.py`, re-exported via `resources.py`, and exercised in `test_install_preservation.py`/`test_package.py` \u2014 ~23 references.\n\nNote: `harness_paths.py` supplies two of the three hubs (it's the single most depended-upon module, per its own docstring, to avoid \"the same rule written seven times\"); `scripts/*.py` are verified byte-identical staged copies of the `master_harness/*.py` originals, so counts were deduplicated to the canonical package files."
+ },
+ {
+  "task": "g1",
+  "arm": "bare_strict",
+  "rep": "r3",
+  "agentId": "a7204588d88d40760",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 984,
+  "withinLimit": false,
+  "outputTokens": 13282,
+  "tokensTotal": 1886289,
+  "costUsd": 0.57217,
+  "seconds": 237.7,
+  "apiCalls": 34,
+  "toolCalls": 33,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 0,
+   "expected": 3,
+   "hits": [],
+   "missed": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ]
+  },
+  "answerChars": 1486,
+  "answer": "Based on directly grepping the source (not graphify-out), ranking symbols by how many distinct files reference them:\n\n1. **`context_for`** \u2014 defined in `scripts/hooks/skill_pipeline.py`. This is the busiest hub: it builds the per-prompt context block and is called from every harness entry point (`harness_goal.py`, `harness_wrap.py`, `harness_super.py`, `harness_proxy.py`, `harness_computer.py`, `harness_ab_test.py`, `auto_mode_harness.py`) plus ~8 test files \u2014 15 distinct callers total.\n\n2. **`skills_dir`** (alongside its sibling path helpers like `repo_root`) \u2014 defined in `scripts/harness_paths.py`. This module is the explicit \"single source of truth for where everything lives\" per its own docstring, re-exported through `master_harness/resources.py` and pulled into `auto_mode_harness.py`, `verify_auto_mode.py`, `install_auto_mode.py`, and `harness_computer.py` \u2014 8 distinct callers.\n\n3. **`resolve`/`build_bundle`** \u2014 defined in `scripts/auto_mode_harness.py`. Imported wholesale as `surface` by `harness_super.py` (`import auto_mode_harness as surface`) and referenced by `harness_wrap.py`, `harness_proxy.py`, and `scripts/hooks/skill_pipeline.py` to select and install skill bundles \u2014 the module itself is cited in 23 files repo-wide.\n\nAll three sit in the `scripts/` (and `scripts/hooks/`) layer that `master_harness/_loader.py` bootstraps at import time, confirming these three files are the structural core the rest of the harness (CLI, hooks, tests) is wired around."
+ },
+ {
+  "task": "g1",
+  "arm": "base_graph",
+  "rep": "r1",
+  "agentId": "a000ce3bfccd1c084",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 270,
+  "withinLimit": true,
+  "outputTokens": 845,
+  "tokensTotal": 131359,
+  "costUsd": 0.04567,
+  "seconds": 21.9,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "graphifyCalls": 2,
+  "score": {
+   "found": 3,
+   "expected": 3,
+   "hits": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ],
+   "missed": []
+  },
+  "answerChars": 618,
+  "answer": "GOAL restated: name the 3 most-connected symbols (hubs) and defining file in Master-Repo-Use. This turn: ran `graphify god-nodes --top 3` + `explain` on each \u2014 done, nothing blocked.\n\nTop 3 hubs (by graph degree):\n1. `run()` (test runner) \u2014 degree 51 \u2014 `tests/test_no_compress_guard.py` L24\n2. `run()` (test runner) \u2014 degree 42 \u2014 `tests/test_no_prune_guard.py` L22\n3. `Verifier` (class) \u2014 degree 38 \u2014 `scripts/verify_auto_mode.py` L101\n\nLeft out to fit 400-token cap: per-connection call lists (51/42/38 edges each), community labels (blank in graph). Ask for those or a `graphify path A B` between any pair if needed."
+ },
+ {
+  "task": "g1",
+  "arm": "base_graph",
+  "rep": "r2",
+  "agentId": "aa40f1377b8101a72",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 268,
+  "withinLimit": true,
+  "outputTokens": 1130,
+  "tokensTotal": 172039,
+  "costUsd": 0.05065,
+  "seconds": 25.3,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "graphifyCalls": 3,
+  "score": {
+   "found": 3,
+   "expected": 3,
+   "hits": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ],
+   "missed": []
+  },
+  "answerChars": 573,
+  "answer": "GOAL: name 3 most-connected symbols + defining file, repo `Master-Repo-Use`. This turn: ran `graphify god-nodes --json` + `explain` on root, got answer.\n\nThree architectural hubs:\n1. `run()` (51 edges) \u2014 `tests/test_no_compress_guard.py:24`\n2. `run()` (42 edges) \u2014 `tests/test_no_prune_guard.py:22`\n3. `Verifier` (38 edges) \u2014 `scripts/verify_auto_mode.py:101`\n\nDone: goal answered from repo root graph. Left: nothing pending; ask if you want next-ranked hubs (`build()` in scripts/build_atlas_data.py, 28 edges; `IsolatedPublicSite` in tests/public_site_fixture, 28 edges)."
+ },
+ {
+  "task": "g1",
+  "arm": "base_graph",
+  "rep": "r3",
+  "agentId": "ad416cb9181d4bfea",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 242,
+  "withinLimit": true,
+  "outputTokens": 923,
+  "tokensTotal": 128404,
+  "costUsd": 0.0387,
+  "seconds": 19.3,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "graphifyCalls": 2,
+  "score": {
+   "found": 3,
+   "expected": 3,
+   "hits": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ],
+   "missed": []
+  },
+  "answerChars": 533,
+  "answer": "GOAL: name 3 most-connected symbols + defining file, <repo>. This turn: ran `graphify god-nodes --top 3 --json` at repo root (already-built graph, local-only).\n\nTop 3 hubs:\n1. `run()` \u2014 51 edges \u2014 `tests/test_no_compress_guard.py`\n2. `run()` \u2014 42 edges \u2014 `tests/test_no_prune_guard.py`\n3. `Verifier` \u2014 38 edges \u2014 `scripts/verify_auto_mode.py`\n\nDone: goal answered from graph, no files touched. Left: nothing pending; ask if you want paths/explain detail for any of these (cut for the 400-token cap)."
+ },
+ {
+  "task": "g1",
+  "arm": "super_graph",
+  "rep": "r1",
+  "agentId": "af8f62b8f1cd69fee",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 232,
+  "withinLimit": true,
+  "outputTokens": 1108,
+  "tokensTotal": 178206,
+  "costUsd": 0.05853,
+  "seconds": 29.1,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "graphifyCalls": 3,
+  "score": {
+   "found": 3,
+   "expected": 3,
+   "hits": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ],
+   "missed": []
+  },
+  "answerChars": 545,
+  "answer": "**Tools used:** graphify (god-nodes, explain) \u2014 local graph query, no model calls.\n\n**GOAL check:** top 3 architectural hubs identified with defining files, matches ask exactly.\n\nThree most connected symbols:\n1. `run()` \u2014 51 edges \u2014 `tests/test_no_compress_guard.py:L24`\n2. `run()` \u2014 42 edges \u2014 `tests/test_no_prune_guard.py:L22`\n3. `Verifier` \u2014 38 edges \u2014 `scripts/verify_auto_mode.py:L101`\n\nDone: goal fully answered, all three hubs + files resolved via graphify (query + json + explain). Nothing left blocked. Nothing omitted for token limit."
+ },
+ {
+  "task": "g1",
+  "arm": "super_graph",
+  "rep": "r2",
+  "agentId": "ae140392cadb3d943",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 194,
+  "withinLimit": true,
+  "outputTokens": 994,
+  "tokensTotal": 177928,
+  "costUsd": 0.05717,
+  "seconds": 24.9,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "graphifyCalls": 3,
+  "score": {
+   "found": 3,
+   "expected": 3,
+   "hits": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ],
+   "missed": []
+  },
+  "answerChars": 453,
+  "answer": "GOAL check: three most connected symbols + defining files, per graphify god-nodes (local, no model).\n\n1. `run()` \u2014 51 edges \u2014 `tests/test_no_compress_guard.py` L24\n2. `run()` \u2014 42 edges \u2014 `tests/test_no_prune_guard.py` L22\n3. `Verifier` \u2014 38 edges \u2014 `scripts/verify_auto_mode.py` L101\n\nDone: goal answered via graphify god-nodes+explain, no files touched. Left out: nothing requested; ask for more god-nodes (--top N) or path/affected details if wanted."
+ },
+ {
+  "task": "g1",
+  "arm": "super_graph",
+  "rep": "r3",
+  "agentId": "a462f27ba0a110dc6",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 237,
+  "withinLimit": true,
+  "outputTokens": 470,
+  "tokensTotal": 177641,
+  "costUsd": 0.05213,
+  "seconds": 25.3,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "graphifyCalls": 3,
+  "score": {
+   "found": 3,
+   "expected": 3,
+   "hits": [
+    "run/test_no_compress_guard.py",
+    "run/test_no_prune_guard.py",
+    "Verifier/verify_auto_mode.py"
+   ],
+   "missed": []
+  },
+  "answerChars": 555,
+  "answer": "GOAL: name 3 most connected symbols (hubs) + defining file, in Master-Repo-Use \u2014 served now via `graphify god-nodes --json` + `explain` on each id.\n\nThree architectural hubs:\n1. `run()` \u2014 51 edges \u2014 `tests/test_no_compress_guard.py:L24`\n2. `run()` \u2014 42 edges \u2014 `tests/test_no_prune_guard.py:L22`\n3. `Verifier` \u2014 38 edges \u2014 `scripts/verify_auto_mode.py:L101`\n\nDone: goal answered directly from local graph query (no model calls, no files touched). Left out: full connection lists (each had ~18-31 more edges beyond the shown sample) \u2014 ask if you want them."
+ },
+ {
+  "task": "g2",
+  "arm": "bare_graph",
+  "rep": "r1",
+  "agentId": "a60c05dc77e956fa7",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 98,
+  "withinLimit": true,
+  "outputTokens": 465,
+  "tokensTotal": 124507,
+  "costUsd": 0.03463,
+  "seconds": 28.7,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "graphifyCalls": 2,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 214,
+  "answer": "The class `Verifier` is defined in `<repo>\\scripts\\verify_auto_mode.py` (line 101), and it is instantiated/called by `main()` in that same file (`scripts/verify_auto_mode.py:707`)."
+ },
+ {
+  "task": "g2",
+  "arm": "bare_graph",
+  "rep": "r2",
+  "agentId": "a7e2e78f22d99a79e",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 167,
+  "withinLimit": true,
+  "outputTokens": 884,
+  "tokensTotal": 210928,
+  "costUsd": 0.05774,
+  "seconds": 24.9,
+  "apiCalls": 5,
+  "toolCalls": 4,
+  "graphifyCalls": 2,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 410,
+  "answer": "The `Verifier` class is defined in `scripts/verify_auto_mode.py` (line 101), and it is instantiated/called by the `main()` function in that same file (line 707: `verifier = Verifier(pathlib.Path(args.repo), pathlib.Path(args.home), ...)`).\n\nNote: an identical copy also exists in `build/lib/master_harness/verify_auto_mode.py` (likely a packaged build artifact), where `main()` similarly calls `Verifier(...)`."
+ },
+ {
+  "task": "g2",
+  "arm": "bare_graph",
+  "rep": "r3",
+  "agentId": "a4403ca1d3251f7e2",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 94,
+  "withinLimit": true,
+  "outputTokens": 240,
+  "tokensTotal": 82176,
+  "costUsd": 0.02275,
+  "seconds": 8.1,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "graphifyCalls": 1,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 208,
+  "answer": "The class `Verifier` is defined in `<repo>\\scripts\\verify_auto_mode.py` (around line 101), and it is called by `main()` in that same file (`scripts/verify_auto_mode.py:707`)."
+ },
+ {
+  "task": "g2",
+  "arm": "bare_nograph",
+  "rep": "r1",
+  "agentId": "ab92407e720613737",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 99,
+  "withinLimit": true,
+  "outputTokens": 617,
+  "tokensTotal": 165185,
+  "costUsd": 0.04409,
+  "seconds": 11.9,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 230,
+  "answer": "The class `Verifier` is defined in `<repo>\\scripts\\verify_auto_mode.py` (line 101), and it is instantiated/called by the `main()` function in that same file (line 707: `verifier = Verifier(...)`)."
+ },
+ {
+  "task": "g2",
+  "arm": "bare_nograph",
+  "rep": "r2",
+  "agentId": "aa2a12c2116f0d064",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 99,
+  "withinLimit": true,
+  "outputTokens": 388,
+  "tokensTotal": 164892,
+  "costUsd": 0.04171,
+  "seconds": 11.0,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 230,
+  "answer": "The class `Verifier` is defined in `<repo>\\scripts\\verify_auto_mode.py` (line 101), and it is instantiated/called by the `main()` function in that same file (line 707: `verifier = Verifier(...)`)."
+ },
+ {
+  "task": "g2",
+  "arm": "bare_nograph",
+  "rep": "r3",
+  "agentId": "a95914de843437eaa",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 137,
+  "withinLimit": true,
+  "outputTokens": 608,
+  "tokensTotal": 164914,
+  "costUsd": 0.04348,
+  "seconds": 11.6,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 320,
+  "answer": "The `Verifier` class is defined in `<repo>\\scripts\\verify_auto_mode.py` (line 101), and it is instantiated/called by the `main()` function in that same file (line 707: `verifier = Verifier(pathlib.Path(args.repo), pathlib.Path(args.home), clients, installed_only=args.installed_only)`)."
+ },
+ {
+  "task": "g2",
+  "arm": "bare_strict",
+  "rep": "r1",
+  "agentId": "a49ad6c0cc0e70550",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 149,
+  "withinLimit": true,
+  "outputTokens": 777,
+  "tokensTotal": 165816,
+  "costUsd": 0.07574,
+  "seconds": 13.2,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 351,
+  "answer": "The class `Verifier` is defined in `<repo>\\scripts\\verify_auto_mode.py` (line 101). It is instantiated/called by the function `main()` in that same file (line 707: `verifier = Verifier(pathlib.Path(args.repo), pathlib.Path(args.home), clients, installed_only=args.installed_only)`), which then calls `verifier.run()`."
+ },
+ {
+  "task": "g2",
+  "arm": "bare_strict",
+  "rep": "r2",
+  "agentId": "aee9d114781a3ded5",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 145,
+  "withinLimit": true,
+  "outputTokens": 865,
+  "tokensTotal": 166203,
+  "costUsd": 0.04731,
+  "seconds": 13.5,
+  "apiCalls": 4,
+  "toolCalls": 4,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 335,
+  "answer": "Class `Verifier` is defined in `<repo>\\scripts\\verify_auto_mode.py` (line 101).\n\nIt is called by the function `main()` in that same file (line 707: `verifier = Verifier(pathlib.Path(args.repo), pathlib.Path(args.home), clients, installed_only=args.installed_only)`), which then calls `verifier.run()`."
+ },
+ {
+  "task": "g2",
+  "arm": "bare_strict",
+  "rep": "r3",
+  "agentId": "ace4a47c5427b7e13",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 223,
+  "withinLimit": true,
+  "outputTokens": 841,
+  "tokensTotal": 124694,
+  "costUsd": 0.03936,
+  "seconds": 11.2,
+  "apiCalls": 3,
+  "toolCalls": 3,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 513,
+  "answer": "Confirmed from source directly.\n\n**File:** `<repo>\\scripts\\verify_auto_mode.py`\n- `class Verifier:` is defined at line 101.\n- It is instantiated and called by `main()` (same file), at line 707: `verifier = Verifier(pathlib.Path(args.repo), pathlib.Path(args.home), ...)`, followed by `verifier.run()`.\n\nNote: `tests\\test_install_preservation.py` also instantiates `verifier_module.Verifier(...)`, but the primary caller in the source is `main()` in `scripts\\verify_auto_mode.py`."
+ },
+ {
+  "task": "g2",
+  "arm": "base_graph",
+  "rep": "r1",
+  "agentId": "ac2448b9af8ae6ae2",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 269,
+  "withinLimit": true,
+  "outputTokens": 1267,
+  "tokensTotal": 221812,
+  "costUsd": 0.06734,
+  "seconds": 28.0,
+  "apiCalls": 5,
+  "toolCalls": 4,
+  "graphifyCalls": 2,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 666,
+  "answer": "GOAL: which file defines class Verifier, which function calls it \u2014 answering directly.\n\n**File:** `<repo>\\scripts\\verify_auto_mode.py` (class `Verifier` at line 101).\n\n**Caller:** function `main()` in that same file \u2014 line 707: `verifier = Verifier(pathlib.Path(args.repo), pathlib.Path(args.home), clients, installed_only=args.installed_only)`, then `verifier.run()` at line 709.\n\nConfirmed via graphify `explain \"Verifier\"` (defined scripts/verify_auto_mode.py:L101) plus direct grep for `Verifier(` locating the sole instantiation inside `main()`.\n\nDone: file and calling function both located and verified. Nothing left blocked."
+ },
+ {
+  "task": "g2",
+  "arm": "base_graph",
+  "rep": "r2",
+  "agentId": "ab06d35a39138aa12",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 149,
+  "withinLimit": true,
+  "outputTokens": 465,
+  "tokensTotal": 85412,
+  "costUsd": 0.02626,
+  "seconds": 11.2,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "graphifyCalls": 1,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 380,
+  "answer": "GOAL: locate class Verifier and its caller in Master-Repo-Use. This turn answers it.\n\nClass `Verifier` is defined in `scripts/verify_auto_mode.py` (line 101). It is called by `main()` in the same file, `scripts/verify_auto_mode.py` (line 707), via `Verifier` instantiation.\n\nDone: file + calling function found via graphify query. Left out: nothing \u2014 full answer fit under budget."
+ },
+ {
+  "task": "g2",
+  "arm": "base_graph",
+  "rep": "r3",
+  "agentId": "aa3703066613d1c96",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 162,
+  "withinLimit": true,
+  "outputTokens": 932,
+  "tokensTotal": 129999,
+  "costUsd": 0.04078,
+  "seconds": 15.8,
+  "apiCalls": 3,
+  "toolCalls": 3,
+  "graphifyCalls": 1,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 313,
+  "answer": "File: `<repo>\\scripts\\verify_auto_mode.py` (class `Verifier` at L101).\nCalling function: `main()` (defined L680), instantiates `Verifier(...)` at L707.\n\nLeft out: the 4 truncated graph nodes from the query (raise `--budget` to see them) \u2014 not needed, confirmed directly via grep."
+ },
+ {
+  "task": "g2",
+  "arm": "super_graph",
+  "rep": "r1",
+  "agentId": "aeb4729691d2bb55a",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 130,
+  "withinLimit": true,
+  "outputTokens": 404,
+  "tokensTotal": 86804,
+  "costUsd": 0.02558,
+  "seconds": 11.7,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "graphifyCalls": 1,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 311,
+  "answer": "Class `Verifier` is defined in `<repo>\\scripts\\verify_auto_mode.py` (near L101). It is called by `main()` in that same file (`scripts/verify_auto_mode.py:L707`).\n\nDone via graphify `query`. Left out: no other files/callers found in the graph traversal \u2014 none omitted for space."
+ },
+ {
+  "task": "g2",
+  "arm": "super_graph",
+  "rep": "r2",
+  "agentId": "a9187b8722bdd2af1",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 164,
+  "withinLimit": true,
+  "outputTokens": 858,
+  "tokensTotal": 175207,
+  "costUsd": 0.0485,
+  "seconds": 15.1,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "graphifyCalls": 0,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 384,
+  "answer": "Class `Verifier` defined at:\n`<repo>\\scripts\\verify_auto_mode.py:101`\n\nInstantiated/called by `main()` in the same file (`verify_auto_mode.py:707`).\n\nMethod used: Grep (ripgrep) for `class Verifier` and `Verifier(`, then Read to confirm caller context \u2014 direct file search, no graphify invocation needed since match was unambiguous. Nothing left out."
+ },
+ {
+  "task": "g2",
+  "arm": "super_graph",
+  "rep": "r3",
+  "agentId": "a674e224f59f408c8",
+  "completed": true,
+  "promptVerified": true,
+  "answerTokens": 152,
+  "withinLimit": true,
+  "outputTokens": 517,
+  "tokensTotal": 87126,
+  "costUsd": 0.02723,
+  "seconds": 13.2,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "graphifyCalls": 1,
+  "score": {
+   "found": 1,
+   "expected": 1,
+   "hits": [
+    "Verifier/verify_auto_mode.py/main"
+   ],
+   "missed": []
+  },
+  "answerChars": 378,
+  "answer": "Class `Verifier` is defined in `<repo>\\scripts\\verify_auto_mode.py` (line 101), instantiated/called by `main()` in that same file (line 707).\n\nDone: goal answered via graphify query (local, no model). Left out: nothing requested \u2014 full call chain (`main()` also calls `parse_clients()`, `print_report()`) omitted as extra detail, ask if needed."
+ }
+]

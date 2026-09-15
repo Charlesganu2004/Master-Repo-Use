@@ -1,0 +1,81 @@
+# test_solution.py
+import time
+import unittest
+from concurrent.futures import ThreadPoolExecutor
+
+from solution import RateLimiter
+
+
+class FakeClock:
+    """Manually-advanced clock so tests don't depend on wall-clock time."""
+
+    def __init__(self, start: float = 0.0) -> None:
+        self._now = start
+
+    def __call__(self) -> float:
+        return self._now
+
+    def advance(self, seconds: float) -> None:
+        self._now += seconds
+
+
+class TestRateLimiterBasics(unittest.TestCase):
+    def test_allows_up_to_limit_then_blocks(self):
+        clock = FakeClock()
+        limiter = RateLimiter(limit=3, window=10, clock=clock)
+        results = [limiter.allow("a") for _ in range(4)]
+        self.assertEqual(results, [True, True, True, False])
+
+    def test_window_expiry_frees_up_slots(self):
+        clock = FakeClock()
+        limiter = RateLimiter(limit=2, window=10, clock=clock)
+        self.assertTrue(limiter.allow("a"))
+        clock.advance(5)
+        self.assertTrue(limiter.allow("a"))
+        self.assertFalse(limiter.allow("a"))  # 2 calls already within last 10s
+        clock.advance(5.001)  # first call now falls outside the window
+        self.assertTrue(limiter.allow("a"))
+        self.assertFalse(limiter.allow("a"))
+
+    def test_keys_are_independent(self):
+        clock = FakeClock()
+        limiter = RateLimiter(limit=1, window=10, clock=clock)
+        self.assertTrue(limiter.allow("a"))
+        self.assertFalse(limiter.allow("a"))
+        self.assertTrue(limiter.allow("b"))
+
+    def test_boundary_exactly_at_window_edge_is_expired(self):
+        clock = FakeClock()
+        limiter = RateLimiter(limit=1, window=10, clock=clock)
+        self.assertTrue(limiter.allow("a"))
+        clock.advance(10)  # exactly `window` seconds later counts as expired
+        self.assertTrue(limiter.allow("a"))
+
+    def test_invalid_arguments_raise(self):
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=0, window=10)
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=5, window=0)
+
+
+class TestRateLimiterConcurrency(unittest.TestCase):
+    def test_concurrent_callers_never_exceed_limit(self):
+        limit = 50
+        limiter = RateLimiter(limit=limit, window=5, clock=time.monotonic)
+        num_threads = 20
+        calls_per_thread = 20  # 400 total attempts contending for 50 slots
+
+        def worker():
+            return sum(1 for _ in range(calls_per_thread) if limiter.allow("shared-key"))
+
+        with ThreadPoolExecutor(max_workers=num_threads) as pool:
+            futures = [pool.submit(worker) for _ in range(num_threads)]
+            allowed_counts = [f.result() for f in futures]
+
+        total_allowed = sum(allowed_counts)
+        self.assertLessEqual(total_allowed, limit)
+        self.assertGreater(total_allowed, 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

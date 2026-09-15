@@ -1,0 +1,125 @@
+{
+  "sources": {
+    "ponytail": {
+      "repo": "DietrichGebert/ponytail",
+      "sha": "356918eba965ee1eac64bd3a7f0dd02108350de5",
+      "licence": "MIT, Copyright (c) 2026 DietrichGebert",
+      "files": [
+        "hooks/ponytail-instructions.js",
+        "hooks/ponytail-config.js",
+        "skills/ponytail/SKILL.md"
+      ]
+    },
+    "caveman": {
+      "repo": "JuliusBrussee/caveman",
+      "sha": "15581d14007fd01fb3f132016741962f34936ca2",
+      "licence": "MIT for skills/ and src/hooks/ (engine-linked directories are BSL-1.1 and are not used here)",
+      "files": [
+        "src/hooks/caveman-config.js",
+        "skills/caveman/SKILL.md"
+      ]
+    }
+  },
+  "caveman_edits": [
+    [
+      "drop",
+      "1. CAVEMAN."
+    ],
+    [
+      "replace",
+      "RE-APPLY LAYER 1 to what you produced: caveman, full output, anti-slop, again.",
+      "RE-APPLY LAYER 1 to what you produced: full output, anti-slop, again."
+    ],
+    [
+      "drop",
+      "S1. CAVEMAN"
+    ]
+  ],
+  "arms": [
+    "bare",
+    "super",
+    "super_ponytail_caveman",
+    "super_ponytail_nocaveman",
+    "ponytail",
+    "caveman"
+  ],
+  "labels": {
+    "bare": "No harness",
+    "super": "Super harness",
+    "super_ponytail_caveman": "Super + ponytail + caveman",
+    "super_ponytail_nocaveman": "Super + ponytail, no caveman",
+    "ponytail": "Ponytail only",
+    "caveman": "Caveman only"
+  },
+  "no_skills": [
+    "bare",
+    "caveman",
+    "ponytail"
+  ],
+  "tasks": {
+    "t1": {
+      "bare": {
+        "contextBytes": 0,
+        "promptBytes": 708,
+        "sha256": "2b35cf3057a9e2bb73b9df243bca225163299bdead4b180920f78fec58fa4b11"
+      },
+      "super": {
+        "contextBytes": 5266,
+        "promptBytes": 6028,
+        "sha256": "c21db8a633edf325f84d521337babf3777181595cffa2f48ad854e30790ea525"
+      },
+      "super_ponytail_caveman": {
+        "contextBytes": 15696,
+        "promptBytes": 16458,
+        "sha256": "3d01001ab73dd130af02c875dc9d667762c2351a6eecc936974f2f7840cfdee2"
+      },
+      "super_ponytail_nocaveman": {
+        "contextBytes": 10255,
+        "promptBytes": 11017,
+        "sha256": "65fdfa4017f3655c6bb14762cb5992c644483ebc12dba37347b8aa811c95b907"
+      },
+      "ponytail": {
+        "contextBytes": 5252,
+        "promptBytes": 6041,
+        "sha256": "525fa4324bbf7c2cb0ede7e410189862fc4d0ca0d18db99fcfb2469b35637481"
+      },
+      "caveman": {
+        "contextBytes": 5174,
+        "promptBytes": 5963,
+        "sha256": "d8a1228b88240fa7cde6135ed7a6e483e35b1f2931c3a8f73cfdf870aa9bd3f5"
+      }
+    },
+    "t2": {
+      "bare": {
+        "contextBytes": 0,
+        "promptBytes": 887,
+        "sha256": "c3fbb7b52865c0ac10820bc88c76bcd0bc67db5301fa57d2f43f181f7bebb574"
+      },
+      "super": {
+        "contextBytes": 5325,
+        "promptBytes": 6266,
+        "sha256": "fff2ad4f9ec26941c8913dbb0e3df70e3b1b1dc723b0d46f542ac02509d9d6ed"
+      },
+      "super_ponytail_caveman": {
+        "contextBytes": 15755,
+        "promptBytes": 16696,
+        "sha256": "017c92510e79ced4b33fc92d2846635e3aa213f524400349de6679d131a0c0ef"
+      },
+      "super_ponytail_nocaveman": {
+        "contextBytes": 10314,
+        "promptBytes": 11255,
+        "sha256": "f2f1d9073e6c3293414bda5b18af53e797e8ee3595d0b9140738e3519cb88b1c"
+      },
+      "ponytail": {
+        "contextBytes": 5252,
+        "promptBytes": 6220,
+        "sha256": "76b4ab5b30bb376913f5c3412253f29cfc78b4bb905f88bc7ef928552c2e14b6"
+      },
+      "caveman": {
+        "contextBytes": 5174,
+        "promptBytes": 6142,
+        "sha256": "9bc9039006b46ad6e2bf1b8012fa0815bf6c8db2effadfb0c359b27e990b7195"
+      }
+    }
+  }
+}

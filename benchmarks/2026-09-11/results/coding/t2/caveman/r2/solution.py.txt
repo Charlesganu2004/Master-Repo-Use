@@ -1,0 +1,49 @@
+# solution.py
+import threading
+import time
+from collections import deque
+from typing import Callable, Deque, Dict, Hashable
+
+
+class RateLimiter:
+    """Thread-safe sliding-window rate limiter.
+
+    Allows at most `limit` calls per key within any trailing `window`
+    seconds. Uses sliding-window log: per-key deque of call timestamps.
+    """
+
+    def __init__(self, limit: int, window: float, clock: Callable[[], float] = time.monotonic):
+        if limit <= 0:
+            raise ValueError("limit must be positive")
+        if window <= 0:
+            raise ValueError("window must be positive")
+        self._limit = limit
+        self._window = window
+        self._clock = clock
+        self._lock = threading.Lock()  # guards dict structure (key creation)
+        self._history: Dict[Hashable, Deque[float]] = {}
+        self._key_locks: Dict[Hashable, threading.Lock] = {}
+
+    def _get_key_lock(self, key: Hashable) -> threading.Lock:
+        # Serialize dict mutation only; per-key lock lets different keys
+        # proceed concurrently once created.
+        with self._lock:
+            lock = self._key_locks.get(key)
+            if lock is None:
+                lock = threading.Lock()
+                self._key_locks[key] = lock
+                self._history[key] = deque()
+            return lock
+
+    def allow(self, key: Hashable) -> bool:
+        key_lock = self._get_key_lock(key)
+        with key_lock:
+            now = self._clock()
+            dq = self._history[key]
+            cutoff = now - self._window
+            while dq and dq[0] <= cutoff:
+                dq.popleft()
+            if len(dq) < self._limit:
+                dq.append(now)
+                return True
+            return False

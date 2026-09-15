@@ -1,0 +1,30 @@
+# solution.py
+import re
+
+_PATTERN = re.compile(r'^(\d+d)?(\d+h)?(\d+m)?(\d+s)?$')
+_MULTIPLIERS = {'d': 86400, 'h': 3600, 'm': 60, 's': 1}
+
+
+def parse_duration(text):
+    """Convert human duration string ('1h30m', '45s', '2d4h') to seconds (int).
+
+    Units d, h, m, s each optional, each at most once, must appear in that
+    order (d before h before m before s). No whitespace, no negative numbers,
+    no unknown units. Raises ValueError on malformed input.
+    """
+    if not isinstance(text, str) or text == "":
+        raise ValueError(f"invalid duration: {text!r} (expected non-empty string)")
+
+    match = _PATTERN.match(text)
+    if not match or not any(match.groups()):
+        raise ValueError(
+            f"invalid duration: {text!r} "
+            "(expected units d,h,m,s each at most once, in that order, e.g. '1h30m')"
+        )
+
+    total_seconds = 0
+    for group in match.groups():
+        if group:
+            value, unit = int(group[:-1]), group[-1]
+            total_seconds += value * _MULTIPLIERS[unit]
+    return total_seconds

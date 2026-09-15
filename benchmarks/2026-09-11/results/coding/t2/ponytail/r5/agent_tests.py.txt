@@ -1,0 +1,67 @@
+# test_solution.py
+import threading
+import unittest
+
+from solution import RateLimiter
+
+
+class FakeClock:
+    def __init__(self, start=0.0):
+        self.t = start
+
+    def __call__(self):
+        return self.t
+
+    def advance(self, dt):
+        self.t += dt
+
+
+class RateLimiterTest(unittest.TestCase):
+    def test_allows_up_to_limit(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=3, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+
+    def test_window_slides(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=2, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        clock.advance(5)
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))  # still 2 calls within last 10s
+        clock.advance(5.001)  # call at t=0 now outside window
+        self.assertTrue(rl.allow("a"))
+
+    def test_keys_are_independent(self):
+        clock = FakeClock()
+        rl = RateLimiter(limit=1, window=10, clock=clock)
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("b"))
+        self.assertFalse(rl.allow("a"))
+        self.assertFalse(rl.allow("b"))
+
+    def test_concurrent_callers_never_exceed_limit(self):
+        clock = FakeClock()  # frozen clock: everyone races at the same instant
+        rl = RateLimiter(limit=5, window=10, clock=clock)
+        results = []
+        results_lock = threading.Lock()
+
+        def worker():
+            r = rl.allow("shared")
+            with results_lock:
+                results.append(r)
+
+        threads = [threading.Thread(target=worker) for _ in range(50)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        self.assertEqual(sum(results), 5)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,60 @@
+# test_solution.py
+import threading
+import unittest
+
+from solution import RateLimiter
+
+
+class TestRateLimiter(unittest.TestCase):
+    def test_allows_up_to_limit(self):
+        t = [0.0]
+        rl = RateLimiter(limit=3, window=10, clock=lambda: t[0])
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+
+    def test_window_slides(self):
+        t = [0.0]
+        rl = RateLimiter(limit=2, window=10, clock=lambda: t[0])
+        self.assertTrue(rl.allow("a"))       # t=0
+        t[0] = 5
+        self.assertTrue(rl.allow("a"))       # t=5, calls=[0,5]
+        self.assertFalse(rl.allow("a"))      # still t=5, limit hit
+        t[0] = 11                            # t=0 call now outside window
+        self.assertTrue(rl.allow("a"))       # calls=[5,11]
+        t[0] = 15                            # t=5 call now outside window
+        self.assertTrue(rl.allow("a"))       # calls=[11,15]
+
+    def test_keys_are_independent(self):
+        t = [0.0]
+        rl = RateLimiter(limit=1, window=10, clock=lambda: t[0])
+        self.assertTrue(rl.allow("a"))
+        self.assertFalse(rl.allow("a"))
+        self.assertTrue(rl.allow("b"))
+
+    def test_concurrent_callers_respect_limit(self):
+        # Fixed clock: every thread sees the same instant, so thread
+        # scheduling can't affect which calls fall in/out of the window —
+        # only the lock's mutual exclusion determines the count.
+        rl = RateLimiter(limit=50, window=10, clock=lambda: 0.0)
+        results = []
+        results_lock = threading.Lock()
+
+        def worker():
+            r = rl.allow("shared")
+            with results_lock:
+                results.append(r)
+
+        threads = [threading.Thread(target=worker) for _ in range(500)]
+        for th in threads:
+            th.start()
+        for th in threads:
+            th.join()
+
+        self.assertEqual(results.count(True), 50)
+        self.assertEqual(results.count(False), 450)
+
+
+if __name__ == "__main__":
+    unittest.main()

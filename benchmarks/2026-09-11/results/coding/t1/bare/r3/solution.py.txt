@@ -1,0 +1,47 @@
+# solution.py
+"""Parse human-readable duration strings into a number of seconds."""
+
+import re
+
+# Units must appear in the order d, h, m, s, each at most once.
+_PATTERN = re.compile(
+    r'^(?:(?P<days>\d+)d)?(?:(?P<hours>\d+)h)?(?:(?P<minutes>\d+)m)?(?:(?P<seconds>\d+)s)?$'
+)
+
+
+def parse_duration(text):
+    """Convert a human duration string into an integer number of seconds.
+
+    Accepts strings built from the units d (days), h (hours), m (minutes),
+    and s (seconds). Each unit may appear at most once, and any units that
+    are present must appear in the order d, h, m, s (though any subset of
+    them may be omitted), e.g. '1h30m', '45s', '2d4h', '1d2h3m4s'.
+
+    Args:
+        text: The duration string to parse.
+
+    Returns:
+        The total duration in seconds, as an int.
+
+    Raises:
+        ValueError: If ``text`` is not a string, is empty/blank, contains no
+            recognized units, has units out of order, repeats a unit,
+            contains a negative or non-integer value, or otherwise doesn't
+            match the expected format.
+    """
+    if not isinstance(text, str):
+        raise ValueError(f"Duration must be a string, got {type(text).__name__!r}")
+
+    stripped = text.strip()
+    if not stripped:
+        raise ValueError("Duration string is empty")
+
+    match = _PATTERN.fullmatch(stripped)
+    if match is None or not any(match.groups()):
+        raise ValueError(
+            f"Invalid duration string {text!r}: expected units d, h, m, s "
+            "(each at most once, in that order), e.g. '1h30m'"
+        )
+
+    days, hours, minutes, seconds = (int(g) if g else 0 for g in match.groups())
+    return days * 86400 + hours * 3600 + minutes * 60 + seconds

@@ -1,0 +1,22 @@
+# solution.py
+import re
+
+# order enforced: d, h, m, s — each optional, each at most once
+_PATTERN = re.compile(r'(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?')
+
+
+def parse_duration(text):
+    """Convert a duration string like '1h30m', '45s', '2d4h' into seconds.
+
+    Units d, h, m, s each appear at most once, in that order.
+    Raises ValueError for anything else.
+    """
+    if not isinstance(text, str):
+        raise ValueError(f"duration must be a string, got {type(text).__name__}")
+
+    match = _PATTERN.fullmatch(text)
+    if not match or not any(match.groups()):
+        raise ValueError(f"invalid duration string: {text!r}")
+
+    days, hours, minutes, seconds = (int(p) if p else 0 for p in match.groups())
+    return days * 86400 + hours * 3600 + minutes * 60 + seconds

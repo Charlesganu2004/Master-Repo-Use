@@ -1,0 +1,49 @@
+<svg class="dg" viewBox="0 0 960 236" role="img" aria-label="Two rows. Your plan: new skill, your repo, scan, then straight to add and package and auto-update, skipping the column where human review sits. With the changes: new skill as metadata, private quarantine, scan as evidence, your approval of the exact digest, signed publish, and users pull and verify.">
+          <defs>
+            <marker id="f1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0 0 L10 5 L0 10 z"/></marker>
+          </defs>
+
+          <text class="row" x="0" y="72">Your plan</text>
+          <text class="row2" x="0" y="88">as written</text>
+          <text class="row" x="0" y="184">With the</text>
+          <text class="row" x="0" y="200">changes</text>
+
+          <!-- row 1: as written -->
+          <rect class="box" x="110" y="48" width="120" height="54" rx="6"/>
+          <text class="t" x="120" y="71">New skill</text><text class="s" x="120" y="88">whole files sent</text>
+          <rect class="box" x="252" y="48" width="120" height="54" rx="6"/>
+          <text class="t" x="262" y="71">Your repo</text><text class="s" x="262" y="88">public, unreviewed</text>
+          <rect class="box" x="394" y="48" width="120" height="54" rx="6"/>
+          <text class="t" x="404" y="71">Scan</text><text class="s" x="404" y="88">decides it is safe</text>
+          <rect class="ghost" x="536" y="48" width="120" height="54" rx="6"/>
+          <text class="g" x="596" y="80" text-anchor="middle">no human gate</text>
+          <rect class="box" x="678" y="48" width="120" height="54" rx="6"/>
+          <text class="t" x="688" y="71">Add + package</text><text class="s" x="688" y="88">repo and database</text>
+          <rect class="box" x="820" y="48" width="120" height="54" rx="6"/>
+          <text class="t" x="830" y="71">Auto-update</text><text class="s" x="830" y="88">pushed to all users</text>
+
+          <line class="edge" x1="230" y1="75" x2="250" y2="75" marker-end="url(#f1a)"/>
+          <line class="edge" x1="372" y1="75" x2="392" y2="75" marker-end="url(#f1a)"/>
+          <path class="edge" d="M514 60 C556 8, 636 8, 676 58" marker-end="url(#f1a)"/>
+          <line class="edge" x1="798" y1="75" x2="818" y2="75" marker-end="url(#f1a)"/>
+
+          <!-- row 2: with the changes -->
+          <rect class="box" x="110" y="160" width="120" height="54" rx="6"/>
+          <text class="t" x="120" y="183">New skill</text><text class="s" x="120" y="200">metadata, opt-in</text>
+          <rect class="box" x="252" y="160" width="120" height="54" rx="6"/>
+          <text class="t" x="262" y="183">Quarantine</text><text class="s" x="262" y="200">private bucket</text>
+          <rect class="box" x="394" y="160" width="120" height="54" rx="6"/>
+          <text class="t" x="404" y="183">Scan</text><text class="s" x="404" y="200">evidence only</text>
+          <rect class="box gate" x="536" y="160" width="120" height="54" rx="6"/>
+          <text class="t gate" x="546" y="183">Your approval</text><text class="s" x="546" y="200">exact digest</text>
+          <rect class="box" x="678" y="160" width="120" height="54" rx="6"/>
+          <text class="t" x="688" y="183">Publish</text><text class="s" x="688" y="200">signed, immutable</text>
+          <rect class="box" x="820" y="160" width="120" height="54" rx="6"/>
+          <text class="t" x="830" y="183">Users pull</text><text class="s" x="830" y="200">verify signature</text>
+
+          <line class="edge" x1="230" y1="187" x2="250" y2="187" marker-end="url(#f1a)"/>
+          <line class="edge" x1="372" y1="187" x2="392" y2="187" marker-end="url(#f1a)"/>
+          <line class="edge" x1="514" y1="187" x2="534" y2="187" marker-end="url(#f1a)"/>
+          <line class="edge" x1="656" y1="187" x2="676" y2="187" marker-end="url(#f1a)"/>
+          <line class="edge" x1="798" y1="187" x2="818" y2="187" marker-end="url(#f1a)"/>
+        </svg>

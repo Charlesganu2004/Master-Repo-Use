@@ -1,0 +1,38 @@
+# solution.py
+import threading
+import time
+from collections import defaultdict, deque
+
+
+class RateLimiter:
+    """Thread-safe sliding-window rate limiter.
+
+    Each key may make at most `limit` calls in any trailing `window`
+    seconds. allow(key) atomically checks the key's recent call history
+    and records the call if it's still under budget.
+    """
+
+    def __init__(self, limit, window, clock=time.monotonic):
+        if limit <= 0:
+            raise ValueError("limit must be positive")
+        if window <= 0:
+            raise ValueError("window must be positive")
+        self.limit = limit
+        self.window = window
+        self.clock = clock
+        self._calls = defaultdict(deque)  # key -> deque[timestamp], oldest first
+        # ponytail: one lock for all keys, per-key locks if this becomes a
+        # throughput bottleneck under many distinct keys.
+        self._lock = threading.Lock()
+
+    def allow(self, key):
+        now = self.clock()
+        cutoff = now - self.window
+        with self._lock:
+            timestamps = self._calls[key]
+            while timestamps and timestamps[0] <= cutoff:
+                timestamps.popleft()
+            if len(timestamps) < self.limit:
+                timestamps.append(now)
+                return True
+            return False

@@ -1,0 +1,87 @@
+# test_solution.py
+import unittest
+
+from solution import parse_duration
+
+
+class TestParseDuration(unittest.TestCase):
+    def test_hours_and_minutes(self):
+        self.assertEqual(parse_duration("1h30m"), 5400)
+
+    def test_seconds_only(self):
+        self.assertEqual(parse_duration("45s"), 45)
+
+    def test_days_and_hours(self):
+        self.assertEqual(parse_duration("2d4h"), 187200)
+
+    def test_days_only(self):
+        self.assertEqual(parse_duration("1d"), 86400)
+
+    def test_zero(self):
+        self.assertEqual(parse_duration("0s"), 0)
+
+    def test_all_units(self):
+        self.assertEqual(parse_duration("1d2h3m4s"), 86400 + 7200 + 180 + 4)
+
+    def test_multi_digit_values(self):
+        self.assertEqual(parse_duration("100s"), 100)
+
+    def test_surrounding_whitespace_is_stripped(self):
+        self.assertEqual(parse_duration("  2d4h  "), 187200)
+
+    def test_empty_string_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("")
+
+    def test_whitespace_only_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("   ")
+
+    def test_missing_unit_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("30")
+
+    def test_missing_number_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("h")
+
+    def test_unknown_unit_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("5x")
+
+    def test_duplicate_unit_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("1h2h")
+
+    def test_out_of_order_units_raise(self):
+        with self.assertRaises(ValueError):
+            parse_duration("30m1h")
+
+    def test_negative_number_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("-5s")
+
+    def test_decimal_number_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("1.5h")
+
+    def test_trailing_garbage_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("1h30mx")
+
+    def test_internal_garbage_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration("1h,30m")
+
+    def test_non_string_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration(None)
+
+    def test_error_message_is_descriptive(self):
+        with self.assertRaises(ValueError) as ctx:
+            parse_duration("1h2h")
+        self.assertIn("repeated", str(ctx.exception))
+
+
+if __name__ == "__main__":
+    unittest.main()

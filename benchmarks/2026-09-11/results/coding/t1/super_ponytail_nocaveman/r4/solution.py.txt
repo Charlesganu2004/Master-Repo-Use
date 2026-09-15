@@ -1,0 +1,54 @@
+# solution.py
+import re
+
+_UNIT_SECONDS = {'d': 86400, 'h': 3600, 'm': 60, 's': 1}
+_UNIT_ORDER = 'dhms'
+_TOKEN = re.compile(r'(\d+)([dhms])')
+
+
+def parse_duration(text):
+    """Convert a human duration string (e.g. '1h30m', '45s', '2d4h') to seconds.
+
+    Units are d (day), h (hour), m (minute), s (second). Each unit may appear
+    at most once, and units must appear in the order d, h, m, s (all optional,
+    but at least one required).
+
+    Raises:
+        ValueError: if `text` is not a string, is empty, contains a unit more
+            than once, has units out of order, or has any unrecognized text.
+    """
+    if not isinstance(text, str):
+        raise ValueError(f"invalid duration: expected a string, got {type(text).__name__}")
+    if text == "":
+        raise ValueError("invalid duration: empty string")
+
+    total_seconds = 0
+    seen_units = set()
+    last_unit_rank = -1
+    pos = 0
+
+    while pos < len(text):
+        match = _TOKEN.match(text, pos)
+        if not match:
+            raise ValueError(
+                f"invalid duration {text!r}: expected a number followed by one of "
+                f"d/h/m/s at position {pos}"
+            )
+        number_str, unit = match.groups()
+        if unit in seen_units:
+            raise ValueError(f"invalid duration {text!r}: unit '{unit}' repeated")
+        unit_rank = _UNIT_ORDER.index(unit)
+        if unit_rank <= last_unit_rank:
+            raise ValueError(
+                f"invalid duration {text!r}: units must appear in order d, h, m, s "
+                f"(unexpected '{unit}')"
+            )
+        seen_units.add(unit)
+        last_unit_rank = unit_rank
+        total_seconds += int(number_str) * _UNIT_SECONDS[unit]
+        pos = match.end()
+
+    if not seen_units:
+        raise ValueError(f"invalid duration {text!r}: no valid units found")
+
+    return total_seconds

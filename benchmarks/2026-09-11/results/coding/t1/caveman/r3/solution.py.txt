@@ -1,0 +1,23 @@
+# solution.py
+import re
+
+_PATTERN = re.compile(r'^(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$')
+
+
+def parse_duration(text):
+    """Convert duration string ('1h30m', '45s', '2d4h') to seconds (int).
+
+    Units: d, h, m, s. Each unit at most once, in that order (d,h,m,s).
+    Raise ValueError on malformed input.
+    """
+    if not isinstance(text, str):
+        raise ValueError(f"duration must be a string, got {type(text).__name__}")
+    if text == "":
+        raise ValueError("duration string is empty")
+
+    match = _PATTERN.match(text)
+    if not match or not any(match.groups()):
+        raise ValueError(f"invalid duration string: {text!r}")
+
+    days, hours, minutes, seconds = (int(g) if g else 0 for g in match.groups())
+    return days * 86400 + hours * 3600 + minutes * 60 + seconds

@@ -1,0 +1,3533 @@
+[
+ {
+  "task": "t1",
+  "arm": "bare",
+  "rep": "r1",
+  "agentId": "a3836a80f0ee3e1b7",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 14,
+   "cw5m": 22488,
+   "cw1h": 0,
+   "read": 297961,
+   "output": 8534
+  },
+  "tokensTotal": 328997,
+  "firstCallContext": 40261,
+  "costUsd": 0.20118,
+  "seconds": 96.9,
+  "apiCalls": 7,
+  "toolCalls": 6,
+  "toolNames": [
+   "Bash",
+   "PowerShell"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 16,
+  "testLoc": 61,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4565,
+  "proseWords": 103,
+  "emDashes": 2,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 16,
+   "failed": 0,
+   "summary": "16 passed in 0.03s"
+  },
+  "judges": [
+   {
+    "correctness": 9,
+    "code_quality": 9,
+    "test_quality": 8,
+    "instruction_following": 10,
+    "communication": 8,
+    "overall": 9,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The single anchored regex `^(?:(\\d+)d)?(?:(\\d+)h)?(?:(\\d+)m)?(?:(\\d+)s)?$` enforces both constraints the request settles \u2014 each unit at most once, and d/h/m/s order \u2014 without hand-rolled state tracking, and the `not any(match.groups())` guard closes the one hole that regex leaves (the all-optional pattern matching the empty string). Arithmetic traces correctly: '1h30m' \u2192 5400, '2d4h' \u2192 187200, '1d2h3m4s' \u2192 93784. Every malformed case I traced raises ValueError as claimed: '30m1h' and '1h1h' fail the anchor after backtracking, 'd5'/'h' lack leading digits, '1.5h', '-5s', '5', '1H30M', '5d3h2m1s6' and 'abc' all fail to match. Error messages are genuinely informative (they echo the offending input with `!r` and give an example), satisfying the \"clear message\" requirement rather than just raising bare ValueError. The 16 tests are well partitioned \u2014 single units, combinations, zeros, whitespace, and a distinct test per malformed category \u2014 and the count in the prose matches the tests shown. Code is idiomatic: module-level compiled pattern, a docstring that documents the Raises contract, no needless abstraction.",
+    "weaknesses": "The tests assert only that ValueError is raised, never that the message is useful, so the \"clear message\" half of the requirement is documented and implemented but not covered by a test (assertRaisesRegex would have cost nothing). `\\d` matches Unicode decimal digits, so '\u0661h' parses as one hour instead of raising \u2014 `[0-9]` would have matched the evident intent; a trivial issue but a real one for input arriving from the web. Rejecting non-string input with ValueError rather than TypeError is a defensible reading of the request and is documented, but it is unidiomatic Python. No test pins down internal whitespace ('1h 30m'), which the implementation rejects \u2014 a behavioural decision left unspecified by both the request and the tests. The closing note about verifying \"via a piped Python heredoc \u2014 no files were created\" is process meta-commentary aimed at a different audience than the person reading the code, and the \"all 16 tests pass\" claim is unverifiable from the answer alone since the files it names were not written."
+   },
+   {
+    "correctness": 9,
+    "code_quality": 9,
+    "test_quality": 9,
+    "instruction_following": 10,
+    "communication": 9,
+    "overall": 9,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "Tracing the regex `^(?:(\\d+)d)?(?:(\\d+)h)?(?:(\\d+)m)?(?:(\\d+)s)?$` against every listed case confirms it is correct: because it is fully anchored, any out-of-order unit, duplicate unit, unknown unit, non-integer/negative value, missing digits, wrong case, or trailing garbage leaves characters unconsumed and the whole match fails, triggering the ValueError branch. The isinstance and empty/whitespace checks are ordered correctly (isinstance check precedes .strip(), avoiding an AttributeError on None). Subset unit strings like '2d4h' or '1d3m' (skipping h) still work correctly by design, matching the \"at most once, in order\" requirement rather than requiring all four units. The 16 unit tests are unusually thorough, covering single/combined units, zero values, whitespace, empty/blank strings, wrong order, duplicates, unknown units, non-integer/negative values, missing number, missing unit, garbage, wrong case, trailing garbage, and non-string input \u2014 directly exercising the error paths the spec calls out. Error messages are descriptive and the docstring accurately documents behavior. The response is concise, accurate, and free of unsupported claims beyond the plausible verification note.",
+    "weaknesses": "The `not any(match.groups())` guard is effectively dead code: given the earlier empty/whitespace check, a successful full match with all four groups None is impossible, so this is a harmless but slightly confusing redundancy. Test coverage, while broad, has minor gaps: no case exercises skipping a middle unit (e.g. '1d3m' or '2d4h' \u2014 used in test_combined_units but not asserting the skip-a-unit behavior is intentional vs. incidental) framed against the \"at most once\" wording, and no test targets an internal-whitespace string like '1h 30m' to confirm it's rejected. These are small; the claimed \"16 tests pass\" is consistent with manual tracing of the code, though the claim itself can't be independently confirmed from the text alone."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 9.0,
+   "code_quality": 9.0,
+   "test_quality": 8.5,
+   "instruction_following": 10.0,
+   "communication": 8.5,
+   "overall": 9.0
+  },
+  "judgeCostUsd": 0.50501
+ },
+ {
+  "task": "t1",
+  "arm": "bare",
+  "rep": "r2",
+  "agentId": "ac2ccac3d17198968",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 5426,
+   "cw1h": 0,
+   "read": 80518,
+   "output": 5703
+  },
+  "tokensTotal": 91651,
+  "firstCallContext": 40261,
+  "costUsd": 0.08671,
+  "seconds": 70.8,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 22,
+  "testLoc": 70,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5397,
+  "proseWords": 145,
+  "emDashes": 2,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 17,
+   "failed": 0,
+   "summary": "17 passed in 0.03s"
+  },
+  "judges": [
+   {
+    "correctness": 9,
+    "code_quality": 8,
+    "test_quality": 9,
+    "instruction_following": 9,
+    "communication": 7,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The regex `^(?:(\\d+)d)?(?:(\\d+)h)?(?:(\\d+)m)?(?:(\\d+)s)?$` elegantly encodes both the \"at most once\" and \"fixed order d,h,m,s\" constraints structurally, and tracing it by hand against every test case (in-order combos, out-of-order like '30m1h'/'1s1d', duplicates like '1h2h', unit-less digits like '30', digit-less units like 'h', decimals, negatives, leading/trailing whitespace, non-string input) confirms it behaves correctly in every case \u2014 matches succeed only when the full string is consumed in the required order, and fail-to-match otherwise triggers the ValueError branch. The explicit empty-string and isinstance checks up front give clear, targeted error messages rather than a generic regex-failure message. The test suite is unusually thorough for this kind of task: it separately covers valid single/combined/zero/large/leading-zero cases and a long list of malformed inputs (missing unit, unknown unit, wrong order, duplicate unit, negative, decimal, whitespace, unit with no digits, non-string), plus two tests that check the actual error message text. Code is clean, PEP8-compliant, has a precise docstring, and precompiles the regex as a module-level constant.",
+    "weaknesses": "There is a small dead-code artifact: the `not any(match.groups())` check can never actually trigger given the anchored full-string regex plus the earlier explicit empty-string guard, since any non-empty string that fully matches the pattern must have consumed at least one group \u2014 a minor code-quality nit rather than a bug. The design relies on positional group ordering (days, hours, minutes, seconds = ...) rather than named groups, which is slightly less self-documenting but not a real problem at this scale. In the closing commentary, the assistant references having run \"the full equivalent-test battery\" via a scratch file at `/tmp/check_solution.py` that isn't shown to the user \u2014 this is an unverifiable aside that adds length without letting the reader confirm anything, and the opening \"All checks pass as expected\" reads as an overclaim not backed by visible evidence in the response itself. The `test_all_units_combined` and `test_zero_value`/leading-zero tests assert against re-derived arithmetic expressions (e.g. `86400 + 7200 + 180 + 4`) rather than a single hardcoded literal, which is a minor rigor gap since it mirrors the same unit-conversion logic being tested rather than serving as a fully independent oracle."
+   },
+   {
+    "correctness": 8,
+    "code_quality": 8,
+    "test_quality": 8,
+    "instruction_following": 9,
+    "communication": 7,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The single-regex design is the right call: `^(?:(\\d+)d)?(?:(\\d+)h)?(?:(\\d+)m)?(?:(\\d+)s)?$` encodes both the \"at most once\" and the d/h/m/s ordering rules structurally, so '1h2h', '30m1h' and '1s1d' all fail without any bespoke state tracking. Tracing the spec examples gives the right values (1h30m\u21925400, 45s\u219245, 2d4h\u2192187200), and the all-optional-groups hole (a match with every group None, i.e. the empty string) is explicitly closed rather than silently returning 0. Error messages are genuinely clear: they quote the offending input with !r and restate the accepted grammar plus examples. The docstring accurately states the accepted forms and enumerates the raise conditions. Tests are broad and well-organised into valid/invalid classes, covering the spec examples, each unit alone, all four combined, zero, leading zeros, large values, and on the failure side: empty, missing unit, unknown unit, out-of-order, duplicated, negative, decimal, surrounding whitespace, bare unit letters, non-string input, plus two assertRaisesRegex checks that the messages are informative rather than just that something raised.",
+    "weaknesses": "Real defect: Python's `$` also matches immediately before a trailing newline, so parse_duration('45s\\n') returns 45 instead of raising \u2014 malformed input silently accepted. `\\Z` would fix it, and no test covers a trailing newline, which is why it slipped through. Relatedly, `\\d` is Unicode-aware, so non-ASCII digits ('\u0665s') parse; harmless here but unstated. Other test gaps: uppercase units ('1H', '2D'), and a trailing bare number after a valid prefix ('1h30'), which is a different failure shape than the '30' case tested. The `not any(match.groups())` guard is now unreachable for practical inputs since the empty string is caught earlier (only '\\n' reaches it), so it reads as redundancy a reviewer would question. No type hints on a small, well-specified signature. Raising ValueError for non-string input rather than TypeError is defended but is a debatable reading of \"malformed input\" \u2014 a reviewer might prefer TypeError with the spec's ValueError reserved for string-shaped errors. Communication: opening with \"All checks pass as expected\" and closing with a claim of having run a \"full equivalent-test battery\" via /tmp/check_solution.py is unverifiable from the answer and slightly evasive \u2014 it ran an equivalent script, not the test file shown, and the reader cannot tell whether test_solution.py itself was ever executed."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 8.5,
+   "code_quality": 8.0,
+   "test_quality": 8.5,
+   "instruction_following": 9.0,
+   "communication": 7.0,
+   "overall": 8.0
+  },
+  "judgeCostUsd": 0.25391
+ },
+ {
+  "task": "t1",
+  "arm": "bare",
+  "rep": "r3",
+  "agentId": "a0fd12b96b3c813d4",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 5634,
+   "cw1h": 0,
+   "read": 124172,
+   "output": 5898
+  },
+  "tokensTotal": 135710,
+  "firstCallContext": 40261,
+  "costUsd": 0.09791,
+  "seconds": 57.9,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 18,
+  "testLoc": 55,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4640,
+  "proseWords": 97,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 18,
+   "failed": 0,
+   "summary": "18 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "bare",
+  "rep": "r4",
+  "agentId": "a9aca05acac70b09e",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 19162,
+   "cw1h": 0,
+   "read": 111141,
+   "output": 6534
+  },
+  "tokensTotal": 136843,
+  "firstCallContext": 40261,
+  "costUsd": 0.13549,
+  "seconds": 59.9,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 44,
+  "testLoc": 61,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5423,
+  "proseWords": 121,
+  "emDashes": 1,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 21,
+   "failed": 0,
+   "summary": "21 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "bare",
+  "rep": "r5",
+  "agentId": "a28587d1be30e6c95",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 12,
+   "cw5m": 9460,
+   "cw1h": 0,
+   "read": 262286,
+   "output": 8295
+  },
+  "tokensTotal": 280053,
+  "firstCallContext": 40261,
+  "costUsd": 0.15908,
+  "seconds": 105.9,
+  "apiCalls": 6,
+  "toolCalls": 5,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 19,
+  "testLoc": 52,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4390,
+  "proseWords": 121,
+  "emDashes": 1,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 14,
+   "failed": 0,
+   "summary": "14 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "caveman",
+  "rep": "r1",
+  "agentId": "a300f2e5d7911208f",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 17314,
+   "cw1h": 0,
+   "read": 157112,
+   "output": 2099
+  },
+  "tokensTotal": 176533,
+  "firstCallContext": 42156,
+  "costUsd": 0.09571,
+  "seconds": 33.0,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 18,
+  "testLoc": 46,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 3049,
+  "proseWords": 10,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 12,
+   "failed": 0,
+   "summary": "12 passed in 0.01s"
+  },
+  "judges": [
+   {
+    "correctness": 8,
+    "code_quality": 8,
+    "test_quality": 8,
+    "instruction_following": 9,
+    "communication": 5,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The regex `^(\\d+d)?(\\d+h)?(\\d+m)?(\\d+s)?$` encodes exactly the specified constraints \u2014 each unit optional, at most once, fixed d>h>m>s order \u2014 so duplicates ('1h1h') and wrong order ('1m1h') are rejected structurally rather than by ad-hoc bookkeeping. The `not any(match.groups())` guard correctly closes the hole where an all-optional pattern matches a string with no units at all. Arithmetic is right (verified 1d2h3m4s = 93784, 2d4h = 187200), return type is int, and '0s' \u2192 0 works rather than being mistaken for an empty parse. Error messages include the offending input via `!r` plus the expected grammar and an example, which satisfies \"clear message\". Compiled module-level pattern and multiplier dict are idiomatic; the docstring states the contract precisely (no whitespace, no negatives, no unknown units). Tests are well organised by case and cover the specified error space thoroughly: empty, unknown unit, duplicate, wrong order, missing number, leading/trailing whitespace, negative, non-string \u2014 plus zero and multi-digit values.",
+    "weaknesses": "`$` with `re.match` also matches immediately before a trailing newline, so `parse_duration('1h\\n')` silently returns 3600 instead of raising; `re.fullmatch` or `\\Z` would close this, and no test covers it. Feeding a non-string raises ValueError rather than TypeError, which is the less idiomatic choice for a type error (the tests lock this behaviour in rather than questioning it) \u2014 defensible, but it deserved a one-line justification. The explicit `text == \"\"` check is redundant given the `any(match.groups())` guard, minor duplicated logic. Tests never assert on message content (no `assertRaisesRegex`), so the \"clear message\" requirement is asserted in prose but not tested, and a regression to a bare `raise ValueError()` would still pass. Some untested boundaries: trailing digits with no unit ('1h30'), uppercase units ('1H'), embedded whitespace ('1h 30m'). Communication is the weakest part: the answer is bracketed by \"Logic verified, all edge cases pass\" and \"Ran tests, all pass\" \u2014 unsupported self-certification that is also factually wrong about edge cases given the trailing-newline gap, and it substitutes for any explanation of the design decisions a reader would want to review."
+   },
+   {
+    "correctness": 8,
+    "code_quality": 9,
+    "test_quality": 8,
+    "instruction_following": 9,
+    "communication": 6,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The regex-based implementation correctly enforces the d-then-h-then-m-then-s ordering and at-most-once-per-unit constraint via non-repeating optional groups; tracing all listed examples ('1h30m'=5400, '2d4h'=187200, '1d2h3m4s'=93784, '0s'=0, '100d') gives correct results. Malformed-input handling is solid: empty string, unknown unit ('30x'), duplicate unit ('1h1h'), wrong order ('1m1h'), missing number ('h30m'), leading/trailing whitespace, negative numbers, and non-string inputs are all correctly rejected via the isinstance/empty check plus the anchored regex, each raising ValueError with a clear message. The code is compact and idiomatic (precompiled pattern, multiplier dict, clear docstring), and the unittest suite is thorough, covering single units, combined units, zero, multi-digit values, and nine distinct malformed-input categories including non-string types.",
+    "weaknesses": "The pattern anchors with `$` rather than `\\Z` (or `re.fullmatch`), and Python's `$` semantics allow it to match just before a trailing newline, so `parse_duration('1h30m\\n')` would silently succeed and return 5400 instead of raising \u2014 inconsistent with how trailing whitespace (a space) is explicitly rejected, and this case is untested. The response's framing lines (\"Logic verified, all edge cases pass.\" and \"Ran tests, all pass.\") assert verification without showing any actual test-run output, an unsupported claim even though manual tracing confirms the tests would in fact pass."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 8.0,
+   "code_quality": 8.5,
+   "test_quality": 8.0,
+   "instruction_following": 9.0,
+   "communication": 5.5,
+   "overall": 8.0
+  },
+  "judgeCostUsd": 0.27095
+ },
+ {
+  "task": "t1",
+  "arm": "caveman",
+  "rep": "r2",
+  "agentId": "a206aa3132fdeb99b",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 4200,
+   "cw1h": 0,
+   "read": 130003,
+   "output": 4692
+  },
+  "tokensTotal": 138901,
+  "firstCallContext": 42156,
+  "costUsd": 0.08343,
+  "seconds": 50.8,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 16,
+  "testLoc": 51,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 3564,
+  "proseWords": 59,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 13,
+   "failed": 0,
+   "summary": "13 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "caveman",
+  "rep": "r3",
+  "agentId": "a7fec739b0aed9b0d",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 4297,
+   "cw1h": 0,
+   "read": 84308,
+   "output": 3124
+  },
+  "tokensTotal": 91733,
+  "firstCallContext": 42156,
+  "costUsd": 0.05885,
+  "seconds": 40.2,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 12,
+  "testLoc": 41,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 2604,
+  "proseWords": 24,
+  "emDashes": 1,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 14,
+   "failed": 0,
+   "summary": "14 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "caveman",
+  "rep": "r4",
+  "agentId": "ac3120dd83d4ba752",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 18034,
+   "cw1h": 0,
+   "read": 69445,
+   "output": 3398
+  },
+  "tokensTotal": 90881,
+  "firstCallContext": 42156,
+  "costUsd": 0.09296,
+  "seconds": 34.0,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 13,
+  "testLoc": 60,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 3441,
+  "proseWords": 16,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 16,
+   "failed": 0,
+   "summary": "16 passed in 0.04s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "caveman",
+  "rep": "r5",
+  "agentId": "ac405d4959b84a548",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 4983,
+   "cw1h": 0,
+   "read": 130332,
+   "output": 5280
+  },
+  "tokensTotal": 140601,
+  "firstCallContext": 42156,
+  "costUsd": 0.09134,
+  "seconds": 55.4,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 16,
+  "testLoc": 63,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 3968,
+  "proseWords": 29,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 22,
+   "failed": 0,
+   "summary": "22 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "ponytail",
+  "rep": "r1",
+  "agentId": "aa8f0161fd83673d0",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 19098,
+   "cw1h": 0,
+   "read": 69433,
+   "output": 4173
+  },
+  "tokensTotal": 92708,
+  "firstCallContext": 42144,
+  "costUsd": 0.10337,
+  "seconds": 42.0,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 10,
+  "testLoc": 40,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 2712,
+  "proseWords": 34,
+  "emDashes": 2,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 7,
+   "failed": 0,
+   "summary": "7 passed in 0.01s"
+  },
+  "judges": [
+   {
+    "correctness": 9,
+    "code_quality": 9,
+    "test_quality": 8,
+    "instruction_following": 9,
+    "communication": 8,
+    "overall": 9,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The regex approach is the right tool and is used carefully: one compiled pattern with optional groups in d/h/m/s order enforces both the ordering and the at-most-once rule structurally, and `fullmatch` blocks partial matches like '1h30' or '1h 30m'. The one trap in an all-optional pattern \u2014 it matches the empty string \u2014 is handled explicitly with `not any(match.groups())`, and '0s' still correctly passes because the group value is the truthy string \"0\" rather than integer 0. Error messages are informative (repr of the offending input, type name for non-strings), the docstring states the contract, and the arithmetic is right (2d4h = 187200, 1h30m = 5400).\n\nTests cover the specified happy paths plus a thoughtful spread of malformed input: wrong order, duplicate unit, unknown unit, uppercase unit (documenting case sensitivity as deliberate), empty string, junk, bare whitespace, internal whitespace, leading minus, and non-string arguments. Leading zeros are pinned with a comment so that behaviour is intentional rather than incidental. The prose is short, names what was deliberately left out (fractional values, locale parsing) and why, and does not pad.",
+    "weaknesses": "The request asks for \"a clear message\", but no test asserts message content \u2014 `assertRaisesRegex` on the malformed-input and non-string paths would lock that in; as written the messages could degrade to a bare `ValueError()` and every test would still pass. Coverage has small gaps: no case using all four units ('1d2h3m4s'), no mid-range combo like '2h30m15s', and nothing for digits with no trailing unit ('1h30', '30') even though that is exactly the class `fullmatch` exists to reject. Grouping negatives into broad methods ('empty and junk') also means one early failure masks the remaining assertions in that method; subTest or separate methods would isolate them.\n\nRaising `ValueError` for a non-string argument is a defensible reading of \"malformed input\" but departs from the Python convention of `TypeError` for wrong argument types, and the choice is not flagged. Minor nit: `int(p) if p else 0` could be `int(p or 0)`. Finally, \"All checks pass\" up front and then \"Ran both through Python locally \u2014 all pass\" is the same unverified claim twice, with no quoted output behind either."
+   },
+   {
+    "correctness": 9,
+    "code_quality": 9,
+    "test_quality": 8,
+    "instruction_following": 9,
+    "communication": 7,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The regex-based approach (four optional, strictly-ordered capture groups matched with fullmatch) correctly enforces \"each unit at most once, in that order\" without extra bookkeeping \u2014 I traced wrong-order (\"30m1h\"), duplicate-unit (\"1h2h\"), unknown-unit (\"1x\"), case-sensitivity (\"1D\"), whitespace, negative-sign, and empty-string cases and all resolve as they should because any partial match leaves unconsumed characters that fullmatch rejects. Zero-value units like \"0s\" work correctly because captured groups are either None or a non-empty digit string (never an empty string), so the any(match.groups()) truthiness check doesn't misfire on \"0\". The worked examples (1h30m=5400, 45s=45, 2d4h=187200, leading zeros in \"007h\"=25200) all compute correctly, the non-string/type check is handled explicitly with a clear message, and the test suite exercises valid combinations plus every specified error case (order, duplication, unknown/case-mismatched units, empty/junk, negative, non-string) using idiomatic unittest with descriptive method names.",
+    "weaknesses": "The closing claim \"Ran both through Python locally \u2014 all pass\" is asserted without any shown output or log, which is an unverifiable/unsupported claim given the answer is plain prose with no evidence attached. Test coverage, while solid, omits a couple of natural edge cases implied by the spec, such as digits with no unit suffix (\"123\") or a bare unit letter with no digits (\"d\"), which would help confirm the regex's requirement that digits always precede a unit. The error messages, while clear, don't pinpoint which ordering/duplication rule was violated (a single generic \"invalid duration string\" message covers many distinct failure modes), so a caller can't easily tell whether the problem was order, duplication, or an unknown unit from the message alone."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 9.0,
+   "code_quality": 9.0,
+   "test_quality": 8.0,
+   "instruction_following": 9.0,
+   "communication": 7.5,
+   "overall": 8.5
+  },
+  "judgeCostUsd": 0.33213
+ },
+ {
+  "task": "t1",
+  "arm": "ponytail",
+  "rep": "r2",
+  "agentId": "a10c334202b5cb666",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 5221,
+   "cw1h": 0,
+   "read": 130499,
+   "output": 5088
+  },
+  "tokensTotal": 140814,
+  "firstCallContext": 42144,
+  "costUsd": 0.09004,
+  "seconds": 55.2,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 12,
+  "testLoc": 41,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 2866,
+  "proseWords": 37,
+  "emDashes": 1,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 8,
+   "failed": 0,
+   "summary": "8 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "ponytail",
+  "rep": "r3",
+  "agentId": "adb37fdc1f904d7cd",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 2236,
+   "cw1h": 0,
+   "read": 84284,
+   "output": 819
+  },
+  "tokensTotal": 87343,
+  "firstCallContext": 42144,
+  "costUsd": 0.03064,
+  "seconds": 28.9,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 10,
+  "testLoc": 21,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 1931,
+  "proseWords": 30,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 4,
+   "failed": 0,
+   "summary": "4 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "ponytail",
+  "rep": "r4",
+  "agentId": "a9fd0445306298923",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 47435,
+   "cw1h": 0,
+   "read": 134806,
+   "output": 3961
+  },
+  "tokensTotal": 186210,
+  "firstCallContext": 42144,
+  "costUsd": 0.18517,
+  "seconds": 57.5,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 11,
+  "testLoc": 39,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 2739,
+  "proseWords": 31,
+  "emDashes": 1,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 5,
+   "failed": 0,
+   "summary": "5 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "ponytail",
+  "rep": "r5",
+  "agentId": "a27f85ec49cfa9a01",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 2441,
+   "cw1h": 0,
+   "read": 128232,
+   "output": 2285
+  },
+  "tokensTotal": 132964,
+  "firstCallContext": 42144,
+  "costUsd": 0.05461,
+  "seconds": 31.4,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 18,
+  "testLoc": 45,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 3299,
+  "proseWords": 51,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 12,
+   "failed": 0,
+   "summary": "12 passed in 0.01s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "super_ponytail_caveman",
+  "rep": "r1",
+  "agentId": "a7b142790e018eeea",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 22226,
+   "cw1h": 0,
+   "read": 73073,
+   "output": 2920
+  },
+  "tokensTotal": 98223,
+  "firstCallContext": 45784,
+  "costUsd": 0.09939,
+  "seconds": 48.0,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 10,
+  "testLoc": 46,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 2805,
+  "proseWords": 42,
+  "emDashes": 1,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 13,
+   "failed": 0,
+   "summary": "13 passed in 0.02s"
+  },
+  "judges": [
+   {
+    "correctness": 9,
+    "code_quality": 8,
+    "test_quality": 8,
+    "instruction_following": 9,
+    "communication": 6,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The single anchored regex `^(?:(\\d+)d)?(?:(\\d+)h)?(?:(\\d+)m)?(?:(\\d+)s)?$` enforces all three constraints at once \u2014 each unit optional, at most once, fixed d/h/m/s order \u2014 so wrong order (\"1m1h\"), duplicates (\"1h2h\"), unit-less digits (\"10\"), signs (\"-5s\"), wrong case (\"1H\"), stray whitespace (\" 1h\") and trailing garbage (\"10hh\") all fall through to ValueError without special-case code. The `not any(match.groups())` guard correctly rejects the empty string while still admitting \"0s\", because it tests capture-group strings rather than parsed ints \u2014 an easy place to get a subtle bug. Arithmetic traced correct: 1h30m\u21925400, 2d4h\u2192187200, 1d2h3m4s\u219293784. Regex is compiled once at module level, the docstring states the contract, and the tests are split into valid/malformed classes covering both the happy path and a genuinely broad set of malformed inputs (including leading zeros and non-string input), which is more error-case coverage than most answers to this prompt provide.",
+    "weaknesses": "The verification claim is inaccurate: the shown test file contains 9 valid assertions and 15 malformed ones, not the \"7 valid / 12 malformed\" reported, and `unittest.main()` prints \"OK\", not the claimed output `all good` \u2014 so the headline evidence does not correspond to the delivered tests, which is exactly the kind of claim a reviewer would have to re-run. The request asks for \"a clear message\", but every failure yields the same generic `invalid duration string: '...'` with no hint of the reason or the expected format, and no test uses `assertRaisesRegex`, so message quality is neither specified nor covered. Raising ValueError for a non-string like `None` is defensible under the prompt but TypeError is the idiomatic choice, and the answer does not note the tradeoff. Small redundancies: `^...$` is unnecessary with `fullmatch`, and the `not text` check is already subsumed by the `not any(match.groups())` guard. The closing \"GOAL fully done, nothing blocked\" is harness jargon that reads as filler to the person receiving the code."
+   },
+   {
+    "correctness": 9,
+    "code_quality": 8,
+    "test_quality": 9,
+    "instruction_following": 9,
+    "communication": 6,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The regex `^(?:(\\d+)d)?(?:(\\d+)h)?(?:(\\d+)m)?(?:(\\d+)s)?$` correctly and concisely enforces \"each unit optional, at most once, in fixed order d-h-m-s\" in a single anchored fullmatch, which I traced through manually for all listed cases: wrong order (\"1m1h\", \"30m1h\"), duplicate units (\"1h2h\", \"1d2d3h\", \"10hh\"), missing digits (\"d5h\", \"h\"), case sensitivity (\"1H\"), leading whitespace, negative sign, and non-string/empty input all correctly fail to fullmatch or are caught by the initial isinstance/empty check, and all raise ValueError. Positive cases (single units, combos, zero, leading zeros like \"007s\") compute the correct second totals. Unit tests are thorough, covering both the valid-combination space and essentially every malformed category the spec implies (order, duplication, missing units, type/format errors), which is good test coverage for the stated requirements. The code itself is short, idiomatic, and documented with a clear docstring.",
+    "weaknesses": "The `not any(match.groups())` guard is effectively dead code for non-empty inputs (a fullmatch of a non-empty string with all groups None is impossible), since the empty case is already filtered earlier \u2014 a minor code-quality nit rather than a bug. The prose response is written in a terse, telegraphic status-log style (\"Verified: ran script, real output `all good`...\", \"Skipped: ... GOAL fully done, nothing blocked.\") rather than clear explanatory prose, which reads oddly for a human reader and asserts test execution results without showing the actual run output, so the \"verified\" claim can't be independently checked from the answer alone. No handling/discussion of case-insensitivity or fractional/negative durations is offered as a design choice explanation beyond a one-line disclaimer."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 9.0,
+   "code_quality": 8.0,
+   "test_quality": 8.5,
+   "instruction_following": 9.0,
+   "communication": 6.0,
+   "overall": 8.0
+  },
+  "judgeCostUsd": 0.20412
+ },
+ {
+  "task": "t1",
+  "arm": "super_ponytail_caveman",
+  "rep": "r2",
+  "agentId": "a0a920f20d5a26586",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 4086,
+   "cw1h": 0,
+   "read": 189184,
+   "output": 4146
+  },
+  "tokensTotal": 197424,
+  "firstCallContext": 45784,
+  "costUsd": 0.08953,
+  "seconds": 50.4,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 15,
+  "testLoc": 51,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 3401,
+  "proseWords": 45,
+  "emDashes": 1,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 17,
+   "failed": 0,
+   "summary": "17 passed in 0.02s"
+  },
+  "judges": [
+   {
+    "strengths": "Correct and well-chosen approach: a single anchored regex with optional groups encodes the \"each unit at most once, in d/h/m/s order\" constraint structurally rather than via ad-hoc parsing, so out-of-order and duplicate-unit inputs are rejected for free. The one genuinely subtle case is handled right \u2014 the `not any(match.groups())` emptiness guard does not misfire on zero values, because groups are strings (`\"0\"` is truthy) rather than ints, so `parse_duration(\"0s\") == 0` and `\"0d0h0m0s\"` both work while `\"\"` correctly raises. Traced cases all behave as specified: 1h30m=5400, 2d4h=187200, 1d2h3m4s=93784; `\"-5s\"`, `\"5.5h\"`, `\"1D\"`, `\"1x\"`, `\"d\"`, `\"   \"`, `\"1d2h3m4s5\"` all raise. Code is clean and idiomatic: module-level compiled pattern, type hints, docstring stating the contract, no needless complexity. Tests are numerous (17) and cover valid combinations plus eleven distinct malformed categories, including the easy-to-forget ones (trailing garbage, bare unit letter, uppercase unit). The closing note listing deliberately-skipped behaviours (case-insensitivity, fractions, internal whitespace) is exactly the right scope signal.",
+    "weaknesses": "The request asks for \"ValueError with a clear message\", but every parse failure produces the same generic `invalid duration string: {text!r}` \u2014 it does not distinguish out-of-order from duplicate-unit from unknown-unit, even though the docstring enumerates those categories as if they were distinguished. Correspondingly, no test asserts anything about message content (all use bare `assertRaises`, never `assertRaisesRegex`), so the one quality the request names for the error path is untested. Raising `ValueError` for a non-string argument is a defensible reading but not Pythonic; `TypeError` is the conventional choice there. The prose claims \"all 16 tests pass\" when the file defines 17 (6 valid + 11 malformed), an arithmetic slip that weakens the \"ran both files locally\" verification claim. The opening line \"Logic check pass, all cases correct.\" is unsupported self-assessment placed before any code. The `__main__` self-check block in solution.py duplicates three assertions already present in the test file, minor clutter.",
+    "correctness": 9,
+    "code_quality": 9,
+    "test_quality": 8,
+    "instruction_following": 9,
+    "communication": 6,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null
+   }
+  ],
+  "judgeMean": {
+   "correctness": 9.0,
+   "code_quality": 9.0,
+   "test_quality": 8.0,
+   "instruction_following": 9.0,
+   "communication": 6.0,
+   "overall": 8.0
+  },
+  "judgeCostUsd": 0.19095
+ },
+ {
+  "task": "t1",
+  "arm": "super_ponytail_caveman",
+  "rep": "r3",
+  "agentId": "aa083217790412d17",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 4272,
+   "cw1h": 0,
+   "read": 140611,
+   "output": 4641
+  },
+  "tokensTotal": 149530,
+  "firstCallContext": 45784,
+  "costUsd": 0.08522,
+  "seconds": 49.4,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 21,
+  "testLoc": 48,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 3611,
+  "proseWords": 91,
+  "emDashes": 3,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 13,
+   "failed": 0,
+   "summary": "13 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "super_ponytail_caveman",
+  "rep": "r4",
+  "agentId": "a618e02e79b0f9213",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 22184,
+   "cw1h": 0,
+   "read": 170647,
+   "output": 4065
+  },
+  "tokensTotal": 196904,
+  "firstCallContext": 45784,
+  "costUsd": 0.13026,
+  "seconds": 51.2,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 10,
+  "testLoc": 56,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 3409,
+  "proseWords": 18,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 19,
+   "failed": 0,
+   "summary": "19 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "super_ponytail_caveman",
+  "rep": "r5",
+  "agentId": "aa6da17291164abad",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 3779,
+   "cw1h": 0,
+   "read": 91564,
+   "output": 3786
+  },
+  "tokensTotal": 99133,
+  "firstCallContext": 45784,
+  "costUsd": 0.06563,
+  "seconds": 40.1,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 15,
+  "testLoc": 57,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 3324,
+  "proseWords": 41,
+  "emDashes": 1,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 18,
+   "failed": 0,
+   "summary": "18 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "super_ponytail_nocaveman",
+  "rep": "r1",
+  "agentId": "aa94044f56e27315d",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 22165,
+   "cw1h": 0,
+   "read": 166086,
+   "output": 5727
+  },
+  "tokensTotal": 193986,
+  "firstCallContext": 43816,
+  "costUsd": 0.14592,
+  "seconds": 60.9,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 10,
+  "testLoc": 51,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 3797,
+  "proseWords": 111,
+  "emDashes": 2,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 13,
+   "failed": 0,
+   "summary": "13 passed in 0.01s"
+  },
+  "judges": [
+   {
+    "correctness": 8,
+    "code_quality": 8,
+    "test_quality": 8,
+    "instruction_following": 8,
+    "communication": 4,
+    "overall": 7,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The regex approach is the right tool: a single all-optional-group pattern enforces d-h-m-s ordering and at-most-once semantics simultaneously, with no hand-rolled scanning or state tracking. Traced against the spec's examples it is correct: '1h30m' -> 5400, '45s' -> 45, '2d4h' -> 187200, '1d2h3m4s' -> 93784. The zero/leading-zero case is handled correctly because `any(match.groups())` tests the captured strings (where '0' is truthy) rather than the converted ints, so '0s' -> 0 instead of spuriously raising \u2014 an easy trap avoided, and covered by a test. Code is idiomatic: module-level compiled pattern, type hints, docstring with a Raises section, `!r` so the offending input is echoed. Test coverage is genuinely broad for a function this size: unknown unit, out-of-order ('30m1h'), duplicate ('1h1h'), unit with no digits, trailing garbage, wrong case, leading whitespace, float and negative values, empty string, non-string inputs. The closing note on deliberately skipped scope (aliases, case-insensitivity, fractional durations) is brief and honest.",
+    "weaknesses": "Real correctness hole: the pattern uses `^...$` with `.match()`, and Python's `$` also matches just before a trailing newline, so `parse_duration('1h\\n')` returns 3600 instead of raising. `re.fullmatch` or `\\Z` closes it. This stings more because the answer claims whitespace was examined adversarially, yet only leading whitespace is tested. The error message is one generic \"invalid duration: ...\" for every failure mode; the request asked for a clear message, and distinguishing unknown unit from out-of-order units would actually help a caller \u2014 as written it is adequate but minimal, and no test asserts on message text (assertRaisesRegex), so \"clear message\" is untested. Raising ValueError for `None`/`5` is debatable (TypeError is the more Pythonic signal for a wrong type). The `not any(match.groups())` guard is dead code: the pattern can only match with all groups None on the empty string, which the preceding check already rejects. Communication is the weakest part. \"verified by running the suite above ... quoted output above\" is false \u2014 no output appears anywhere, and the code blocks come after the claim, not above it; it also sits oddly beside \"no files created\". Roughly a third of the prose is harness bookkeeping (\"Skills applied: master-plan ... master-design-taste N/A (no UI), ponytail ladder ...\", \"Goal check: GOAL was exactly this function + tests\") that means nothing to someone who asked for a parsing function, and reads as self-assessment rather than information."
+   },
+   {
+    "correctness": 9,
+    "code_quality": 8,
+    "test_quality": 9,
+    "instruction_following": 9,
+    "communication": 6,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The regex `^(?:(\\d+)d)?(?:(\\d+)h)?(?:(\\d+)m)?(?:(\\d+)s)?$` correctly encodes \"each unit at most once, in strict d-h-m-s order\" in one place, and tracing it through the required examples ('1h30m'=5400, '2d4h'=187200, '1d2h3m4s'=93784, '01h'=3600) all compute correctly. The isinstance/empty guard plus `not any(match.groups())` correctly reject empty strings and non-string input, and the code correctly rejects wrong order ('30m1h'), duplicate units ('1h1h'), wrong case ('1H'), missing digits ('h'), trailing garbage, whitespace, and non-integer/negative values \u2014 all traced through the regex mechanics confirm no match occurs. The test suite is unusually thorough for both the positive space (all four individual units, several combinations, zero and leading-zero values) and negative space (nine distinct malformed-input categories), directly matching the spec's requirements and using assertRaises(ValueError) throughout.",
+    "weaknesses": "The preamble is cluttered with self-referential \"skills applied\" commentary (master-plan, ponytail ladder, master-review, etc.) that is meaningless to a reader focused on the deliverable and adds no verifiable information about the code itself. The claim \"All 13 tests pass (verified by running the suite above, no files created)\" is asserted without showing actual test-runner output, so the verification claim rests on the reader's trust rather than evidence. Test coverage of \"duplicate unit\" and \"wrong order\" only exercises the h/m units, not d or s, and there's no test for a bare-digit string (e.g. '5') or for units separated by extra whitespace, though the underlying regex logic handles these correctly by inspection."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 8.5,
+   "code_quality": 8.0,
+   "test_quality": 8.5,
+   "instruction_following": 8.5,
+   "communication": 5.0,
+   "overall": 7.5
+  },
+  "judgeCostUsd": 0.37242
+ },
+ {
+  "task": "t1",
+  "arm": "super_ponytail_nocaveman",
+  "rep": "r2",
+  "agentId": "aa365216a6fecb64a",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 6557,
+   "cw1h": 0,
+   "read": 87628,
+   "output": 7840
+  },
+  "tokensTotal": 102029,
+  "firstCallContext": 43816,
+  "costUsd": 0.11233,
+  "seconds": 78.1,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 15,
+  "testLoc": 43,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4390,
+  "proseWords": 133,
+  "emDashes": 3,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 12,
+   "failed": 0,
+   "summary": "12 passed in 0.04s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "super_ponytail_nocaveman",
+  "rep": "r3",
+  "agentId": "a25b064fe0564e550",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 9908,
+   "cw1h": 0,
+   "read": 188825,
+   "output": 10200
+  },
+  "tokensTotal": 208941,
+  "firstCallContext": 43816,
+  "costUsd": 0.16455,
+  "seconds": 98.5,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 14,
+  "testLoc": 56,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4078,
+  "proseWords": 115,
+  "emDashes": 4,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 18,
+   "failed": 0,
+   "summary": "18 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "super_ponytail_nocaveman",
+  "rep": "r4",
+  "agentId": "a2194a42f578ef759",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 21921,
+   "cw1h": 0,
+   "read": 71105,
+   "output": 3942
+  },
+  "tokensTotal": 96972,
+  "firstCallContext": 43816,
+  "costUsd": 0.10845,
+  "seconds": 75.1,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 36,
+  "testLoc": 59,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 6297,
+  "proseWords": 246,
+  "emDashes": 7,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 14,
+   "failed": 0,
+   "summary": "14 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "super_ponytail_nocaveman",
+  "rep": "r5",
+  "agentId": "a8dd29fd0fbbdcf17",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 10,
+   "cw5m": 8685,
+   "cw1h": 0,
+   "read": 233775,
+   "output": 8577
+  },
+  "tokensTotal": 251047,
+  "firstCallContext": 43816,
+  "costUsd": 0.15426,
+  "seconds": 88.3,
+  "apiCalls": 5,
+  "toolCalls": 4,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 19,
+  "testLoc": 62,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4401,
+  "proseWords": 97,
+  "emDashes": 2,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 18,
+   "failed": 0,
+   "summary": "18 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "super",
+  "rep": "r1",
+  "agentId": "a2e3a9369b01ba711",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 46344,
+   "cw1h": 0,
+   "read": 42066,
+   "output": 2634
+  },
+  "tokensTotal": 91048,
+  "firstCallContext": 42068,
+  "costUsd": 0.15062,
+  "seconds": 59.8,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 13,
+  "testLoc": 65,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5111,
+  "proseWords": 134,
+  "emDashes": 3,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 17,
+   "failed": 0,
+   "summary": "17 passed in 0.03s"
+  },
+  "judges": [
+   {
+    "parameters": "{}",
+    "correctness": 9,
+    "code_quality": 9,
+    "test_quality": 9,
+    "instruction_following": 9,
+    "communication": 5,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The parser is the right shape for the spec: a single anchored regex with four optional ordered groups makes unit order and at-most-once appearance structural rather than hand-checked, so out-of-order (\"30m1h\"), duplicated (\"1h1h\"), decimal (\"1.5h\"), signed (\"-5s\"), uppercase (\"1H\"), unknown-unit (\"10x\"), whitespace-padded and digits-only (\"30\") inputs all fall out as ValueError with no extra code. The `not any(match.groups())` guard correctly rejects the empty string while still accepting \"0s\" (the group \"0\" is a truthy non-empty string), and the arithmetic and all sample cases trace correctly (1h30m=5400, 2d4h=187200, 1d2h3m4s=93784). Error messages are specific and include the offending input via `!r`. The docstring accurately states the accepted grammar and the raise conditions. Tests are genuinely broad: valid single/combined/zero/leading-zero/large inputs plus twelve malformed classes, and one test asserts the message content rather than just the exception type.",
+    "weaknesses": "The prose around the code is the weak part. It claims \"15 unit tests\" but there are 17 test methods, and it claims all tests were \"verified to pass by direct execution\" while the quoted output is from an ad-hoc 11-case script, not a unittest run (no \"Ran N tests / OK\" line) \u2014 an unsupported completion claim. The opening paragraphs list internal harness passes (\"PLAN, ARCHITECT, FULL OUTPUT, ANTI-SLOP, VERIFY\") and close with \"Nothing from the goal is outstanding\", which is filler for someone who asked for a function and tests. It also says \"no files written\" while presenting `# solution.py` and a test module that does `from solution import parse_duration`, which could not run as shown. Minor code nits: `^`/`$` are redundant alongside `fullmatch`, and a non-string argument raises ValueError where TypeError would be the conventional choice (defensible, and documented, but a reviewer would query it). Untested-but-working cases like \"1h30\" (trailing digits with no unit) could have been covered."
+   },
+   {
+    "correctness": 9,
+    "code_quality": 9,
+    "test_quality": 9,
+    "instruction_following": 9,
+    "communication": 6,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "Tracing the regex by hand confirms it is correct for every case the spec and the tests exercise: ordered optional groups (d\u2192h\u2192m\u2192s) with `fullmatch` correctly reject repeated units (\"1h1h\"), out-of-order units (\"30m1h\"), decimals (\"1.5h\"), negatives (\"-5s\"), wrong case (\"1H\"), bare units (\"h\"), digits-only (\"30\"), and empty string (all groups match zero-width but `any(match.groups())` catches the all-None case). Valid cases (single units, combined units like \"1h30m\"/\"2d4h\"/\"1d2h3m4s\", \"0s\", leading zeros, large numbers) all compute the right second counts. The non-string type check and its own ValueError is a sensible extra for \"malformed input.\" Tests are well organized into valid/invalid classes and cover essentially every failure mode named in the spec plus a message-content assertion (assertRaisesRegex), which is genuinely useful test coverage rather than boilerplate.",
+    "weaknesses": "The closing summary claims \"15 unit tests\" but the file actually defines 17 test methods (5 in the valid class + 12 in the invalid class) \u2014 a factual inaccuracy in the answer's own accounting of its work. The prose is cluttered with internal-process jargon (\"Passes applied: PLAN, ARCHITECT, FULL OUTPUT, ANTI-SLOP, VERIFY\") that isn't part of what the user asked for and adds noise without informational value to a reader who just wants the function and tests. Minor: behavior for skipped-but-present units in valid order (e.g., \"1d1m\" omitting hours) is correct but never explicitly tested, and the docstring's \"any present unit may be omitted\" phrasing is slightly redundant/awkward."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 9.0,
+   "code_quality": 9.0,
+   "test_quality": 9.0,
+   "instruction_following": 9.0,
+   "communication": 5.5,
+   "overall": 8.0
+  },
+  "judgeCostUsd": 0.30144
+ },
+ {
+  "task": "t1",
+  "arm": "super",
+  "rep": "r2",
+  "agentId": "a3ef6dfd86a99262a",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 12,
+   "cw5m": 9336,
+   "cw1h": 0,
+   "read": 278098,
+   "output": 9910
+  },
+  "tokensTotal": 297356,
+  "firstCallContext": 42068,
+  "costUsd": 0.17808,
+  "seconds": 101.0,
+  "apiCalls": 6,
+  "toolCalls": 5,
+  "toolNames": [
+   "Bash",
+   "PowerShell"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 36,
+  "testLoc": 66,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5932,
+  "proseWords": 159,
+  "emDashes": 3,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 14,
+   "failed": 0,
+   "summary": "14 passed in 0.02s"
+  },
+  "judges": [
+   {
+    "correctness": 9,
+    "code_quality": 8,
+    "test_quality": 9,
+    "instruction_following": 9,
+    "communication": 6,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "Manually tracing the regex-driven parser against every listed case (valid combos, zero values, leading zeros, empty/non-string input, missing number/unit, unknown unit, out-of-order units, duplicate units, trailing/internal garbage, non-integer/negative numbers) confirms it behaves correctly in each case \u2014 the `match.start() != pos` contiguity check is a particularly good detail, since without it a string like \"1y2h\" could wrongly parse as just \"2h\" instead of raising. The unit-order/duplicate logic via `_UNIT_ORDER.index` is correct and concise, `int()` naturally rejects decimals/negatives, and arbitrary-precision ints avoid overflow concerns. The 14-test suite is genuinely thorough, covering essentially every malformed-input category the spec implies, and the answer backs its correctness claim with an actual quoted test run rather than just asserting it.",
+    "weaknesses": "The final `if not seen_units: raise ValueError(...)` branch is dead code \u2014 given the earlier empty-string guard, any non-empty string that produces no regex matches will already have pos=0 != len(text) and raise on the preceding check, so this branch can never execute; a careful reviewer would flag it as either confused reasoning or code that should be removed. Some error messages are technically imprecise (e.g. \"100\" or \"1.5h\" get \"unexpected characters at position 0\" rather than a message describing the actual issue), though still valid ValueErrors with reasonable clarity. The prose surrounding the code leans on internal process narration (\"Skills applied: master-plan ... master-anti-slop ... master-review ...\", \"GOAL status: fully done\") that reads as meta self-reporting rather than content the requester asked for, and it asserts specific unshown verification numbers (\"manual check of 7 valid strings and 15 malformed-input cases\") without displaying them, which is an unsupported-claim ding on communication."
+   },
+   {
+    "correctness": 9,
+    "code_quality": 8,
+    "test_quality": 7,
+    "instruction_following": 9,
+    "communication": 5,
+    "overall": 8,
+    "three_sentence_note": null,
+    "lists_unhandled_edge_cases": null,
+    "strengths": "The parsing approach is sound and the strictness the request asks for is actually enforced, not approximated. Using `finditer` plus a running `pos` cursor rejects any text that isn't a contiguous run of number+unit pairs, so leading garbage (\"1y2h\", \"-5h\", \"1.5h\"), internal garbage (\"1 h30m\", \"1h,30m\"), trailing garbage (\"1h5\", \"1h \"), missing unit (\"100\") and missing number (\"h\", \"30mh\") all fail \u2014 and the error message carries the offending position and the repr of the input, which satisfies \"clear message\" better than a generic string. Order and duplicate checks are correct: duplicates are rejected outright, and because duplicates can't survive, comparing each new unit's index against only `seen_units[-1]` is sufficient to enforce strict d\u2192h\u2192m\u2192s monotonicity (\"30m1h\", \"1s1d\" both raise). Values verified by hand all match: '2d4h'=187200, '2d4h30m15s'=189015, '007h'=25200 (leading zeros accepted via int()). Constants are hoisted to module level, the regex is precompiled, and the docstring documents both the unit semantics and every raise condition. Test coverage is broad for a task this size: single units, all four combined, zero values, leading zeros, empty, non-string, and each distinct malformed class gets its own named test.",
+    "weaknesses": "Communication is the weak part. Roughly the first third of the answer is process bookkeeping aimed at no one who asked \u2014 a \"Skills applied:\" paragraph naming five internal skills and a \"GOAL status: fully done, nothing left blocked\" footer, plus a redundant restatement that the tests pass in both the opening and closing lines. A reader who wanted a function and its tests has to scroll past harness telemetry to reach the code, and the claim of anti-slop discipline sits inside the sloppiest section of the response. Tests never assert on message content: every error case uses bare `assertRaises(ValueError)`, so the \"clear message\" half of the requirement \u2014 the part the implementation actually invested in \u2014 is untested, and `assertRaisesRegex` would have cost nothing. Several tests bundle multiple independent assertions without `subTest`, so the first failure masks the rest. Minor code issues: the `if not seen_units` branch is unreachable, since no-matches always implies `pos != len(text)` once the empty-string case is handled above it; `\\d` matches Unicode decimal digits and `int()` accepts them, so a string like \"\u0663h\" parses instead of raising; and raising `ValueError` rather than `TypeError` for a non-string argument is defensible under the prompt's wording but is not the Pythonic choice, and isn't flagged as a deliberate trade-off."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 9.0,
+   "code_quality": 8.0,
+   "test_quality": 8.0,
+   "instruction_following": 9.0,
+   "communication": 5.5,
+   "overall": 8.0
+  },
+  "judgeCostUsd": 0.34391
+ },
+ {
+  "task": "t1",
+  "arm": "super",
+  "rep": "r3",
+  "agentId": "a56dc326fd500cc5b",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 5692,
+   "cw1h": 0,
+   "read": 84132,
+   "output": 6418
+  },
+  "tokensTotal": 96246,
+  "firstCallContext": 42068,
+  "costUsd": 0.09524,
+  "seconds": 66.7,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 16,
+  "testLoc": 70,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4310,
+  "proseWords": 56,
+  "emDashes": 2,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 23,
+   "failed": 0,
+   "summary": "23 passed in 0.06s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "super",
+  "rep": "r4",
+  "agentId": "acc02d0e44768a160",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 20492,
+   "cw1h": 0,
+   "read": 162316,
+   "output": 6630
+  },
+  "tokensTotal": 189446,
+  "firstCallContext": 42068,
+  "costUsd": 0.15001,
+  "seconds": 70.3,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 20,
+  "testLoc": 58,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5017,
+  "proseWords": 155,
+  "emDashes": 4,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 20,
+   "failed": 0,
+   "summary": "20 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t1",
+  "arm": "super",
+  "rep": "r5",
+  "agentId": "ab849e424692a056e",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 3980,
+   "cw1h": 0,
+   "read": 84132,
+   "output": 4753
+  },
+  "tokensTotal": 92869,
+  "firstCallContext": 42068,
+  "costUsd": 0.07431,
+  "seconds": 48.9,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 20,
+  "testLoc": 59,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4360,
+  "proseWords": 106,
+  "emDashes": 1,
+  "hidden": {
+   "passed": 21,
+   "total": 21,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 20,
+   "failed": 0,
+   "summary": "20 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "bare",
+  "rep": "r1",
+  "agentId": "a5554493e68be5287",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 18992,
+   "cw1h": 0,
+   "read": 67607,
+   "output": 7828
+  },
+  "tokensTotal": 94431,
+  "firstCallContext": 40318,
+  "costUsd": 0.13929,
+  "seconds": 65.1,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 34,
+  "testLoc": 91,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 8601,
+  "proseWords": 314,
+  "emDashes": 2,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 7,
+   "failed": 0,
+   "summary": "7 passed in 0.02s"
+  },
+  "judges": [
+   {
+    "correctness": 9,
+    "code_quality": 9,
+    "test_quality": 8,
+    "instruction_following": 10,
+    "communication": 9,
+    "overall": 9,
+    "three_sentence_note": true,
+    "lists_unhandled_edge_cases": true,
+    "strengths": "The core algorithm is right: a per-key deque of allowed-call timestamps, pruned from the left against `now - window`, with the check-and-append performed atomically inside one lock, so the limit invariant genuinely holds for concurrent callers. Signature matches the request exactly (limit, window, clock=time.monotonic), argument validation raises ValueError on non-positive limit/window, and only allowed calls are recorded so denied attempts do not extend the window. Deque length is naturally capped at `limit`, giving O(1) amortized work with no unbounded per-key history.\n\nTests are well chosen and deterministic: an injected thread-safe FakeClock for the timing cases (up-to-limit, key independence, window sliding freeing capacity, exact-boundary expiry, invalid args) plus two concurrency tests. The shared-key test uses a Barrier to maximize real contention (20 threads x 25 attempts against limit=50) and asserts an exact count of 50 winners rather than a loose inequality \u2014 a genuine race would fail it. The distinct-key test confirms per-key budgets under parallel access. A large window in the concurrency tests correctly removes real-clock flakiness.\n\nBoth required narrative pieces are delivered: the note is exactly three sentences and explains the dict-of-deques choice, the pruning cost, and the deliberate single-lock-over-sharding tradeoff. The closing edge-case list is substantive and honest \u2014 unbounded memory for one-off keys, global-lock throughput, non-monotonic clock behaviour, and absence of weighted calls / retry-after introspection. Prose is short and free of filler.",
+    "weaknesses": "`now = self._clock()` is read before acquiring the lock, so under contention timestamps can be appended out of order (thread A samples t1, thread B samples t2 > t1 and appends first, then A appends t1). Since pruning stops at the first non-expired entry, a stale entry sitting behind a newer one is not popped, which can reject a call that should have been allowed. The error is conservative (never permits more than `limit`) and bounded by thread-scheduling jitter, so it is a small blemish rather than a broken invariant, but moving the clock read inside the lock would cost nothing and remove it \u2014 and the answer does not flag it, even in the edge-case list where the related clock discussion is only about non-monotonic clocks.\n\nTest gaps are minor but real: nothing asserts the default `clock=time.monotonic` path or that `allow` samples the clock once per call; no test covers non-string hashable keys; the boundary semantics (expiry at exactly `window`) are asserted but the choice of half-open interval is never stated as a deliberate contract in the docstring's user-facing terms beyond one line. In `test_concurrent_distinct_keys_do_not_interfere`, `results[key] = ...` is written from multiple threads without a lock; it is safe in CPython for distinct keys but is inconsistent with the careful locking used in the sibling test.\n\nThe module-bottom comment about sharding duplicates the first edge-case bullet and the third sentence of the note, so the same tradeoff is stated three times. Finally, \"all 7 tests pass\" is asserted twice but is unverifiable from the text alone."
+   },
+   {
+    "correctness": 9,
+    "code_quality": 9,
+    "test_quality": 9,
+    "instruction_following": 10,
+    "communication": 8,
+    "overall": 9,
+    "three_sentence_note": true,
+    "lists_unhandled_edge_cases": true,
+    "strengths": "The core algorithm is correct: a dict[key -> deque[float]] with a single global lock, pruning expired timestamps (<= now-window) before checking length against limit, and appending only when under the cap. Tracing the tests by hand confirms correctness: basic limit enforcement, key independence, window sliding (advance 5.0001s past a 10s window correctly expires the oldest entry while keeping the newer one), and the exact-boundary case (advancing exactly `window` seconds expires the prior call, consistent with the documented half-open interval (now-window, now]). The check-then-append is fully serialized under the lock, so the two concurrency tests (one hammering a shared key from 20 threads with a Barrier for maximal contention, expecting exactly `limit` successes out of 500 attempts; one verifying 10 distinct keys each get their own independent budget) are correctly reasoned and would pass. Every explicit deliverable is present: the exact class/method signature requested, thread-safety, unit tests including a concurrent-callers test (two, in fact), a note on the data-structure choice that is exactly three grammatical sentences (verified by counting terminal periods), and a closing list of unhandled edge cases (unbounded memory growth per key, single-lock throughput ceiling, non-monotonic clock misbehavior, no weighted/batch calls or non-mutating quota peek). Input validation (limit/window <= 0) is a sensible, non-required addition.",
+    "weaknesses": "The single global lock is a defensible but non-trivial scalability trade-off for a \"thread-safe\" requirement that didn't demand high throughput; the answer is honest about this in both the code comment and the edge-case list, but embedding a near-duplicate \"scaling note\" inside solution.py alongside the separately requested three-sentence note is slightly redundant. The closing claim \"I ran both files together (via stdin, no files written)... all 7 tests pass\" is an unverifiable process claim included in the response text; graders can't confirm execution occurred, though the traced-through logic strongly suggests the tests would in fact pass. Minor nitpicks: no runtime type/isinstance checks on `limit`/`window` (a float limit or non-numeric window would slip past validation), and the `Deque`/`Hashable` typing-module imports are stylistically dated versus `collections.abc` equivalents, though functionally fine. No test explicitly targets the documented boundary semantics from the *within-window* side (e.g., a call one epsilon before expiry still counting), though the exact-boundary test implicitly covers the edge."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 9.0,
+   "code_quality": 9.0,
+   "test_quality": 8.5,
+   "instruction_following": 10.0,
+   "communication": 8.5,
+   "overall": 9.0
+  },
+  "judgeCostUsd": 0.31895
+ },
+ {
+  "task": "t2",
+  "arm": "bare",
+  "rep": "r2",
+  "agentId": "acc66a7acbdb868a3",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 10381,
+   "cw1h": 0,
+   "read": 174312,
+   "output": 11875
+  },
+  "tokensTotal": 196576,
+  "firstCallContext": 40318,
+  "costUsd": 0.17958,
+  "seconds": 102.2,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 29,
+  "testLoc": 106,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 8103,
+  "proseWords": 223,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 8,
+   "failed": 0,
+   "summary": "8 passed in 0.05s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "bare",
+  "rep": "r3",
+  "agentId": "a8f2fb21527a496de",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 4921,
+   "cw1h": 0,
+   "read": 80632,
+   "output": 6344
+  },
+  "tokensTotal": 91901,
+  "firstCallContext": 40318,
+  "costUsd": 0.09188,
+  "seconds": 56.8,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 31,
+  "testLoc": 60,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 6168,
+  "proseWords": 268,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 6,
+   "failed": 0,
+   "summary": "6 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "bare",
+  "rep": "r4",
+  "agentId": "a07aa5c1504503207",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 18654,
+   "cw1h": 0,
+   "read": 111773,
+   "output": 6820
+  },
+  "tokensTotal": 137253,
+  "firstCallContext": 40318,
+  "costUsd": 0.1372,
+  "seconds": 64.3,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 34,
+  "testLoc": 63,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 6531,
+  "proseWords": 296,
+  "emDashes": 5,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 5,
+   "failed": 0,
+   "summary": "5 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "bare",
+  "rep": "r5",
+  "agentId": "a1abc314be4a170bb",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 6343,
+   "cw1h": 0,
+   "read": 80632,
+   "output": 7874
+  },
+  "tokensTotal": 94853,
+  "firstCallContext": 40318,
+  "costUsd": 0.11073,
+  "seconds": 69.1,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 34,
+  "testLoc": 79,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 7560,
+  "proseWords": 323,
+  "emDashes": 4,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 7,
+   "failed": 0,
+   "summary": "7 passed in 0.11s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "caveman",
+  "rep": "r1",
+  "agentId": "a3d31e3fa295b3bb4",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 19437,
+   "cw1h": 0,
+   "read": 69502,
+   "output": 4923
+  },
+  "tokensTotal": 93866,
+  "firstCallContext": 42213,
+  "costUsd": 0.11173,
+  "seconds": 45.0,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 53,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 3954,
+  "proseWords": 109,
+  "emDashes": 1,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 5,
+   "failed": 0,
+   "summary": "5 passed in 0.03s"
+  },
+  "judges": [
+   {
+    "correctness": 8,
+    "code_quality": 8,
+    "test_quality": 7,
+    "instruction_following": 9,
+    "communication": 6,
+    "overall": 8,
+    "three_sentence_note": true,
+    "lists_unhandled_edge_cases": true,
+    "strengths": "Correct sliding-window-log design: per-key deque, front expiry, admit/record inside a single lock so the read-modify-write is atomic; denied calls are not recorded and keys stay independent. Constructor validates limit and window. Tests inject a FakeClock so window-sliding is deterministic rather than sleep-based, and the concurrency test forces maximum contention with a 100-thread Barrier and asserts sum(results) == limit exactly, not merely <=. All requested deliverables are present and in order: signature with clock=time.monotonic, allow(key), five unit tests including a concurrent one, a note that is exactly three sentences, and a closing list of unhandled edge cases that correctly names unbounded key growth, single-global-lock contention, and a non-monotonic clock.",
+    "weaknesses": "now = self._clock() is read outside the lock, so concurrent appends can land out of order and the front-expiry loop can stop early on a slightly-newer entry, leaving stale timestamps; the error direction is conservative so the contract still holds, but reading the clock inside the lock would eliminate it. Tests never pin the expiry boundary exactly at now - window, and never assert that repeated denied calls fail to extend the window \u2014 the classic bug this design avoids but does not demonstrate. The barrier test silently depends on pool.map submitting all 100 items before any thread waits; lowering max_workers would deadlock. Prose is clipped and ungrammatical (\"Deque give O(1)\", \"memory grow unbounded\"), the note says the lock is \"per key\" while the edge-case list correctly says it is one global lock, and the opening \"All 5 tests pass.\" is asserted with no output shown."
+   },
+   {
+    "correctness": 9,
+    "code_quality": 9,
+    "test_quality": 9,
+    "instruction_following": 10,
+    "communication": 6,
+    "overall": 8,
+    "three_sentence_note": true,
+    "lists_unhandled_edge_cases": true,
+    "strengths": "The sliding-window-log algorithm is correct: it evicts expired timestamps from the front of a per-key deque under a single lock, then admits only if len(calls) < limit, matching \"fewer than limit calls in the window\" and correctly not recording rejected calls. Signature matches exactly (RateLimiter(limit, window, clock=time.monotonic), allow(key)), with sensible ValueError guards on non-positive limit/window. The test suite is well constructed: a FakeClock gives deterministic, non-flaky tests for limit enforcement, window expiry at the boundary, and key independence, and the concurrency test uses a threading.Barrier to force all 100 threads to call allow() simultaneously on a shared key, then asserts sum(results) == limit exactly \u2014 a precise, meaningful correctness check under real contention rather than a vague \"it didn't crash\" test. The response also fully delivers the requested three-sentence note (exactly three sentences) and a closing list of unhandled edge cases (unbounded memory from idle keys, single global lock contention, non-monotonic clock), hitting every requested deliverable and format.",
+    "weaknesses": "The note and edge-case prose is grammatically broken/telegraphic (\"Deque give O(1)...\", \"Lock wrap whole read-modify-write\", \"key's deque stay in dict (empty) forever\") which reads as rushed and could confuse a reader despite being technically accurate. The lock-outside-timestamp-capture pattern (now = self._clock() taken before acquiring the lock) is not discussed, and while it doesn't break correctness here, a stronger answer would note that thread scheduling could interleave timestamps slightly out of strict order in the deque even though the limit check remains sound. No test explicitly verifies that a rejected (False) call does not get recorded toward the limit, though this is implicitly exercised by the sequential tests."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 8.5,
+   "code_quality": 8.5,
+   "test_quality": 8.0,
+   "instruction_following": 9.5,
+   "communication": 6.0,
+   "overall": 8.0
+  },
+  "judgeCostUsd": 0.29169
+ },
+ {
+  "task": "t2",
+  "arm": "caveman",
+  "rep": "r2",
+  "agentId": "adc99c150ea215fb6",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 5240,
+   "cw1h": 0,
+   "read": 129822,
+   "output": 6218
+  },
+  "tokensTotal": 141286,
+  "firstCallContext": 42213,
+  "costUsd": 0.10126,
+  "seconds": 55.9,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 36,
+  "testLoc": 64,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5474,
+  "proseWords": 134,
+  "emDashes": 1,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 6,
+   "failed": 0,
+   "summary": "6 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "caveman",
+  "rep": "r3",
+  "agentId": "a6f4e25b5106d0b96",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 4564,
+   "cw1h": 0,
+   "read": 128903,
+   "output": 5575
+  },
+  "tokensTotal": 139048,
+  "firstCallContext": 42213,
+  "costUsd": 0.09295,
+  "seconds": 52.8,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 31,
+  "testLoc": 64,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5565,
+  "proseWords": 167,
+  "emDashes": 2,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 6,
+   "failed": 0,
+   "summary": "6 passed in 0.04s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "caveman",
+  "rep": "r4",
+  "agentId": "aa045e47a3b7000fa",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 20593,
+   "cw1h": 0,
+   "read": 156591,
+   "output": 4642
+  },
+  "tokensTotal": 181834,
+  "firstCallContext": 42213,
+  "costUsd": 0.12924,
+  "seconds": 47.5,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 0,
+  "testLoc": 0,
+  "extraction": {
+   "solution": "missing",
+   "tests": "missing"
+  },
+  "answerChars": 967,
+  "proseWords": 152,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 0,
+   "total": null,
+   "failures": [
+    "no solution block"
+   ]
+  },
+  "ownTests": {
+   "ran": false
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "caveman",
+  "rep": "r5",
+  "agentId": "a4447e7d2ac6e3ed1",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 10,
+   "cw5m": 24442,
+   "cw1h": 0,
+   "read": 214085,
+   "output": 7379
+  },
+  "tokensTotal": 245916,
+  "firstCallContext": 42200,
+  "costUsd": 0.17773,
+  "seconds": 79.3,
+  "apiCalls": 5,
+  "toolCalls": 4,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 26,
+  "testLoc": 69,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5028,
+  "proseWords": 126,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 7,
+   "failed": 0,
+   "summary": "7 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "ponytail",
+  "rep": "r1",
+  "agentId": "a3d9bdfb42d647b28",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 19877,
+   "cw1h": 0,
+   "read": 69490,
+   "output": 5833
+  },
+  "tokensTotal": 95204,
+  "firstCallContext": 42201,
+  "costUsd": 0.12193,
+  "seconds": 57.1,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 48,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4692,
+  "proseWords": 200,
+  "emDashes": 5,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 4,
+   "failed": 0,
+   "summary": "4 passed in 0.03s"
+  },
+  "judges": [
+   {
+    "strengths": "Implementation is functionally correct and minimal: per-key `deque` of timestamps, monotonic-order trimming with `while q and q[0] <= cutoff`, and the whole read-evict-append sequence held under one lock, so the check-then-append race is genuinely closed. Signature matches the request exactly (`limit, window, clock=time.monotonic`), with sensible added validation for non-positive limit/window.\n\nTests are well chosen and deterministic: an injected `FakeClock` avoids sleep-based flakiness, and the four cases cover fill-then-block, window sliding across the exact boundary (5.001 nudge past expiry), key independence, and concurrency. The concurrency test is the strongest part \u2014 a `threading.Barrier(100)` releases all threads simultaneously against a frozen clock and asserts exactly `limit` winners, which is a real contention test rather than a sequential loop in threads.\n\nTraced by hand, every assertion holds (e.g. limit=2/window=10: q=[0], q=[0,5], denied, then t=10.001 evicts 0 and allows). The three-sentence note is genuinely three sentences and explains the actual tradeoff (exact log vs fixed-window bucket error, O(1) ops, why the lock is what provides safety). The closing edge-case list is specific and correct: unbounded key growth, single-process scope, and backward clock jumps.",
+    "weaknesses": "`now = self.clock()` is read *outside* the lock, then appended inside it. Under contention two threads can append out of order (thread A reads t=1.000, is preempted, thread B reads t=1.002 and appends first, then A appends 1.000 behind it). That breaks the deque's sorted invariant the eviction loop depends on: `while q and q[0] <= cutoff` stops at the first live head, so an older entry sitting behind a newer head lingers past its window. Safety is preserved (never more than `limit` through) and the skew is bounded by scheduling delay, but it is a real defect a reviewer would flag, and moving the `clock()` call inside the `with` block fixes it for free.\n\n`defaultdict(deque)` means a *denied* or merely-queried key still materializes an empty deque, so the memory-leak edge case they name is slightly worse than described \u2014 it is created on every lookup, not only on allowed calls.\n\nThe stray `# ponytail:` comment prefix is nonsense and would not survive review. The `**Skipped:** per-key locking` line duplicates what the code comment already says and sits awkwardly between the note and the edge-case list.\n\nTest gaps: the `ValueError` paths they chose to add are never exercised; there is no test using the default `time.monotonic` clock; and nothing asserts the deque is actually trimmed (a test could grow only to observe memory, but a boundary test at exactly `t == window` \u2014 where `<=` vs `<` decides the outcome \u2014 is the meaningful missing case).\n\nThe opening \"All checks pass\" asserts a test run the reader cannot see; the assertions do hold on inspection, but the claim is stated as verified fact without evidence.",
+    "correctness": 8,
+    "code_quality": 7,
+    "test_quality": 7,
+    "instruction_following": 9,
+    "communication": 7,
+    "overall": 8,
+    "three_sentence_note": true,
+    "lists_unhandled_edge_cases": true
+   },
+   {
+    "correctness": 9,
+    "code_quality": 8,
+    "test_quality": 8,
+    "instruction_following": 9,
+    "communication": 7,
+    "overall": 8,
+    "three_sentence_note": true,
+    "lists_unhandled_edge_cases": true,
+    "strengths": "The sliding-window-log algorithm (deque of timestamps per key, evict-then-check-then-append under one lock) is correct and matches the spec exactly, including the RateLimiter(limit, window, clock) signature and allow(key) semantics. Tracing the logic confirms no race: the entire read-evict-write sequence is inside the lock, so len(q) < limit can never be read stale by two threads. The concurrency test is well constructed \u2014 it freezes the clock and uses a threading.Barrier to force all 100 threads to race simultaneously on one key, then asserts exactly `limit` (10) succeeded, which is a deterministic, meaningful check of the mutual-exclusion invariant rather than a flaky timing-based test. The other three tests (basic limit, window sliding via a FakeClock, key independence) are clear and cover the core behaviors. Both formatting requirements are satisfied precisely: the note is exactly three sentences, and the response closes with a bulleted list of unhandled edge cases (unbounded memory from stale keys, single-process-only safety, and non-monotonic clock assumption).",
+    "weaknesses": "A couple of small polish issues: the inline comment word \"ponytail\" in the lock declaration is unexplained/unprofessional and reads as a stray artifact rather than a meaningful label, slightly hurting clarity. The response also inserts an extra \"**Skipped:** per-key locking...\" line between the three-sentence note and the edge-case list that wasn't asked for \u2014 mild filler duplicating information already in the code comment. The constructor's added ValueError validation for non-positive limit/window is untested, a minor gap in test coverage relative to the code actually shipped. The terse opening line (\"All checks pass \u2014 deque-per-key sliding-window log...\") is jargon-dense and could be clearer for someone who hasn't already read the code. None of these affect correctness of the core rate-limiter logic."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 8.5,
+   "code_quality": 7.5,
+   "test_quality": 7.5,
+   "instruction_following": 9.0,
+   "communication": 7.0,
+   "overall": 8.0
+  },
+  "judgeCostUsd": 0.29867
+ },
+ {
+  "task": "t2",
+  "arm": "ponytail",
+  "rep": "r2",
+  "agentId": "a48d13791247309ba",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 4113,
+   "cw1h": 0,
+   "read": 84398,
+   "output": 3109
+  },
+  "tokensTotal": 91624,
+  "firstCallContext": 42201,
+  "costUsd": 0.05826,
+  "seconds": 44.5,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 26,
+  "testLoc": 48,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4679,
+  "proseWords": 210,
+  "emDashes": 7,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 4,
+   "failed": 0,
+   "summary": "4 passed in 0.06s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "ponytail",
+  "rep": "r3",
+  "agentId": "a0555260966ad10d2",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 5385,
+   "cw1h": 0,
+   "read": 130649,
+   "output": 4302
+  },
+  "tokensTotal": 140342,
+  "firstCallContext": 42201,
+  "costUsd": 0.08262,
+  "seconds": 59.3,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 45,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4074,
+  "proseWords": 149,
+  "emDashes": 1,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 4,
+   "failed": 0,
+   "summary": "4 passed in 0.06s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "ponytail",
+  "rep": "r4",
+  "agentId": "a25787f4609e16770",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 18527,
+   "cw1h": 0,
+   "read": 69490,
+   "output": 4415
+  },
+  "tokensTotal": 92436,
+  "firstCallContext": 42201,
+  "costUsd": 0.10437,
+  "seconds": 46.7,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 43,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4163,
+  "proseWords": 177,
+  "emDashes": 2,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 4,
+   "failed": 0,
+   "summary": "4 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "ponytail",
+  "rep": "r5",
+  "agentId": "a96790f0beafcabfb",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 20609,
+   "cw1h": 0,
+   "read": 116047,
+   "output": 6099
+  },
+  "tokensTotal": 142761,
+  "firstCallContext": 42188,
+  "costUsd": 0.13573,
+  "seconds": 56.5,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 23,
+  "testLoc": 51,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 3976,
+  "proseWords": 143,
+  "emDashes": 3,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 4,
+   "failed": 0,
+   "summary": "4 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "super_ponytail_caveman",
+  "rep": "r1",
+  "agentId": "a9ac476249a3ce40b",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 12,
+   "cw5m": 26027,
+   "cw1h": 0,
+   "read": 271758,
+   "output": 6477
+  },
+  "tokensTotal": 304274,
+  "firstCallContext": 45887,
+  "costUsd": 0.18421,
+  "seconds": 79.6,
+  "apiCalls": 6,
+  "toolCalls": 5,
+  "toolNames": [
+   "Bash",
+   "mcp__ccd_session__mark_chapter"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 54,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4712,
+  "proseWords": 208,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 5,
+   "failed": 0,
+   "summary": "5 passed in 0.06s"
+  },
+  "judges": [
+   {
+    "correctness": 9,
+    "code_quality": 8,
+    "test_quality": 7,
+    "instruction_following": 9,
+    "communication": 5,
+    "overall": 7,
+    "three_sentence_note": true,
+    "lists_unhandled_edge_cases": true,
+    "strengths": "The core algorithm (per-key deque of allowed-call timestamps, popleft expired entries against a cutoff, append+return True only under a single lock guarding the whole read-check-write) is a correct, race-free sliding-window log. Tracing the boundary tests by hand confirms the implementation matches: the window-slide test (t=4.999 still blocked, t=5.0 exactly expires the oldest call) and the partial-expiry test (only the t=0 call expires at t=10.5, not the t=1 call) both check out arithmetically against the `dq[0] <= cutoff` eviction rule. The concurrency test is meaningful, not decorative: 500 threads hammer a single shared key with limit=100 and a large window (1000s, so no expiry noise), and asserting `sum(results) == 100` exactly would catch a broken/missing lock (a naive unlocked check-then-append would let more than 100 through under contention). All four requested deliverables are present in the requested order: implementation, tests including one concurrent case, a note on the data-structure choice, and a trailing edge-case list.",
+    "weaknesses": "The prose throughout (the opening \"GOAL:... Nothing blocked\" framing, and the compressed note) is telegraphic and grammatically broken rather than clear, professional writing \u2014 e.g. \"Deque per key hold only allowed-call timestamps\" and \"defaultdict skip separate key-exists branch\" drop articles and subject-verb agreement, making it read like shorthand notes rather than a note meant to be read by someone else. The answer asserts \"verified by run (5/5 tests pass...)\" but shows no actual test-runner output, so this is an unverified claim of correctness rather than demonstrated evidence. It uses a nonstandard \"# ponytail:\" marker in place of a conventional TODO/NOTE comment with no explanation, which is likely to confuse a reader. The code adds input validation (ValueError for bad limit/window) that wasn't requested but is then never exercised by a test, leaving a self-introduced code path untested. The single global lock is flagged as a throughput limitation but that tradeoff (vs. per-key locks or sharding) is asserted rather than measured."
+   },
+   {
+    "correctness": 8,
+    "code_quality": 8,
+    "test_quality": 7,
+    "instruction_following": 9,
+    "communication": 6,
+    "overall": 8,
+    "three_sentence_note": true,
+    "lists_unhandled_edge_cases": true,
+    "strengths": "The core implementation is small, idiomatic and does what the request specifies: per-key deque of allowed-call timestamps, a single mutex around the whole read-check-write so the check and the record are atomic, amortized O(1) pruning via popleft, and the exact constructor signature including clock=time.monotonic. Injecting a fake clock in tests is the right move and is used well: the test suite covers the up-to-limit/then-block sequence, key independence, the exact window boundary (4.999 blocked, 5.0 allowed), and a partial-expiry case that proves the window slides rather than resetting wholesale. The concurrency test is genuinely meaningful rather than decorative \u2014 500 threads on one key with limit=100, asserting sum(results) == 100, which catches both over-admission (broken locking) and under-admission. The three-sentence note is exactly three sentences and gives real reasoning (front-expiry, global lock vs per-key tradeoff, defaultdict). The closing edge-case list is honest and specific: unbounded key growth, global-lock throughput ceiling, non-monotonic clocks, and the absence of batch/peek APIs.",
+    "weaknesses": "self.clock() is read outside the lock, so under contention two threads can append out of order (A reads t1, is preempted, B reads t2 > t1 and appends first, then A appends t1). That violates the \"oldest first\" invariant the while-popleft pruning depends on, and can leave an expired entry stranded at the head, making the limiter briefly over-restrictive. Moving the clock read inside the critical section costs nothing and fixes it; the listed \"clock going backwards\" caveat covers a different case and does not name this one. Test coverage has a hole the answer created itself: it added ValueError validation for limit < 1 and window <= 0 but never tests either path, and there is no concurrency test across multiple keys. The prose is the weakest part \u2014 telegraphic, ungrammatical (\"Deque per key hold\", \"defaultdict skip\", \"Single global lock guard\"), an opening status line written in shorthand, and stray unexplained \"# ponytail:\" markers embedded in the edge-case bullets that read as leaked internal tooling noise. The claimed run output \"allowed: 100 expected 100\" does not correspond to anything the shown test prints, so that detail is unsupported by the code presented."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 8.5,
+   "code_quality": 8.0,
+   "test_quality": 7.0,
+   "instruction_following": 9.0,
+   "communication": 5.5,
+   "overall": 7.5
+  },
+  "judgeCostUsd": 0.22489
+ },
+ {
+  "task": "t2",
+  "arm": "super_ponytail_caveman",
+  "rep": "r2",
+  "agentId": "a74462cb718560aad",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 3750,
+   "cw1h": 0,
+   "read": 91770,
+   "output": 4
+  },
+  "tokensTotal": 95528,
+  "firstCallContext": 45887,
+  "costUsd": 0.02778,
+  "seconds": 48.7,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 59,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 4840,
+  "proseWords": 155,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 6,
+   "failed": 0,
+   "summary": "6 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "super_ponytail_caveman",
+  "rep": "r3",
+  "agentId": "a78f5153a19e08f85",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 10,
+   "cw5m": 4595,
+   "cw1h": 0,
+   "read": 239151,
+   "output": 5749
+  },
+  "tokensTotal": 249505,
+  "firstCallContext": 45887,
+  "costUsd": 0.11683,
+  "seconds": 71.0,
+  "apiCalls": 5,
+  "toolCalls": 4,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 26,
+  "testLoc": 75,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5709,
+  "proseWords": 254,
+  "emDashes": 3,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 6,
+   "failed": 0,
+   "summary": "6 passed in 0.13s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "super_ponytail_caveman",
+  "rep": "r4",
+  "agentId": "a621494ba6a5013d2",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 25794,
+   "cw1h": 0,
+   "read": 124389,
+   "output": 8134
+  },
+  "tokensTotal": 158323,
+  "firstCallContext": 45887,
+  "costUsd": 0.17071,
+  "seconds": 82.2,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 55,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5081,
+  "proseWords": 237,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 5,
+   "failed": 0,
+   "summary": "5 passed in 0.04s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "super_ponytail_caveman",
+  "rep": "r5",
+  "agentId": "a00f6673c6184b163",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 8507,
+   "cw1h": 0,
+   "read": 195863,
+   "output": 7164
+  },
+  "tokensTotal": 211542,
+  "firstCallContext": 45887,
+  "costUsd": 0.1321,
+  "seconds": 76.5,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash",
+   "PowerShell"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 70,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5591,
+  "proseWords": 197,
+  "emDashes": 3,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 6,
+   "failed": 0,
+   "summary": "6 passed in 0.02s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "super_ponytail_nocaveman",
+  "rep": "r1",
+  "agentId": "a2172046bb09a7ac9",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 10,
+   "cw5m": 27178,
+   "cw1h": 0,
+   "read": 218858,
+   "output": 5866
+  },
+  "tokensTotal": 251912,
+  "firstCallContext": 43919,
+  "costUsd": 0.1704,
+  "seconds": 123.1,
+  "apiCalls": 5,
+  "toolCalls": 4,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 56,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5471,
+  "proseWords": 274,
+  "emDashes": 5,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 5,
+   "failed": 0,
+   "summary": "5 passed in 0.14s"
+  },
+  "judges": [
+   {
+    "correctness": 9,
+    "code_quality": 8,
+    "test_quality": 8,
+    "instruction_following": 9,
+    "communication": 6,
+    "overall": 8,
+    "three_sentence_note": true,
+    "lists_unhandled_edge_cases": true,
+    "strengths": "The core implementation is the right one and is correct: a per-key deque of timestamps, all eviction and the length check performed inside a single `threading.Lock`, so `allow()` is genuinely atomic (check-and-record cannot interleave) and the classic TOCTOU overshoot is impossible. The signature matches the request exactly, including the injectable `clock`, and the constructor validates `limit`/`window`. Eviction is O(1) amortized via `popleft` and relies correctly on monotonic-plus-serialized appends keeping the deque sorted.\n\nTests are well-targeted: a `FakeClock` makes the sliding behaviour deterministic rather than sleep-based, and `test_window_slides_as_time_passes` checks both that the third call is refused inside the window and that one slot frees up once the oldest call ages out. Per-key independence and constructor validation are covered. The concurrency test is real rather than decorative: 1000 threads contend on one shared key inside a 60s window and the assertion is the exact invariant (`sum(allowed) == limit`), which would fail loudly if the lock were dropped or the check were split from the record.\n\nAll four requested deliverables are present: implementation, tests with a concurrent case, a note that is exactly three sentences, and a closing list of unhandled edge cases. The edge-case list is substantive and honest \u2014 unbounded key growth with no TTL/LRU, single-process scope, the `<=` vs `<` boundary decision at exactly `window` seconds, and backwards-moving custom clocks \u2014 each naming the consequence rather than just the category.",
+    "weaknesses": "Two stray artifacts hurt quality. The lock line carries `# ponytail: global lock, ...` \u2014 \"ponytail\" is meaningless in context and reads like leaked internal scaffolding in code that is otherwise clean. The note closes with \"the ladder rung that holds here is 'stdlib does it'\", unexplained jargon that adds nothing for the reader, and sentence one's \"eviction never touches the untouched-live entries\" is garbled.\n\nThe verification claim does not hold up. It says both blocks were run together via `python - <<'EOF'`, but the test block begins `from solution import RateLimiter`; fed as one stdin script with no `solution.py` on disk that import raises ModuleNotFoundError, so the quoted 5-passing-tests output cannot have come from the run as described. The result is plausible (the tests would pass if actually run), but the evidence as presented is inconsistent.\n\nTest coverage has minor gaps. The concurrency test asserts only the success count and never checks that a subsequent `allow` on the shared key is refused, nor that a second key is unaffected under contention. Nothing tests full-window recovery (advance past `window` and confirm a fresh `limit` calls are admitted), and the documented `<=` boundary semantics \u2014 the one behavioural choice the spec leaves open \u2014 is asserted only at `window + 0.0001`, never at exactly `window`, so the edge the note explicitly calls out is untested. `defaultdict` also mutates `_calls` on every lookup, so even refused calls for brand-new keys create entries; that amplifies the acknowledged memory leak slightly and goes unmentioned."
+   },
+   {
+    "correctness": 9,
+    "code_quality": 8,
+    "test_quality": 8,
+    "instruction_following": 8,
+    "communication": 8,
+    "overall": 8,
+    "three_sentence_note": true,
+    "lists_unhandled_edge_cases": true,
+    "strengths": "The core RateLimiter is a correct sliding-window log: a deque per key evicted with a simple `while dq[0] <= cutoff: popleft()`, and the entire check-and-record sequence in allow() is wrapped in one lock, making it genuinely atomic under concurrent access \u2014 tracing the logic (including the window-slide and independent-keys tests) confirms the arithmetic is right. The test suite is well constructed: a FakeClock gives deterministic control over window-boundary behavior, there's a dedicated concurrency test with 1000 threads hammering one key that asserts exactly `limit` successes (a real test of the lock's correctness, not just a smoke test), plus coverage for independent keys and constructor validation. The closing content delivers exactly what was asked: a three-sentence rationale for the dict-of-deques choice, and a candid, specific list of unhandled edge cases (unbounded key memory, single-process-only locking, boundary semantics at exactly `window` seconds, non-monotonic custom clocks).",
+    "weaknesses": "A stray, unexplained comment (\"# ponytail: global lock...\") sits in otherwise clean code and reads as noise/confusing jargon to a reviewer. The response tacks on an extra \"Skipped: per-key locks / distributed backend...\" sentence after the edge-case list, so the answer doesn't strictly \"finish\" with the list as instructed. The \"Verified \u2014 ran both blocks together\" claim is asserted as fact but is unfalsifiable from the transcript alone (though manual tracing of the code confirms the tests would indeed pass). Test coverage, while solid, doesn't probe concurrent access across multiple distinct keys simultaneously or explicitly assert the exact boundary case (a call at precisely `now - window`) beyond what's implied by the window-slide test."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 9.0,
+   "code_quality": 8.0,
+   "test_quality": 8.0,
+   "instruction_following": 8.5,
+   "communication": 7.0,
+   "overall": 8.0
+  },
+  "judgeCostUsd": 0.28173
+ },
+ {
+  "task": "t2",
+  "arm": "super_ponytail_nocaveman",
+  "rep": "r2",
+  "agentId": "ac8b4240e6221f81c",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 6238,
+   "cw1h": 0,
+   "read": 87834,
+   "output": 5146
+  },
+  "tokensTotal": 99222,
+  "firstCallContext": 43919,
+  "costUsd": 0.08463,
+  "seconds": 74.4,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 31,
+  "testLoc": 56,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5998,
+  "proseWords": 257,
+  "emDashes": 8,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 5,
+   "failed": 0,
+   "summary": "5 passed in 0.05s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "super_ponytail_nocaveman",
+  "rep": "r3",
+  "agentId": "a86c9897dd8d0ed37",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 8699,
+   "cw1h": 0,
+   "read": 87834,
+   "output": 10698
+  },
+  "tokensTotal": 107235,
+  "firstCallContext": 43919,
+  "costUsd": 0.1463,
+  "seconds": 107.5,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 67,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 7464,
+  "proseWords": 397,
+  "emDashes": 8,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 6,
+   "failed": 0,
+   "summary": "6 passed in 0.05s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "super_ponytail_nocaveman",
+  "rep": "r4",
+  "agentId": "ac7281a7750906e0b",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 12,
+   "cw5m": 26673,
+   "cw1h": 0,
+   "read": 269824,
+   "output": 10575
+  },
+  "tokensTotal": 307084,
+  "firstCallContext": 43919,
+  "costUsd": 0.22642,
+  "seconds": 111.5,
+  "apiCalls": 6,
+  "toolCalls": 5,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 62,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 6451,
+  "proseWords": 315,
+  "emDashes": 4,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 7,
+   "failed": 0,
+   "summary": "7 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "super_ponytail_nocaveman",
+  "rep": "r5",
+  "agentId": "abf42e00101ab6aea",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 23649,
+   "cw1h": 0,
+   "read": 169844,
+   "output": 7929
+  },
+  "tokensTotal": 201430,
+  "firstCallContext": 43906,
+  "costUsd": 0.1724,
+  "seconds": 81.3,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 54,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 5854,
+  "proseWords": 317,
+  "emDashes": 6,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 5,
+   "failed": 0,
+   "summary": "5 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "super",
+  "rep": "r1",
+  "agentId": "a004ac9f07338cb5b",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 22710,
+   "cw1h": 0,
+   "read": 164939,
+   "output": 9601
+  },
+  "tokensTotal": 197258,
+  "firstCallContext": 42171,
+  "costUsd": 0.18579,
+  "seconds": 89.4,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 31,
+  "testLoc": 66,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 6672,
+  "proseWords": 305,
+  "emDashes": 0,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 7,
+   "failed": 0,
+   "summary": "7 passed in 0.02s"
+  },
+  "judges": [
+   {
+    "three_sentence_note": true,
+    "lists_unhandled_edge_cases": true,
+    "correctness": 8,
+    "code_quality": 9,
+    "test_quality": 8,
+    "instruction_following": 10,
+    "communication": 8,
+    "overall": 8,
+    "strengths": "The core semantics are right and precisely documented: evicting while `timestamps[0] <= cutoff` (cutoff = now - window) keeps exactly the calls whose age is strictly less than `window`, rejected calls are not recorded, per-key deques are naturally capped at `limit` entries, and the whole read-evict-check-append sequence sits inside one lock so the count-then-append race cannot leak an extra allow. Signature matches the request exactly, including the `clock=time.monotonic` default, and the code is clean, typed, and commented where the invariant (stale entries form a contiguous prefix) actually needs justifying. Tests are well chosen: window boundary is probed on both sides (4.999 rejected, exactly 5.0 allowed), key independence, partial eviction where only the older call expires, argument validation, and a concurrency test with 200 threads against limit=50 asserting the allowed count is exactly 50 with a 60s window so the assertion is deterministic. The FakeClock is itself lock-protected, which is a nice detail. Every requested part is delivered in order, the note is exactly three sentences and explains both the deque choice and the single-lock-vs-sharding tradeoff, the edge-case list is concrete and honest (unbounded key-map growth, global-lock contention, backward-jumping clocks, single-process only), and the \"OK / 7 tests\" output is quoted rather than asserted.",
+    "weaknesses": "`now = self._clock()` is read outside the lock, so under real concurrency two threads can append out of order (thread A samples t1, is descheduled, thread B samples t2 > t1 and appends first). That violates the \"non-decreasing, so stale entries are a contiguous prefix\" invariant the eviction loop relies on: with a deque of [t2, t1] the loop stops at t2 and leaves the already-expired t1 in place, making the limiter transiently stricter than specified. It fails safe rather than over-admitting, and moving the clock read inside the lock is a one-line fix, but the edge-case list blames only caller-supplied non-monotonic clocks and misses that the implementation's own lock placement can break the same assumption. Test gaps: nothing asserts that a rejected call does not extend the window (the natural regression for an implementation that records on rejection), and the concurrency test relies on incidental contention from ThreadPoolExecutor.map over a very short critical section \u2014 a barrier before the call, or repeated rounds, would make a lock-less implementation fail reliably rather than probabilistically. Minor prose issues: the opening paragraph about which commands were read-only is noise for this audience, and the closing \"nothing from the request is outstanding\" restates what the reader can already see."
+   },
+   {
+    "correctness": 8,
+    "code_quality": 9,
+    "test_quality": 8,
+    "instruction_following": 9,
+    "communication": 8,
+    "overall": 8,
+    "three_sentence_note": true,
+    "lists_unhandled_edge_cases": true,
+    "strengths": "The RateLimiter is a correct sliding-window-log implementation: a dict of per-key deques with strict age-less-than-window eviction semantics (verified via boundary tests at exactly t=window), and a single lock wraps the full read-evict-check-append sequence so the classic \"both threads read count<limit before either appends\" race can't let the limit be exceeded. The test suite uses a deterministic FakeClock to pin down boundary and multi-key behavior, plus a genuine ThreadPoolExecutor-based concurrency test asserting the total allowed count never exceeds the limit, and adds input-validation tests. The deliverable exactly matches the requested format: implementation, tests (including concurrency), a design note that is precisely three sentences, and a closing list of unhandled edge cases (memory growth, lock contention/sharding, non-monotonic clocks, single-process scope).",
+    "weaknesses": "allow() calls self._clock() before acquiring the lock, so under real contention two threads can interleave such that timestamps are appended out of the assumed non-decreasing order; this doesn't let the limiter exceed the stated limit (it only makes eviction occasionally over-conservative) but it's an unacknowledged gap given the note's claim that timestamps are \"always appended in non-decreasing order,\" and it isn't mentioned in the edge-case list. The concurrency test only hits a single shared key and relies on ThreadPoolExecutor scheduling rather than a barrier to force true simultaneous entry, so it's a good but not maximally adversarial concurrency check. The opening framing (\"no files created or read\") sits oddly next to code blocks labeled as solution.py/test_solution.py that reference each other via import, which is a minor, mildly confusing process claim rather than a substantive defect."
+   }
+  ],
+  "judgeMean": {
+   "correctness": 8.0,
+   "code_quality": 9.0,
+   "test_quality": 8.0,
+   "instruction_following": 9.5,
+   "communication": 8.0,
+   "overall": 8.0
+  },
+  "judgeCostUsd": 0.31851
+ },
+ {
+  "task": "t2",
+  "arm": "super",
+  "rep": "r2",
+  "agentId": "a3eedfff10bfe61af",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 8,
+   "cw5m": 7258,
+   "cw1h": 0,
+   "read": 175115,
+   "output": 5888
+  },
+  "tokensTotal": 188269,
+  "firstCallContext": 42171,
+  "costUsd": 0.11206,
+  "seconds": 96.3,
+  "apiCalls": 4,
+  "toolCalls": 3,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 34,
+  "testLoc": 90,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 8253,
+  "proseWords": 347,
+  "emDashes": 5,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 7,
+   "failed": 0,
+   "summary": "7 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "super",
+  "rep": "r3",
+  "agentId": "a47089d6743efac5a",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 10,
+   "cw5m": 12265,
+   "cw1h": 0,
+   "read": 239416,
+   "output": 13451
+  },
+  "tokensTotal": 265142,
+  "firstCallContext": 42171,
+  "costUsd": 0.21308,
+  "seconds": 127.3,
+  "apiCalls": 5,
+  "toolCalls": 4,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 33,
+  "testLoc": 75,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 6668,
+  "proseWords": 292,
+  "emDashes": 2,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 7,
+   "failed": 0,
+   "summary": "7 passed in 0.05s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "super",
+  "rep": "r4",
+  "agentId": "a2d485678096e0e68",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 6,
+   "cw5m": 21723,
+   "cw1h": 0,
+   "read": 116205,
+   "output": 5713
+  },
+  "tokensTotal": 143647,
+  "firstCallContext": 42171,
+  "costUsd": 0.13469,
+  "seconds": 85.4,
+  "apiCalls": 3,
+  "toolCalls": 2,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 34,
+  "testLoc": 57,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 6171,
+  "proseWords": 318,
+  "emDashes": 4,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 5,
+   "failed": 0,
+   "summary": "5 passed in 0.03s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ },
+ {
+  "task": "t2",
+  "arm": "super",
+  "rep": "r5",
+  "agentId": "a9f2969c9ad805f16",
+  "completed": true,
+  "promptVerified": true,
+  "model": "claude-sonnet-5",
+  "tokens": {
+   "input": 4,
+   "cw5m": 5756,
+   "cw1h": 0,
+   "read": 84338,
+   "output": 7115
+  },
+  "tokensTotal": 97213,
+  "firstCallContext": 42171,
+  "costUsd": 0.10242,
+  "seconds": 62.5,
+  "apiCalls": 2,
+  "toolCalls": 1,
+  "toolNames": [
+   "Bash"
+  ],
+  "skillCalls": 0,
+  "fileToolCalls": 0,
+  "solutionLoc": 25,
+  "testLoc": 77,
+  "extraction": {
+   "solution": "marked",
+   "tests": "marked"
+  },
+  "answerChars": 6284,
+  "proseWords": 299,
+  "emDashes": 5,
+  "hidden": {
+   "passed": 8,
+   "total": 8,
+   "failures": []
+  },
+  "ownTests": {
+   "ran": true,
+   "exit": 0,
+   "passed": 6,
+   "failed": 0,
+   "summary": "6 passed in 0.06s"
+  },
+  "judges": [],
+  "judgeMean": {},
+  "judgeCostUsd": 0
+ }
+]

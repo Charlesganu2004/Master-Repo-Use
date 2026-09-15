@@ -1,0 +1,21 @@
+{
+  "tasks": {
+    "t1": {
+      "name": "Duration parser",
+      "level": "standard",
+      "prompt": "Write a Python function parse_duration(text) that converts a human duration string such as '1h30m', '45s' or '2d4h' into an integer number of seconds. Units are d, h, m and s; each appears at most once and in that order. Raise ValueError with a clear message for malformed input. Include unit tests."
+    },
+    "t2": {
+      "name": "Sliding-window rate limiter",
+      "level": "slightly harder",
+      "prompt": "Implement a thread-safe sliding-window rate limiter in Python: a class RateLimiter(limit, window, clock=time.monotonic) whose allow(key) method returns True and records the call if that key has had fewer than `limit` allowed calls in the last `window` seconds, and returns False otherwise. Include unit tests, one of which exercises concurrent callers. Then write a three-sentence note on why you chose the data structure, and finish by listing any edge case you did not handle."
+    }
+  },
+  "delivery": "Deliver your answer the way you normally would to the person who asked. Put the complete implementation in one ```python block whose first line is `# solution.py`, and your tests in one ```python block whose first line is `# test_solution.py`. You may run Python to check your work, for example with `python - <<'EOF'`, but do not create or modify files and do not read any files.",
+  "no_skills": "Do not use the Skill tool.",
+  "notes": [
+    "delivery is appended to every arm unchanged, so the only difference between arms is the injected context above the task",
+    "no_skills is appended to the arms that would not have the master skills installed in real use: bare, ponytail and caveman. The super arms may load the skills their harness names, as they would in real use",
+    "the interface names (parse_duration, RateLimiter, allow, clock) are fixed so a hidden test suite can score every answer the same way"
+  ]
+}

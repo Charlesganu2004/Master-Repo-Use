@@ -62,3 +62,9 @@ master_harness/super_chain.py
 # Raw benchmark sessions contain local machine paths. Export reviewed, sanitized
 # reports explicitly; keep the original downloadable archive in session artifacts.
 /benchmarks/private-benchmark-report.zip
+
+# graphify writes a graph of the repo here; generated, large, and rebuilt in seconds
+graphify-out/
+
+# graphify writes this per machine and it holds an absolute local path to the shim
+.gemini/settings.json

@@ -1,0 +1,9 @@
+Good — this confirms `harness_super` is referenced from `harness_proxy.py`, `harness_wrap.py`, `skill_pipeline.py`, `super_chain.py`, `build_atlas_data.py`, `harness_ab_test.py`, `setup.py`, and its own file. Combined with the earlier evidence, the three clearest hubs (highest fan-in/out across the codebase, verified by direct grep on non-test source) are:
+
+1. **`repo_root()`** (and the `harness_paths` module built on it) — defined in `scripts/harness_paths.py` (mirrored at `master_harness/harness_paths.py`). It's the base primitive every other function in that file calls internally (16 internal call sites), and the module itself is imported by nearly every harness surface: `auto_mode_harness.py`, `harness_computer.py`, `harness_goal.py`, `harness_super.py`, `install_auto_mode.py`, `verify_auto_mode.py`, `skill_pipeline.py`, `resources.py`, `_loader.py`, `cli.py`.
+
+2. **`context_for()`** — defined in `scripts/hooks/skill_pipeline.py` (mirrored `master_harness/skill_pipeline.py`). It assembles the injected context block and is called (directly or via the `harness_goal.context_for`/`harness_super.context_for` wrappers) from `auto_mode_harness.py`, `harness_goal.py`, `harness_proxy.py`, `harness_super.py`, `harness_wrap.py`, `harness_ab_test.py`, and `build_atlas_data.py`.
+
+3. **`harness_super` module** (its `context_for`/chain functions) — defined in `scripts/harness_super.py`. It's the orchestration layer invoked by `harness_proxy.py`, `harness_wrap.py`, `skill_pipeline.py`, `super_chain.py`, `harness_ab_test.py`, and `build_atlas_data.py`, and it in turn drives `harness_computer`, `harness_proxy`, and `harness_wrap` as subprocesses.
+
+(Note: `master_harness/` and `scripts/` contain near-duplicate copies of these modules by design — see `master_harness/resources.py`'s docstring — so the canonical definitions live in `scripts/`.)

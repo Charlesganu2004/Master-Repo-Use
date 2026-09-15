@@ -1,0 +1,78 @@
+# test_solution.py
+import unittest
+
+from solution import parse_duration
+
+
+class TestParseDuration(unittest.TestCase):
+    def test_single_units(self):
+        self.assertEqual(parse_duration('45s'), 45)
+        self.assertEqual(parse_duration('30m'), 1800)
+        self.assertEqual(parse_duration('5h'), 18000)
+        self.assertEqual(parse_duration('2d'), 172800)
+
+    def test_combined_units(self):
+        self.assertEqual(parse_duration('1h30m'), 5400)
+        self.assertEqual(parse_duration('2d4h'), 187200)
+        self.assertEqual(parse_duration('1d2h3m4s'), 93784)
+
+    def test_zero_and_leading_zeros(self):
+        self.assertEqual(parse_duration('0s'), 0)
+        self.assertEqual(parse_duration('01h005m'), 3900)
+
+    def test_large_numbers(self):
+        self.assertEqual(parse_duration('100d'), 8640000)
+
+    def test_empty_string_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('')
+
+    def test_non_string_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration(None)
+        with self.assertRaises(ValueError):
+            parse_duration(90)
+
+    def test_unknown_unit_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('1x')
+
+    def test_number_without_unit_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('1')
+
+    def test_non_numeric_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('abc')
+
+    def test_negative_number_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('-5s')
+
+    def test_decimal_number_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('1.5h')
+
+    def test_whitespace_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration(' 1h')
+        with self.assertRaises(ValueError):
+            parse_duration('1h ')
+
+    def test_repeated_unit_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('1h1h')
+        with self.assertRaises(ValueError):
+            parse_duration('1d1d')
+
+    def test_out_of_order_units_raises(self):
+        with self.assertRaises(ValueError):
+            parse_duration('30m1h')
+        with self.assertRaises(ValueError):
+            parse_duration('1s1m')
+        with self.assertRaises(ValueError):
+            parse_duration('1s1d')
+
+
+if __name__ == '__main__':
+    unittest.main()

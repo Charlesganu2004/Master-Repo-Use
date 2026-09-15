@@ -1,0 +1,84 @@
+# test_solution.py
+import threading
+import unittest
+from concurrent.futures import ThreadPoolExecutor
+
+from solution import RateLimiter
+
+
+class FakeClock:
+    """Manually advanceable clock so window-boundary behavior is deterministic."""
+
+    def __init__(self, start: float = 0.0):
+        self._now = start
+        self._lock = threading.Lock()
+
+    def __call__(self) -> float:
+        with self._lock:
+            return self._now
+
+    def advance(self, seconds: float) -> None:
+        with self._lock:
+            self._now += seconds
+
+
+class RateLimiterTests(unittest.TestCase):
+    def test_allows_up_to_limit_then_blocks(self):
+        clock = FakeClock()
+        limiter = RateLimiter(limit=3, window=10, clock=clock)
+        self.assertTrue(limiter.allow("a"))
+        self.assertTrue(limiter.allow("a"))
+        self.assertTrue(limiter.allow("a"))
+        self.assertFalse(limiter.allow("a"))
+
+    def test_window_slides_and_frees_capacity(self):
+        clock = FakeClock()
+        limiter = RateLimiter(limit=2, window=5, clock=clock)
+        self.assertTrue(limiter.allow("a"))       # t=0
+        clock.advance(3)
+        self.assertTrue(limiter.allow("a"))       # t=3, both within window
+        self.assertFalse(limiter.allow("a"))      # limit hit
+
+        clock.advance(2.001)                      # t=5.001: t=0 call expires
+        self.assertTrue(limiter.allow("a"))       # slot freed up
+        self.assertFalse(limiter.allow("a"))      # t=3 call still counts
+
+    def test_keys_are_independent(self):
+        clock = FakeClock()
+        limiter = RateLimiter(limit=1, window=10, clock=clock)
+        self.assertTrue(limiter.allow("a"))
+        self.assertFalse(limiter.allow("a"))
+        self.assertTrue(limiter.allow("b"))
+
+    def test_invalid_arguments_raise(self):
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=0, window=10)
+        with self.assertRaises(ValueError):
+            RateLimiter(limit=5, window=0)
+
+    def test_concurrent_callers_never_exceed_limit(self):
+        limit = 50
+        clock = FakeClock()  # frozen: every call lands at the same instant
+        limiter = RateLimiter(limit=limit, window=10, clock=clock)
+
+        num_threads = 20
+        calls_per_thread = 25  # 500 attempts contending for 50 slots
+        results = []
+        results_lock = threading.Lock()
+
+        def worker():
+            local_results = [limiter.allow("shared-key") for _ in range(calls_per_thread)]
+            with results_lock:
+                results.extend(local_results)
+
+        with ThreadPoolExecutor(max_workers=num_threads) as pool:
+            futures = [pool.submit(worker) for _ in range(num_threads)]
+            for f in futures:
+                f.result()
+
+        self.assertEqual(len(results), num_threads * calls_per_thread)
+        self.assertEqual(sum(results), limit)  # exactly `limit` succeed, never more
+
+
+if __name__ == "__main__":
+    unittest.main()

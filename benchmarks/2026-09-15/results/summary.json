@@ -1,0 +1,112 @@
+{
+ "g1:bare_strict": {
+  "n": 3,
+  "scoreRate": 0.0,
+  "withinLimit": 0,
+  "answerTokens": 984,
+  "maxAnswerTokens": 1059,
+  "costUsd": 0.3918,
+  "seconds": 157.8,
+  "toolCalls": 17,
+  "graphifyRuns": 0
+ },
+ "g1:bare_nograph": {
+  "n": 3,
+  "scoreRate": 0.333,
+  "withinLimit": 1,
+  "answerTokens": 610,
+  "maxAnswerTokens": 1780,
+  "costUsd": 0.33105,
+  "seconds": 156.1,
+  "toolCalls": 16,
+  "graphifyRuns": 0
+ },
+ "g1:bare_graph": {
+  "n": 3,
+  "scoreRate": 1.0,
+  "withinLimit": 3,
+  "answerTokens": 128,
+  "maxAnswerTokens": 200,
+  "costUsd": 0.05348,
+  "seconds": 21.2,
+  "toolCalls": 3,
+  "graphifyRuns": 3
+ },
+ "g1:base_graph": {
+  "n": 3,
+  "scoreRate": 1.0,
+  "withinLimit": 3,
+  "answerTokens": 268,
+  "maxAnswerTokens": 270,
+  "costUsd": 0.04567,
+  "seconds": 21.9,
+  "toolCalls": 2,
+  "graphifyRuns": 3
+ },
+ "g1:super_graph": {
+  "n": 3,
+  "scoreRate": 1.0,
+  "withinLimit": 3,
+  "answerTokens": 232,
+  "maxAnswerTokens": 237,
+  "costUsd": 0.05717,
+  "seconds": 25.3,
+  "toolCalls": 3,
+  "graphifyRuns": 3
+ },
+ "g2:bare_strict": {
+  "n": 3,
+  "scoreRate": 1.0,
+  "withinLimit": 3,
+  "answerTokens": 149,
+  "maxAnswerTokens": 223,
+  "costUsd": 0.04731,
+  "seconds": 13.2,
+  "toolCalls": 3,
+  "graphifyRuns": 0
+ },
+ "g2:bare_nograph": {
+  "n": 3,
+  "scoreRate": 1.0,
+  "withinLimit": 3,
+  "answerTokens": 99,
+  "maxAnswerTokens": 137,
+  "costUsd": 0.04348,
+  "seconds": 11.6,
+  "toolCalls": 3,
+  "graphifyRuns": 0
+ },
+ "g2:bare_graph": {
+  "n": 3,
+  "scoreRate": 1.0,
+  "withinLimit": 3,
+  "answerTokens": 98,
+  "maxAnswerTokens": 167,
+  "costUsd": 0.03463,
+  "seconds": 24.9,
+  "toolCalls": 2,
+  "graphifyRuns": 3
+ },
+ "g2:base_graph": {
+  "n": 3,
+  "scoreRate": 1.0,
+  "withinLimit": 3,
+  "answerTokens": 162,
+  "maxAnswerTokens": 269,
+  "costUsd": 0.04078,
+  "seconds": 15.8,
+  "toolCalls": 3,
+  "graphifyRuns": 3
+ },
+ "g2:super_graph": {
+  "n": 3,
+  "scoreRate": 1.0,
+  "withinLimit": 3,
+  "answerTokens": 152,
+  "maxAnswerTokens": 164,
+  "costUsd": 0.02723,
+  "seconds": 13.2,
+  "toolCalls": 1,
+  "graphifyRuns": 2
+ }
+}

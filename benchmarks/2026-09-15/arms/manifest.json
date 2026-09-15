@@ -1,0 +1,60 @@
+{
+  "limit": 400,
+  "graphify": "<graphify>",
+  "tasks": {
+    "g1": {
+      "bare_nograph": {
+        "promptBytes": 339,
+        "contextBytes": 0,
+        "sha256": "1e9606152ccf28ed6e49803ef544f3ae12c5d85c4f8c1e23170ab5e432910d01"
+      },
+      "bare_graph": {
+        "promptBytes": 855,
+        "contextBytes": 0,
+        "sha256": "087411e45aeb6395210b7754747878fbd0990e3ca5221aa4387831f6fc90003e"
+      },
+      "base_graph": {
+        "promptBytes": 4813,
+        "contextBytes": 3987,
+        "sha256": "0ad284a5566bd75aa184559ece3cdb4247007ef81224cc91e54b3301936b5160"
+      },
+      "super_graph": {
+        "promptBytes": 7225,
+        "contextBytes": 6399,
+        "sha256": "c5e259e9fe7e8fc99f4f1dab746f2d7ff58d8244b4981d023b976db686b6eb7f"
+      },
+      "bare_strict": {
+        "promptBytes": 456,
+        "contextBytes": 0,
+        "sha256": "99e4af6644d1806e764a8dc0008dc30b9d6cb3a9a67d7cc70b28f9086e0bccde"
+      }
+    },
+    "g2": {
+      "bare_nograph": {
+        "promptBytes": 327,
+        "contextBytes": 0,
+        "sha256": "cb24d22afc13d7c3ad143f8e2a8d524f87e52bca6ad0f6692a5eff4f556c53a5"
+      },
+      "bare_graph": {
+        "promptBytes": 843,
+        "contextBytes": 0,
+        "sha256": "9b7c34f3f48b7e331f17de6e0a553ee61122dc25b609a0e9e7173a922c32ead5"
+      },
+      "base_graph": {
+        "promptBytes": 4789,
+        "contextBytes": 3975,
+        "sha256": "1f7d87d4dadc84885f09de2890cb1f3aa7bb5b8ba446567436918e8cb875fd4e"
+      },
+      "super_graph": {
+        "promptBytes": 7201,
+        "contextBytes": 6387,
+        "sha256": "c4d4b933617c3d3626235af723c4a20129a2f655c0a4bee00af8cc5745258a6a"
+      },
+      "bare_strict": {
+        "promptBytes": 444,
+        "contextBytes": 0,
+        "sha256": "0da42fd4ae7279451ff17e2d518bb814234c8952a73995c639aa04a0ebc750fc"
+      }
+    }
+  }
+}

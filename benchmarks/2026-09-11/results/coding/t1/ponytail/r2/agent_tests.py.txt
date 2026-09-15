@@ -1,0 +1,54 @@
+# test_solution.py
+import unittest
+
+from solution import parse_duration
+
+
+class ParseDurationTests(unittest.TestCase):
+    def test_valid_combinations(self):
+        self.assertEqual(parse_duration("1h30m"), 5400)
+        self.assertEqual(parse_duration("45s"), 45)
+        self.assertEqual(parse_duration("2d4h"), 187200)
+        self.assertEqual(parse_duration("1d1h1m1s"), 90061)
+        self.assertEqual(parse_duration("0s"), 0)
+        self.assertEqual(parse_duration("10d"), 864000)
+
+    def test_wrong_order_rejected(self):
+        with self.assertRaises(ValueError):
+            parse_duration("1h30s2d")
+
+    def test_duplicate_unit_rejected(self):
+        with self.assertRaises(ValueError):
+            parse_duration("1h2h")
+
+    def test_missing_unit_rejected(self):
+        with self.assertRaises(ValueError):
+            parse_duration("100")
+
+    def test_missing_number_rejected(self):
+        with self.assertRaises(ValueError):
+            parse_duration("h30m")
+
+    def test_negative_and_decimal_rejected(self):
+        with self.assertRaises(ValueError):
+            parse_duration("-5s")
+        with self.assertRaises(ValueError):
+            parse_duration("1.5h")
+
+    def test_unknown_unit_and_whitespace_rejected(self):
+        with self.assertRaises(ValueError):
+            parse_duration("30x")
+        with self.assertRaises(ValueError):
+            parse_duration("1h ")
+
+    def test_empty_and_non_string_rejected(self):
+        with self.assertRaises(ValueError):
+            parse_duration("")
+        with self.assertRaises(ValueError):
+            parse_duration(None)
+        with self.assertRaises(ValueError):
+            parse_duration(5)
+
+
+if __name__ == "__main__":
+    unittest.main()
