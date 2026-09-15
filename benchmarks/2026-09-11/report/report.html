@@ -1,0 +1,357 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Harness, Skills and Browser Benchmark</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
+<style>
+@page { size: A4; margin: 16mm 15mm 18mm; }
+:root { --ink:#121316; --ink2:#454a53; --ink3:#6b717b; --line:rgba(20,22,27,.14); --accent:#c44e16; --panel:#fbfaf7; --zone:rgba(20,22,27,.03); }
+* { box-sizing: border-box; }
+body { margin:0; color:var(--ink); background:#fff; font:400 10.5pt/1.55 "Geist","Segoe UI",system-ui,sans-serif; }
+h1 { font-size:26pt; line-height:1.1; margin:0 0 6pt; letter-spacing:-.02em; font-weight:650; }
+h2 { font-size:16pt; margin:22pt 0 8pt; letter-spacing:-.01em; font-weight:620; break-after:avoid; }
+h3 { font-size:11.5pt; margin:14pt 0 6pt; font-weight:620; break-after:avoid; }
+p, li { max-width:170mm; color:var(--ink2); }
+.part { break-before:page; }
+.eyebrow { font:500 8.5pt "Geist Mono",Consolas,monospace; letter-spacing:.06em; text-transform:uppercase; color:var(--ink3); }
+.lede { font-size:12pt; color:var(--ink2); }
+code, .mono { font-family:"Geist Mono",Consolas,monospace; font-size:.9em; }
+pre { font:8.5pt/1.5 "Geist Mono",Consolas,monospace; background:#f4f3f0; border:1px solid var(--line); border-radius:6px;
+      padding:8pt 10pt; white-space:pre-wrap; overflow-wrap:anywhere; }
+.table-wrap { margin:6pt 0 10pt; }
+table { width:100%; border-collapse:collapse; font-size:8pt; font-variant-numeric:tabular-nums; break-inside:auto; }
+th, td { text-align:right; padding:3.5pt 4pt; border-bottom:1px solid var(--line); vertical-align:top; }
+th:first-child, td:first-child, th:nth-child(2):not(:last-child) { text-align:left; }
+thead th { font:500 7pt "Geist Mono",Consolas,monospace; text-transform:uppercase; letter-spacing:.04em; color:var(--ink3); }
+tr.subject td { background:rgba(196,78,22,.07); }
+tr { break-inside:avoid; }
+figure { margin:8pt 0 12pt; break-inside:avoid; }
+figure img { width:100%; }
+figcaption { font-size:8.5pt; color:var(--ink3); margin-top:3pt; }
+.note { font-size:8.5pt; color:var(--ink3); }
+.callout { border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:6px; padding:8pt 12pt; margin:10pt 0; background:var(--panel); break-inside:avoid; }
+.callout p { margin:4pt 0; }
+.two { display:grid; grid-template-columns:1fr 1fr; gap:10pt; }
+.dg { width:100%; height:auto; font-family:"Geist","Segoe UI",sans-serif; }
+.dg .zone { fill:var(--zone); stroke:rgba(20,22,27,.26); stroke-width:1; }
+.dg .zone.untrusted { stroke-dasharray:6 4; }
+.dg .zlabel { font:500 10.5px "Geist Mono",monospace; letter-spacing:.08em; fill:var(--ink3); }
+.dg .box { fill:#fff; stroke:rgba(20,22,27,.3); stroke-width:1.2; }
+.dg .box.gate { stroke:var(--accent); stroke-width:2.2; }
+.dg .ghost { fill:none; stroke:var(--ink3); stroke-width:1.2; stroke-dasharray:4 4; }
+.dg .t { font-size:12.5px; font-weight:600; fill:var(--ink); }
+.dg .t.gate { fill:var(--accent); }
+.dg .s { font-size:10.5px; fill:var(--ink2); }
+.dg .g { font-size:11px; fill:var(--ink3); font-style:italic; }
+.dg .row { font-size:12px; font-weight:600; fill:var(--ink); }
+.dg .row2 { font-size:11px; fill:var(--ink3); }
+.dg .edge { fill:none; stroke:var(--ink3); stroke-width:1.4; }
+.dg .edge.dashed { stroke-dasharray:4 3; }
+.dg .lbl { font-size:10.5px; fill:var(--ink3); paint-order:stroke; stroke:#fff; stroke-width:4px; stroke-linejoin:round; }
+.dg .head { fill:var(--ink3); }
+</style></head><body>
+
+<p class="eyebrow">Master Repo &middot; 2026-09-15 &middot; commit 649ef5a</p>
+<h1>Harness, Skills and Browser Benchmark</h1>
+<p class="lede">Six ways of asking, two coding tasks, five runs each, then three browser tools on the same three tasks, then graphify across the harnesses under a token ceiling. Everything here was run against real models and real tools on one machine, and every number comes from a transcript or a results file.</p>
+<div class="callout"><h3>The short version</h3><ul><li><b>The harness does not make the model more correct on these tasks.</b> All six prompt arms passed 100% of the hidden tests on both coding tasks, and the plain no-harness arm scored highest with the blind judges on the harder one. What the arms change is cost, length and shape.</li><li><b>The compression skills pay for themselves; the chain alone does not.</b> Ponytail cut cost 33.5% on T1 and 23.9% on T2, caveman 32.6% and 18.6%, and the two on top of the super harness 33.9% and 3.7%. The super harness by itself cost 10.7% more on T1 and 1.8% less on T2.</li><li><b>Removing caveman from a pair that had it made everything worse.</b> Super plus ponytail without caveman was the most expensive arm measured (+24.2% against no harness on T2), the wordiest (315 prose words), and produced 49 em dashes across ten answers, which its own rule 3 forbids.</li><li><b>graphify changes the answer on questions a graph answers.</b> Naming the three architectural hubs: 0% and 33% correct without it, 100% with it, at a seventh of the cost and a sixth of the time. On a question one grep answers, every arm scored 100%: the gain is specific, not general.</li><li><b>The token ceiling is advisory unless it runs through the proxy.</b> At 600 tokens, 5 of 16 answers stayed inside it. Rewriting rule 15 to state a word budget made answers shorter and more accurate but did not change compliance.</li><li><b>Rustwright is the fastest engine and by far the lightest; caveman-browse reads a page for fewer tokens but acts slowly.</b> Checkout took 1.43s on Rustwright, 1.46s on Playwright and 42.1s on caveman-browse, whose client-line actions each wait to settle.</li></ul></div>
+<h3>What was asked, and where each part is answered</h3><ul><li><b>A live test of the super harness against no harness</b>, with the prompts and a graph: Part A.</li><li><b>Super with ponytail and caveman against super with ponytail but no caveman</b>, and <b>ponytail against caveman</b>: Part A.</li><li><b>caveman-browse against Playwright against a Rust Playwright</b>: Part B. The Rust one is Rustwright, from Skyvern, which is Playwright's API on a Rust engine.</li><li><b>The prompts, including a slightly harder one to run yourself</b>: Part C.</li><li><b>Does the super harness work, is it automatic, and does /token limit make the model stop</b>: Part D.</li><li><b>The + on client surfaces</b>, and <b>skills as deep as their originals, updated when upstream moves</b>: Part D.</li><li><b>Moving skills, tools, plugins and MCP into MongoDB or PostgreSQL</b>: whether it is possible, whether it works, the flaws, a plan and an architecture diagram: Part E.</li></ul>
+
+<section class="part"><p class="eyebrow">Part A</p><h2>Super harness against no harness, and the skill combinations</h2>
+<h3>How it was run</h3><p>Every arm ran in the same scaffold: Claude Sonnet 5 in an agent profile that does not load CLAUDE.md, so the no-harness arm really has no harness. A probe confirmed it: asked whether it could see the phrases "Standing pipeline" or "THREE LAYERS", it answered no to both.</p><p>The harness arms' context is not written by hand. It is produced by this repository's own hook, in the mode that arm names, for that exact prompt, so what the model receives is what a real session receives. Every run's first message was checked against the sha256 of its committed prompt file; 60 of 60 matched.</p><p>Scoring is objective first: a hidden test suite the model never saw, plus the answer's own tests re-run against its own code. Two blind judges, one Opus 5 and one Sonnet 5, then scored five dimensions without being told which arm produced the answer.</p>
+<figure><img src="../charts/coding_overview.png" alt="Six arms, two tasks, five runs each. Bars are medians; whiskers are the range across the five runs."><figcaption>Six arms, two tasks, five runs each. Bars are medians; whiskers are the range across the five runs.</figcaption></figure>
+<h3>T1, the standard prompt: duration parser</h3><div class="table-wrap"><table>
+<thead><tr><th>Arm</th><th>Injected KB</th><th>Real tokens added</th><th>Cost</th><th>Cost vs none</th>
+<th>Seconds</th><th>Output tokens</th><th>Solution LOC</th><th>Test LOC</th><th>Tool calls</th>
+<th>Prose words</th><th>Hidden tests</th><th>Own tests green</th><th>Judge /10</th><th>Cost per correct</th></tr></thead>
+<tbody><tr class=""><td>No harness</td>
+<td>0.0</td><td>0</td>
+<td>$0.1355</td><td>+0%</td>
+<td>70.8</td><td>6,534</td><td>19</td>
+<td>61</td><td>2</td><td>121</td>
+<td>100%</td><td>5/5</td>
+<td>8.50</td><td>$0.1361</td></tr><tr class="subject"><td>Super harness</td>
+<td>5.3</td><td>1,807</td>
+<td>$0.1500</td><td>+11%</td>
+<td>66.7</td><td>6,418</td><td>20</td>
+<td>65</td><td>1</td><td>134</td>
+<td>100%</td><td>5/5</td>
+<td>8.00</td><td>$0.1297</td></tr><tr class=""><td>Super + ponytail + caveman</td>
+<td>15.7</td><td>5,523</td>
+<td>$0.0895</td><td>-34%</td>
+<td>49.4</td><td>4,065</td><td>15</td>
+<td>51</td><td>2</td><td>42</td>
+<td>100%</td><td>5/5</td>
+<td>8.00</td><td>$0.0940</td></tr><tr class=""><td>Super + ponytail, no caveman</td>
+<td>10.3</td><td>3,555</td>
+<td>$0.1459</td><td>+8%</td>
+<td>78.1</td><td>7,840</td><td>15</td>
+<td>56</td><td>3</td><td>115</td>
+<td>100%</td><td>5/5</td>
+<td>7.50</td><td>$0.1371</td></tr><tr class=""><td>Ponytail only</td>
+<td>5.3</td><td>1,883</td>
+<td>$0.0900</td><td>-34%</td>
+<td>42.0</td><td>3,961</td><td>11</td>
+<td>40</td><td>2</td><td>34</td>
+<td>100%</td><td>5/5</td>
+<td>8.50</td><td>$0.0928</td></tr><tr class=""><td>Caveman only</td>
+<td>5.2</td><td>1,895</td>
+<td>$0.0913</td><td>-33%</td>
+<td>40.2</td><td>3,398</td><td>16</td>
+<td>51</td><td>2</td><td>24</td>
+<td>100%</td><td>5/5</td>
+<td>8.00</td><td>$0.0845</td></tr></tbody></table></div>
+<h3>T2, the slightly harder prompt: sliding-window rate limiter</h3><div class="table-wrap"><table>
+<thead><tr><th>Arm</th><th>Injected KB</th><th>Real tokens added</th><th>Cost</th><th>Cost vs none</th>
+<th>Seconds</th><th>Output tokens</th><th>Solution LOC</th><th>Test LOC</th><th>Tool calls</th>
+<th>Prose words</th><th>Hidden tests</th><th>Own tests green</th><th>Judge /10</th><th>Cost per correct</th></tr></thead>
+<tbody><tr class=""><td>No harness</td>
+<td>0.0</td><td>0</td>
+<td>$0.1372</td><td>+0%</td>
+<td>65.1</td><td>7,828</td><td>34</td>
+<td>79</td><td>1</td><td>296</td>
+<td>100%</td><td>5/5</td>
+<td>9.00</td><td>$0.1317</td></tr><tr class="subject"><td>Super harness</td>
+<td>5.3</td><td>1,853</td>
+<td>$0.1347</td><td>-2%</td>
+<td>89.4</td><td>7,115</td><td>33</td>
+<td>75</td><td>3</td><td>305</td>
+<td>100%</td><td>5/5</td>
+<td>8.00</td><td>$0.1496</td></tr><tr class=""><td>Super + ponytail + caveman</td>
+<td>15.8</td><td>5,569</td>
+<td>$0.1321</td><td>-4%</td>
+<td>76.5</td><td>6,477</td><td>25</td>
+<td>59</td><td>3</td><td>208</td>
+<td>100%</td><td>5/5</td>
+<td>7.50</td><td>$0.1263</td></tr><tr class=""><td>Super + ponytail, no caveman</td>
+<td>10.3</td><td>3,601</td>
+<td>$0.1704</td><td>+24%</td>
+<td>107.5</td><td>7,929</td><td>25</td>
+<td>56</td><td>3</td><td>315</td>
+<td>100%</td><td>5/5</td>
+<td>8.00</td><td>$0.1600</td></tr><tr class=""><td>Ponytail only</td>
+<td>5.3</td><td>1,883</td>
+<td>$0.1044</td><td>-24%</td>
+<td>56.5</td><td>4,415</td><td>25</td>
+<td>48</td><td>1</td><td>177</td>
+<td>100%</td><td>5/5</td>
+<td>8.00</td><td>$0.1006</td></tr><tr class=""><td>Caveman only</td>
+<td>5.2</td><td>1,895</td>
+<td>$0.1117</td><td>-19%</td>
+<td>52.8</td><td>5,575</td><td>26</td>
+<td>64</td><td>2</td><td>134</td>
+<td>100%</td><td>4/5</td>
+<td>8.00</td><td>$0.1532</td></tr></tbody></table></div>
+<p class="note">Real tokens added is the first API call's full context for that arm minus the no-harness arm's, as Claude's own
+tokenizer counted it. Hidden tests are the checks in hidden/, which no model saw. Own tests green counts runs whose own tests passed
+when run against their own code. Judge is the mean of two blind Opus 5 judges per answer. Cost per correct is total cost divided by
+answers that passed every hidden test.</p>
+<figure><img src="../charts/coding_quality.png" alt="Quality: hidden tests passed, blind judge score, and cost per fully correct answer."><figcaption>Quality: hidden tests passed, blind judge score, and cost per fully correct answer.</figcaption></figure>
+<figure><img src="../charts/coding_efficiency.png" alt="Quality against cost, per arm and task. Up and to the left is better."><figcaption>Quality against cost, per arm and task. Up and to the left is better.</figcaption></figure>
+<h3>Blind judge scores by dimension (mean of both tasks)</h3><div class="table-wrap"><table>
+<thead><tr><th>Arm</th><th>Correctness</th><th>Code quality</th><th>Test quality</th><th>Instructions followed</th>
+<th>Communication</th><th>T2 three-sentence note</th><th>T2 lists unhandled cases</th></tr></thead>
+<tbody><tr><td>No harness</td><td>8.88</td><td>8.75</td><td>8.50</td><td>9.75</td><td>8.12</td><td>100%</td><td>100%</td></tr><tr><td>Super harness</td><td>8.50</td><td>8.75</td><td>8.25</td><td>9.25</td><td>6.75</td><td>100%</td><td>100%</td></tr><tr><td>Super + ponytail + caveman</td><td>8.75</td><td>8.25</td><td>7.62</td><td>9.00</td><td>5.75</td><td>100%</td><td>100%</td></tr><tr><td>Super + ponytail, no caveman</td><td>8.75</td><td>8.00</td><td>8.25</td><td>8.50</td><td>6.00</td><td>100%</td><td>100%</td></tr><tr><td>Ponytail only</td><td>8.75</td><td>8.25</td><td>7.75</td><td>9.00</td><td>7.25</td><td>100%</td><td>100%</td></tr><tr><td>Caveman only</td><td>8.25</td><td>8.50</td><td>8.00</td><td>9.25</td><td>5.75</td><td>100%</td><td>100%</td></tr></tbody></table></div>
+<figure><img src="../charts/coding_context.png" alt="What each arm puts in front of the prompt: kilobytes injected, labelled with the real tokens added."><figcaption>What each arm puts in front of the prompt: kilobytes injected, labelled with the real tokens added.</figcaption></figure>
+<h3>What the numbers say</h3><ul><li><b>Correctness saturated.</b> Every arm passed every hidden test on both tasks, 100% across 60 runs. These two tasks do not separate the arms on correctness, and no claim that a harness makes a model more correct can rest on them.</li><li><b>Cost separates them cleanly.</b> On T1: ponytail $0.0900, caveman $0.0913, super plus ponytail plus caveman $0.0895, against $0.1355 with no harness and $0.1500 for the super harness alone. The compression skills are what move the number.</li><li><b>Prose is where the tokens went.</b> Words outside code, T1: caveman 24, ponytail 34, super plus both 42, no harness 121, super alone 134. On T2: caveman 134, ponytail 177, super plus both 208, no harness 296, super alone 305.</li><li><b>Code got shorter too.</b> The solution for T1 was 11 lines under ponytail and 19 with no harness; for T2, 25 lines against 34.</li><li><b>The anti-slop rule is not self-enforcing.</b> Rule 3 says no em dashes. Across ten answers per arm: caveman 5, super plus both 12, no harness 17, ponytail 22, super alone 29, and super plus ponytail without caveman 49. The arm carrying the rule most prominently produced more of them than the arm carrying no rule at all.</li><li><b>The judges did not reward the harness.</b> Means across both tasks put no harness at 8.5 and 9.0, ponytail 8.5 and 8.0, super 8.0 and 8.0, and super plus ponytail without caveman lowest at 7.5. Two judges, three runs per cell, so treat this as a direction rather than a ranking.</li></ul>
+<h3>Super + ponytail + caveman against super + ponytail without caveman, and ponytail against caveman</h3><ul><li><b>Super plus ponytail plus caveman against super plus ponytail with caveman removed.</b> Removing caveman cost 31% more on T2 ($0.1704 against $0.1321), produced 51% more prose (315 words against 208), and produced four times the em dashes (49 against 12). On this evidence caveman is doing the compression work in that pair, and ponytail alone does not replace it.</li><li><b>Ponytail against caveman.</b> They cut cost by about the same amount on T1 (33.5% and 32.6%) and differ in what they cut. Ponytail shortens the code: 11 lines against caveman's 16 on T1. Caveman shortens the talking: 24 words of prose against ponytail's 34 on T1, and 134 against 177 on T2. They are complementary, which is what ponytail's own documentation says: it governs what you build, not how you talk.</li><li><b>The super harness alone is the weakest buy here.</b> It cost more than no harness on T1, produced the most prose of any arm on both tasks, and did not score better with the judges. Its value has to come from the passes that do not show up in a two-task benchmark, such as the review and verify passes on longer work, and this benchmark does not measure that.</li></ul>
+</section>
+
+<section class="part"><p class="eyebrow">Part B</p><h2>caveman-browse against Playwright against Rustwright</h2>
+<p>Three tools on the same three tasks over two local pages: find one order's total in a 240-row table, count the rows matching two conditions, and complete a checkout form and read back the confirmation code. Each tool drove the same installed Microsoft Edge, so the browser is held constant and the engine is what varies.</p><p>Twice over: once with an agent in the loop (Sonnet 5, three runs per tool per task) and once as fixed scripts with no model at all (five cold rounds per tool per task). The scripts for Playwright and Rustwright are literally the same functions; only the import changes.</p>
+<figure><img src="../charts/browser_agent.png" alt="An agent does each task with each tool: tokens and time, with how many of three runs got the right answer."><figcaption>An agent does each task with each tool: tokens and time, with how many of three runs got the right answer.</figcaption></figure>
+<figure><img src="../charts/browser_engine.png" alt="Without a model: seconds per task from a cold start, and the tokens each tool needs to show the orders page."><figcaption>Without a model: seconds per task from a cold start, and the tokens each tool needs to show the orders page.</figcaption></figure>
+<h3>Agent in the loop</h3><div class="table-wrap"><table><thead><tr><th>Task</th><th>Tool</th>
+<th>Correct</th><th>Cost</th><th>Tokens, all kinds</th><th>Output tokens</th><th>Seconds</th><th>Tool calls</th>
+<th>Code lines written</th></tr></thead><tbody><tr><td>lookup</td><td>caveman-browse</td><td>3/3</td><td>$0.1306</td><td>287,444</td><td>2,104</td><td>42.6</td><td>5</td><td>5</td></tr><tr><td>lookup</td><td>playwright</td><td>3/3</td><td>$0.0572</td><td>93,327</td><td>671</td><td>14.6</td><td>1</td><td>13</td></tr><tr><td>lookup</td><td>rustwright</td><td>3/3</td><td>$0.0596</td><td>94,410</td><td>1,142</td><td>21.6</td><td>1</td><td>15</td></tr><tr><td>count</td><td>caveman-browse</td><td>3/3</td><td>$0.1119</td><td>225,155</td><td>2,391</td><td>38.2</td><td>3</td><td>3</td></tr><tr><td>count</td><td>playwright</td><td>3/3</td><td>$0.0664</td><td>127,450</td><td>1,012</td><td>25.1</td><td>2</td><td>34</td></tr><tr><td>count</td><td>rustwright</td><td>3/3</td><td>$0.0780</td><td>128,697</td><td>1,849</td><td>59.0</td><td>2</td><td>44</td></tr><tr><td>checkout</td><td>caveman-browse</td><td>2/2</td><td>$0.3149</td><td>907,142</td><td>7,488</td><td>237.3</td><td>18</td><td>16</td></tr><tr><td>checkout</td><td>playwright</td><td>2/2</td><td>$0.1687</td><td>382,500</td><td>4,201</td><td>124.9</td><td>7</td><td>31</td></tr><tr><td>checkout</td><td>rustwright</td><td>1/1</td><td>$0.2387</td><td>617,578</td><td>4,896</td><td>100.0</td><td>11</td><td>26</td></tr></tbody></table></div>
+<p class="note">Code lines written: lines of Python the agent ran for Playwright and Rustwright; for caveman-browse,
+the number of CLI commands it ran, since its interface is commands rather than a script.</p>
+<h3>No model: the same tasks as fixed scripts, cold start each time</h3><div class="table-wrap"><table><thead><tr><th>Task</th>
+<th>Tool</th><th>Correct</th><th>Median s</th><th>Range s</th><th>Client memory MiB</th></tr></thead>
+<tbody><tr><td>lookup</td><td>caveman-browse</td><td>5/5</td><td>1.59</td><td>1.43 to 2.19</td><td>n/a</td></tr><tr><td>lookup</td><td>playwright</td><td>5/5</td><td>1.24</td><td>1.15 to 3.39</td><td>174.5</td></tr><tr><td>lookup</td><td>rustwright</td><td>5/5</td><td>1.21</td><td>1.16 to 1.40</td><td>51.7</td></tr><tr><td>count</td><td>caveman-browse</td><td>5/5</td><td>1.50</td><td>1.46 to 1.70</td><td>n/a</td></tr><tr><td>count</td><td>playwright</td><td>5/5</td><td>1.19</td><td>1.16 to 4.83</td><td>163.9</td></tr><tr><td>count</td><td>rustwright</td><td>5/5</td><td>1.17</td><td>1.09 to 1.29</td><td>50.8</td></tr><tr><td>checkout</td><td>caveman-browse</td><td>5/5</td><td>42.13</td><td>42.06 to 42.24</td><td>n/a</td></tr><tr><td>checkout</td><td>playwright</td><td>5/5</td><td>1.46</td><td>1.44 to 1.63</td><td>196.6</td></tr><tr><td>checkout</td><td>rustwright</td><td>5/5</td><td>1.43</td><td>1.34 to 1.49</td><td>52.0</td></tr></tbody></table></div>
+<div class="two"><div class="table-wrap"><table><thead><tr><th>Page view</th><th>Bytes</th><th>Tokens (o200k)</th></tr></thead>
+<tbody><tr><td>caveman-browse:checkout:full</td><td>2,168</td><td>652</td></tr><tr><td>caveman-browse:checkout:interactive</td><td>296</td><td>80</td></tr><tr><td>caveman-browse:orders:full</td><td>43,264</td><td>12,485</td></tr><tr><td>caveman-browse:orders:interactive</td><td>292</td><td>80</td></tr><tr><td>caveman-browse:orders:query</td><td>84</td><td>25</td></tr><tr><td>playwright:checkout:full</td><td>2,505</td><td>740</td></tr><tr><td>playwright:orders:full</td><td>63,820</td><td>20,097</td></tr><tr><td>rustwright:checkout:full</td><td>2,532</td><td>743</td></tr><tr><td>rustwright:orders:full</td><td>63,872</td><td>20,111</td></tr></tbody></table></div><div class="table-wrap"><table><thead><tr><th>Tool</th><th>Script LOC for the three tasks</th></tr></thead>
+<tbody><tr><td>caveman-browse</td><td>38</td></tr><tr><td>playwright</td><td>22</td></tr><tr><td>rustwright</td><td>22</td></tr></tbody></table></div></div>
+<h3>What the numbers say</h3><ul><li><b>Rustwright is a drop-in and it is faster.</b> The same task functions ran unchanged on both engines. Cold-start medians: 1.21s, 1.17s and 1.43s for lookup, count and checkout, against Playwright's 1.24s, 1.19s and 1.46s. The gap is small on warm local pages and larger at launch.</li><li><b>Rustwright's memory claim holds.</b> Client-side memory, excluding the browser itself: about 51 MiB against Playwright's 164 to 197 MiB, because there is no Node driver process.</li><li><b>caveman-browse reads a page for fewer tokens.</b> The full orders page costs 12,485 tokens as its compressed view against 20,097 for Playwright's ARIA snapshot, 38% less. Its query view of the same page is 25 tokens, and its controls-only view 80.</li><li><b>But acting through it is slow.</b> Checkout took 42.1s against 1.4s, because each command-line action waits for the page to settle and each call reconnects. The read tasks are competitive at 1.5s.</li><li><b>Two limits of its command line, both measured.</b> A snapshot with no url attaches to a blank target, and a snapshot with the url reloads the page, so a form being filled is reset. Reading state after acting has to go through eval. The MCP server's snapshot takes an optional url and does not have this problem.</li><li><b>The agent-level comparison is weaker than the script-level one.</b> Two checkout runs refused the task on the read-only grounds of the agent profile used for isolation, without touching the tool. That is a property of the scaffold, not of Rustwright, and those runs are excluded from the medians rather than counted as failures.</li></ul>
+</section>
+
+<section class="part"><p class="eyebrow">Part C</p><h2>The prompts, so you can run it yourself</h2>
+<h3>T1, the standard prompt</h3><pre>Write a Python function parse_duration(text) that converts a human duration string such as &#x27;1h30m&#x27;, &#x27;45s&#x27; or &#x27;2d4h&#x27; into an integer number of seconds. Units are d, h, m and s; each appears at most once and in that order. Raise ValueError with a clear message for malformed input. Include unit tests.</pre>
+<h3>T2, the slightly harder prompt</h3><pre>Implement a thread-safe sliding-window rate limiter in Python: a class RateLimiter(limit, window, clock=time.monotonic) whose allow(key) method returns True and records the call if that key has had fewer than `limit` allowed calls in the last `window` seconds, and returns False otherwise. Include unit tests, one of which exercises concurrent callers. Then write a three-sentence note on why you chose the data structure, and finish by listing any edge case you did not handle.</pre>
+<h3>Appended to every arm</h3><pre>Deliver your answer the way you normally would to the person who asked. Put the complete implementation in one ```python block whose first line is `# solution.py`, and your tests in one ```python block whose first line is `# test_solution.py`. You may run Python to check your work, for example with `python - &lt;&lt;&#x27;EOF&#x27;`, but do not create or modify files and do not read any files.</pre>
+<p>The bare, ponytail and caveman arms also get: <code>Do not use the Skill tool.</code></p>
+<h3>Browser tasks</h3><pre>lookup: Open http://localhost:8777/benchmarks/2026-09-11/fixtures/orders.html and report the Total shown for order ORD-10173.
+count: Open http://localhost:8777/benchmarks/2026-09-11/fixtures/orders.html and count the orders whose Status is Shipped and whose Total is more than $500. Report the number.
+checkout: Open http://localhost:8777/benchmarks/2026-09-11/fixtures/checkout.html and place an order with Full name Ada Lovelace, Email ada@example.com, Street address 12 Analytical Way, City London, Postcode N1 9GU, Shipping method Express and Coupon code SAVE10, accepting the terms. Report the confirmation code the page shows.</pre>
+<h3>Reproduce</h3><ul><li>Everything is in <code>benchmarks/run-it-yourself/</code>: run <code>setup.ps1</code> or <code>setup.sh</code>, paste the eight prompts it writes into whatever assistant you already pay for, save the replies, and run <code>harness/score.py</code>.</li><li>The two coding prompts are in Part C above and in <code>benchmarks/2026-09-11/prompts/coding.json</code>. The harder one is T2, the rate limiter.</li><li>The measured input side, with no model needed: <code>python scripts/harness_ab_test.py --measure --harder</code>.</li><li>The graph experiment's own prompts and ground truth are in <code>benchmarks/2026-09-15/</code>, and its ground truth is regenerated from the graph, so it moves when the code moves.</li></ul>
+</section>
+
+<section class="part"><p class="eyebrow">Part C2</p><h2>graphify: set up locally, then measured across the harnesses</h2>
+<p>graphify was already in this repository: catalogued, wrapped by skills/master-graphify, shipped to every client by the harness, and named in rule 1 of the standing pipeline and lane rule 12. What was missing was the machine half, so a model told to ask the graph first had nothing to ask.</p><p>It is now installed locally, with ten projects indexed and merged into one graph of 6,213 nodes at ~/.graphify/global-graph.json. Indexing is local AST parsing only: no API key, and the model-backed pass over documents is never reached from scripts/graphify_local.py. Ten projects took about thirty seconds.</p>
+<figure><img src="../../2026-09-15/charts/graphify_experiment.png" alt="graphify experiment results">
+<figcaption>Five arms, two codebase questions, three runs each, every answer capped at 400 tokens.</figcaption></figure>
+<div class="table-wrap"><table><thead><tr><th>Arm</th><th>Runs</th><th>Facts correct</th>
+<th>Within 400 tokens</th><th>Median answer tokens</th><th>Worst answer</th><th>Cost</th><th>Seconds</th>
+<th>Used graphify</th></tr></thead><tbody><tr class="divider"><td colspan="9">g1: Architectural hubs (a graph answers this; reading files does not)</td></tr><tr><td>No harness, graphify forbidden</td><td>3</td><td>0%</td><td>0/3</td><td>984</td><td>1,059</td><td>$0.3918</td><td>157.8</td><td>0/3</td></tr><tr><td>No harness, not offered</td><td>3</td><td>33%</td><td>1/3</td><td>610</td><td>1,780</td><td>$0.3311</td><td>156.1</td><td>0/3</td></tr><tr><td>No harness, graphify offered</td><td>3</td><td>100%</td><td>3/3</td><td>128</td><td>200</td><td>$0.0535</td><td>21.2</td><td>3/3</td></tr><tr class="subject"><td>Base harness + graphify</td><td>3</td><td>100%</td><td>3/3</td><td>268</td><td>270</td><td>$0.0457</td><td>21.9</td><td>3/3</td></tr><tr class="subject"><td>Super harness + graphify</td><td>3</td><td>100%</td><td>3/3</td><td>232</td><td>237</td><td>$0.0572</td><td>25.3</td><td>3/3</td></tr><tr class="divider"><td colspan="9">g2: Definition and caller (one grep finds this)</td></tr><tr><td>No harness, graphify forbidden</td><td>3</td><td>100%</td><td>3/3</td><td>149</td><td>223</td><td>$0.0473</td><td>13.2</td><td>0/3</td></tr><tr><td>No harness, not offered</td><td>3</td><td>100%</td><td>3/3</td><td>99</td><td>137</td><td>$0.0435</td><td>11.6</td><td>0/3</td></tr><tr><td>No harness, graphify offered</td><td>3</td><td>100%</td><td>3/3</td><td>98</td><td>167</td><td>$0.0346</td><td>24.9</td><td>3/3</td></tr><tr class="subject"><td>Base harness + graphify</td><td>3</td><td>100%</td><td>3/3</td><td>162</td><td>269</td><td>$0.0408</td><td>15.8</td><td>3/3</td></tr><tr class="subject"><td>Super harness + graphify</td><td>3</td><td>100%</td><td>3/3</td><td>152</td><td>164</td><td>$0.0272</td><td>13.2</td><td>2/3</td></tr></tbody></table></div>
+<h3>What the numbers say</h3><ul><li><b>On the question a graph answers, it decides the outcome.</b> Naming the three most connected symbols: 0% correct with graphify forbidden, 33% when it was installed but not mentioned, 100% in all three arms that used it. Cost fell from $0.33 to $0.05 and time from 156s to 21s.</li><li><b>On the control question, nothing changed.</b> Which file defines Verifier and what calls it: every arm scored 100%, because one grep answers it. The gain is specific to questions about structure, which is what the skill already claims.</li><li><b>The ceiling held where the graph was used.</b> Every graphify arm kept all three answers inside 400 tokens. The arms without it ran over, once at 1,780 tokens, because they pasted evidence to justify an answer they were not sure of.</li><li><b>The control had to be fixed mid-experiment.</b> graphify is installed machine-wide, so an agent that was not told about it found it anyway. A strict arm that forbids it was added, and it is the one that scored 0%.</li></ul>
+</section>
+
+<section class="part"><p class="eyebrow">Part D</p><h2>The super harness is on, and it works</h2><ul><li>The per-prompt hook is live on this machine in super mode. Feeding the exact hook command registered in <code>~/.claude/settings.json</code> a real prompt returns 6,001 bytes of context carrying the three layers, all ten chain passes through S10, and rule 15 at the limit that prompt set.</li><li>Super mode is stored beside the goal state and switched by <code>python scripts/harness_super.py --mode super|base</code>. <code>--install all</code> turns it on, which is how it was enabled here.</li><li>Nothing is typed to get the rest: the layers, the chain, the standing goal and the lane rules ride every prompt in every client with a hook. Clients without hooks get the same text as a paste bundle.</li><li>The install check <code>python scripts/verify_auto_mode.py</code> reports 47 passed, 7 failed across seven clients. All seven failures are the same file: an installed copy of master-super-harness/SKILL.md that is older than the repository's, in seven client directories. The installer refuses to overwrite a skill it did not write, because it cannot tell an old copy from a local edit, and that refusal is the behaviour that protects a customised skill. It needs a word from Charles either way.</li><li>The benchmark in Part A is itself the strongest evidence that the injection works: every arm's prompt was verified against a sha256 of the committed prompt file, and the arms behave measurably differently.</li></ul>
+<h3>/token limit</h3><ul><li><code>/token limit 2000</code> at the start of a message adds rule 15 for that session: plan the answer to fit, stop at the last clean break, and say what was left out. <code>/token limit off</code> lifts it.</li><li>Four spellings are accepted and all four are parsed by the hook's own parser at build time, so the site cannot advertise one that does not work: <code>/token limit 2000</code>, <code>\token limit 2k</code>, <code>token limit: 4000</code>, <code>/token limit off</code>.</li><li>It persists for the session like the goal, a session that lifted it is not overridden by a global limit, and a question about token limits does not set one: the command needs its marker.</li><li>Through the proxy it is a hard cap, not advice: max_tokens, max_completion_tokens or Ollama's num_predict, chosen by the API path, and it never raises a lower cap the caller already set. Everywhere else it is an instruction the model follows.</li><li>Both pages show it: the harness section lists the four spellings and the mode commands, rendered from the payload the builder produced.</li><li>Measured, because an instruction that is only claimed is not enforced: at a 600-token ceiling across sixteen answers, 5 stayed inside it. Rule 15 was then rewritten to state the word budget the ceiling works out to and to ban the four openers that put a capped answer over, and the same sixteen runs were repeated: answers got shorter, median 720 to 662 tokens, and more accurate, 106 to 112 facts of 120, but compliance did not move, 5 of 16 again. Use the proxy when the ceiling has to hold. Both runs are in <code>benchmarks/run-it-yourself/results/</code>.</li></ul>
+<h3>The + on every client surface</h3><ul><li>Every client-surface group on the main page and in every design now has a + for a client the vetted list does not name.</li><li>Five kinds are covered: an OpenAI-compatible endpoint (open frontier models), Ollama, an IDE extension or coding agent such as GitHub Copilot, a command-line tool with no hook, and a chat product. Each produces exact commands with copy buttons, and each states what it cannot do.</li><li>One generator serves both pages, so the main page and the designs cannot drift apart on the commands for the same client, and the templates are built and checked in Python: every flag is checked against the real CLI at build time.</li><li>Saved clients live in that browser only, are validated again every time they are shown, and get ids that cannot collide after a removal.</li><li>A security fix came out of testing this: the first version accepted <code>https://x/$(id)</code> as a base URL, which bash and PowerShell both expand inside double quotes, and accepted <code>(</code> in a command, which PowerShell evaluates in argument mode. Both fields are allowlists now, with tests that would have caught the original.</li></ul>
+<h3>Skills as deep as their originals, and upstream tracking</h3><ul><li>Eight skills adapted from upstream were rewritten to the depth of their originals, each naming its source and licence: caveman, full output, anti-slop, plan, design taste, token reducer, refactor and refactor UI.</li><li>The super harness has its own skill with the full step-by-step procedure for every pass it runs.</li><li><code>scripts/skill_upstreams.py</code> pins the sha256 of each upstream file at the commit it was checked against, and a weekly workflow opens a <code>[Skill Upstream]</code> issue when one moves.</li><li>Detection is automatic; merging is not, and that is deliberate. An update that merged itself would republish whatever a compromised upstream account pushed, which is the supply-chain path this repository's own registry plan exists to close.</li></ul>
+</section>
+
+<section class="part"><p class="eyebrow">Part E</p><h2>Moving skills, tools, plugins and MCP into a database: will it work?</h2>
+<p>Yes, it is possible: it is what npm, PyPI and the VS Code Marketplace do, at a smaller scale. As written it does not work, because two parts would hurt you. Bots that update packages when upstream releases would republish whatever an upstream ships, under your name, to every user. A monitor that sends every capability a user adopts to your repo would copy their private work into a public place, and a skill cannot monitor anything anyway: it is text a model reads, with no process of its own.</p><p>With the changes below it works, and the first half already runs here with no database at all: the catalog in <code>repo-lists/</code>, <code>catalog-guardian.yml</code> with the owner-only <code>APPROVE CATALOG MAINTENANCE</code> phrase, the SHA-bound <code>owner-approval.yml</code>, <code>watch-sources.yml</code> for the skill aggregator, and <code>skill-upstreams.yml</code> pinning the hash of every skill adapted from upstream. The database earns its place when other people install from you.</p>
+<h3>Where the plan as written breaks</h3><ul><li><b>Packages in the database.</b> A database as the only home loses diffs, history and review, and package bytes do not belong in rows. Git stays the source, object storage holds the bytes keyed by sha256, and the database holds metadata and lifecycle state. A hosted MCP server cannot be packaged at all: it is a running service, so it is stored as a reviewed connector descriptor.</li><li><b>Bots that update on release.</b> One compromised upstream account then ships malware to every user, signed by you. Many skill repositories never tag a release either, so a release watcher sees nothing. Detect automatically, publish only after a scan and your approval of the exact digest, and watch file hashes rather than tags, which is what <code>scripts/skill_upstreams.py</code> already does.</li><li><b>Telling users they are behind.</b> That means knowing what every user installed, which is telemetry, and package names alone can reveal private work. Pull, not push: the client downloads a signed index and compares its own lockfile.</li><li><b>Delete after a GitHub issue.</b> Right in shape, and it is the <code>[Catalog Audit]</code> flow you already have, but a quiet repository is not a dead one and a delete cannot reach users' copies, Git history or backups. Tombstone first, notify, purge after a retention period, and bind approval to the exact list of digests.</li><li><b>A monitor that sends everything a user adopts.</b> Opt-in, a local program rather than a skill, metadata first (source, version, digest), file contents only with separate consent, into private quarantine, never the repository or a public issue.</li><li><b>Scan, and add whatever is clean.</b> No scan proves harmless. For a skill the real risk is prompt injection in plain language; SQL injection is a flaw in code that builds queries, so a Markdown skill cannot carry it but your registry's API can. Scan output is evidence for a person, never the decision, and a licence check comes before anything is republished.</li></ul>
+<figure><svg class="dg" viewBox="0 0 960 236" role="img" aria-label="Two rows. Your plan: new skill, your repo, scan, then straight to add and package and auto-update, skipping the column where human review sits. With the changes: new skill as metadata, private quarantine, scan as evidence, your approval of the exact digest, signed publish, and users pull and verify.">
+          <defs>
+            <marker id="f1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0 0 L10 5 L0 10 z"/></marker>
+          </defs>
+
+          <text class="row" x="0" y="72">Your plan</text>
+          <text class="row2" x="0" y="88">as written</text>
+          <text class="row" x="0" y="184">With the</text>
+          <text class="row" x="0" y="200">changes</text>
+
+          <!-- row 1: as written -->
+          <rect class="box" x="110" y="48" width="120" height="54" rx="6"/>
+          <text class="t" x="120" y="71">New skill</text><text class="s" x="120" y="88">whole files sent</text>
+          <rect class="box" x="252" y="48" width="120" height="54" rx="6"/>
+          <text class="t" x="262" y="71">Your repo</text><text class="s" x="262" y="88">public, unreviewed</text>
+          <rect class="box" x="394" y="48" width="120" height="54" rx="6"/>
+          <text class="t" x="404" y="71">Scan</text><text class="s" x="404" y="88">decides it is safe</text>
+          <rect class="ghost" x="536" y="48" width="120" height="54" rx="6"/>
+          <text class="g" x="596" y="80" text-anchor="middle">no human gate</text>
+          <rect class="box" x="678" y="48" width="120" height="54" rx="6"/>
+          <text class="t" x="688" y="71">Add + package</text><text class="s" x="688" y="88">repo and database</text>
+          <rect class="box" x="820" y="48" width="120" height="54" rx="6"/>
+          <text class="t" x="830" y="71">Auto-update</text><text class="s" x="830" y="88">pushed to all users</text>
+
+          <line class="edge" x1="230" y1="75" x2="250" y2="75" marker-end="url(#f1a)"/>
+          <line class="edge" x1="372" y1="75" x2="392" y2="75" marker-end="url(#f1a)"/>
+          <path class="edge" d="M514 60 C556 8, 636 8, 676 58" marker-end="url(#f1a)"/>
+          <line class="edge" x1="798" y1="75" x2="818" y2="75" marker-end="url(#f1a)"/>
+
+          <!-- row 2: with the changes -->
+          <rect class="box" x="110" y="160" width="120" height="54" rx="6"/>
+          <text class="t" x="120" y="183">New skill</text><text class="s" x="120" y="200">metadata, opt-in</text>
+          <rect class="box" x="252" y="160" width="120" height="54" rx="6"/>
+          <text class="t" x="262" y="183">Quarantine</text><text class="s" x="262" y="200">private bucket</text>
+          <rect class="box" x="394" y="160" width="120" height="54" rx="6"/>
+          <text class="t" x="404" y="183">Scan</text><text class="s" x="404" y="200">evidence only</text>
+          <rect class="box gate" x="536" y="160" width="120" height="54" rx="6"/>
+          <text class="t gate" x="546" y="183">Your approval</text><text class="s" x="546" y="200">exact digest</text>
+          <rect class="box" x="678" y="160" width="120" height="54" rx="6"/>
+          <text class="t" x="688" y="183">Publish</text><text class="s" x="688" y="200">signed, immutable</text>
+          <rect class="box" x="820" y="160" width="120" height="54" rx="6"/>
+          <text class="t" x="830" y="183">Users pull</text><text class="s" x="830" y="200">verify signature</text>
+
+          <line class="edge" x1="230" y1="187" x2="250" y2="187" marker-end="url(#f1a)"/>
+          <line class="edge" x1="372" y1="187" x2="392" y2="187" marker-end="url(#f1a)"/>
+          <line class="edge" x1="514" y1="187" x2="534" y2="187" marker-end="url(#f1a)"/>
+          <line class="edge" x1="656" y1="187" x2="676" y2="187" marker-end="url(#f1a)"/>
+          <line class="edge" x1="798" y1="187" x2="818" y2="187" marker-end="url(#f1a)"/>
+        </svg>
+<figcaption>Your plan as written against the plan that works: the columns line up, and as written the path jumps
+from the scan straight to publishing, over the column where a person should decide.</figcaption></figure>
+<figure><svg class="dg" viewBox="0 0 1000 590" role="img" aria-label="Four zones left to right: your machine, an untrusted zone, the human gate, and the trusted registry. Client metadata and upstream changes enter the untrusted zone through intake, quarantine and scanners; evidence goes to a review issue you approve; only the publisher writes records to Postgres and archives to object storage; clients pull the signed index and packages back along one rail and verify before installing.">
+          <defs>
+            <marker id="f2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0 0 L10 5 L0 10 z"/></marker>
+          </defs>
+
+          <!-- zones -->
+          <rect class="zone" x="10" y="16" width="190" height="530" rx="10"/>
+          <text class="zlabel" x="24" y="38">YOUR MACHINE</text>
+          <rect class="zone untrusted" x="215" y="16" width="250" height="530" rx="10"/>
+          <text class="zlabel" x="229" y="38">UNTRUSTED, NO SECRETS</text>
+          <rect class="zone" x="480" y="16" width="150" height="530" rx="10"/>
+          <text class="zlabel" x="494" y="38">HUMAN GATE</text>
+          <rect class="zone" x="645" y="16" width="345" height="530" rx="10"/>
+          <text class="zlabel" x="659" y="38">TRUSTED REGISTRY</text>
+
+          <!-- untrusted column -->
+          <rect class="box" x="235" y="60" width="210" height="48" rx="6"/>
+          <text class="t" x="247" y="81">Upstream repos</text><text class="s" x="247" y="97">commits, releases, advisories</text>
+          <rect class="box" x="235" y="140" width="210" height="48" rx="6"/>
+          <text class="t" x="247" y="161">Watcher</text><text class="s" x="247" y="177">polls with ETag, pins sha256</text>
+          <rect class="box" x="235" y="220" width="210" height="48" rx="6"/>
+          <text class="t" x="247" y="241">Intake API</text><text class="s" x="247" y="257">auth, size and time limits</text>
+          <rect class="box" x="235" y="300" width="210" height="48" rx="6"/>
+          <text class="t" x="247" y="321">Quarantine</text><text class="s" x="247" y="337">private bucket, never the repo</text>
+          <rect class="box" x="235" y="380" width="210" height="48" rx="6"/>
+          <text class="t" x="247" y="401">Scanners</text><text class="s" x="247" y="417">sandboxed, evidence only</text>
+
+          <line class="edge" x1="340" y1="108" x2="340" y2="138" marker-end="url(#f2a)"/>
+          <text class="lbl" x="348" y="127">new digest</text>
+          <line class="edge" x1="340" y1="188" x2="340" y2="218" marker-end="url(#f2a)"/>
+          <text class="lbl" x="348" y="207">candidate</text>
+          <line class="edge" x1="340" y1="268" x2="340" y2="298" marker-end="url(#f2a)"/>
+          <text class="lbl" x="348" y="287">exact commit</text>
+          <line class="edge" x1="340" y1="348" x2="340" y2="378" marker-end="url(#f2a)"/>
+          <text class="lbl" x="348" y="367">bytes</text>
+
+          <!-- your machine -->
+          <rect class="box" x="30" y="220" width="150" height="48" rx="6"/>
+          <text class="t" x="42" y="241">Client agent</text><text class="s" x="42" y="257">opt-in, runs locally</text>
+          <rect class="box" x="30" y="380" width="150" height="48" rx="6"/>
+          <text class="t" x="42" y="401">Harness adapters</text><text class="s" x="42" y="417">Claude, Codex, Copilot</text>
+          <rect class="box" x="30" y="460" width="150" height="48" rx="6"/>
+          <text class="t" x="42" y="481">Local cache</text><text class="s" x="42" y="497">lockfile, verified bytes</text>
+
+          <line class="edge" x1="180" y1="244" x2="233" y2="244" marker-end="url(#f2a)"/>
+          <text class="lbl" x="207" y="236" text-anchor="middle">metadata</text>
+          <line class="edge" x1="105" y1="380" x2="105" y2="270" marker-end="url(#f2a)"/>
+          <text class="lbl" x="113" y="329">reads configs</text>
+          <line class="edge" x1="105" y1="460" x2="105" y2="430" marker-end="url(#f2a)"/>
+          <text class="lbl" x="113" y="449">installs</text>
+
+          <!-- human gate -->
+          <rect class="box gate" x="495" y="373" width="120" height="62" rx="6"/>
+          <text class="t gate" x="507" y="394">Review issue</text>
+          <text class="s" x="507" y="410">you approve the</text>
+          <text class="s" x="507" y="424">exact digest</text>
+          <line class="edge" x1="445" y1="404" x2="493" y2="404" marker-end="url(#f2a)"/>
+          <text class="lbl" x="470" y="396" text-anchor="middle">evidence</text>
+          <path class="edge dashed" d="M445 164 L555 164 L555 371" marker-end="url(#f2a)"/>
+          <text class="lbl" x="563" y="262">stale or</text>
+          <text class="lbl" x="563" y="276">archived</text>
+
+          <!-- trusted registry -->
+          <rect class="box" x="660" y="380" width="112" height="48" rx="6"/>
+          <text class="t" x="672" y="401">Publisher</text><text class="s" x="672" y="417">signs, writes once</text>
+          <rect class="box" x="660" y="460" width="112" height="48" rx="6"/>
+          <text class="t" x="672" y="481">Git</text><text class="s" x="672" y="497">what you author</text>
+          <rect class="box" x="815" y="220" width="160" height="48" rx="6"/>
+          <text class="t" x="827" y="241">Postgres</text><text class="s" x="827" y="257">metadata, lifecycle state</text>
+          <rect class="box" x="815" y="300" width="160" height="48" rx="6"/>
+          <text class="t" x="827" y="321">Signed index</text><text class="s" x="827" y="337">current and revoked</text>
+          <rect class="box" x="815" y="380" width="160" height="48" rx="6"/>
+          <text class="t" x="827" y="401">Object storage</text><text class="s" x="827" y="417">bytes keyed by sha256</text>
+
+          <line class="edge" x1="615" y1="404" x2="658" y2="404" marker-end="url(#f2a)"/>
+          <text class="lbl" x="637" y="396" text-anchor="middle">approved</text>
+          <line class="edge" x1="716" y1="460" x2="716" y2="430" marker-end="url(#f2a)"/>
+          <text class="lbl" x="724" y="449">builds from</text>
+          <line class="edge" x1="772" y1="404" x2="813" y2="404" marker-end="url(#f2a)"/>
+          <text class="lbl" x="793" y="396" text-anchor="middle">archive</text>
+          <path class="edge" d="M716 380 L716 244 L813 244" marker-end="url(#f2a)"/>
+          <text class="lbl" x="765" y="236" text-anchor="middle">record, tombstone</text>
+          <line class="edge" x1="895" y1="268" x2="895" y2="298" marker-end="url(#f2a)"/>
+          <text class="lbl" x="903" y="287">publishes</text>
+
+          <!-- the pull rail back to the user's machine -->
+          <path class="edge" d="M975 324 L983 324 L983 566 L105 566 L105 510" marker-end="url(#f2a)"/>
+          <line class="edge" x1="895" y1="428" x2="895" y2="566"/>
+          <text class="lbl" x="540" y="558" text-anchor="middle">clients pull the index and packages, then verify the signature</text>
+        </svg>
+<figcaption>The architecture. Only the publisher writes to the registry, and only after your approval of the exact
+digest; nothing in the dashed zone holds a secret. Clients pull the signed index and verify before installing.</figcaption></figure>
+<h3>The plan</h3><ul><li><b>Phase 0, running now.</b> The Git-native registry: the catalog, three weekly GitHub Actions, owner-only approval bound to an exact commit.</li><li><b>Phase 1, next.</b> Package what you own: build the skills and the harness into signed, versioned archives from Git with a GitHub Action, stored as release assets. No database yet. Gate: every definition round-trips byte for byte and a digest mismatch is refused.</li><li><b>Phase 2.</b> The review pipeline: private quarantine, sandboxed scan workers with no secrets, evidence in a review issue, signed publication only after your approval of the exact digest. Gate: nothing executes during intake and a failed scanner blocks publishing.</li><li><b>Phase 3.</b> The registry database and upstream watching: Postgres for metadata and lifecycle state, object storage for bytes, the <code>skill_upstreams.py</code> pattern extended to every catalog entry through a GitHub App with conditional requests and advisories. Gate: one upstream change makes one candidate, the database rebuilds from Git and storage, and a rollback is exercised.</li><li><b>Phase 4.</b> The opt-in client monitor: a local CLI and hook, with a skill that explains it, reading the configs of the clients it supports. Gate: local-only mode uploads nothing and an unsupported client is reported as unsupported.</li><li><b>Phase 5.</b> Lifecycle: a dossier issue per stale or archived entry, adoption under a new name with a named owner, retirement as tombstone then purge. Gate: a retry cannot widen the approved scope and a restore replays tombstones before downloads reopen.</li></ul>
+<h3>Decisions that are yours</h3><ul><li><b>Will other people install from you?</b> If not, stop after phase 1: Git and Actions are already the registry.</li><li><b>PostgreSQL or MongoDB.</b> PostgreSQL is the recommendation; MongoDB reuses the existing importer. One, not both.</li><li><b>How long a retired package's bytes are kept.</b> Long enough to roll back, short enough that deleted means something.</li><li><b>Whether the client monitor ships at all</b>, and whether it is ever on by default. The recommendation is never.</li><li><b>An emergency block:</b> whether a digest confirmed as malicious may be blocked from new installs at once, pending your review.</li><li><b>Who else may approve.</b> Today only your account can, and any second approver needs the same exact-digest binding.</li></ul>
+</section>
+
+<section class="part"><p class="eyebrow">Part F</p><h2>Limits of this benchmark, what is blocked, and the files</h2>
+<h3>Limits</h3><ul><li>Five runs per cell for the coding benchmark, three for the graph experiment, two for the 600-token kit. These are directions, not rankings, and no significance is claimed.</li><li>One model, Claude Sonnet 5, and one agent scaffold. The scaffold was chosen because it is the only one that does not load CLAUDE.md, which is what makes the no-harness arm honest; its own system prompt applies to every arm equally but it is not a neutral substrate.</li><li>Both coding tasks saturated the hidden tests at 100%, so this benchmark cannot separate the arms on correctness. A harder task set would.</li><li>The blind judges are models. Their scores agreed closely, which is evidence of consistency, not of being right.</li><li>Token counts for page views use the o200k counter, which is not Claude's tokenizer. It is used because caveman-browse's own published numbers use it, so the two are comparable.</li><li>The agent-driven browser comparison uses each tool from the command line. Playwright's own agent interface is its MCP server, which was not installed here; its published token numbers are not what this measured.</li></ul>
+<h3>Blocked</h3><ul><li>Closing the open GitHub issue and reviewing recently closed ones needs <code>gh auth login</code>. The repository is private and the CLI is logged out, so nothing about issues in this report is verified.</li><li>One installed skill copy, master-super-harness, is older than the repository's. The installer refused to overwrite it because it cannot prove the difference is not a local edit, which is the behaviour that protects a customised skill. It needs a word from Charles either way.</li></ul>
+<h3>Files</h3><ul><li><code>benchmarks/2026-09-11/</code>: the six-arm coding benchmark and the browser tools, with every prompt, hidden test, answer and result.</li><li><code>benchmarks/2026-09-15/</code>: graphify across the harnesses at a 400-token ceiling.</li><li><code>benchmarks/run-it-yourself/</code>: the kit, the 600-token runs before and after the rule change, and <code>report/metrics.pdf</code>.</li><li><code>benchmarks/share/harness-metrics-2026-09-15.zip</code>: the same kit packaged to send to someone else.</li><li><code>scripts/graphify_local.py</code>: the local multi-project setup.</li><li><code>docs/CAPABILITY-REGISTRY-ARCHITECTURE.md</code>: the registry answer in full, which Part E summarises.</li></ul>
+</section>
+</body></html>

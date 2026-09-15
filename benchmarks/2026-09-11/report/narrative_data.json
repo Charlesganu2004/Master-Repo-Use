@@ -8,15 +8,6 @@
     "<b>The token ceiling is advisory unless it runs through the proxy.</b> At 600 tokens, 5 of 16 answers stayed inside it. Rewriting rule 15 to state a word budget made answers shorter and more accurate but did not change compliance.",
     "<b>Rustwright is the fastest engine and by far the lightest; caveman-browse reads a page for fewer tokens but acts slowly.</b> Checkout took 1.43s on Rustwright, 1.46s on Playwright and 42.1s on caveman-browse, whose client-line actions each wait to settle."
   ],
-  "asked": [
-    "<b>A live test of the super harness against no harness</b>, with the prompts and a graph: Part A.",
-    "<b>Super with ponytail and caveman against super with ponytail but no caveman</b>, and <b>ponytail against caveman</b>: Part A.",
-    "<b>caveman-browse against Playwright against a Rust Playwright</b>: Part B. The Rust one is Rustwright, from Skyvern, which is Playwright's API on a Rust engine.",
-    "<b>The prompts, including a slightly harder one to run yourself</b>: Part C.",
-    "<b>Does the super harness work, is it automatic, and does /token limit make the model stop</b>: Part D.",
-    "<b>The + on client surfaces</b>, and <b>skills as deep as their originals, updated when upstream moves</b>: Part D.",
-    "<b>Moving skills, tools, plugins and MCP into MongoDB or PostgreSQL</b>: whether it is possible, whether it works, the flaws, a plan and an architecture diagram: Part E."
-  ],
   "method": [
     "Every arm ran in the same scaffold: Claude Sonnet 5 in an agent profile that does not load CLAUDE.md, so the no-harness arm really has no harness. A probe confirmed it: asked whether it could see the phrases \"Standing pipeline\" or \"THREE LAYERS\", it answered no to both.",
     "The harness arms' context is not written by hand. It is produced by this repository's own hook, in the mode that arm names, for that exact prompt, so what the model receives is what a real session receives. Every run's first message was checked against the sha256 of its committed prompt file; 60 of 60 matched.",
@@ -62,62 +53,6 @@
     "The two coding prompts are in Part C above and in <code>benchmarks/2026-09-11/prompts/coding.json</code>. The harder one is T2, the rate limiter.",
     "The measured input side, with no model needed: <code>python scripts/harness_ab_test.py --measure --harder</code>.",
     "The graph experiment's own prompts and ground truth are in <code>benchmarks/2026-09-15/</code>, and its ground truth is regenerated from the graph, so it moves when the code moves."
-  ],
-  "verification": [
-    "The per-prompt hook is live on this machine in super mode. Feeding the exact hook command registered in <code>~/.claude/settings.json</code> a real prompt returns 6,001 bytes of context carrying the three layers, all ten chain passes through S10, and rule 15 at the limit that prompt set.",
-    "Super mode is stored beside the goal state and switched by <code>python scripts/harness_super.py --mode super|base</code>. <code>--install all</code> turns it on, which is how it was enabled here.",
-    "Nothing is typed to get the rest: the layers, the chain, the standing goal and the lane rules ride every prompt in every client with a hook. Clients without hooks get the same text as a paste bundle.",
-    "The install check <code>python scripts/verify_auto_mode.py</code> reports 47 passed, 7 failed across seven clients. All seven failures are the same file: an installed copy of master-super-harness/SKILL.md that is older than the repository's, in seven client directories. The installer refuses to overwrite a skill it did not write, because it cannot tell an old copy from a local edit, and that refusal is the behaviour that protects a customised skill. It needs a word from Charles either way.",
-    "The benchmark in Part A is itself the strongest evidence that the injection works: every arm's prompt was verified against a sha256 of the committed prompt file, and the arms behave measurably differently."
-  ],
-  "token_limit": [
-    "<code>/token limit 2000</code> at the start of a message adds rule 15 for that session: plan the answer to fit, stop at the last clean break, and say what was left out. <code>/token limit off</code> lifts it.",
-    "Four spellings are accepted and all four are parsed by the hook's own parser at build time, so the site cannot advertise one that does not work: <code>/token limit 2000</code>, <code>\\token limit 2k</code>, <code>token limit: 4000</code>, <code>/token limit off</code>.",
-    "It persists for the session like the goal, a session that lifted it is not overridden by a global limit, and a question about token limits does not set one: the command needs its marker.",
-    "Through the proxy it is a hard cap, not advice: max_tokens, max_completion_tokens or Ollama's num_predict, chosen by the API path, and it never raises a lower cap the caller already set. Everywhere else it is an instruction the model follows.",
-    "Both pages show it: the harness section lists the four spellings and the mode commands, rendered from the payload the builder produced.",
-    "Measured, because an instruction that is only claimed is not enforced: at a 600-token ceiling across sixteen answers, 5 stayed inside it. Rule 15 was then rewritten to state the word budget the ceiling works out to and to ban the four openers that put a capped answer over, and the same sixteen runs were repeated: answers got shorter, median 720 to 662 tokens, and more accurate, 106 to 112 facts of 120, but compliance did not move, 5 of 16 again. Use the proxy when the ceiling has to hold. Both runs are in <code>benchmarks/run-it-yourself/results/</code>."
-  ],
-  "plus": [
-    "Every client-surface group on the main page and in every design now has a + for a client the vetted list does not name.",
-    "Five kinds are covered: an OpenAI-compatible endpoint (open frontier models), Ollama, an IDE extension or coding agent such as GitHub Copilot, a command-line tool with no hook, and a chat product. Each produces exact commands with copy buttons, and each states what it cannot do.",
-    "One generator serves both pages, so the main page and the designs cannot drift apart on the commands for the same client, and the templates are built and checked in Python: every flag is checked against the real CLI at build time.",
-    "Saved clients live in that browser only, are validated again every time they are shown, and get ids that cannot collide after a removal.",
-    "A security fix came out of testing this: the first version accepted <code>https://x/$(id)</code> as a base URL, which bash and PowerShell both expand inside double quotes, and accepted <code>(</code> in a command, which PowerShell evaluates in argument mode. Both fields are allowlists now, with tests that would have caught the original."
-  ],
-  "skills": [
-    "Eight skills adapted from upstream were rewritten to the depth of their originals, each naming its source and licence: caveman, full output, anti-slop, plan, design taste, token reducer, refactor and refactor UI.",
-    "The super harness has its own skill with the full step-by-step procedure for every pass it runs.",
-    "<code>scripts/skill_upstreams.py</code> pins the sha256 of each upstream file at the commit it was checked against, and a weekly workflow opens a <code>[Skill Upstream]</code> issue when one moves.",
-    "Detection is automatic; merging is not, and that is deliberate. An update that merged itself would republish whatever a compromised upstream account pushed, which is the supply-chain path this repository's own registry plan exists to close."
-  ],
-  "registry_answer": [
-    "Yes, it is possible: it is what npm, PyPI and the VS Code Marketplace do, at a smaller scale. As written it does not work, because two parts would hurt you. Bots that update packages when upstream releases would republish whatever an upstream ships, under your name, to every user. A monitor that sends every capability a user adopts to your repo would copy their private work into a public place, and a skill cannot monitor anything anyway: it is text a model reads, with no process of its own.",
-    "With the changes below it works, and the first half already runs here with no database at all: the catalog in <code>repo-lists/</code>, <code>catalog-guardian.yml</code> with the owner-only <code>APPROVE CATALOG MAINTENANCE</code> phrase, the SHA-bound <code>owner-approval.yml</code>, <code>watch-sources.yml</code> for the skill aggregator, and <code>skill-upstreams.yml</code> pinning the hash of every skill adapted from upstream. The database earns its place when other people install from you."
-  ],
-  "registry_flaws": [
-    "<b>Packages in the database.</b> A database as the only home loses diffs, history and review, and package bytes do not belong in rows. Git stays the source, object storage holds the bytes keyed by sha256, and the database holds metadata and lifecycle state. A hosted MCP server cannot be packaged at all: it is a running service, so it is stored as a reviewed connector descriptor.",
-    "<b>Bots that update on release.</b> One compromised upstream account then ships malware to every user, signed by you. Many skill repositories never tag a release either, so a release watcher sees nothing. Detect automatically, publish only after a scan and your approval of the exact digest, and watch file hashes rather than tags, which is what <code>scripts/skill_upstreams.py</code> already does.",
-    "<b>Telling users they are behind.</b> That means knowing what every user installed, which is telemetry, and package names alone can reveal private work. Pull, not push: the client downloads a signed index and compares its own lockfile.",
-    "<b>Delete after a GitHub issue.</b> Right in shape, and it is the <code>[Catalog Audit]</code> flow you already have, but a quiet repository is not a dead one and a delete cannot reach users' copies, Git history or backups. Tombstone first, notify, purge after a retention period, and bind approval to the exact list of digests.",
-    "<b>A monitor that sends everything a user adopts.</b> Opt-in, a local program rather than a skill, metadata first (source, version, digest), file contents only with separate consent, into private quarantine, never the repository or a public issue.",
-    "<b>Scan, and add whatever is clean.</b> No scan proves harmless. For a skill the real risk is prompt injection in plain language; SQL injection is a flaw in code that builds queries, so a Markdown skill cannot carry it but your registry's API can. Scan output is evidence for a person, never the decision, and a licence check comes before anything is republished."
-  ],
-  "registry_plan": [
-    "<b>Phase 0, running now.</b> The Git-native registry: the catalog, three weekly GitHub Actions, owner-only approval bound to an exact commit.",
-    "<b>Phase 1, next.</b> Package what you own: build the skills and the harness into signed, versioned archives from Git with a GitHub Action, stored as release assets. No database yet. Gate: every definition round-trips byte for byte and a digest mismatch is refused.",
-    "<b>Phase 2.</b> The review pipeline: private quarantine, sandboxed scan workers with no secrets, evidence in a review issue, signed publication only after your approval of the exact digest. Gate: nothing executes during intake and a failed scanner blocks publishing.",
-    "<b>Phase 3.</b> The registry database and upstream watching: Postgres for metadata and lifecycle state, object storage for bytes, the <code>skill_upstreams.py</code> pattern extended to every catalog entry through a GitHub App with conditional requests and advisories. Gate: one upstream change makes one candidate, the database rebuilds from Git and storage, and a rollback is exercised.",
-    "<b>Phase 4.</b> The opt-in client monitor: a local CLI and hook, with a skill that explains it, reading the configs of the clients it supports. Gate: local-only mode uploads nothing and an unsupported client is reported as unsupported.",
-    "<b>Phase 5.</b> Lifecycle: a dossier issue per stale or archived entry, adoption under a new name with a named owner, retirement as tombstone then purge. Gate: a retry cannot widen the approved scope and a restore replays tombstones before downloads reopen."
-  ],
-  "registry_decisions": [
-    "<b>Will other people install from you?</b> If not, stop after phase 1: Git and Actions are already the registry.",
-    "<b>PostgreSQL or MongoDB.</b> PostgreSQL is the recommendation; MongoDB reuses the existing importer. One, not both.",
-    "<b>How long a retired package's bytes are kept.</b> Long enough to roll back, short enough that deleted means something.",
-    "<b>Whether the client monitor ships at all</b>, and whether it is ever on by default. The recommendation is never.",
-    "<b>An emergency block:</b> whether a digest confirmed as malicious may be blocked from new installs at once, pending your review.",
-    "<b>Who else may approve.</b> Today only your account can, and any second approver needs the same exact-digest binding."
   ],
   "limits": [
     "Five runs per cell for the coding benchmark, three for the graph experiment, two for the 600-token kit. These are directions, not rankings, and no significance is claimed.",

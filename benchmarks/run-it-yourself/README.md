@@ -100,3 +100,17 @@ ceiling is advisory, and this is the honest limit of it: on the proxy path it is
 a real `max_tokens` and holds absolutely, and everywhere else it asks a model to
 respect a number it cannot see. Both runs are here: `results/runs-rule-v1.json`
 is the first, `results/runs.json` the second.
+
+## The numbers we got, in full
+
+`report/metrics.pdf` is this kit's own metrics and charts. The 21-page report on
+everything behind it, the six-arm coding benchmark, the three browser engines,
+the graphify experiment and the registry design, is
+`../2026-09-11/report/report.pdf`, and it travels inside the zip as
+`report/full-benchmark-report.pdf`.
+
+Rebuild the zip after changing anything here:
+
+```bash
+python benchmarks/run-it-yourself/package.py
+```

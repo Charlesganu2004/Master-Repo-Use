@@ -12,7 +12,7 @@
     "The per-prompt hook is live on this machine in super mode. Feeding the exact hook command registered in <code>~/.claude/settings.json</code> a real prompt returns 6,001 bytes of context carrying the three layers, all ten chain passes through S10, and rule 15 at the limit that prompt set.",
     "Super mode is stored beside the goal state and switched by <code>python scripts/harness_super.py --mode super|base</code>. <code>--install all</code> turns it on, which is how it was enabled here.",
     "Nothing is typed to get the rest: the layers, the chain, the standing goal and the lane rules ride every prompt in every client with a hook. Clients without hooks get the same text as a paste bundle.",
-    "The install check <code>python scripts/verify_auto_mode.py</code> reports 54 passed, 0 failed across seven clients after the install.",
+    "The install check <code>python scripts/verify_auto_mode.py</code> reports 47 passed, 7 failed across seven clients. All seven failures are the same file: an installed copy of master-super-harness/SKILL.md that is older than the repository's, in seven client directories. The installer refuses to overwrite a skill it did not write, because it cannot tell an old copy from a local edit, and that refusal is the behaviour that protects a customised skill. It needs a word from Charles either way.",
     "The benchmark in Part A is itself the strongest evidence that the injection works: every arm's prompt was verified against a sha256 of the committed prompt file, and the arms behave measurably differently."
   ],
   "token_limit": [
@@ -20,7 +20,8 @@
     "Four spellings are accepted and all four are parsed by the hook's own parser at build time, so the site cannot advertise one that does not work: <code>/token limit 2000</code>, <code>\\token limit 2k</code>, <code>token limit: 4000</code>, <code>/token limit off</code>.",
     "It persists for the session like the goal, a session that lifted it is not overridden by a global limit, and a question about token limits does not set one: the command needs its marker.",
     "Through the proxy it is a hard cap, not advice: max_tokens, max_completion_tokens or Ollama's num_predict, chosen by the API path, and it never raises a lower cap the caller already set. Everywhere else it is an instruction the model follows.",
-    "Both pages show it: the harness section lists the four spellings and the mode commands, rendered from the payload the builder produced."
+    "Both pages show it: the harness section lists the four spellings and the mode commands, rendered from the payload the builder produced.",
+    "Measured, because an instruction that is only claimed is not enforced: at a 600-token ceiling across sixteen answers, 5 stayed inside it. Rule 15 was then rewritten to state the word budget the ceiling works out to and to ban the four openers that put a capped answer over, and the same sixteen runs were repeated: answers got shorter, median 720 to 662 tokens, and more accurate, 106 to 112 facts of 120, but compliance did not move, 5 of 16 again. Use the proxy when the ceiling has to hold. Both runs are in <code>benchmarks/run-it-yourself/results/</code>."
   ],
   "plus": [
     "Every client-surface group on the main page and in every design now has a + for a client the vetted list does not name.",
