@@ -68,3 +68,6 @@ graphify-out/
 
 # graphify writes this per machine and it holds an absolute local path to the shim
 .gemini/settings.json
+
+# the harness installer keeps a .bak beside a managed file before rewriting it
+*.md.bak
