@@ -65,6 +65,24 @@ class ProseIsNotCodeTests(unittest.TestCase):
                 findings = self.scan(name, RLO)
                 self.assertTrue(any("invisible/bidi" in f for f in findings), findings)
 
+    def test_real_secrets_are_flagged_even_in_prose(self):
+        """The docstring above promised this and nothing tested it.
+
+        The secrets check sat below the prose return, so an AWS key, a private
+        key or a GitHub token pasted into a README scanned clean while the same
+        string in app.py was flagged. Found auditing the closure of issue #14.
+        """
+        keys = {
+            "aws access key": "export AWS_ACCESS_KEY_ID=AKIAQ3EGUNK7ZLPXWMRT",
+            "private key": "-----BEGIN RSA PRIVATE KEY-----",
+            "github token": "token: ghp_" + "Zq8" * 12,
+        }
+        for label, text in keys.items():
+            for name in ("README.md", "notes.txt", "app.py"):
+                with self.subTest(secret=label, file=name):
+                    findings = self.scan(name, text)
+                    self.assertTrue(any("secret/private-key" in f for f in findings), findings)
+
     def test_prose_suffixes_are_declared_not_guessed(self):
         self.assertIn(".md", security.PROSE_SUFFIXES)
         self.assertNotIn(".py", security.PROSE_SUFFIXES)

@@ -181,6 +181,14 @@ def scan_text(path: pathlib.Path, text: str) -> list[str]:
     for name, pattern in SUSPICIOUS:
         if pattern.search(text):
             out.append(f"HIGH {name} pattern in {path}")
+    if any(pattern.search(text) for pattern in SECRETS):
+        # Before the prose return, because a key pasted into a README leaks
+        # exactly as one in source does. These patterns match key formats, not
+        # the word "secret", so a doc advising against logging keys stays clean.
+        # Built-in heuristic, so it caps at HIGH. Only an external scanner may
+        # justify a CRITICAL; printing CRITICAL here is what made 107
+        # findings read as 107 removal candidates.
+        out.append(f"HIGH secret/private-key material in {path}")
     if is_prose(path):
         # Documentation stops here. Everything below describes code constructs.
         return out
@@ -190,11 +198,6 @@ def scan_text(path: pathlib.Path, text: str) -> list[str]:
         out.append(f"HIGH possible SQL injection construction in {path}")
     if any(pattern.search(text) for pattern in COMMAND):
         out.append(f"HIGH possible command injection construction in {path}")
-    if any(pattern.search(text) for pattern in SECRETS):
-        # Built-in heuristic, so it caps at HIGH. Only an external scanner may
-        # justify a CRITICAL; printing CRITICAL here is what made 107
-        # findings read as 107 removal candidates.
-        out.append(f"HIGH secret/private-key material in {path}")
     return out
 
 
