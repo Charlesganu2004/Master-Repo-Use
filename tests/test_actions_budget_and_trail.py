@@ -6,7 +6,11 @@ recording it leaves nothing to audit.
 """
 import datetime as dt
 import pathlib
+import re
+import shutil
+import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -86,6 +90,76 @@ class LeastPrivilege(unittest.TestCase):
     def test_the_bot_pushes_to_a_branch_never_to_main(self):
         self.assertIn("HEAD:automation/security-trail", WORKFLOW)
         self.assertNotIn("push origin main", WORKFLOW)
+
+    def test_the_push_still_works_the_second_week(self):
+        """It pushed once, created the branch, and refused every week after.
+
+        `--force-with-lease` with no argument compares against the remote-tracking
+        ref, and this job's checkout fetches only main. Creating a branch needs no
+        lease, so the first run passed and every later one died on "stale info"
+        with the row already committed and nothing recorded. Run the workflow's own
+        push block twice against a real remote, which is the case that failed.
+        """
+        script = push_block()
+        self.assertIn("git push origin", script)
+
+        work = pathlib.Path(tempfile.mkdtemp())
+        try:
+            remote, seed = work / "remote.git", work / "seed"
+            subprocess.run(["git", "init", "--quiet", "--bare", "--initial-branch=main",
+                            str(remote)], check=True)
+            subprocess.run(["git", "clone", "--quiet", str(remote), str(seed)], check=True)
+
+            def git(cwd, *args):
+                return subprocess.run(("git",) + args, cwd=cwd, check=True,
+                                      capture_output=True, text=True).stdout
+
+            git(seed, "config", "user.name", "Test")
+            git(seed, "config", "user.email", "test@example.com")
+            git(seed, "checkout", "--quiet", "-b", "main")
+            (seed / "docs").mkdir()
+            (seed / "docs" / "SECURITY-TRAIL.md").write_text("| seeded |", encoding="utf-8")
+            git(seed, "add", "-A")
+            git(seed, "commit", "--quiet", "-m", "seed")
+            git(seed, "push", "--quiet", "origin", "main")
+
+            for week in (1, 2):
+                # A scheduled run is a fresh shallow checkout of main, so it holds
+                # no remote-tracking ref for the trail branch. A push in a reused
+                # clone creates one and hides the bug, so clone again each week.
+                run = work / f"week{week}"
+                subprocess.run(["git", "clone", "--quiet", "--depth", "1", "--single-branch",
+                                "--branch", "main", str(remote), str(run)], check=True)
+                git(run, "config", "user.name", "Test")
+                git(run, "config", "user.email", "test@example.com")
+                (run / "docs" / "SECURITY-TRAIL.md").write_text(
+                    f"| seeded |{chr(10)}| week {week} |", encoding="utf-8")
+                done = subprocess.run(["bash", "-c", script], cwd=run,
+                                      capture_output=True, text=True)
+                self.assertNotIn("stale info", done.stderr,
+                                 f"week {week} refused the push it had no ref to compare")
+                self.assertEqual(done.returncode, 0,
+                                 f"week {week} push failed: {done.stdout} {done.stderr}")
+
+            pushed = git(remote, "log", "--oneline", "automation/security-trail")
+            self.assertEqual(pushed.count("trail: deep-scan rotation"), 1,
+                             "each run replaces the branch with main plus its own row")
+            self.assertIn("week 2", git(remote, "show",
+                                        "automation/security-trail:docs/SECURITY-TRAIL.md"))
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+
+
+def push_block():
+    """The shell of the workflow step that records the row, ready to run."""
+    step = WORKFLOW.index("      - name: Commit to the automation branch, never to main")
+    body = WORKFLOW[WORKFLOW.index("run: |", step) + len("run: |"):]
+    lines = []
+    for line in body.splitlines()[1:]:
+        if line.strip() and not line.startswith(" " * 10):
+            break
+        lines.append(line[10:])
+    return re.sub(r"\$\{\{[^}]*\}\}", "test-run", "\n".join(lines))
 
 
 if __name__ == "__main__":

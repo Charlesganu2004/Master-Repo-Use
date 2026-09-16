@@ -349,7 +349,20 @@ jobs:
           git config user.email "charlesganu2004@gmail.com"
           git add docs/SECURITY-TRAIL.md
           git commit -m "trail: deep-scan rotation ${{ github.run_id }}"
-          git push origin "HEAD:automation/security-trail" --force-with-lease
+          # A bare --force-with-lease leases against the remote-tracking ref, and
+          # this job's checkout fetches only main, so the trail branch falls outside
+          # the fetch refspec and git reads the lease as stale however recently the
+          # ref was fetched. It refuses with "stale info" instead of pushing, which
+          # is how every scheduled run after the one that created this branch lost
+          # its row. Name the expected value instead: ls-remote reads the tip, the
+          # lease holds the push to exactly that tip, and a branch that does not
+          # exist yet has nothing to force past.
+          if tip=$(git ls-remote --exit-code origin refs/heads/automation/security-trail | cut -f1); then
+            git push origin "HEAD:automation/security-trail" \
+              --force-with-lease="automation/security-trail:$tip"
+          else
+            git push origin "HEAD:automation/security-trail"
+          fi
 
   approved-maintenance:
     if: >-
