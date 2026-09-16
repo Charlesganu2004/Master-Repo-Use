@@ -142,6 +142,28 @@ def is_fixture_path(path: str) -> bool:
             or lowered.startswith(FIXTURE_PREFIXES))
 
 
+# Scanners whose output may justify removing a repository. The built-in
+# heuristics are absent on purpose: they match text, not threats.
+EXTERNAL_SCANNERS = ("clamav", "gitleaks", "osv", "semgrep", "snyk", "trivy")
+FINDING_LOCATION = re.compile(r"\bat (\S+?)(?::\d+)?(?:\s|$)")
+
+
+def substantiates_critical(finding: str) -> bool:
+    """Whether one finding line, fresh or restored from cache, can justify REMOVE.
+
+    Cached findings were written under whatever rules held when they were made,
+    so every line is judged by the rules that hold now. The scanner has to be the
+    word straight after the severity, not a name appearing anywhere in the line,
+    where a path like .github/workflows/semgrep.yml would count. And a secret
+    candidate in a fixture path is capped exactly as a fresh gitleaks run caps it.
+    """
+    parts = str(finding).split(maxsplit=2)
+    if len(parts) < 2 or parts[0] != "CRITICAL" or parts[1] not in EXTERNAL_SCANNERS:
+        return False
+    location = FINDING_LOCATION.search(str(finding))
+    return not (location and is_fixture_path(location.group(1)))
+
+
 def redact(text: str, limit: int = 400) -> str:
     """Best-effort masking for exception/diagnostic strings.
 

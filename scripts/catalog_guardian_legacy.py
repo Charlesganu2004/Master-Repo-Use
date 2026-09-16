@@ -350,6 +350,20 @@ def run_gitleaks(clone: pathlib.Path) -> list[str]:
 
 # Only these can justify a CRITICAL. Everything else is a heuristic hint.
 EXTERNAL_SCANNERS = ("clamav", "gitleaks", "osv", "semgrep", "snyk", "trivy")
+FINDING_LOCATION = re.compile(r"\bat (\S+?)(?::\d+)?(?:\s|$)")
+
+
+def substantiates_critical(finding: str) -> bool:
+    """Whether one finding line, fresh or restored from cache, can justify REMOVE.
+
+    catalog_guardian.py replaces this with the copy in catalog_security.py; the
+    two are held identical by tests/test_cached_findings_meet_current_rules.py.
+    """
+    parts = str(finding).split(maxsplit=2)
+    if len(parts) < 2 or parts[0] != "CRITICAL" or parts[1] not in EXTERNAL_SCANNERS:
+        return False
+    location = FINDING_LOCATION.search(str(finding))
+    return not (location and is_fixture_path(location.group(1)))
 
 
 def deep_scan(repo: str) -> tuple[list[str], bool]:
@@ -413,10 +427,7 @@ def deep_scan(repo: str) -> tuple[list[str], bool]:
     # raise it. The built-in heuristics match on text and cannot tell an exploit
     # from a paragraph explaining one, which is how issue #14 came to recommend
     # deleting anthropics/skills.
-    critical = any(
-        item.startswith("CRITICAL") and any(tool in item for tool in EXTERNAL_SCANNERS)
-        for item in findings
-    )
+    critical = any(substantiates_critical(item) for item in findings)
     return findings, critical
 
 
@@ -500,16 +511,18 @@ def restore_scan_state(result: Result, old: dict) -> None:
         # This is the path that marked ggml-org/llama.cpp REMOVE for a finding
         # nobody could find: a cached critical flag restored during a cheap
         # metadata pass, with a generic note and no evidence carried alongside it.
-        # A remembered verdict has to remember its reason too.
+        # A remembered verdict has to remember its reason too, and the reason is
+        # judged by today's rules: a line cached before the fixture cap existed
+        # is exactly how ollama/ollama would still be removed for its testdata.
         evidence = next(
-            (str(item) for item in result.findings if str(item).startswith("CRITICAL")), None)
+            (str(item) for item in result.findings if substantiates_critical(str(item))), None)
         if evidence:
             result.status = "REMOVE"
             result.note = (f"previous CRITICAL pending owner-approved rescan: {evidence[:200]}")
         else:
             result.critical = False
             result.status = "REVIEW"
-            result.note = ("cached critical flag with no CRITICAL finding retained; "
+            result.note = ("cached critical flag with no finding that meets current rules; "
                            "unsubstantiated, so held for rescan rather than removal")
     elif any(str(item).startswith("HIGH") for item in result.findings) and result.status == "HEALTHY":
         first_high = next(str(i) for i in result.findings if str(i).startswith("HIGH"))
@@ -692,7 +705,7 @@ def main() -> int:
                 # one. If the flag is set but no CRITICAL line exists to quote, the
                 # verdict is unsubstantiated and must not remove anything.
                 evidence = next(
-                    (item for item in result.findings if item.startswith("CRITICAL")), None)
+                    (item for item in result.findings if substantiates_critical(item)), None)
                 if evidence:
                     result.status = "REMOVE"
                     result.note = f"CRITICAL security finding: {evidence[:200]}"

@@ -12,19 +12,27 @@ why. Nothing is deleted on evidence nobody can read.
 """
 import pathlib
 import re
+import sys
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / "scripts" / "catalog_guardian_legacy.py").read_text(encoding="utf-8")
+sys.path.insert(0, str(ROOT / "scripts"))
+import catalog_guardian as guardian  # noqa: E402  (patches the legacy engine)
 
 
 class EveryVerdictQuotesItsEvidence(unittest.TestCase):
     def test_remove_requires_a_quotable_critical_finding(self):
-        self.assertIn(
-            'evidence = next(\n                    (item for item in result.findings '
-            'if item.startswith("CRITICAL")), None)',
-            SOURCE,
-            "REMOVE no longer looks for a finding to quote")
+        """A critical flag with nothing to quote is held, not acted on."""
+        result = guardian.Result(repo="example/repo", status="HEALTHY")
+        guardian.restore_scan_state(result, {"deep_scanned": True, "critical": True, "findings": []})
+        self.assertEqual("REVIEW", result.status, "REMOVE no longer looks for a finding to quote")
+        self.assertFalse(result.critical)
+        self.assertIn("unsubstantiated", result.note)
+        # The fresh-scan path lives inside main(); pin that it selects its evidence
+        # with the same rule, so the two paths cannot drift apart again.
+        self.assertEqual(2, SOURCE.count("if substantiates_critical("),
+                         "both REMOVE paths must choose their evidence with substantiates_critical")
 
     def test_both_paths_that_set_remove_require_evidence(self):
         """There are two. The cached one is what actually bit llama.cpp.
@@ -77,8 +85,15 @@ class ScannerFailuresAreNotFindings(unittest.TestCase):
 
 class OnlyRealScannersCanRemove(unittest.TestCase):
     def test_critical_requires_a_named_external_scanner(self):
-        self.assertIn("EXTERNAL_SCANNERS", SOURCE)
-        self.assertIn("any(tool in item for tool in EXTERNAL_SCANNERS)", SOURCE)
+        """The scanner is the word after the severity, not a name found anywhere in the line."""
+        self.assertTrue(guardian.substantiates_critical(
+            "CRITICAL gitleaks secret candidate rule=aws-access-token at src/app.py:3 (value withheld)"))
+        self.assertFalse(guardian.substantiates_critical(
+            "CRITICAL secret/private-key material in app.py"))
+        self.assertFalse(guardian.substantiates_critical(
+            "CRITICAL credential-exfil pattern in .github/workflows/semgrep.yml"))
+        self.assertIn("any(substantiates_critical(item) for item in findings)", SOURCE,
+                      "deep_scan must set critical with the shared rule")
 
     def test_no_builtin_heuristic_emits_critical(self):
         """Heuristics may flag for review; they may never drive a removal."""

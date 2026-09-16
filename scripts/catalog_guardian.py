@@ -27,6 +27,8 @@ for _name in (
     "run_gitleaks",
     "clamav_database_ready",
     "has_scanner_error",
+    "EXTERNAL_SCANNERS",
+    "substantiates_critical",
 ):
     setattr(_legacy, _name, getattr(_security, _name))
 

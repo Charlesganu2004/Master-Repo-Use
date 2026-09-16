@@ -115,9 +115,11 @@ class OnlyRealScannersRaiseCriticalTests(unittest.TestCase):
                 self.assertIn(tool, legacy.EXTERNAL_SCANNERS)
 
     def test_critical_requires_a_named_scanner(self):
-        source = (ROOT / "scripts" / "catalog_guardian_legacy.py").read_text(encoding="utf-8")
-        self.assertIn("EXTERNAL_SCANNERS", source)
-        self.assertIn('item.startswith("CRITICAL") and any(tool in item', source)
+        """The CRITICAL that nearly removed anthropics/skills came from a heuristic."""
+        self.assertFalse(guardian.substantiates_critical(
+            "CRITICAL credential-exfil pattern in error-codes.md"))
+        self.assertTrue(guardian.substantiates_critical(
+            "CRITICAL gitleaks secret candidate rule=github-pat at lib/client.py:9 (value withheld)"))
 
 
 if __name__ == "__main__":

@@ -94,9 +94,13 @@ class OnlyExternalScannersRaiseCritical(unittest.TestCase):
             self.assertIn('f"CRITICAL gitleaks secret candidate', source, name)
 
     def test_removal_still_requires_a_named_external_scanner(self):
-        source = (ROOT / "scripts" / "catalog_guardian_legacy.py").read_text(encoding="utf-8")
-        self.assertIn("EXTERNAL_SCANNERS", source)
-        self.assertIn("any(tool in item for tool in EXTERNAL_SCANNERS)", source)
+        """And a gitleaks line in a fixture path does not count, even one cached before the cap."""
+        import catalog_guardian as entry
+        self.assertFalse(entry.substantiates_critical(
+            "CRITICAL gitleaks secret candidate rule=generic-api-key "
+            "at convert/testdata/gemma-2b-it.json:3 (value withheld)"))
+        self.assertTrue(entry.substantiates_critical(
+            "CRITICAL gitleaks secret candidate rule=generic-api-key at cmd/serve.go:88 (value withheld)"))
 
 
 class TheSeverityContractIsDocumented(unittest.TestCase):
