@@ -117,29 +117,50 @@ REDACTIONS = [
 
 
 
-# Paths whose whole job is to hold data that looks like a secret. Shared logic
-# with catalog_guardian_legacy; see the note there for why this exists.
-FIXTURE_MARKERS = (
-    "testdata/", "test-data/", "/test/", "/tests/", "tests/", "__tests__/",
-    "__mocks__/", "fixtures/", "fixture/", "/spec/", "specs/",
-    ".test.", ".spec.", "_test.", "-test.",
-    "example", "sample", "mock", "dummy", "placeholder",
-    ".env.example", ".env.sample", ".env.template",
-    "secret_scanning", "gitleaks.toml", ".gitleaksignore",
-    "/docs/", "/doc/", "readme",
+# Paths whose whole job is to hold data that looks like a secret: test, fixture,
+# example and documentation paths. Shared logic with catalog_guardian_legacy,
+# held identical by tests/test_fixture_not_leak.py.
+#
+# Matched on whole path segments and known test-file names, never on substrings.
+# Substrings failed both ways: "tests/" exempted src/contests/prod_keys.py and
+# "mock" exempted services/mockingbird/secrets.py, while SKILL.md and
+# AuthenticationApiTests.cs, a document and a test, were not exempted at all.
+FIXTURE_DIRS = frozenset({
+    "test", "tests", "__tests__", "__mocks__", "testdata", "test-data", "test_data",
+    "fixture", "fixtures", "spec", "specs", "example", "examples", "sample", "samples",
+    "mocks", "doc", "docs",
+})
+FIXTURE_NAMES = frozenset({
+    ".env.example", ".env.sample", ".env.template", "gitleaks.toml", ".gitleaksignore",
+})
+# A word inside a file name, between . _ or -, as in settings.example.yaml or mock_server.py.
+FIXTURE_NAME_WORDS = frozenset({"example", "sample", "mock", "dummy", "placeholder", "fixture"})
+# Documentation formats. Plain .txt is left out on purpose: credentials.txt is not a document.
+DOC_SUFFIXES = (".md", ".markdown", ".mdx", ".rst", ".adoc", ".org")
+TEST_FILE = re.compile(
+    r"^test_"                       # test_config.py
+    r"|(?:_test|_tests|_spec)\.\w+$"  # handler_test.go, manager_tests.rs, user_spec.rb
+    r"|\.(?:test|spec)\.\w+$"       # analytics.test.ts, setup-auth.test.sh
 )
+CAMEL_TEST_FILE = re.compile(r"[a-z0-9](?:Test|Tests|Spec)\.\w+$")  # FooTest.java, ApiTests.cs
 
-# Matched against the start of a path as well, since "docs/CLI.md" has no
-# leading slash and was slipping through.
-FIXTURE_PREFIXES = (
-    "docs/", "doc/", "test/", "tests/", "example/", "examples/", "sample/",
-)
 
 def is_fixture_path(path: str) -> bool:
     """True when a secret-shaped string here is expected rather than alarming."""
-    lowered = str(path).replace("\\", "/").lower()
-    return (any(marker in lowered for marker in FIXTURE_MARKERS)
-            or lowered.startswith(FIXTURE_PREFIXES))
+    parts = [part for part in str(path).replace("\\", "/").split("/") if part]
+    if not parts:
+        return False
+    name, dirs = parts[-1], [part.lower() for part in parts[:-1]]
+    lowered = name.lower()
+    if any(d in FIXTURE_DIRS or d.endswith((".test", ".tests")) for d in dirs):
+        return True  # the last condition is a C# test project such as SnapTrade.Net.Test
+    if lowered in FIXTURE_NAMES or lowered.startswith("secret_scanning."):
+        return True
+    if lowered.endswith(DOC_SUFFIXES) or lowered.split(".")[0] == "readme":
+        return True
+    if TEST_FILE.search(lowered) or CAMEL_TEST_FILE.search(name):
+        return True
+    return bool(FIXTURE_NAME_WORDS & set(re.split(r"[._-]", lowered)))
 
 
 # Scanners whose output may justify removing a repository. The built-in

@@ -39,6 +39,17 @@ class FixturePathsAreRecognised(unittest.TestCase):
         "docs/CLI.md",                                # Depth-Anything-3: a doc example
         ".env.example",
         "spec/fixtures/creds.json",
+        # Missed by the substring markers, found auditing the #16 closure, which
+        # promised that test and documentation paths cap below CRITICAL.
+        ".copilot/skills/secret-handling/SKILL.md",   # bradygaster/squad: a doc about secrets
+        "AGENT.md",                                   # satoshiman/rag-cli
+        "sdks/csharp/src/SnapTrade.Net.Test/Api/AuthenticationApiTests.cs",  # passiv/snaptrade-sdks
+        "src/network/connection_manager_tests.rs",
+        "spec/models/user_spec.rb",
+        "src/test/java/com/acme/FooTest.java",
+        "pkg/settings/test_config.py",
+        "config/settings.example.yaml",
+        "server/mock_server.py",
     ]
 
     NOT_FIXTURES = [
@@ -47,6 +58,21 @@ class FixturePathsAreRecognised(unittest.TestCase):
         "app/settings.py",
         "lib/auth.go",
         "terraform/main.tf",
+        # Wrongly exempted by substring matching: a marker inside a longer name.
+        "src/contests/prod_keys.py",
+        "config/examplecorp/prod.env",
+        "services/mockingbird/secrets.py",
+        "app/readme_generator/keys.go",
+        "infra/samples_service/prod.env",
+        "src/latest-test.go",
+        # A plain-text file is not documentation; credentials.txt is a leak.
+        "ops/credentials.txt",
+        # Real source in the 2026-09-01 removals. Whether one gitleaks hit here
+        # should remove a repository is a policy question, not a path question.
+        "codex-rs/Cargo.lock",
+        "codex-rs/cli/src/login.rs",
+        "backend/go/valkey-store/Makefile",
+        "graphiti_core/telemetry/telemetry.py",
     ]
 
     def test_every_real_false_positive_is_recognised(self):
