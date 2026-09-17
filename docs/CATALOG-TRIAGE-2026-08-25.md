@@ -151,3 +151,21 @@ regenerated on 2026-09-17: `tastytrade/tastytrade-api-js` (122d) and
 Status after these records, regenerated 2026-09-17 00:30 UTC with a metadata pass that removes
 nothing: healthy 296, stale 7, review 1 (CartographAI), remove 0, all 304 catalogued repositories
 present. The previous `docs/CATALOG-STATUS.md` dated from 2026-08-27 and was missing 11 of them.
+
+**82 lane repositories registered, and what the first audit of them found.** Lanes added after
+the catalog was set up never put their repositories in `repo-lists/all-curated.txt`, the only list
+Guardian reads, so they had never been audited. Registered on 2026-09-17; the catalog is now 386.
+The first metadata pass over them, which removes nothing, found:
+
+- **REMOVE status, owner decision needed:** `nilbuild/git-standup` (436d since push) and
+  `themeselection/Awesome-JavaScript-Libraries` (1010d). Past the 365-day threshold; an approved
+  maintenance run would propose removing both.
+- **REVIEW:** `openrecall/openrecall` (357d, AGPL-3.0) and `r33drichards/merge-conflict` (360d, no
+  licence detected).
+- **STALE:** `sedarged/Agent-skills-ecosystem` (162d), `BehiSecc/VibeSec-Skill` (211d) and
+  `hardikpandya/stop-slop` (183d).
+- **Worth a look:** `claude-did-this/MCPControl`, a computer-control MCP server, is HEALTHY only
+  through release grace: last push 288d ago, last release 486d ago. For a server that acts on the
+  machine, that is thinner maintenance than the status suggests.
+
+Status regenerated 2026-09-17 00:43 UTC: healthy 371, stale 10, review 3, remove 2, 386 rows.

@@ -1,16 +1,18 @@
 # Catalog Status
 
-Last automated update: **2026-09-17 00:30 UTC**
+Last automated update: **2026-09-17 00:43 UTC**
 
 Policy: stale **120d** · adoption/replacement review **270d** · active-catalog removal **365d** · archived observation grace **30d**.
 
-🟢 Healthy **296** · 🟡 Stale **7** · 🟠 Review **1** · 🔴 Remove **0** · ⚪ Unknown **0**
+🟢 Healthy **371** · 🟡 Stale **10** · 🟠 Review **3** · 🔴 Remove **2** · ⚪ Unknown **0**
 
 | Repo | Status | Push age | Archived | License | Deep scan | Managed | Note |
 |---|---|---:|---:|---|---:|---:|---|
+| `AB498/computer-control-mcp` | 🟢 HEALTHY | 53d | no | mit | no | no |  |
 | `AI4Finance-Foundation/FinGPT` | 🟢 HEALTHY | 2d | no | mit | no | no |  |
 | `AI4Finance-Foundation/FinRL` | 🟢 HEALTHY | 65d | no | mit | no | no |  |
 | `AThevon/genjutsu` | 🟢 HEALTHY | 8d | no | other | no | no |  |
+| `ActivityWatch/activitywatch` | 🟢 HEALTHY | 0d | no | mpl-2.0 | no | no |  |
 | `Agents365-ai/drawio-skill` | 🟢 HEALTHY | 2d | no | mit | no | no |  |
 | `AnswerDotAI/rerankers` | 🟢 HEALTHY | 270d | no | apache-2.0 | no | no | Widely used reranking wrapper (1.6k stars). Feature-complete. |
 | `AppFlowy-IO/AppFlowy` | 🟢 HEALTHY | 1d | no | agpl-3.0 | no | no |  |
@@ -22,8 +24,10 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `ChromeDevTools/chrome-devtools-mcp` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `CloudAI-X/threejs-skills` | 🟢 HEALTHY | 69d | no | — | no | no |  |
 | `Cocoon-AI/architecture-diagram-generator` | 🟢 HEALTHY | 126d | no | mit | no | no | released 130d ago; a release is maintenance even when the last push was 126d ago |
+| `CursorTouch/Windows-MCP` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `D-Ogi/WatermarkRemover-AI` | 🟢 HEALTHY | 0d | no | mit | no | no | Authorized-media utility (1.9k stars). Feature-complete. |
 | `DhruvaBansal00/robin_stocks_v2` | 🟢 HEALTHY | 18d | no | mit | no | no |  |
+| `Egonex-AI/Understand-Anything` | 🟢 HEALTHY | 4d | no | mit | no | no |  |
 | `EleutherAI/lm-evaluation-harness` | 🟢 HEALTHY | 2d | no | mit | no | no |  |
 | `EvolvingLMMs-Lab/lmms-eval` | 🟢 HEALTHY | 5d | no | other | no | no |  |
 | `FlagOpen/RoboBrain2.5` | 🟢 HEALTHY | 200d | no | apache-2.0 | no | no | Research release. Finished artifact rather than a maintained package. |
@@ -32,11 +36,16 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `HKUDS/AI-Trader` | 🟢 HEALTHY | 97d | no | — | no | no |  |
 | `HKUDS/LightRAG` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `HKUDS/Vibe-Trading` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
+| `Humanizr/Humanizer` | 🟢 HEALTHY | 5d | no | other | no | no |  |
+| `JCodesMore/ai-website-cloner-template` | 🟢 HEALTHY | 33d | no | mit | no | no |  |
 | `Jesse-ai/jesse` | 🟢 HEALTHY | 2d | no | mit | no | no |  |
 | `Jpisnice/shadcn-ui-mcp-server` | 🟢 HEALTHY | 123d | no | mit | no | no | released 229d ago; a release is maintenance even when the last push was 123d ago |
+| `JuliusBrussee/caveman` | 🟢 HEALTHY | 0d | no | other | no | no |  |
+| `Leonxlnx/taste-skill` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `Lumiwealth/lumibot` | 🟢 HEALTHY | 2d | no | gpl-3.0 | no | no |  |
 | `MCP-UI-Org/mcp-ui` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `MIT-SPARK/Hydra` | 🟢 HEALTHY | 0d | no | bsd-2-clause | no | no |  |
+| `Maciek-roboblog/Claude-Code-Usage-Monitor` | 🟢 HEALTHY | 73d | no | mit | no | no |  |
 | `MingyuJ666/Stockagent` | 🟢 HEALTHY | 92d | no | — | no | no |  |
 | `MrNeRF/LichtFeld-Studio` | 🟢 HEALTHY | 0d | no | gpl-3.0 | no | no |  |
 | `NVIDIA/Megatron-LM` | 🟢 HEALTHY | 0d | no | other | no | no |  |
@@ -61,6 +70,7 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `RyanWeb31110/codex-thread-handoff` | 🟢 HEALTHY | 98d | no | mit | no | no |  |
 | `Sapience-AI/openclaw-middleware-suite` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `Significant-Gravitas/AutoGPT` | 🟢 HEALTHY | 0d | no | other | no | no |  |
+| `Skyvern-AI/rustwright` | 🟢 HEALTHY | 1d | no | mit | no | no |  |
 | `SkyworkAI/DeepResearchAgent` | 🟢 HEALTHY | 135d | no | mit | no | no | released 204d ago; a release is maintenance even when the last push was 135d ago |
 | `SkyworkAI/Matrix-Game` | 🟢 HEALTHY | 170d | no | mit | no | no | Research release, same reasoning. |
 | `Stability-AI/StableLM` | 🟢 HEALTHY | 891d | no | apache-2.0 | no | no | Last push 2024-04-08 -- roughly 870 days at time of adding, far past the 365d removal threshold. Added deliberately as a historical reference: StableLM was a landmark 2024 open-weight release and the repo is useful for understanding that generation. It is NOT a current runtime choice; for local inference today use the Gemma / Phi / Ollama lanes in repo-lists/local-models.txt. Re-review only if Stability resumes development. |
@@ -68,6 +78,7 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `SuperClaude-Org/SuperClaude_Framework` | 🟢 HEALTHY | 1d | no | mit | no | no |  |
 | `ToolJet/ToolJet` | 🟢 HEALTHY | 0d | no | agpl-3.0 | no | no |  |
 | `TradingAgents-AI/TradingAgents` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `Vincentwei1021/video-shotcraft` | 🟢 HEALTHY | 7d | no | apache-2.0 | no | no |  |
 | `VoltAgent/awesome-agent-skills` | 🟢 HEALTHY | 1d | no | mit | no | no |  |
 | `VoltAgent/awesome-claude-design` | 🟢 HEALTHY | 88d | no | mit | no | no |  |
 | `YeQing17-2026/OmniAgent` | 🟢 HEALTHY | 51d | no | other | no | no |  |
@@ -84,14 +95,19 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `alpacahq/alpaca-py` | 🟢 HEALTHY | 1d | no | apache-2.0 | no | no |  |
 | `amruthpillai/reactive-resume` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `anchore/syft` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `andreaswasita/copilot-agents-dojo` | 🟢 HEALTHY | 9d | no | mit | no | no |  |
+| `anomalyco/opencode` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `anthropics/claude-plugins-official` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `anthropics/skills` | 🟢 HEALTHY | 6d | no | — | no | no |  |
 | `aquasecurity/trivy` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `arangodb/arangodb` | 🟢 HEALTHY | 0d | no | other | no | no |  |
+| `asottile/pyupgrade` | 🟢 HEALTHY | 12d | no | mit | no | no |  |
 | `atilaahmettaner/tradingview-mcp` | 🟢 HEALTHY | 15d | no | mit | no | no |  |
 | `aws/amazon-braket-sdk-python` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `awslabs/mcp` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `baidu/Unlimited-OCR` | 🟢 HEALTHY | 49d | no | mit | no | no |  |
 | `bergside/awesome-design-skills` | 🟢 HEALTHY | 80d | no | mit | no | no |  |
+| `blader/humanizer` | 🟢 HEALTHY | 10d | no | mit | no | no |  |
 | `borglab/gtsam` | 🟢 HEALTHY | 0d | no | other | no | no |  |
 | `bradygaster/Aspiregregator` | 🟢 HEALTHY | 39d | no | mit | no | no |  |
 | `bradygaster/MultiAgent` | 🟢 HEALTHY | 300d | no | — | no | no | Microsoft dev-advocate conference demo, point-in-time by construction. Reference only; do not depend on it. For real agent work use microsoft/agent-framework. |
@@ -102,27 +118,38 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `browser-use/browser-use` | 🟢 HEALTHY | 1d | no | mit | no | no |  |
 | `bukosabino/ta` | 🟢 HEALTHY | 182d | no | mit | no | no | Technical-analysis indicator maths (5,180 stars). The formulas do not change; quiet is correct. |
 | `calcom/cal.diy` | 🟢 HEALTHY | 2d | no | mit | no | no |  |
+| `ccusage/ccusage` | 🟢 HEALTHY | 0d | no | other | no | no |  |
 | `centminmod/my-claude-code-setup` | 🟢 HEALTHY | 14d | no | mit | no | no |  |
 | `cisco-ai-defense/mcp-scanner` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `clangd/clangd` | 🟢 HEALTHY | 2d | no | apache-2.0 | no | no |  |
+| `clangd/vscode-clangd` | 🟢 HEALTHY | 3d | no | mit | no | no |  |
+| `claude-did-this/MCPControl` | 🟢 HEALTHY | 288d | no | mit | no | no | released 486d ago; a release is maintenance even when the last push was 288d ago |
 | `cloud-custodian/cloud-custodian` | 🟢 HEALTHY | 1d | no | apache-2.0 | no | no |  |
 | `cloudflare/mcp-server-cloudflare` | 🟢 HEALTHY | 15d | no | apache-2.0 | no | no |  |
 | `cloudquery/cloudquery` | 🟢 HEALTHY | 1d | no | mpl-2.0 | no | no |  |
+| `codemod/codemod` | 🟢 HEALTHY | 2d | no | apache-2.0 | no | no |  |
+| `coinbase/cdp-sdk` | 🟢 HEALTHY | 2d | no | mit | no | no |  |
 | `coinbase/cdp-sdk-python` | 🟢 HEALTHY | 324d | no | other | no | no | Superseded 2026-08-25 by the coinbase/cdp-sdk monorepo (pushed 2026-08-25). Kept for existing Python integrations; prefer coinbase/cdp-sdk for new work. |
 | `coinbase/coinbase-advanced-py` | 🟢 HEALTHY | 89d | no | apache-2.0 | no | no |  |
 | `colmap/colmap` | 🟢 HEALTHY | 0d | no | other | no | no |  |
 | `confident-ai/deepeval` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `coollabsio/coolify` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `cppcheck-opensource/cppcheck` | 🟢 HEALTHY | 0d | no | gpl-3.0 | no | no |  |
 | `creativetimofficial/ui` | 🟢 HEALTHY | 186d | no | mit | no | no | Component library (12k stars) exposed via registry and MCP. Design systems move slowly by design. |
 | `crewAIInc/crewAI` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `dani-garcia/vaultwarden` | 🟢 HEALTHY | 3d | no | agpl-3.0 | no | no |  |
+| `danielmiessler/Fabric` | 🟢 HEALTHY | 9d | no | mit | no | no |  |
 | `docusealco/docuseal` | 🟢 HEALTHY | 2d | no | agpl-3.0 | no | no |  |
 | `dwavesystems/dwave-ocean-sdk` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `emilkowalski/skills` | 🟢 HEALTHY | 1d | no | mit | no | no |  |
+| `emilybache/GildedRose-Refactoring-Kata` | 🟢 HEALTHY | 26d | no | mit | no | no |  |
 | `enricoros/big-AGI` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `exa-labs/exa-mcp-server` | 🟢 HEALTHY | 26d | no | mit | no | no |  |
 | `exogee-technology/graphweaver` | 🟢 HEALTHY | 1d | no | other | no | no |  |
 | `expo/examples` | 🟢 HEALTHY | 13d | no | mit | no | no |  |
 | `expo/expo` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
+| `facebook/infer` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
+| `facebook/jscodeshift` | 🟢 HEALTHY | 5d | no | mit | no | no |  |
 | `facebookresearch/map-anything` | 🟢 HEALTHY | 40d | no | apache-2.0 | no | no |  |
 | `facebookresearch/vggt` | 🟢 HEALTHY | 120d | no | other | no | no |  |
 | `facebookresearch/vjepa2` | 🟢 HEALTHY | 177d | no | mit | no | no | Meta research release. Finished artifact rather than a maintained runtime package. |
@@ -135,6 +162,7 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `getomnico/omni` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `getzep/graphiti` | 🟢 HEALTHY | 5d | no | apache-2.0 | no | no |  |
 | `ggml-org/llama.cpp` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
+| `ggml-org/whisper.cpp` | 🟢 HEALTHY | 1d | no | mit | no | no |  |
 | `github/awesome-copilot` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `github/copilot-cli` | 🟢 HEALTHY | 0d | no | other | no | no |  |
 | `github/copilot-sdk` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
@@ -167,20 +195,28 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `infracost/agent-skills` | 🟢 HEALTHY | 41d | no | apache-2.0 | no | no |  |
 | `infracost/infracost` | 🟢 HEALTHY | 7d | no | apache-2.0 | no | no |  |
 | `isl-org/Open3D` | 🟢 HEALTHY | 0d | no | other | no | no |  |
+| `itsjwill/motion-primitives-website` | 🟢 HEALTHY | 79d | no | — | no | no |  |
+| `jamiepine/voicebox` | 🟢 HEALTHY | 39d | no | mit | no | no |  |
 | `jasonwilbur/cloud-cost-mcp` | 🟢 HEALTHY | 105d | no | apache-2.0 | no | no |  |
+| `jaywilburn/refactoring-ui-skill` | 🟢 HEALTHY | 118d | no | mit | no | no |  |
+| `jendrikseipp/vulture` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `jmfernandes/robin_stocks` | 🟢 HEALTHY | 217d | no | mit | no | no | The de-facto Robinhood Python library (2.1k stars). Tracks a stable API. |
 | `jpmorganchase/QOKit` | 🟢 HEALTHY | 91d | no | apache-2.0 | no | no |  |
 | `kernc/backtesting.py` | 🟢 HEALTHY | 42d | no | agpl-3.0 | no | no |  |
 | `kk7nc/RMDL` | 🟢 HEALTHY | 147d | no | gpl-3.0 | no | no | GPL-3.0 research code for random multimodel deep learning, listed in multi-model-data.txt as research reference, not a dependency, so push age is not a health signal. |
 | `koide3/glim` | 🟢 HEALTHY | 10d | no | mit | no | no |  |
+| `kucherenko/jscpd` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `langchain-ai/langchain` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `langchain-ai/open_deep_research` | 🟢 HEALTHY | 37d | yes | mit | no | no | Archived 2026-08-10. MIT-licensed, so managed adoption IS legally permitted. Queued as the highest-value adoption candidate -- see docs/MANAGED-ADOPTION-PLAN.md. Until adoption completes, treat as reference: the technique is worth reading, the repo is not maintained. Continuation work upstream lives in langchain-ai/langgraph. |
 | `langflow-ai/langflow` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `langgenius/dify` | 🟢 HEALTHY | 0d | no | other | no | no |  |
 | `lightonai/pylate` | 🟢 HEALTHY | 55d | no | mit | no | no |  |
+| `llvm/llvm-project` | 🟢 HEALTHY | 0d | no | other | no | no |  |
 | `lobehub/lobe-chat` | 🟢 HEALTHY | 0d | no | other | no | no |  |
+| `lucasrosati/claude-code-memory-setup` | 🟢 HEALTHY | 5d | no | mit | no | no |  |
 | `marp-team/marpit` | 🟢 HEALTHY | 12d | no | mit | no | no |  |
 | `mattpocock/skills` | 🟢 HEALTHY | 1d | no | mit | no | no |  |
+| `mattsse/chromiumoxide` | 🟢 HEALTHY | 166d | no | apache-2.0 | no | no | released 203d ago; a release is maintenance even when the last push was 166d ago |
 | `mem0ai/mem0` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `microsoft/Agents-for-net` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `microsoft/BitNet` | 🟢 HEALTHY | 51d | no | mit | no | no |  |
@@ -195,9 +231,11 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `microsoft/lets-learn-mcp-python` | 🟢 HEALTHY | 357d | yes | mit | no | no | Official Microsoft course material pinned to a teaching moment. Not intended to track MCP spec changes. Archived by Microsoft, confirmed 2026-09-16; reference-only use is unaffected. |
 | `microsoft/mcp` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `microsoft/onnxruntime-genai` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
+| `microsoft/playwright` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `microsoft/playwright-mcp` | 🟢 HEALTHY | 2d | no | apache-2.0 | no | no |  |
 | `microsoft/qsharp` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `microsoft/semantic-kernel` | 🟢 HEALTHY | 5d | no | mit | no | no |  |
+| `microsoft/vscode-cpptools` | 🟢 HEALTHY | 0d | no | other | no | no |  |
 | `microsoftdocs/mcp` | 🟢 HEALTHY | 6d | no | cc-by-4.0 | no | no |  |
 | `mindsdb/mindsdb` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `mindsdb/mindshub` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
@@ -208,14 +246,31 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `modelcontextprotocol/python-sdk` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `modelcontextprotocol/servers` | 🟢 HEALTHY | 13d | no | other | no | no |  |
 | `modelcontextprotocol/typescript-sdk` | 🟢 HEALTHY | 0d | no | other | no | no |  |
+| `mongodb-developer/GenAI-Showcase` | 🟢 HEALTHY | 12d | no | mit | no | no |  |
+| `mongodb-js/compass` | 🟢 HEALTHY | 0d | no | other | no | no |  |
+| `mongodb-js/mongodb-mcp-server` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `mongodb-js/mongosh` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `mongodb/laravel-mongodb` | 🟢 HEALTHY | 6d | no | mit | no | no |  |
+| `mongodb/mongo` | 🟢 HEALTHY | 2d | no | other | no | no |  |
+| `mongodb/mongo-cxx-driver` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `mongodb/mongo-python-driver` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `mongodb/mongo-tools` | 🟢 HEALTHY | 0d | no | other | no | no |  |
+| `mongodb/mongodb-atlas-cli` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `mongodb/motor` | 🟢 HEALTHY | 2d | no | apache-2.0 | no | no |  |
+| `mongodb/node-mongodb-native` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `motiondivision/motion` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
+| `mprknowledgerepo-dev/taste-skill-frontend` | 🟢 HEALTHY | 91d | no | mit | no | no |  |
 | `mrdoob/three.js` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
+| `msgpack/msgpack-c` | 🟢 HEALTHY | 11d | no | other | no | no |  |
 | `mudler/LocalAI` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
+| `mvanhorn/last30days-skill` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `naplesblue/apple-design-skill` | 🟢 HEALTHY | 58d | no | other | no | no |  |
 | `nautechsystems/nautilus_trader` | 🟢 HEALTHY | 0d | no | lgpl-3.0 | no | no |  |
 | `nerfstudio-project/gsplat` | 🟢 HEALTHY | 13d | no | apache-2.0 | no | no |  |
 | `nevil-mathew/GraphWeave` | 🟢 HEALTHY | 54d | no | mit | no | no |  |
 | `nextlevelbuilder/ui-ux-pro-max-skill` | 🟢 HEALTHY | 1d | no | mit | no | no |  |
 | `nicobailon/visual-explainer` | 🟢 HEALTHY | 19d | no | mit | no | no |  |
+| `nlohmann/json` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `nozomi-koborinai/gcp-cost-mcp-server` | 🟢 HEALTHY | 59d | no | mit | no | no |  |
 | `nvidia-isaac/nvblox` | 🟢 HEALTHY | 75d | no | other | no | no |  |
 | `obra/superpowers` | 🟢 HEALTHY | 2d | no | mit | no | no |  |
@@ -233,14 +288,18 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `opencost/opencost-helm-chart` | 🟢 HEALTHY | 5d | no | apache-2.0 | no | no |  |
 | `opengrep/opengrep` | 🟢 HEALTHY | 0d | no | lgpl-2.1 | no | no |  |
 | `ossf/scorecard` | 🟢 HEALTHY | 2d | no | apache-2.0 | no | no |  |
+| `padamson/playwright-rust` | 🟢 HEALTHY | 1d | no | apache-2.0 | no | no |  |
+| `paolino/mcp-merge-guard` | 🟢 HEALTHY | 49d | no | — | no | no |  |
 | `paradedb/paradedb` | 🟢 HEALTHY | 0d | no | agpl-3.0 | no | no |  |
 | `passiv/snaptrade-cli` | 🟢 HEALTHY | 43d | no | — | no | no |  |
 | `passiv/snaptrade-react` | 🟢 HEALTHY | 303d | no | apache-2.0 | no | no | Official vendor SDK for a stable API. Low churn is expected rather than a warning sign. |
 | `passiv/snaptrade-sdks` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `pathwaycom/pathway` | 🟢 HEALTHY | 0d | no | other | no | no |  |
 | `penpot/penpot` | 🟢 HEALTHY | 0d | no | mpl-2.0 | no | no |  |
+| `petergyang/no-ai-slop` | 🟢 HEALTHY | 14d | no | mit | no | no |  |
 | `playcanvas/supersplat` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `pmorissette/bt` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
+| `prassoai/macroscope-local` | 🟢 HEALTHY | 6d | no | mit | no | no |  |
 | `punkpeye/awesome-mcp-servers` | 🟢 HEALTHY | 1d | no | mit | no | no |  |
 | `qiskit-community/ibm-quantum-challenge-fall-2021` | 🟢 HEALTHY | 579d | yes | apache-2.0 | no | no | Historical IBM Quantum Challenge material. Static by design; keep only as an educational/reference artifact rather than an active runtime dependency. Archived upstream, confirmed 2026-09-16; reference-only use is unaffected. |
 | `qiskit-community/qiskit-finance` | 🟢 HEALTHY | 6d | no | apache-2.0 | no | no | Official Qiskit finance module, Apache-2.0. Stable API; quiet is expected. |
@@ -258,9 +317,12 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `rohitg00/agentmemory` | 🟢 HEALTHY | 2d | no | apache-2.0 | no | no |  |
 | `roninoss/create-expo-stack` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `rpng/open_vins` | 🟢 HEALTHY | 290d | no | gpl-3.0 | no | no | Mature, widely-cited visual-inertial odometry library. Stability is the feature; low churn is expected. |
+| `rtk-ai/rtk` | 🟢 HEALTHY | 1d | no | apache-2.0 | no | no |  |
 | `runagent-dev/runagent` | 🟢 HEALTHY | 81d | no | other | no | no |  |
 | `rustdesk/rustdesk` | 🟢 HEALTHY | 0d | no | agpl-3.0 | no | no |  |
 | `satoshiman/rag-cli` | 🟢 HEALTHY | 117d | no | — | no | no |  |
+| `screenpipe/screenpipe` | 🟢 HEALTHY | 0d | no | other | no | no |  |
+| `seb1n/awesome-ai-agent-skills` | 🟢 HEALTHY | 38d | no | mit | no | no |  |
 | `semgrep/semgrep` | 🟢 HEALTHY | 0d | no | lgpl-2.1 | no | no |  |
 | `sgl-project/sglang` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `sickn33/agentic-awesome-skills` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
@@ -271,14 +333,18 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `snyk/cli` | 🟢 HEALTHY | 0d | no | other | no | no |  |
 | `soolaugust/0CompactMem` | 🟢 HEALTHY | 64d | no | — | no | no |  |
 | `sooperset/mcp-atlassian` | 🟢 HEALTHY | 1d | no | mit | no | no |  |
+| `sourcery-ai/sourcery` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `stella-cv/stella_vslam` | 🟢 HEALTHY | 21d | no | other | no | no |  |
 | `supabase/agent-skills` | 🟢 HEALTHY | 35d | no | mit | no | no |  |
 | `tastyware/tastytrade` | 🟢 HEALTHY | 40d | no | mit | no | no |  |
 | `tastyware/tastytrade-cli` | 🟢 HEALTHY | 37d | no | mit | no | no |  |
 | `tauricresearch/tradingagents` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `tensorflow/quantum` | 🟢 HEALTHY | 15d | no | apache-2.0 | no | no |  |
+| `testdouble/han` | 🟢 HEALTHY | 1d | no | mit | no | no |  |
 | `thammo4/uvatradier` | 🟢 HEALTHY | 151d | no | apache-2.0 | no | no | Active Tradier Python client, Apache-2.0. Small but current. |
 | `thedotmack/claude-mem` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `theosib/token-compact` | 🟢 HEALTHY | 169d | no | — | no | no | released 169d ago; a release is maintenance even when the last push was 169d ago |
+| `tirth8205/code-review-graph` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `topoteretes/cognee` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `tradingstrategy-ai/getting-started` | 🟢 HEALTHY | 0d | no | — | no | no |  |
 | `trufflesecurity/trufflehog` | 🟢 HEALTHY | 0d | no | agpl-3.0 | no | no |  |
@@ -289,26 +355,42 @@ Policy: stale **120d** · adoption/replacement review **270d** · active-catalog
 | `upstash/context7` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `upstash/rag-chat` | 🟢 HEALTHY | 275d | no | mit | no | no | Vendor SDK for a stable API. Low churn is normal, not decay. |
 | `upstash/vector-js` | 🟢 HEALTHY | 191d | no | mit | no | no | Vendor SDK, same reasoning. |
+| `vercel-labs/agent-browser` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `vercel-labs/agent-skills` | 🟢 HEALTHY | 19d | no | — | no | no |  |
+| `vercel-labs/deepsec` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `vercel-labs/json-render` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `vercel-labs/portless` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
+| `vercel-labs/skills` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `vespa-engine/vespa` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `vision-x-nyu/thinking-in-space` | 🟢 HEALTHY | 407d | no | apache-2.0 | no | no | Official VSI-Bench research/evaluation artifact. Treat research artifacts separately from runtime packages; keep as reference while still relevant to spatial reasoning evaluation. |
 | `vllm-project/llm-compressor` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `vllm-project/vllm` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `vnpy/vnpy` | 🟢 HEALTHY | 3d | no | mit | no | no |  |
+| `webpro-nl/knip` | 🟢 HEALTHY | 0d | no | isc | no | no |  |
 | `wentaoyuan/RoboPoint` | 🟢 HEALTHY | 426d | no | apache-2.0 | no | no | Apache-2.0 research artifact for spatial affordance prediction. Keep as reference while still relevant; do not interpret paper-code quietness as runtime-package abandonment. |
 | `wshobson/agents` | 🟢 HEALTHY | 2d | no | mit | no | no |  |
 | `wshobson/maverick-mcp` | 🟢 HEALTHY | 2d | no | mit | no | no |  |
 | `xgboosted/pandas-ta-classic` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `yamadashy/repomix` | 🟢 HEALTHY | 3d | no | mit | no | no |  |
+| `yttrium400/reducethemtokens` | 🟢 HEALTHY | 95d | no | mit | no | no |  |
 | `yusufkaraaslan/Skill_Seekers` | 🟢 HEALTHY | 0d | no | mit | no | no |  |
 | `yvgude/lean-ctx` | 🟢 HEALTHY | 0d | no | apache-2.0 | no | no |  |
 | `zai-org/GLM-5` | 🟢 HEALTHY | 15d | no | apache-2.0 | no | no |  |
 | `zanwei/design-dna` | 🟢 HEALTHY | 19d | no | mit | no | no | Design-token extraction tool (1.5k stars). Small, focused, complete. |
+| `zavora-ai/computer-use-mcp` | 🟢 HEALTHY | 4d | no | mit | no | no |  |
 | `zzallirog/weighted-compact` | 🟢 HEALTHY | 98d | no | mit | no | no |  |
+| `nilbuild/git-standup` | 🔴 REMOVE | 436d | no | mit | no | no | no push for 436d; active-catalog removal threshold is 365d |
+| `themeselection/Awesome-JavaScript-Libraries` | 🔴 REMOVE | 1010d | no | mit | no | no | no push for 1010d; active-catalog removal threshold is 365d |
 | `CartographAI/mcp-server-codegraph` | 🟠 REVIEW | 348d | no | mit | no | no | no push for 348d; replacement/managed-adoption review starts at 270d |
+| `openrecall/openrecall` | 🟠 REVIEW | 357d | no | agpl-3.0 | no | no | no push for 357d; replacement/managed-adoption review starts at 270d |
+| `r33drichards/merge-conflict` | 🟠 REVIEW | 360d | no | — | no | no | no push for 360d; replacement/managed-adoption review starts at 270d |
+| `BehiSecc/VibeSec-Skill` | 🟡 STALE | 211d | no | apache-2.0 | no | no | no push for 211d; stale warning starts at 120d |
 | `HappyHackingSpace/awesome-hackathon` | 🟡 STALE | 133d | no | — | no | no | no push for 133d; stale warning starts at 120d |
 | `LQF-dev/Zero-code` | 🟡 STALE | 130d | no | mit | no | no | no push for 130d; stale warning starts at 120d |
 | `LottieFiles/motion-design-skill` | 🟡 STALE | 121d | no | mit | no | no | no push for 121d; stale warning starts at 120d |
 | `allenai/molmoact` | 🟡 STALE | 128d | no | apache-2.0 | no | no | no push for 128d; stale warning starts at 120d |
+| `hardikpandya/stop-slop` | 🟡 STALE | 183d | no | mit | no | no | no push for 183d; stale warning starts at 120d |
+| `sedarged/Agent-skills-ecosystem` | 🟡 STALE | 162d | no | — | no | no | no push for 162d; stale warning starts at 120d |
 | `skytable/skytable` | 🟡 STALE | 147d | no | agpl-3.0 | no | no | no push for 147d; stale warning starts at 120d |
 | `tastytrade/tastytrade-api-js` | 🟡 STALE | 122d | no | mit | no | no | no push for 122d; stale warning starts at 120d |
 | `wangcangshu/codex-desktop-thread-rescue` | 🟡 STALE | 135d | no | — | no | no | no push for 135d; stale warning starts at 120d |
