@@ -150,6 +150,13 @@ class TheWorkflowDetectsButNeverMerges(unittest.TestCase):
         for vendor in ("anthropic", "openai", "claude -p", "ANTHROPIC_API_KEY"):
             self.assertNotIn(vendor, self.workflow)
 
+    def test_it_closes_the_issue_once_the_upstreams_match_again(self):
+        """Nothing closed it, so a request stayed open after the work was done."""
+        close = self.workflow.index("gh issue close")
+        guard = self.workflow.rindex("moved == 'false'", 0, close)
+        self.assertLess(guard, close, "the close step must run only when nothing moved")
+        self.assertIn("--state open --search 'in:title [Skill Upstream]'", self.workflow[guard:close])
+
 
 if __name__ == "__main__":
     unittest.main()

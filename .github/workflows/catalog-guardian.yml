@@ -303,7 +303,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/catalog_guardian.py --deep --batch-size 20 \
+          # 20 repositories did not fit in 45 minutes: the 2026-09-07, 09-14 and
+          # 09-17 rotations were all killed by the timeout, and a killed job skips
+          # the cache-save step, so coverage never advanced past 14 of 304. Twelve
+          # fits, and the time budget stops the scan with minutes to spare so the
+          # run finishes and saves what it scanned.
+          python scripts/catalog_guardian.py --deep --batch-size 12 \
+            --time-budget-minutes 32 \
             --batch-index '${{ steps.slice.outputs.index }}'
 
       - name: Report security findings
@@ -429,7 +435,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/catalog_guardian.py --deep --batch-size 12 --apply-removals
+          python scripts/catalog_guardian.py --deep --batch-size 12 --apply-removals \
+            --time-budget-minutes 55
 
       - name: Create automation branch
         id: changes

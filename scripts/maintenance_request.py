@@ -91,14 +91,14 @@ Review the current Master Repo as a maintenance operation. Use the repository fi
 6. Prefer maintained upstream replacements over Charles-managed forks.
 7. If a removed repo contains unique useful functionality and its license allows maintenance, create/update a `managed-repos/candidates/` plan. Do not copy third-party source or create a fork until Charles approves the scope.
 8. Update `repo-lists/`, lifecycle overrides, health/security docs, and the interactive page/status only when supported by evidence.
-9. Keep Flowise in transition/reference handling unless a currently maintained successor or owner-approved managed fork is selected; do not classify it healthy solely because 3.1.4 was recent if upstream is officially sunset.
+9. Treat a recent release on an archived repository as a possible sunset release, not proof of maintenance: check the archive flag and the release notes before calling it healthy. Flowise shipped its final release, 3.1.4, on 2026-07-29 and reached end of life on 2026-08-31.
 10. Create a PR with a concise per-repo decision table: KEEP, REFERENCE, REPLACE, REMOVE, or MANAGED-ADOPTION REVIEW. Request review from `@Charlesganu2004` and do not merge it.
 
 ## Current safeguards
 
 - `main` is intended to be owner-controlled with CODEOWNERS + owner approval check + GitHub branch/ruleset protection.
 - Scheduled AI maintenance is disabled by design to avoid recurring model/API spend.
-- Scheduled Catalog Guardian runs are disabled by default; use local checks or the manual workflow when Charles chooses.
+- Catalog Guardian runs a deterministic weekly metadata audit and a read-only deep-scan rotation, with no model calls; removals still need the owner's approval comment on the `[Catalog Audit]` issue and a merged pull request.
 - Token/work-spend routing is separate and opt-in in `docs/TOKEN-BUDGET.md`.
 
 ## Suggested approval flow

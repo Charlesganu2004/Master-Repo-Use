@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 import urllib.error
 import urllib.request
 from dataclasses import asdict, dataclass
@@ -414,6 +415,30 @@ def substantiates_critical(finding: str) -> bool:
     return gitleaks_cap_reason(rule.group(1) if rule else "", location.group(1) if location else "") is None
 
 
+class ScanBudget:
+    """Stop deep scanning in time for the run to finish and save what it learned.
+
+    Every rotation on record ended cancelled at the job's 45 minute timeout, and a
+    cancelled job skips the cache-save step, so nothing persisted: deep-scan
+    coverage sat at 14 of 304 from 2026-09-01 while three runs burned 45 minutes
+    each. Stopping at a budget inside the timeout means the repositories already
+    scanned keep their findings, the rest keep their previous state, and the run
+    writes its status file, its report and its trail row.
+    """
+
+    def __init__(self, minutes: float, clock=None):
+        self.minutes = minutes
+        # Resolved here, not in the signature default, so the clock stays replaceable.
+        self.clock = clock or time.monotonic
+        self.started = self.clock()
+        self.skipped = 0
+
+    def exhausted(self) -> bool:
+        if not self.minutes:
+            return False
+        return (self.clock() - self.started) / 60 >= self.minutes
+
+
 def run_external_scanners(clone: pathlib.Path) -> list[str]:
     """Run the external scanners over one clone.
 
@@ -714,7 +739,10 @@ def main() -> int:
     parser.add_argument("--batch-index", type=int, default=0)
     parser.add_argument("--force-repo", action="append", default=[])
     parser.add_argument("--apply-removals", action="store_true")
+    parser.add_argument("--time-budget-minutes", type=float, default=0,
+                        help="stop deep scanning after this long and finish the run; 0 means no limit")
     args = parser.parse_args()
+    budget = ScanBudget(args.time_budget_minutes)
     policy = {
         "stale_after_days": args.stale_after_days,
         "adoption_review_days": args.adoption_review_days,
@@ -778,6 +806,11 @@ def main() -> int:
 
         rotating = args.deep and idx % groups == args.batch_index % groups
         should_scan = repo in forced or (args.deep and (rotating or result.status in {"REVIEW", "REMOVE"}))
+        if should_scan and budget.exhausted():
+            # Out of time. This repository keeps its previous state and the run goes
+            # on to finish, rather than the job being killed with nothing saved.
+            should_scan = False
+            budget.skipped += 1
 
         if should_scan and meta is not None and not result.disabled:
             result.findings, result.critical = deep_scan(repo)
@@ -821,6 +854,10 @@ def main() -> int:
             removed.append(result)
         results.append(result)
 
+    if budget.skipped:
+        print(f"::warning::time budget of {args.time_budget_minutes:g} minutes reached; "
+              f"{budget.skipped} repositories kept their previous scan state and wait for the "
+              f"next rotation. Everything scanned before that is saved.")
     render(results, policy)
     if removed:
         existing = REMOVALS.read_text(encoding="utf-8") if REMOVALS.exists() else "# Automatic Catalog Removal Proposals\n\n"

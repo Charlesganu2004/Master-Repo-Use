@@ -79,3 +79,17 @@ jobs:
           else
             gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file /tmp/skill-upstreams.md --assignee Charlesganu2004
           fi
+
+      # Nothing closed the issue when the work was done, so a resolved request would
+      # have stayed open until someone noticed. Pinning a reviewed upstream is what
+      # resolves it, and the next check is what proves it.
+      - name: Close the upstream issue once every skill matches again
+        if: steps.compare.outputs.moved == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search 'in:title [Skill Upstream]' --json number,title --jq '[.[] | select(.title | startswith("[Skill Upstream]"))][0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" --repo "$GITHUB_REPOSITORY" --comment "Every tracked upstream now matches the version this repository reviewed and pinned, so there is nothing outstanding here. A new issue opens the next time one moves."
+          fi
