@@ -163,10 +163,42 @@ def is_fixture_path(path: str) -> bool:
     return bool(FIXTURE_NAME_WORDS & set(re.split(r"[._-]", lowered)))
 
 
+# Lockfiles hold integrity hashes, which gitleaks reads as keys and which are never
+# credentials. codex-rs/Cargo.lock put openai/codex up for removal this way.
+LOCKFILES = frozenset({
+    "cargo.lock", "package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml",
+    "bun.lockb", "poetry.lock", "pdm.lock", "uv.lock", "pipfile.lock", "go.sum",
+    "gemfile.lock", "composer.lock", "flake.lock", "packages.lock.json", "podfile.lock",
+})
+
+# The entropy rule: any long random-looking string beside a key-like name. It
+# produced 73 of the 82 gitleaks CRITICALs in issue #17 and every false positive on
+# record. Worth a human look; too imprecise to propose deleting a repository.
+LOW_PRECISION_RULES = frozenset({"generic-api-key"})
+
+
+def is_lockfile(path: str) -> bool:
+    return str(path).replace("\\", "/").rsplit("/", 1)[-1].lower() in LOCKFILES
+
+
+def gitleaks_cap_reason(rule: str, location: str) -> str | None:
+    """Why a gitleaks hit reports HIGH instead of CRITICAL, or None when it may propose removal."""
+    if is_fixture_path(location):
+        return "fixture path"
+    if is_lockfile(location):
+        return "lockfile hash"
+    if rule.lower() in LOW_PRECISION_RULES:
+        return "low-precision rule"
+    return None
+
+
 # Scanners whose output may justify removing a repository. The built-in
-# heuristics are absent on purpose: they match text, not threats.
+# heuristics are absent on purpose: they match text, not threats. In practice two
+# of these raise CRITICAL: clamav for an infected file, and gitleaks for a precise
+# rule outside the capped paths. The others report HIGH.
 EXTERNAL_SCANNERS = ("clamav", "gitleaks", "osv", "semgrep", "snyk", "trivy")
 FINDING_LOCATION = re.compile(r"\bat (\S+?)(?::\d+)?(?:\s|$)")
+FINDING_RULE = re.compile(r"\brule=(\S+)")
 
 
 def substantiates_critical(finding: str) -> bool:
@@ -175,14 +207,18 @@ def substantiates_critical(finding: str) -> bool:
     Cached findings were written under whatever rules held when they were made,
     so every line is judged by the rules that hold now. The scanner has to be the
     word straight after the severity, not a name appearing anywhere in the line,
-    where a path like .github/workflows/semgrep.yml would count. And a secret
-    candidate in a fixture path is capped exactly as a fresh gitleaks run caps it.
+    where a path like .github/workflows/semgrep.yml would count. And a gitleaks
+    line is capped exactly as a fresh gitleaks run caps it.
     """
-    parts = str(finding).split(maxsplit=2)
+    text = str(finding)
+    parts = text.split(maxsplit=2)
     if len(parts) < 2 or parts[0] != "CRITICAL" or parts[1] not in EXTERNAL_SCANNERS:
         return False
-    location = FINDING_LOCATION.search(str(finding))
-    return not (location and is_fixture_path(location.group(1)))
+    location = FINDING_LOCATION.search(text)
+    if parts[1] != "gitleaks":
+        return not (location and is_fixture_path(location.group(1)))
+    rule = FINDING_RULE.search(text)
+    return gitleaks_cap_reason(rule.group(1) if rule else "", location.group(1) if location else "") is None
 
 
 def redact(text: str, limit: int = 400) -> str:
@@ -212,18 +248,15 @@ def is_prose(path: pathlib.Path) -> bool:
 def scan_text(path: pathlib.Path, text: str) -> list[str]:
     """Heuristic source scan that reports category + path, never matched values.
 
-    Severity here caps at HIGH. Only the real scanners (ClamAV, Gitleaks, OSV,
-    Semgrep) may raise CRITICAL, because only they can distinguish a live threat
-    from a sentence describing one. A pattern match in a text file is evidence
-    worth a human look, never evidence enough to delete a repository.
+    Severity here caps at HIGH. Only an external scanner may raise CRITICAL, and
+    in practice only ClamAV and precise gitleaks rules do. A pattern match in a
+    text file is evidence worth a human look, never evidence enough to delete a
+    repository.
     """
     out: list[str] = []
     controls = sorted({f"U+{ord(c):04X}" for c in text if c in INVISIBLE})
     if controls:
         out.append(f"HIGH invisible/bidi controls {','.join(controls)} in {path}")
-    for name, pattern in SUSPICIOUS:
-        if pattern.search(text):
-            out.append(f"HIGH {name} pattern in {path}")
     if any(pattern.search(text) for pattern in SECRETS):
         # Before the prose return, because a key pasted into a README leaks
         # exactly as one in source does. These patterns match key formats, not
@@ -233,8 +266,15 @@ def scan_text(path: pathlib.Path, text: str) -> list[str]:
         # findings read as 107 removal candidates.
         out.append(f"HIGH secret/private-key material in {path}")
     if is_prose(path):
-        # Documentation stops here. Everything below describes code constructs.
+        # Documentation stops here. Everything below describes code constructs,
+        # including the download-to-shell and credential-exfil patterns: a README's
+        # `curl ... | sh` install line and a doc naming ANTHROPIC_API_KEY beside
+        # api.anthropic.com are instructions, and the second is what put
+        # anthropics/skills up for removal in issue #14.
         return out
+    for name, pattern in SUSPICIOUS:
+        if pattern.search(text):
+            out.append(f"HIGH {name} pattern in {path}")
     if any(pattern.search(text) for pattern in PROMPT_INJECTION):
         out.append(f"HIGH possible prompt/instruction injection text in {path}")
     if any(pattern.search(text) for pattern in SQL):
@@ -261,6 +301,14 @@ def run_external(cmd: list[str], cwd: pathlib.Path, label: str) -> list[str]:
             "so the result is not classified as a finding"
         ]
     if proc.returncode in finding_codes:
+        if label == "clamav":
+            # An infected file is the one external result that says the code itself
+            # is hostile, so it is the one that may propose removal. It used to
+            # report HIGH like a lint match, so malware could never delist anything.
+            return [
+                "CRITICAL clamav reported infected files (scanner details withheld from "
+                "persisted output; rerun clamscan locally for the file list)"
+            ]
         return [
             f"HIGH {label} reported findings (scanner details withheld from persisted output; "
             "rerun the scanner locally for full details)"
@@ -320,10 +368,11 @@ def run_gitleaks(clone: pathlib.Path) -> list[str]:
         location = str(entry.get("File") or "unknown-file")[:160]
         line = entry.get("StartLine")
         where = f"{location}:{line}" if line else location
-        if is_fixture_path(location):
+        reason = gitleaks_cap_reason(rule, location)
+        if reason:
             findings.append(
                 f"HIGH gitleaks secret candidate rule={rule} at {where} "
-                f"(value withheld; fixture path, capped below CRITICAL)")
+                f"(value withheld; {reason}, capped below CRITICAL)")
         else:
             findings.append(
                 f"CRITICAL gitleaks secret candidate rule={rule} at {where} (value withheld)")

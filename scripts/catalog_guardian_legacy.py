@@ -356,10 +356,11 @@ def run_gitleaks(clone: pathlib.Path) -> list[str]:
         location = str(entry.get("File") or "unknown-file")[:160]
         line = entry.get("StartLine")
         where = f"{location}:{line}" if line else location
-        if is_fixture_path(location):
+        reason = gitleaks_cap_reason(rule, location)
+        if reason:
             findings.append(
                 f"HIGH gitleaks secret candidate rule={rule} at {where} "
-                f"(value withheld; fixture path, capped below CRITICAL)")
+                f"(value withheld; {reason}, capped below CRITICAL)")
         else:
             findings.append(
                 f"CRITICAL gitleaks secret candidate rule={rule} at {where} (value withheld)")
@@ -371,6 +372,29 @@ def run_gitleaks(clone: pathlib.Path) -> list[str]:
 # Only these can justify a CRITICAL. Everything else is a heuristic hint.
 EXTERNAL_SCANNERS = ("clamav", "gitleaks", "osv", "semgrep", "snyk", "trivy")
 FINDING_LOCATION = re.compile(r"\bat (\S+?)(?::\d+)?(?:\s|$)")
+FINDING_RULE = re.compile(r"\brule=(\S+)")
+# Lockfile hashes and the entropy rule cap below CRITICAL; see catalog_security.py.
+LOCKFILES = frozenset({
+    "cargo.lock", "package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml",
+    "bun.lockb", "poetry.lock", "pdm.lock", "uv.lock", "pipfile.lock", "go.sum",
+    "gemfile.lock", "composer.lock", "flake.lock", "packages.lock.json", "podfile.lock",
+})
+LOW_PRECISION_RULES = frozenset({"generic-api-key"})
+
+
+def is_lockfile(path: str) -> bool:
+    return str(path).replace("\\", "/").rsplit("/", 1)[-1].lower() in LOCKFILES
+
+
+def gitleaks_cap_reason(rule: str, location: str) -> str | None:
+    """Why a gitleaks hit reports HIGH instead of CRITICAL, or None when it may propose removal."""
+    if is_fixture_path(location):
+        return "fixture path"
+    if is_lockfile(location):
+        return "lockfile hash"
+    if rule.lower() in LOW_PRECISION_RULES:
+        return "low-precision rule"
+    return None
 
 
 def substantiates_critical(finding: str) -> bool:
@@ -379,11 +403,48 @@ def substantiates_critical(finding: str) -> bool:
     catalog_guardian.py replaces this with the copy in catalog_security.py; the
     two are held identical by tests/test_cached_findings_meet_current_rules.py.
     """
-    parts = str(finding).split(maxsplit=2)
+    text = str(finding)
+    parts = text.split(maxsplit=2)
     if len(parts) < 2 or parts[0] != "CRITICAL" or parts[1] not in EXTERNAL_SCANNERS:
         return False
-    location = FINDING_LOCATION.search(str(finding))
-    return not (location and is_fixture_path(location.group(1)))
+    location = FINDING_LOCATION.search(text)
+    if parts[1] != "gitleaks":
+        return not (location and is_fixture_path(location.group(1)))
+    rule = FINDING_RULE.search(text)
+    return gitleaks_cap_reason(rule.group(1) if rule else "", location.group(1) if location else "") is None
+
+
+def run_external_scanners(clone: pathlib.Path) -> list[str]:
+    """Run the external scanners over one clone.
+
+    ClamAV is required: without it no malware conclusion can be drawn, so its
+    absence is a scanner error. Trivy and Snyk are optional add-ons, run when
+    present. Trivy used to be called unconditionally while no workflow installed
+    it, so every approved scan reported "trivy not installed" and marked clean
+    repositories as needing a rescan.
+    """
+    findings: list[str] = []
+    if shutil.which("trivy"):
+        findings += run_external(
+            ["trivy", "fs", "--scanners", "vuln,secret,misconfig", "--severity", "HIGH,CRITICAL", "--exit-code", "1", "."],
+            clone,
+            "trivy",
+        )
+    findings += run_external(["osv-scanner", "scan", "source", "-r", "."], clone, "osv-scanner")
+    findings += run_external(["semgrep", "--config", "p/sql-injection", "--error", "."], clone, "semgrep-sql-injection")
+    findings += run_external(["semgrep", "--config", "p/command-injection", "--error", "."], clone, "semgrep-command-injection")
+    if shutil.which("clamscan") is None:
+        findings.append("SCANNER-ERROR clamav not installed; malware scanning did not run")
+    elif not clamav_database_ready():
+        findings.append(
+            "SCANNER-ERROR clamav signature database is missing or not initialised (run freshclam); "
+            "malware scanning was skipped and no malware conclusion can be drawn"
+        )
+    else:
+        findings += run_external(["clamscan", "-r", "--infected", "--no-summary", "."], clone, "clamav")
+    if shutil.which("snyk") and os.getenv("SNYK_TOKEN"):
+        findings += run_external(["snyk", "test", "--all-projects", "--severity-threshold=high"], clone, "snyk")
+    return findings
 
 
 def deep_scan(repo: str) -> tuple[list[str], bool]:
@@ -422,25 +483,7 @@ def deep_scan(repo: str) -> tuple[list[str], bool]:
                 findings.append("INFO finding limit reached")
                 break
         findings += run_gitleaks(clone)
-        findings += run_external(
-            ["trivy", "fs", "--scanners", "vuln,secret,misconfig", "--severity", "HIGH,CRITICAL", "--exit-code", "1", "."],
-            clone,
-            "trivy",
-        )
-        findings += run_external(["osv-scanner", "scan", "source", "-r", "."], clone, "osv-scanner")
-        findings += run_external(["semgrep", "--config", "p/sql-injection", "--error", "."], clone, "semgrep-sql-injection")
-        findings += run_external(["semgrep", "--config", "p/command-injection", "--error", "."], clone, "semgrep-command-injection")
-        if shutil.which("clamscan") is None:
-            findings.append("SCANNER-ERROR clamav not installed; malware scanning did not run")
-        elif not clamav_database_ready():
-            findings.append(
-                "SCANNER-ERROR clamav signature database is missing or not initialised (run freshclam); "
-                "malware scanning was skipped and no malware conclusion can be drawn"
-            )
-        else:
-            findings += run_external(["clamscan", "-r", "--infected", "--no-summary", "."], clone, "clamav")
-        if shutil.which("snyk") and os.getenv("SNYK_TOKEN"):
-            findings += run_external(["snyk", "test", "--all-projects", "--severity-threshold=high"], clone, "snyk")
+        findings += run_external_scanners(clone)
     # Redact defensively: nothing leaves this function without passing the masker.
     findings = [redact(item, 500) for item in findings]
     # CRITICAL removes a repository from the catalog, so only a real scanner may
@@ -483,8 +526,11 @@ def classify(repo: str, meta: dict | None, old: dict, override: dict, stale: int
         # (finished research artifact, pinned course material, stable vendor SDK).
         # Honour it: hold the row HEALTHY so the weekly audit converges instead of
         # re-reporting the same accepted exception forever. Archival is a genuine
-        # state change the owner has not yet ruled on, so it still escalates.
-        status = "REVIEW" if archived else "HEALTHY"
+        # state change the owner has not yet ruled on, so it still escalates, unless
+        # the override records that it already has: acknowledged_archived. Without
+        # that, a decided archived reference showed as REVIEW every single week.
+        acknowledged = bool((override or {}).get("acknowledged_archived"))
+        status = "REVIEW" if archived and not acknowledged else "HEALTHY"
         note = note or f"owner lifecycle override: {mode}"
     elif mode == "archived-active":
         # Deliberately stays REVIEW. This mode tracks a sunset in progress and is
@@ -517,6 +563,41 @@ def classify(repo: str, meta: dict | None, old: dict, override: dict, stale: int
         disabled=disabled,
         license=license_key,
         override=mode,
+        note=note,
+    )
+
+
+def result_after_metadata_error(repo: str, old: dict, exc: Exception) -> Result:
+    """The row for a repository whose metadata could not be fetched this run.
+
+    A metadata fetch failure is an INFRASTRUCTURE problem, not a verdict about the
+    repository. Defaulting a never-seen repo to REVIEW meant one DNS blip could
+    silently label 21 healthy repos as needing a lifecycle decision. Keep the last
+    known status when there is one; otherwise say UNKNOWN, which reads as
+    "unverified, retry" rather than as a judgement.
+
+    A kept REMOVE keeps its evidence rule too. This path used to carry the cached
+    critical flag forward with no check at all, the third place a remembered verdict
+    could outlive its reason.
+    """
+    findings = old.get("findings") or []
+    evidenced = any(substantiates_critical(str(item)) for item in findings)
+    status = old.get("status") or "UNKNOWN"
+    note = f"metadata error: {exc}"
+    critical = bool(old.get("critical")) and evidenced
+    if status == "REMOVE" and not evidenced:
+        status = "REVIEW"
+        note += "; cached REMOVE had no finding that meets current rules, so it is held"
+    return Result(
+        repo=repo,
+        status=status,
+        pushed_at=old.get("pushed_at"),
+        age_days=old.get("age_days"),
+        archived=bool(old.get("archived")),
+        deep_scanned=bool(old.get("deep_scanned")),
+        critical=critical,
+        findings=findings,
+        adoption_candidate=bool(old.get("adoption_candidate")),
         note=note,
     )
 
@@ -659,24 +740,7 @@ def main() -> int:
         try:
             meta = metadata(repo)
         except Exception as exc:
-            # A metadata fetch failure is an INFRASTRUCTURE problem, not a verdict
-            # about the repository. Defaulting a never-seen repo to REVIEW meant one
-            # DNS blip could silently label 21 healthy repos as needing a lifecycle
-            # decision. Keep the last known status when there is one; otherwise say
-            # UNKNOWN, which reads as "unverified, retry" rather than as a judgement.
-            result = Result(
-                repo=repo,
-                status=old.get("status") or "UNKNOWN",
-                pushed_at=old.get("pushed_at"),
-                age_days=old.get("age_days"),
-                archived=bool(old.get("archived")),
-                deep_scanned=bool(old.get("deep_scanned")),
-                critical=bool(old.get("critical")),
-                findings=old.get("findings") or [],
-                adoption_candidate=bool(old.get("adoption_candidate")),
-                note=f"metadata error: {exc}",
-            )
-            results.append(result)
+            results.append(result_after_metadata_error(repo, old, exc))
             continue
 
         result = classify(

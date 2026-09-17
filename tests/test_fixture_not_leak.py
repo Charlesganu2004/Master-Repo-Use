@@ -109,9 +109,23 @@ class OnlyExternalScannersRaiseCritical(unittest.TestCase):
             self.assertNotIn("'CRITICAL' if name == 'credential-exfil'", source, name)
 
     def test_gitleaks_in_a_fixture_path_is_capped(self):
-        for name in ("catalog_guardian_legacy.py", "catalog_security.py"):
-            source = (ROOT / "scripts" / name).read_text(encoding="utf-8")
-            self.assertIn("fixture path, capped below CRITICAL", source, name)
+        """Run the real gitleaks parser, since the source-string version passed with the cap inverted."""
+        import json
+        import tempfile
+        import types
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = pathlib.Path(tmp) / "repo"
+            clone.mkdir()
+            (pathlib.Path(tmp) / "gitleaks-report.json").write_text(json.dumps([
+                {"RuleID": "private-key", "File": "convert/testdata/gemma-2b-it.json", "StartLine": 3},
+            ]), encoding="utf-8")
+            proc = types.SimpleNamespace(returncode=1, stdout="", stderr="")
+            with mock.patch.object(security.shutil, "which", return_value="/usr/bin/gitleaks"), \
+                 mock.patch.object(security.subprocess, "run", return_value=proc):
+                [line] = security.run_gitleaks(clone)
+        self.assertTrue(line.startswith("HIGH"), line)
+        self.assertIn("fixture path, capped below CRITICAL", line)
 
     def test_gitleaks_outside_a_fixture_path_still_raises_critical(self):
         """The exemption is narrow; a real leak in shipping code must still bite."""
@@ -126,7 +140,7 @@ class OnlyExternalScannersRaiseCritical(unittest.TestCase):
             "CRITICAL gitleaks secret candidate rule=generic-api-key "
             "at convert/testdata/gemma-2b-it.json:3 (value withheld)"))
         self.assertTrue(entry.substantiates_critical(
-            "CRITICAL gitleaks secret candidate rule=generic-api-key at cmd/serve.go:88 (value withheld)"))
+            "CRITICAL gitleaks secret candidate rule=aws-access-token at cmd/serve.go:88 (value withheld)"))
 
 
 class TheSeverityContractIsDocumented(unittest.TestCase):

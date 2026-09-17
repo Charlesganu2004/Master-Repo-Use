@@ -86,8 +86,9 @@ class ExitCodeTests(unittest.TestCase):
         self.assertEqual([], self.fake("clamav", 0))
 
     def test_known_finding_exit_is_finding(self) -> None:
-        result = self.fake("clamav", 1)
-        self.assertTrue(result[0].startswith("HIGH"))
+        """An infected file is CRITICAL; a vulnerability or lint finding is HIGH."""
+        self.assertTrue(self.fake("clamav", 1)[0].startswith("CRITICAL clamav"))
+        self.assertTrue(self.fake("trivy", 1)[0].startswith("HIGH"))
 
     def test_clamav_exit_two_is_scanner_error(self) -> None:
         result = self.fake("clamav", 2)
