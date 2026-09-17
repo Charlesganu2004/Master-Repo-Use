@@ -35,7 +35,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          # Deep enough to hold the commit before a multi-commit push. At depth 2 that
+          # commit was usually missing, the diff failed, and `|| true` turned the
+          # failure into "nothing new", so intake scans silently did not happen.
+          fetch-depth: 50
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -50,12 +53,13 @@ jobs:
           : > /tmp/new-repos.txt
           if [[ '${{ github.event_name }}' == 'push' ]]; then
             base='${{ github.event.before }}'
-            if [[ -z "$base" || "$base" =~ ^0+$ ]]; then
+            if [[ -z "$base" || "$base" =~ ^0+$ ]] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
               base='HEAD^'
             fi
-            git diff "$base" HEAD -- 'repo-lists/*.txt' \
-              | sed -n 's/^+\([^+#][^ #]*\/[^ #]*\).*$/\1/p' \
-              | sort -u > /tmp/new-repos.txt || true
+            # New to the catalog, not merely new to a file: registering an already
+            # listed repository in another list is not intake. Capped so a bulk
+            # change cannot time this 20-minute job out; the rest wait for rotation.
+            python scripts/new_catalog_repos.py --base "$base" --limit 15 > /tmp/new-repos.txt || true
           fi
           {
             echo 'repos<<EOF'

@@ -356,3 +356,102 @@ skytable/skytable
 Chalarangelo/30-seconds-of-css
 freeCodeCamp/freeCodeCamp
 freshtechbro/claudedesignskills
+
+# Registered 2026-09-17: repositories named in lane lists that were never added here,
+# so Catalog Guardian had never audited or scanned them. Grouped by the lane that lists them.
+# --- agent-skill-marketplaces
+vercel-labs/skills
+vercel-labs/agent-skills
+sedarged/Agent-skills-ecosystem
+testdouble/han
+mvanhorn/last30days-skill
+BehiSecc/VibeSec-Skill
+petergyang/no-ai-slop
+hardikpandya/stop-slop
+Vincentwei1021/video-shotcraft
+tirth8205/code-review-graph
+Leonxlnx/taste-skill
+mprknowledgerepo-dev/taste-skill-frontend
+vercel-labs/agent-browser
+vercel-labs/json-render
+vercel-labs/portless
+vercel-labs/deepsec
+prassoai/macroscope-local
+# --- ai-client-tools
+anomalyco/opencode
+# --- broker-app-integrations
+coinbase/cdp-sdk
+# --- browser-automation
+microsoft/playwright
+padamson/playwright-rust
+Skyvern-AI/rustwright
+mattsse/chromiumoxide
+# --- chat-code-monitor
+screenpipe/screenpipe
+openrecall/openrecall
+ActivityWatch/activitywatch
+Maciek-roboblog/Claude-Code-Usage-Monitor
+ccusage/ccusage
+danielmiessler/Fabric
+nilbuild/git-standup
+# --- computer-control
+CursorTouch/Windows-MCP
+AB498/computer-control-mcp
+zavora-ai/computer-use-mcp
+claude-did-this/MCPControl
+# --- context-token-management
+lucasrosati/claude-code-memory-setup
+JuliusBrussee/caveman
+rtk-ai/rtk
+yttrium400/reducethemtokens
+theosib/token-compact
+# --- cpp-toolchain
+ggml-org/whisper.cpp
+facebook/infer
+cppcheck-opensource/cppcheck
+clangd/clangd
+clangd/vscode-clangd
+microsoft/vscode-cpptools
+llvm/llvm-project
+nlohmann/json
+msgpack/msgpack-c
+# --- design-agent-skills
+JCodesMore/ai-website-cloner-template
+# --- design-ui-motion
+motiondivision/motion
+themeselection/Awesome-JavaScript-Libraries
+itsjwill/motion-primitives-website
+# --- document-store-indexing
+mongodb/mongo
+mongodb/mongo-python-driver
+mongodb/motor
+mongodb/node-mongodb-native
+mongodb/mongo-cxx-driver
+mongodb/laravel-mongodb
+mongodb-js/mongosh
+mongodb-js/compass
+mongodb/mongo-tools
+mongodb/mongodb-atlas-cli
+mongodb-js/mongodb-mcp-server
+mongodb-developer/GenAI-Showcase
+# --- media-transcription-ocr
+jamiepine/voicebox
+baidu/Unlimited-OCR
+Egonex-AI/Understand-Anything
+blader/humanizer
+Humanizr/Humanizer
+# --- merge-conflict-tooling
+paolino/mcp-merge-guard
+r33drichards/merge-conflict
+# --- refactoring-skills
+seb1n/awesome-ai-agent-skills
+andreaswasita/copilot-agents-dojo
+jaywilburn/refactoring-ui-skill
+jendrikseipp/vulture
+webpro-nl/knip
+kucherenko/jscpd
+facebook/jscodeshift
+codemod/codemod
+asottile/pyupgrade
+sourcery-ai/sourcery
+emilybache/GildedRose-Refactoring-Kata
