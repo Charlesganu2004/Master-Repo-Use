@@ -79,6 +79,30 @@ class LifecycleOverrideTests(unittest.TestCase):
                 self.assertTrue(str(entry.get("note", "")).strip(),
                                 f"{repo} override must say why age is the wrong signal")
 
+    def test_an_acknowledged_archival_says_so_in_its_note(self):
+        """acknowledged_archived silences the weekly REVIEW, so the reason has to be written down."""
+        data = json.loads(OVERRIDES.read_text(encoding="utf-8"))
+        acknowledged = {repo: entry for repo, entry in data.items() if entry.get("acknowledged_archived")}
+        self.assertTrue(acknowledged)
+        for repo, entry in acknowledged.items():
+            with self.subTest(repo=repo):
+                self.assertIn("archived", entry["note"].lower())
+                self.assertIn(entry["mode"], {"keep", "reference"})
+
+    def test_notes_fit_the_audit_table(self):
+        """The audit issue cut notes at 300 characters; #21 showed one mid-sentence.
+
+        Owner-written notes are decision records and are not shortened to fit, so
+        the table's limit is what has to hold every note.
+        """
+        import re
+        workflow = (OVERRIDES.parents[1] / ".github" / "workflows" / "catalog-guardian.yml").read_text(encoding="utf-8")
+        limit = int(re.search(r"note = \(r\.get\('note'\).*?\[:(\d+)\]", workflow).group(1))
+        data = json.loads(OVERRIDES.read_text(encoding="utf-8"))
+        for repo, entry in data.items():
+            with self.subTest(repo=repo):
+                self.assertLessEqual(len(entry["note"]), limit)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -57,3 +57,10 @@ Routine follow-up now uses the GitHub-first `Catalog Guardian` workflow. It perf
 Charles must comment the exact phrase `APPROVE CATALOG MAINTENANCE` before the deeper deterministic scan/removal/adoption proposal runs. That approved run creates or updates an automation branch and PR; it never merges `main` automatically.
 
 `scripts/maintenance_request.py` remains available only for the separate optional path when deterministic tooling leaves a modernization/adoption decision that genuinely needs model judgment. That AI-assisted path requires the separate `APPROVE AI MAINTENANCE` approval.
+
+## Update 2026-09-16
+
+`qiskit-community/ibm-quantum-challenge-fall-2021`: the evidence column above says "Not archived".
+It has since been archived upstream (GitHub API, confirmed 2026-09-16). The REFERENCE decision
+stands, since a historical challenge artifact was already static, and the override now records
+`acknowledged_archived`. See `docs/CATALOG-TRIAGE-2026-08-25.md` §7.

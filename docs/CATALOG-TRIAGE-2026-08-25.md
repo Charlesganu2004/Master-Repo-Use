@@ -115,3 +115,39 @@ freshness check. Flowise and `open_deep_research` both hit it in the same month.
 Guardian already handles it via the `archived` flag. The lesson worth keeping is the one in §3:
 *a recent release does not imply a maintained project* — check `archived`, and check whether the
 release notes announce a sunset.
+
+## 7. Update 2026-09-16: after the #21 audit
+
+Recorded after checking every row of the 2026-09-14 audit (issue #21) against the repository
+and against the GitHub API. The rows above are left as written on 2026-08-25.
+
+**Archivals now acknowledged.** `microsoft/lets-learn-mcp-python` (§4 above) and
+`qiskit-community/ibm-quantum-challenge-fall-2021` were archived upstream after their decisions
+were recorded; the API confirmed `archived: true` for both on 2026-09-16. Both were already
+reference-only, which archival does not change, so their overrides now carry
+`acknowledged_archived`, as do `Chalarangelo/30-seconds-of-css` and
+`langchain-ai/open_deep_research`, whose notes already recorded the archival. Guardian holds an
+acknowledged archival HEALTHY; before this, each of the four showed as REVIEW every week.
+
+**Two stale warnings were reference material.** `kk7nc/RMDL` is listed under "Research reference
+(read for the ideas; not proposed as a dependency)" in `repo-lists/multi-model-data.txt`, and
+`openai/parameter-golf` is a fixed-duration challenge. Both now have `reference` overrides.
+
+**`CartographAI/mcp-server-codegraph` needs an owner decision by 2026-10-04.** MIT, not archived,
+last push 2025-10-03. It crosses the 365-day removal threshold on 2026-10-04, after which an
+approved maintenance run will propose removing it. No decision has been recorded, and a reference
+override would be the wrong tool: it is a runtime MCP server, which is exactly what the threshold
+exists for. The catalog already carries a maintained tool for the same job,
+`Graphify-Labs/graphify` (`repo-lists/all-curated.txt`), installed locally and wrapped by
+`skills/master-graphify`. Removal remains the owner's decision.
+
+**The other five STALE rows need nothing yet.** `HappyHackingSpace/awesome-hackathon`,
+`LQF-dev/Zero-code`, `allenai/molmoact`, `skytable/skytable` and
+`wangcangshu/codex-desktop-thread-rescue` are 126 to 145 days quiet: warnings, not decisions.
+Re-check at the 270-day review. Two more crossed 120 days between the audit and the status
+regenerated on 2026-09-17: `tastytrade/tastytrade-api-js` (122d) and
+`LottieFiles/motion-design-skill` (121d), in the same position.
+
+Status after these records, regenerated 2026-09-17 00:30 UTC with a metadata pass that removes
+nothing: healthy 296, stale 7, review 1 (CartographAI), remove 0, all 304 catalogued repositories
+present. The previous `docs/CATALOG-STATUS.md` dated from 2026-08-27 and was missing 11 of them.

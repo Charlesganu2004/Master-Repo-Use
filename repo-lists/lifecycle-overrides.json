@@ -5,7 +5,8 @@
   },
   "Chalarangelo/30-seconds-of-css": {
     "mode": "reference",
-    "note": "Archived 2023, CC-BY-4.0. A finished snippet reference rather than a maintained package; CSS techniques do not rot the way dependencies do. Reference only."
+    "note": "Archived 2023, CC-BY-4.0. A finished snippet reference rather than a maintained package; CSS techniques do not rot the way dependencies do. Reference only.",
+    "acknowledged_archived": true
   },
   "D-Ogi/WatermarkRemover-AI": {
     "mode": "reference",
@@ -75,9 +76,14 @@
     "mode": "reference",
     "note": "The de-facto Robinhood Python library (2.1k stars). Tracks a stable API."
   },
+  "kk7nc/RMDL": {
+    "mode": "reference",
+    "note": "GPL-3.0 research code for random multimodel deep learning, listed in multi-model-data.txt as research reference, not a dependency, so push age is not a health signal."
+  },
   "langchain-ai/open_deep_research": {
     "mode": "reference",
-    "note": "Archived 2026-08-10. MIT-licensed, so managed adoption IS legally permitted. Queued as the highest-value adoption candidate -- see docs/MANAGED-ADOPTION-PLAN.md. Until adoption completes, treat as reference: the technique is worth reading, the repo is not maintained. Continuation work upstream lives in langchain-ai/langgraph."
+    "note": "Archived 2026-08-10. MIT-licensed, so managed adoption IS legally permitted. Queued as the highest-value adoption candidate -- see docs/MANAGED-ADOPTION-PLAN.md. Until adoption completes, treat as reference: the technique is worth reading, the repo is not maintained. Continuation work upstream lives in langchain-ai/langgraph.",
+    "acknowledged_archived": true
   },
   "microsoft/LLMLingua": {
     "mode": "reference",
@@ -89,7 +95,8 @@
   },
   "microsoft/lets-learn-mcp-python": {
     "mode": "reference",
-    "note": "Official Microsoft course material pinned to a teaching moment. Not intended to track MCP spec changes."
+    "note": "Official Microsoft course material pinned to a teaching moment. Not intended to track MCP spec changes. Archived by Microsoft, confirmed 2026-09-16; reference-only use is unaffected.",
+    "acknowledged_archived": true
   },
   "mlabouardy/komiser": {
     "mode": "reference",
@@ -99,13 +106,18 @@
     "mode": "reference",
     "note": "Official Ollama JS client. Thin wrapper over a stable HTTP API."
   },
+  "openai/parameter-golf": {
+    "mode": "reference",
+    "note": "The smallest-language-model-in-16MB challenge: a fixed-duration challenge, like the IBM Quantum Challenge row, so push age is not a health signal."
+  },
   "passiv/snaptrade-react": {
     "mode": "reference",
     "note": "Official vendor SDK for a stable API. Low churn is expected rather than a warning sign."
   },
   "qiskit-community/ibm-quantum-challenge-fall-2021": {
     "mode": "reference",
-    "note": "Historical IBM Quantum Challenge material. Static by design; keep only as an educational/reference artifact rather than an active runtime dependency."
+    "note": "Historical IBM Quantum Challenge material. Static by design; keep only as an educational/reference artifact rather than an active runtime dependency. Archived upstream, confirmed 2026-09-16; reference-only use is unaffected.",
+    "acknowledged_archived": true
   },
   "qiskit-community/qiskit-finance": {
     "mode": "reference",

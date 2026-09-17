@@ -143,7 +143,8 @@ jobs:
               print('| Repo | Status | Push age | Archived | Note |')
               print('|---|---|---:|---:|---|')
               for r in sorted(attention, key=lambda x: (x.get('status',''), x.get('repo',''))):
-                  note = (r.get('note') or '').replace('|', '/').replace('\n', ' ')[:300]
+                  # Owner-written notes run to ~430 characters; a 300 cut ended #21's mid-sentence.
+                  note = (r.get('note') or '').replace('|', '/').replace('\n', ' ')[:600]
                   age = f"{r.get('age_days')}d" if r.get('age_days') is not None else '—'
                   print(f"| `{r.get('repo')}` | **{r.get('status')}** | {age} | {'yes' if r.get('archived') else 'no'} | {note} |")
           else:
