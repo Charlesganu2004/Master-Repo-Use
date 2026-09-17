@@ -54,11 +54,11 @@ if [[ "$VERIFY_ONLY" -eq 0 ]]; then
 
   echo "[2/3] Setting least-privilege workflow permissions..."
   # Read-only GITHUB_TOKEN by default; each workflow widens what it needs.
-  # This repo-level setting lets the approved maintenance job OPEN a PR. It does
-  # not satisfy the required owner-approval status and does not let automation
-  # merge protected main.
+  # Actions may not create or approve pull requests: one setting controls both,
+  # and approving is a way around the owner gate (#16 turned it off). The approved
+  # maintenance job pushes its branch and posts a link for the owner to open it.
   api_json PUT "repos/$REPO/actions/permissions/workflow" \
-    '{"default_workflow_permissions":"read","can_approve_pull_request_reviews":true}'
+    '{"default_workflow_permissions":"read","can_approve_pull_request_reviews":false}'
 
   echo "[3/3] Protecting main with PR + SHA-bound owner approval..."
   gh_api --method PUT "repos/$REPO/branches/main/protection" \

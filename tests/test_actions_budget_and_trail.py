@@ -5,8 +5,8 @@ overruns the Actions allowance costs real money, and a scan that acts without
 recording it leaves nothing to audit.
 """
 import datetime as dt
+import os
 import pathlib
-import re
 import shutil
 import subprocess
 import sys
@@ -20,6 +20,7 @@ import actions_budget as budget  # noqa: E402
 import security_trail as trail  # noqa: E402
 
 WORKFLOW = (ROOT / ".github" / "workflows" / "catalog-guardian.yml").read_text(encoding="utf-8")
+RECORD = ROOT / "scripts" / "record_trail_row.sh"
 
 
 class TheBudgetGate(unittest.TestCase):
@@ -44,6 +45,85 @@ class TheBudgetGate(unittest.TestCase):
             index = WORKFLOW.index(step)
             window = WORKFLOW[index:index + 200]
             self.assertIn("budget.outputs.ok", window, f"{step} is not gated")
+
+
+class TheBudgetIsReadOrSaysItCouldNot(unittest.TestCase):
+    """A gate that cannot read the budget reported 0 minutes used and passed.
+
+    No job granted actions: read, so the runs API refused the workflow token, the
+    loop stopped on the HTTP error, and the script printed "used 0 of 3000". The
+    only automated trail row on record says exactly that. A number the script
+    could not measure must never be printed as a measurement.
+    """
+
+    RUN = {"id": 1, "name": "Catalog Guardian"}
+    JOB = {"started_at": "2026-09-14T14:16:00Z", "completed_at": "2026-09-14T14:25:30Z",
+           "labels": ["ubuntu-latest"]}
+
+    def run_main(self, *argv, responses):
+        from unittest import mock
+        import io
+        import contextlib
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.object(budget, "request", side_effect=responses), \
+             mock.patch.object(sys, "argv", ["actions_budget.py", "--repo", "o/r", *argv]), \
+             contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = budget.main()
+        return code, out.getvalue(), err.getvalue()
+
+    @staticmethod
+    def refused(*_args, **_kwargs):
+        import urllib.error
+        raise urllib.error.HTTPError("https://api.github.com", 403, "Resource not accessible by integration", {}, None)
+
+    def test_an_unreadable_budget_is_reported_as_unknown(self):
+        code, out, _ = self.run_main("--cell", responses=self.refused)
+        self.assertEqual(0, code)
+        self.assertIn("unknown", out)
+        self.assertNotIn("0 of 3000", out)
+
+    def test_the_gate_proceeds_on_an_unreadable_budget_and_says_so(self):
+        """Fail open, deliberately and loudly.
+
+        The rotation is capped at 45 minutes a week, about 200 of 3,000 a month,
+        so it cannot overrun the allowance by itself; failing closed would stop
+        every security scan whenever the API is unreadable.
+        """
+        code, out, err = self.run_main("--gate", "--reserve", "600", responses=self.refused)
+        self.assertEqual(0, code)
+        self.assertIn("could not be read", out + err)
+
+    def test_a_readable_budget_is_a_measurement(self):
+        responses = [{"workflow_runs": [self.RUN]}, {"jobs": [self.JOB]}, {"workflow_runs": []}]
+        code, out, _ = self.run_main("--cell", responses=responses)
+        self.assertEqual(0, code)
+        self.assertEqual("10 of 3000 minutes", out.strip())
+
+    def test_a_partial_read_is_a_lower_bound(self):
+        """One run's jobs refused, as a rate limit does partway through."""
+        def respond(url, token):
+            if "/runs/2/jobs" in url:
+                self.refused()
+            if "/runs/1/jobs" in url:
+                return {"jobs": [self.JOB]}
+            if "page=1&" in url:
+                return {"workflow_runs": [self.RUN, {"id": 2, "name": "Pages"}]}
+            return {"workflow_runs": []}
+        code, out, _ = self.run_main("--cell", responses=respond)
+        self.assertEqual("at least 10 of 3000 minutes", out.strip())
+
+    def test_the_gate_still_stops_when_headroom_is_measured_low(self):
+        job = dict(self.JOB, completed_at="2026-09-16T14:16:00Z")   # 2 days = 2880 minutes
+        responses = [{"workflow_runs": [self.RUN]}, {"jobs": [job]}, {"workflow_runs": []}]
+        code, _, _ = self.run_main("--gate", "--reserve", "600", responses=responses)
+        self.assertEqual(1, code)
+
+    def test_every_job_that_reads_the_budget_may_read_actions(self):
+        for job in ("  deep-scan-rotation:", "  record-trail:", "  approved-maintenance:"):
+            start = WORKFLOW.index(job)
+            block = WORKFLOW[start:start + 700]
+            with self.subTest(job=job.strip()):
+                self.assertIn("actions: read", block[:block.index("steps:")])
 
 
 class TheSecurityTrail(unittest.TestCase):
@@ -88,21 +168,29 @@ class LeastPrivilege(unittest.TestCase):
             self.assertNotIn(scanner, body, f"{scanner} runs in the job that can push")
 
     def test_the_bot_pushes_to_a_branch_never_to_main(self):
-        self.assertIn("HEAD:automation/security-trail", WORKFLOW)
+        script = RECORD.read_text(encoding="utf-8")
+        self.assertIn("branch=automation/security-trail", script)
+        self.assertIn('"HEAD:refs/heads/$branch"', script)
+        pushes = [line for line in script.splitlines() if " push " in line and not line.lstrip().startswith("#")]
+        self.assertTrue(pushes)
+        for line in pushes:
+            self.assertNotIn("--force", line, "an append-only trail must never be force-pushed")
         self.assertNotIn("push origin main", WORKFLOW)
+        jobs = {"record-trail": WORKFLOW[WORKFLOW.index("  record-trail:"):WORKFLOW.index("  approved-maintenance:")],
+                "approved-maintenance": WORKFLOW[WORKFLOW.index("  approved-maintenance:"):]}
+        for name, body in jobs.items():
+            with self.subTest(job=name):
+                self.assertIn("scripts/record_trail_row.sh", body)
 
-    def test_the_push_still_works_the_second_week(self):
-        """It pushed once, created the branch, and refused every week after.
+    def test_rows_accumulate_week_after_week(self):
+        """Two failures, both in the step this script replaced.
 
-        `--force-with-lease` with no argument compares against the remote-tracking
-        ref, and this job's checkout fetches only main. Creating a branch needs no
-        lease, so the first run passed and every later one died on "stale info"
-        with the row already committed and nothing recorded. Run the workflow's own
-        push block twice against a real remote, which is the case that failed.
+        It pushed with a bare --force-with-lease, which git reads as stale when the
+        checkout fetched only main, so every run after the one that created the
+        branch recorded nothing. And it pushed "main plus this run's row" over the
+        branch, so even a run that got through erased the previous run's row. An
+        append-only trail has to keep both weeks.
         """
-        script = push_block()
-        self.assertIn("git push origin", script)
-
         work = pathlib.Path(tempfile.mkdtemp())
         try:
             remote, seed = work / "remote.git", work / "seed"
@@ -118,48 +206,35 @@ class LeastPrivilege(unittest.TestCase):
             git(seed, "config", "user.email", "test@example.com")
             git(seed, "checkout", "--quiet", "-b", "main")
             (seed / "docs").mkdir()
-            (seed / "docs" / "SECURITY-TRAIL.md").write_text("| seeded |", encoding="utf-8")
+            (seed / "scripts").mkdir()
+            shutil.copy(ROOT / "scripts" / "security_trail.py", seed / "scripts" / "security_trail.py")
+            trail.append("seeded", "", "", "", "", seed / "docs" / "SECURITY-TRAIL.md")
             git(seed, "add", "-A")
             git(seed, "commit", "--quiet", "-m", "seed")
             git(seed, "push", "--quiet", "origin", "main")
+            main_before = git(remote, "rev-parse", "main")
 
             for week in (1, 2):
-                # A scheduled run is a fresh shallow checkout of main, so it holds
-                # no remote-tracking ref for the trail branch. A push in a reused
-                # clone creates one and hides the bug, so clone again each week.
+                # A scheduled run is a fresh shallow single-branch checkout of main,
+                # so it holds no ref for the trail branch. Clone again each week.
                 run = work / f"week{week}"
                 subprocess.run(["git", "clone", "--quiet", "--depth", "1", "--single-branch",
-                                "--branch", "main", str(remote), str(run)], check=True)
-                git(run, "config", "user.name", "Test")
-                git(run, "config", "user.email", "test@example.com")
-                (run / "docs" / "SECURITY-TRAIL.md").write_text(
-                    f"| seeded |{chr(10)}| week {week} |", encoding="utf-8")
-                done = subprocess.run(["bash", "-c", script], cwd=run,
-                                      capture_output=True, text=True)
-                self.assertNotIn("stale info", done.stderr,
-                                 f"week {week} refused the push it had no ref to compare")
+                                "--branch", "main", remote.as_uri(), str(run)], check=True)
+                done = subprocess.run(
+                    ["bash", str(RECORD), "--action", f"rotation-week-{week}", "--budget", "1 of 3000 minutes"],
+                    cwd=run, capture_output=True, text=True,
+                    env={**os.environ, "TRAIL_SUBJECT": f"week {week}"})
                 self.assertEqual(done.returncode, 0,
-                                 f"week {week} push failed: {done.stdout} {done.stderr}")
+                                 f"week {week} failed: {done.stdout} {done.stderr}")
+                self.assertNotIn("stale info", done.stderr)
 
-            pushed = git(remote, "log", "--oneline", "automation/security-trail")
-            self.assertEqual(pushed.count("trail: deep-scan rotation"), 1,
-                             "each run replaces the branch with main plus its own row")
-            self.assertIn("week 2", git(remote, "show",
-                                        "automation/security-trail:docs/SECURITY-TRAIL.md"))
+            rows = git(remote, "show", "automation/security-trail:docs/SECURITY-TRAIL.md")
+            self.assertIn("rotation-week-1", rows, "week 2 erased week 1's row")
+            self.assertIn("rotation-week-2", rows)
+            self.assertEqual(main_before, git(remote, "rev-parse", "main"), "the trail touched main")
+            self.assertNotIn("rotation-week", git(remote, "show", "main:docs/SECURITY-TRAIL.md"))
         finally:
             shutil.rmtree(work, ignore_errors=True)
-
-
-def push_block():
-    """The shell of the workflow step that records the row, ready to run."""
-    step = WORKFLOW.index("      - name: Commit to the automation branch, never to main")
-    body = WORKFLOW[WORKFLOW.index("run: |", step) + len("run: |"):]
-    lines = []
-    for line in body.splitlines()[1:]:
-        if line.strip() and not line.startswith(" " * 10):
-            break
-        lines.append(line[10:])
-    return re.sub(r"\$\{\{[^}]*\}\}", "test-run", "\n".join(lines))
 
 
 if __name__ == "__main__":

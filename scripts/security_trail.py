@@ -68,12 +68,13 @@ def cell(text: str, limit: int = 160) -> str:
     return flat[:limit] if len(flat) <= limit else flat[:limit - 3] + "..."
 
 
-def append(action: str, scope: str, outcome: str, approval: str, budget: str) -> str:
-    if not TRAIL.exists():
-        TRAIL.parent.mkdir(parents=True, exist_ok=True)
-        TRAIL.write_text(HEADER, encoding="utf-8")
+def append(action: str, scope: str, outcome: str, approval: str, budget: str,
+           path: pathlib.Path = TRAIL) -> str:
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(HEADER, encoding="utf-8", newline="\n")
 
-    existing = TRAIL.read_text(encoding="utf-8")
+    existing = path.read_text(encoding="utf-8")
     if not existing.endswith("\n"):
         existing += "\n"
 
@@ -81,8 +82,9 @@ def append(action: str, scope: str, outcome: str, approval: str, budget: str) ->
     row = (f"| {stamp} | {run_link()} | {cell(action, 40)} | {cell(scope, 70)} "
            f"| {cell(outcome, 90)} | {cell(approval, 60)} | {cell(budget, 30)} |\n")
 
-    # Append only. Never rewrite what is already there.
-    TRAIL.write_text(existing + row, encoding="utf-8")
+    # Append only. Never rewrite what is already there. LF endings, so a Windows
+    # session does not rewrite every existing row's line ending as it appends.
+    path.write_text(existing + row, encoding="utf-8", newline="\n")
     return row
 
 
@@ -95,10 +97,13 @@ def main() -> int:
     parser.add_argument("--approval", default="none required",
                         help="the phrase or rule that authorised it")
     parser.add_argument("--budget", default="", help="minutes used at the time")
+    parser.add_argument("--file", type=pathlib.Path, default=TRAIL,
+                        help="trail file to append to; scripts/record_trail_row.sh passes the "
+                             "automation/security-trail branch's copy")
     args = parser.parse_args()
 
-    row = append(args.action, args.scope, args.outcome, args.approval, args.budget)
-    print("appended to docs/SECURITY-TRAIL.md:")
+    row = append(args.action, args.scope, args.outcome, args.approval, args.budget, args.file)
+    print(f"appended to {args.file}:")
     print(row.rstrip())
     return 0
 

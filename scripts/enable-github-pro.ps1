@@ -71,10 +71,11 @@ if (-not $VerifyOnly) {
 
   Write-Host '[2/3] Setting least-privilege workflow permissions...' -ForegroundColor Cyan
   # Read-only GITHUB_TOKEN by default; each workflow widens what it needs.
-  # This repo-level setting lets approved maintenance OPEN a PR. It does not
-  # satisfy owner-approval and does not let automation merge protected main.
+  # Actions may not create or approve pull requests: one setting controls both,
+  # and approving is a way around the owner gate (#16 turned it off). The approved
+  # maintenance job pushes its branch and posts a link for the owner to open it.
   Invoke-GhJson -Method PUT -Endpoint "repos/$Repository/actions/permissions/workflow" `
-    -Json '{"default_workflow_permissions":"read","can_approve_pull_request_reviews":true}'
+    -Json '{"default_workflow_permissions":"read","can_approve_pull_request_reviews":false}'
 
   Write-Host '[3/3] Protecting main with PR + SHA-bound owner approval...' -ForegroundColor Cyan
   gh api --method PUT `

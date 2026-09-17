@@ -2,7 +2,8 @@
   "required_status_checks": {
     "strict": false,
     "contexts": [
-      "owner-approval"
+      "owner-approval",
+      "safety-validation"
     ]
   },
   "enforce_admins": false,

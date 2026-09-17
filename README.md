@@ -298,13 +298,13 @@ That owner comment triggers GitHub Actions to:
 
 1. deep-scan the rotating batch and every current REVIEW/REMOVE candidate;
 2. re-evaluate stale/archive/security state;
-3. prepare removal/replacement/managed-adoption changes on `automation/catalog-guardian`;
-4. open or refresh a PR;
-5. close the audit issue with a link to the PR.
+3. prepare removal/replacement/managed-adoption changes on `automation/catalog-guardian`, tagged `catalog-guardian/run-<run id>` so a later run cannot erase what this one proposed;
+4. record the run in the security trail;
+5. close the audit issue with a one-click link to open the pull request.
 
-It still **does not merge `main`**.
+It still **does not merge `main`**, and it does not open the pull request itself: Actions is deliberately not permitted to create or approve pull requests, because GitHub controls both with one setting and approving would be a way around the owner gate. You open it from the link, and the `owner-approval` check runs on it as usual.
 
-One-time setting required for automatic PR creation: **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests**. This permission lets the bot create the PR; it does not satisfy the separate `owner-approval` gate and does not let the bot merge protected `main`.
+Only two results can propose a removal: a ClamAV infected file, and a precise Gitleaks rule such as `private-key` in shipping code. The `generic-api-key` rule, lockfiles, and test, example and documentation paths report HIGH for review.
 
 ### Optional AI maintenance only when judgment is needed
 

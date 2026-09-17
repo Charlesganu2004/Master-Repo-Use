@@ -18,8 +18,9 @@ permissions:
   contents: read
 
 jobs:
-  # Cheap weekly metadata pass. Deep scanning happens only for repositories newly
-  # added to a catalog list, or when the owner approves maintenance below.
+  # Cheap weekly metadata pass. Deep scanning happens for repositories newly added
+  # to a catalog list, in the weekly read-only rotation below, and when the owner
+  # approves maintenance.
   audit:
     if: github.event_name != 'issue_comment'
     runs-on: ubuntu-latest
@@ -154,9 +155,11 @@ jobs:
           print()
           print('`APPROVE CATALOG MAINTENANCE`')
           print()
-          print('That approval runs a rotating deep scan plus all current REVIEW/REMOVE candidates, applies removal proposals on an automation branch, and opens a PR. **It never merges `main` automatically.**')
+          print('That approval runs a rotating deep scan plus all current REVIEW/REMOVE candidates, applies removal proposals on an automation branch tagged for the run, and posts a link to open the pull request (Actions is not permitted to open it). **It never merges `main` automatically.**')
           print()
-          print('Deep intake uses built-in invisible/prompt/SQL/command/secret/binary checks plus Semgrep, Gitleaks, OSV Scanner and ClamAV. Snyk runs when SNYK_TOKEN is configured. Additional supported scanners such as Trivy can also be installed without changing Guardian.')
+          print('Deep intake uses built-in invisible/prompt/SQL/command/secret/binary checks plus Semgrep, Gitleaks, OSV Scanner and ClamAV. Snyk runs when SNYK_TOKEN is configured, and Trivy runs when it is installed.')
+          print()
+          print('Only two results can propose a removal: a ClamAV infected file, and a precise Gitleaks rule (such as private-key) in shipping code. The generic-api-key rule, lockfiles, and test, example and documentation paths report HIGH for review, as do Semgrep, OSV, Trivy and Snyk findings.')
           print()
           print('Secret values are never printed: Gitleaks runs with `--redact` and only rule, file and line are reported. A `SCANNER-ERROR` note means a scanner failed to run (for example ClamAV without a signature database) and the repository should be rescanned — it is **not** a claim that anything was found.')
           print()
@@ -208,6 +211,9 @@ jobs:
     permissions:
       contents: read
       issues: write
+      # The budget gate reads this repository's workflow runs. Without it the API
+      # refused the token and the gate passed on a budget it never read.
+      actions: read
     concurrency:
       group: catalog-guardian-deep-rotation
       cancel-in-progress: false
@@ -302,27 +308,19 @@ jobs:
         shell: bash
         run: python scripts/security_report.py
 
-      - name: Write the security trail and say what was done
-        if: always() && steps.budget.outputs.ok == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Runs even when the scan failed, because "the scan did not finish" is
-          # exactly the kind of thing the trail exists to record.
-          BUDGET=$(python scripts/actions_budget.py --repo "$GITHUB_REPOSITORY" | grep -m1 used | tr -s " " | cut -d" " -f3-6)
-          python scripts/security_trail.py             --action "deep-scan-rotation"             --scope "rotating slice of the catalog, read-only"             --outcome "job status ${{ job.status }}; see the linked run for findings"             --approval "scheduled rotation; read-only, so no owner phrase required"             --budget "${BUDGET:-unknown}"
-
-
   # Separate job on purpose. deep-scan-rotation clones third-party repositories,
   # so it stays contents: read. This one clones nothing but this repository, which
-  # is why it is the only place a write token appears.
+  # is why it is the only place a write token appears. It runs for a manual
+  # dispatch as well as the schedule: a dispatched scan is still a scan, and the
+  # trail's own rule is that every scan writes a row.
   record-trail:
     needs: deep-scan-rotation
-    if: always() && github.event_name == 'schedule'
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: write
+      actions: read
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -332,37 +330,20 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Append the row
+      - name: Append this run's row on the trail branch, never on main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRAIL_SUBJECT: deep-scan rotation ${{ github.run_id }}
         run: |
-          BUDGET=$(python scripts/actions_budget.py --repo "$GITHUB_REPOSITORY" | grep -m1 used | tr -s " " | cut -d" " -f3-6)
-          python scripts/security_trail.py             --action "deep-scan-rotation"             --scope "rotating slice of the catalog, read-only"             --outcome "scan job finished with status ${{ needs.deep-scan-rotation.result }}"             --approval "scheduled rotation; read-only, so no owner phrase required"             --budget "${BUDGET:-unknown}"
-
-      - name: Commit to the automation branch, never to main
-        run: |
-          if git diff --quiet -- docs/SECURITY-TRAIL.md; then
-            echo "nothing to record"
-            exit 0
-          fi
-          git config user.name "Charles Ganu"
-          git config user.email "charlesganu2004@gmail.com"
-          git add docs/SECURITY-TRAIL.md
-          git commit -m "trail: deep-scan rotation ${{ github.run_id }}"
-          # A bare --force-with-lease leases against the remote-tracking ref, and
-          # this job's checkout fetches only main, so the trail branch falls outside
-          # the fetch refspec and git reads the lease as stale however recently the
-          # ref was fetched. It refuses with "stale info" instead of pushing, which
-          # is how every scheduled run after the one that created this branch lost
-          # its row. Name the expected value instead: ls-remote reads the tip, the
-          # lease holds the push to exactly that tip, and a branch that does not
-          # exist yet has nothing to force past.
-          if tip=$(git ls-remote --exit-code origin refs/heads/automation/security-trail | cut -f1); then
-            git push origin "HEAD:automation/security-trail" \
-              --force-with-lease="automation/security-trail:$tip"
-          else
-            git push origin "HEAD:automation/security-trail"
-          fi
+          # Runs even when the scan failed or was skipped, because "the scan did not
+          # finish" is exactly the kind of thing the trail exists to record.
+          budget="$(python scripts/actions_budget.py --repo "$GITHUB_REPOSITORY" --cell)"
+          bash scripts/record_trail_row.sh \
+            --action "deep-scan-rotation" \
+            --scope "rotating slice of the catalog, read-only" \
+            --outcome "scan job finished with status ${{ needs.deep-scan-rotation.result }}; findings are in the linked run" \
+            --approval "${{ github.event_name == 'schedule' && 'scheduled rotation' || 'manual dispatch' }}; read-only, so no owner phrase required" \
+            --budget "$budget"
 
   approved-maintenance:
     if: >-
@@ -378,6 +359,7 @@ jobs:
       issues: write
       pull-requests: write
       statuses: write
+      actions: read
     concurrency:
       group: catalog-guardian-approved-maintenance
       cancel-in-progress: false
@@ -460,8 +442,18 @@ jobs:
           git switch -C "$branch"
           git add docs/ repo-lists/ managed-repos/
           git commit -m 'chore: propose owner-approved catalog maintenance'
+          # The branch is force-pushed on every approved run, which erased the only
+          # record of the previous run's proposals. Tag each run first so what it
+          # proposed stays reachable after the next one replaces the branch.
+          tag="catalog-guardian/run-${{ github.run_id }}"
+          git tag -a "$tag" -m "Approved catalog maintenance run ${{ github.run_id }} on issue #${{ github.event.issue.number }}"
+          git push origin "refs/tags/$tag"
           git push --force origin "$branch"
+          removals="$(git diff --numstat origin/main HEAD -- repo-lists/all-curated.txt | awk '{print $2+0}')"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "removals=${removals:-0}" >> "$GITHUB_OUTPUT"
 
       - name: Open or refresh owner-review PR
         if: steps.changes.outputs.changed == 'true'
@@ -491,8 +483,16 @@ jobs:
             rc=$?
             set -e
             if [[ $rc -ne 0 ]]; then
-              gh issue comment '${{ github.event.issue.number }}' --repo "$GITHUB_REPOSITORY" --body "The approved scan completed and pushed branch \`$branch\`, but GitHub blocked automatic PR creation. Enable **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests**, then comment \`APPROVE CATALOG MAINTENANCE\` again. Error: $(tr '\n' ' ' </tmp/pr-error.txt | head -c 500)"
-              exit 1
+              # Expected, not a failure. Actions is deliberately not allowed to
+              # create or approve pull requests (#16 turned that off), and the one
+              # setting controls both. So the owner opens it: the branch is pushed,
+              # and this link opens the pull request form in one click. The
+              # owner-approval check then runs on the pull request as usual. The
+              # earlier message told the owner to turn the setting back on.
+              compare="https://github.com/$GITHUB_REPOSITORY/compare/main...$branch?expand=1"
+              echo "compare_url=$compare" >> "$GITHUB_OUTPUT"
+              echo "::notice::Pull request not created by Actions (permission is off by design): $compare"
+              exit 0
             fi
             pr_number="$(gh pr view "$url" --repo "$GITHUB_REPOSITORY" --json number --jq .number)"
           fi
@@ -514,6 +514,14 @@ jobs:
         run: |
           gh issue close '${{ github.event.issue.number }}' --repo "$GITHUB_REPOSITORY" --comment "Approved maintenance completed. Review the generated PR before merging: ${{ steps.pr.outputs.url }}"
 
+      - name: Close approved audit issue with a link to open the pull request
+        if: steps.changes.outputs.changed == 'true' && steps.pr.outputs.compare_url != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh issue close '${{ github.event.issue.number }}' --repo "$GITHUB_REPOSITORY" --comment "Approved maintenance completed and proposed ${{ steps.changes.outputs.removals }} removal(s) on \`${{ steps.changes.outputs.branch }}\` (tagged \`${{ steps.changes.outputs.tag }}\`). Actions is not permitted to open pull requests, so open it here and review it before merging: ${{ steps.pr.outputs.compare_url }}"
+
       - name: Close audit with no changes
         if: steps.changes.outputs.changed == 'false'
         env:
@@ -521,3 +529,28 @@ jobs:
         shell: bash
         run: |
           gh issue close '${{ github.event.issue.number }}' --repo "$GITHUB_REPOSITORY" --comment 'Approved deep maintenance completed; no repository changes were required.'
+
+      # The job that runs --apply-removals wrote no trail row, so the one approved
+      # run on record, 2026-09-01, proposed nine removals and left no row. The
+      # trail's third rule is that removals record the approval that authorised them.
+      - name: Record this approved run in the security trail
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRAIL_SUBJECT: approved catalog maintenance ${{ github.run_id }}
+        shell: bash
+        run: |
+          budget="$(python scripts/actions_budget.py --repo "$GITHUB_REPOSITORY" --cell)"
+          if [[ '${{ steps.changes.outputs.changed }}' == 'true' ]]; then
+            outcome="${{ steps.changes.outputs.removals }} removal(s) proposed on ${{ steps.changes.outputs.branch }} at ${{ steps.changes.outputs.sha }}, tag ${{ steps.changes.outputs.tag }}; nothing merged"
+          elif [[ '${{ steps.changes.outputs.changed }}' == 'false' ]]; then
+            outcome="no changes proposed; nothing merged"
+          else
+            outcome="job status ${{ job.status }} before any proposal was made; nothing merged"
+          fi
+          bash scripts/record_trail_row.sh \
+            --action "approved-maintenance" \
+            --scope "deep scan batch plus current REVIEW and REMOVE candidates" \
+            --outcome "$outcome" \
+            --approval "owner approval phrase on issue #${{ github.event.issue.number }}" \
+            --budget "$budget"
