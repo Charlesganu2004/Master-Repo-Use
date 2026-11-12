@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "exec": "{{HOME_JSON}}\\.local\\node\\node.exe",
+        "args": [
+          "{{HOME_JSON}}\\.copilot\\hooks\\caveman-autocompress.js",
+          "sessionStart"
+        ],
+        "timeoutSec": 15
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "exec": "{{HOME_JSON}}\\.local\\node\\node.exe",
+        "args": [
+          "{{HOME_JSON}}\\.copilot\\hooks\\caveman-autocompress.js",
+          "postToolUse"
+        ],
+        "timeoutSec": 15
+      }
+    ],
+    "agentStop": [
+      {
+        "type": "command",
+        "exec": "{{HOME_JSON}}\\.local\\node\\node.exe",
+        "args": [
+          "{{HOME_JSON}}\\.copilot\\hooks\\caveman-autocompress.js",
+          "agentStop"
+        ],
+        "timeoutSec": 15
+      }
+    ]
+  }
+}

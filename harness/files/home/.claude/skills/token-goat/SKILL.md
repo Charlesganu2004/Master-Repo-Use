@@ -1,0 +1,39 @@
+---
+name: token-goat
+description: Use before reading whole files or grepping wide. token-goat commands (symbol, read, section, semantic, outline, skeleton, map, refs, changed, config-get, bash-output, web-output, gdrive-sections) return narrow slices of code and docs at a fraction of the token cost.
+allowed-tools:
+  - Bash
+  - Read
+  - Grep
+  - Glob
+---
+
+## token-goat
+
+**Gate — before every file read, answer one question first: is there a token-goat command that returns just what I need?** If yes, run it. A read tool invoked without answering the gate is a violation, not an oversight. The gate is per file: batched or parallel reads do not exempt it.
+
+This gate decides *whether* to reach for a read tool at all. Claude Code's own Read, Grep, and Glob preference rules only pick the *fallback* once token-goat has been ruled out for this read — they never authorize skipping the gate.
+
+Fallback clauses may name your harness's own native read, search, and edit tools, or its shell helpers. Shell binaries and editor programs are commands invoked through the shell tool, never tool identifiers, and must never appear in an agent's tools frontmatter or an allowed-tools list. This paragraph deliberately names no specific tool or binary: instruction-file loaders harvest such names into a tool allowlist and then warn that every one of them is unknown.
+
+Exemptions (gate passes, read directly): the file is under ~200 lines and you need all of it; it was never indexed (new, untracked, or generated this turn); it is a genuinely opaque binary (not an image); the target has no symbol handle (e.g. a literal mid-function).
+
+Failure shapes to catch yourself in, and the command that replaces each:
+- a shell text search with context flags to find a function body → `read "file::symbol"`
+- paging one function with view/view_range → `read "file::symbol"`
+- reading a symbol plus chasing its callers and containing doc section as separate reads → `brief "file::symbol"`
+- reading one heading of a large doc → `section "file::Heading"`
+- searching for a symbol's callers → `refs file::symbol --callers`
+- searching for a *concept* rather than a literal string → `semantic "description"`
+- re-reading output you already captured → `bash-output`/`web-output`/`mcp-output` by ID
+- a directory listing or recursive wildcard walk to orient in an unfamiliar repo → `map --compact`
+- pulling one value or subtree out of a JSON/YAML/XML file (manifest, lockfile, spec, config) → `json-query file 'a.b.c'` / `yaml-query file 'a.b.c'` / `xml-query file 'a.b.c'`
+- opening an image to check its dimensions, format, or size → `image-meta file`
+- opening a screenshot, diagram, or scan to read the text in it → `image-text file`
+- opening a PDF or Office document → inspect its format first, then read a narrow slice: PDF `pdf-meta`/`pdf-outline` then `pdf-locate` to find the pages and `pdf-extract` only those; Word `docx-outline` then `docx-text`; PowerPoint `pptx-outline` then `pptx-slide`/`pptx-notes`; Excel `xlsx-sheets` then `xlsx-head`/`xlsx-range`/`xlsx-query`
+
+Commands: `symbol NAME`, `read "file::symbol"`, `brief "file::symbol"`, `section "file::Heading"`, `semantic "description"`, `outline file`/`skeleton file`, `map --compact`, `refs file::symbol --callers`, `changed --symbol`, `config-get file KEY`, `json-query file 'a.b.c'`/`yaml-query`/`xml-query`, `json-outline file`/`yaml-outline`/`xml-outline`, `bash-output`/`web-output`/`mcp-output`, `gdrive-sections <file-id>`, `image-meta file`/`image-text file`, `pdf-meta`/`pdf-outline`/`pdf-locate`/`pdf-extract`, `docx-outline`/`docx-text`, `pptx-outline`/`pptx-slide`/`pptx-notes`/`pptx-text`, `xlsx-sheets`/`xlsx-head`/`xlsx-range`/`xlsx-query`.
+
+Sub-agent briefs must carry this gate verbatim: a sub-agent inherits none of this context and its reads spend the same token budget.
+
+`token-goat stats` — self-check. Flat counts during code work mean the gate is being skipped.

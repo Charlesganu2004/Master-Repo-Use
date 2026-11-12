@@ -62,3 +62,6 @@ master_harness/super_chain.py
 # Raw benchmark sessions contain local machine paths. Export reviewed, sanitized
 # reports explicitly; keep the original downloadable archive in session artifacts.
 /benchmarks/private-benchmark-report.zip
+
+# graphify's local code graph, rebuilt per machine.
+graphify-out/

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "command": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\cavecrew-rules-sync.mjs\"",
+        "bash": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\cavecrew-rules-sync.mjs\"",
+        "powershell": "& \"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\cavecrew-rules-sync.mjs\"",
+        "timeoutSec": 30
+      }
+    ]
+  }
+}

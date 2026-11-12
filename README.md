@@ -101,6 +101,28 @@ The global bootstrap installs the standing instruction layer, the repository's
 first-class skills and each selected client's supported hooks. It **does not
 install the entire third-party catalog into every machine or every prompt**.
 
+### Full harness for Copilot CLI and OpenCode Desktop (Windows)
+
+One line installs the apps, the tools and the harness files (rules, agents, skills, hooks, MCP servers) for GitHub Copilot CLI and OpenCode Desktop, then prompts for GitHub sign-in:
+
+```powershell
+irm https://raw.githubusercontent.com/Charlesganu2004/Master-Repo-Use/main/harness/install.ps1 | iex
+```
+
+The `irm | iex` form cannot take parameters. For Google Vertex models use the scriptblock form:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Charlesganu2004/Master-Repo-Use/main/harness/install.ps1))) -VertexProject <vertex-project-id>
+```
+
+Or set the project through the environment first:
+
+```powershell
+$env:HARNESS_VERTEX_PROJECT='<vertex-project-id>'; irm https://raw.githubusercontent.com/Charlesganu2004/Master-Repo-Use/main/harness/install.ps1 | iex
+```
+
+The installer is safe to rerun. Step-by-step walkthrough: [harness/SETUP.md](harness/SETUP.md). For a white page with a Copy button on every command, download [harness/SETUP.html](harness/SETUP.html) and open it in a browser.
+
 ### Windows one-liner
 
 ```powershell

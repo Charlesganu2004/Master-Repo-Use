@@ -1,0 +1,15 @@
+{
+  "ollama": {
+    "type": "local",
+    "command": [
+      "{{HOME_JSON}}\\AppData\\Local\\Programs\\Ollama\\ollama.exe",
+      "serve"
+    ],
+    "disabled": false,
+    "timeout": {
+      "startup": 120000,
+      "catalog": 120000,
+      "execution": 120000
+    }
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "command": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" sessionStart \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "bash": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" sessionStart \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "powershell": "& \"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" sessionStart \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "timeoutSec": 60,
+        "allowedEnvVars": [
+          "TRACEPARENT",
+          "TRACESTATE",
+          "COPILOT_HOME",
+          "COPILOT_CACHE_HOME",
+          "TOKEN_GOAT_LOG"
+        ]
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "command": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" preToolUse \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "bash": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" preToolUse \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "powershell": "& \"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" preToolUse \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "timeoutSec": 60,
+        "allowedEnvVars": [
+          "TRACEPARENT",
+          "TRACESTATE",
+          "COPILOT_HOME",
+          "COPILOT_CACHE_HOME",
+          "TOKEN_GOAT_LOG"
+        ]
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "command": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" postToolUse \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "bash": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" postToolUse \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "powershell": "& \"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" postToolUse \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "timeoutSec": 60,
+        "allowedEnvVars": [
+          "TRACEPARENT",
+          "TRACESTATE",
+          "COPILOT_HOME",
+          "COPILOT_CACHE_HOME",
+          "TOKEN_GOAT_LOG"
+        ]
+      }
+    ],
+    "preCompact": [
+      {
+        "type": "command",
+        "command": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" preCompact \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "bash": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" preCompact \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "powershell": "& \"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" preCompact \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "timeoutSec": 60,
+        "allowedEnvVars": [
+          "TRACEPARENT",
+          "TRACESTATE",
+          "COPILOT_HOME",
+          "COPILOT_CACHE_HOME",
+          "TOKEN_GOAT_LOG"
+        ]
+      }
+    ],
+    "agentStop": [
+      {
+        "type": "command",
+        "command": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" agentStop \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "bash": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" agentStop \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "powershell": "& \"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" agentStop \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "timeoutSec": 60,
+        "allowedEnvVars": [
+          "TRACEPARENT",
+          "TRACESTATE",
+          "COPILOT_HOME",
+          "COPILOT_CACHE_HOME",
+          "TOKEN_GOAT_LOG"
+        ]
+      }
+    ],
+    "subagentStop": [
+      {
+        "type": "command",
+        "command": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" subagentStop \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "bash": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" subagentStop \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "powershell": "& \"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" subagentStop \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "timeoutSec": 60,
+        "allowedEnvVars": [
+          "TRACEPARENT",
+          "TRACESTATE",
+          "COPILOT_HOME",
+          "COPILOT_CACHE_HOME",
+          "TOKEN_GOAT_LOG"
+        ]
+      }
+    ],
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "command": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" userPromptSubmitted \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "bash": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" userPromptSubmitted \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "powershell": "& \"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" userPromptSubmitted \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "timeoutSec": 60,
+        "allowedEnvVars": [
+          "TRACEPARENT",
+          "TRACESTATE",
+          "COPILOT_HOME",
+          "COPILOT_CACHE_HOME",
+          "TOKEN_GOAT_LOG"
+        ]
+      }
+    ],
+    "postToolUseFailure": [
+      {
+        "type": "command",
+        "command": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" postToolUseFailure \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "bash": "\"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" postToolUseFailure \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "powershell": "& \"{{HOME_JSON}}\\.local\\node\\node.exe\" \"{{HOME_JSON}}\\.copilot\\hooks\\token-goat-shim.js\" postToolUseFailure \"{{HOME_JSON}}\\.local\\node\\node_modules\\token-goat\\dist\\token-goat.mjs\"",
+        "timeoutSec": 60,
+        "allowedEnvVars": [
+          "TRACEPARENT",
+          "TRACESTATE",
+          "COPILOT_HOME",
+          "COPILOT_CACHE_HOME",
+          "TOKEN_GOAT_LOG"
+        ]
+      }
+    ]
+  }
+}

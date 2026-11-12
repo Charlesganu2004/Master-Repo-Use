@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Harness Setup for GitHub Copilot CLI and OpenCode Desktop</title>
+<style>
+:root { --accent: #0b5cad; --text: #24292f; --muted: #57606a; --line: #d0d7de; --soft: #f6f8fa; --r: 8px; --r-sm: 4px; }
+* { box-sizing: border-box; }
+html { background: #ffffff; }
+body { margin: 0; background: #ffffff; color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+main { max-width: 820px; margin: 0 auto; padding: 40px 20px 80px; }
+h1 { font-size: 2rem; line-height: 1.25; margin: 0 0 16px; }
+h2 { font-size: 1.4rem; margin: 2.2rem 0 0.8rem; padding-top: 0.4rem; border-top: 1px solid var(--line); }
+h3 { font-size: 1.1rem; margin: 1.6rem 0 0.6rem; }
+p, ul, ol { margin: 0.7rem 0; }
+li { margin: 0.3rem 0; }
+a { color: var(--accent); }
+nav.toc { background: var(--soft); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 20px; margin: 20px 0; }
+nav.toc strong { display: block; margin-bottom: 6px; }
+nav.toc ol { margin: 0; padding-left: 1.4rem; }
+code { font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9em; background: var(--soft); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 0.1em 0.35em; white-space: nowrap; }
+.codeblock { margin: 0.9rem 0; background: var(--soft); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.codebar { display: flex; justify-content: flex-end; padding: 6px 8px; border-bottom: 1px solid var(--line); background: #ffffff; }
+.codeblock pre { margin: 0; padding: 14px 16px; overflow-x: auto; }
+.codeblock pre code { background: none; border: 0; padding: 0; font-size: 0.88rem; line-height: 1.5; white-space: pre; }
+.copy-btn { min-width: 64px; font: 600 0.8rem system-ui, -apple-system, "Segoe UI", Arial, sans-serif; color: var(--accent); background: #ffffff; border: 1px solid var(--accent); border-radius: var(--r-sm); padding: 4px 10px; cursor: pointer; }
+.copy-btn:hover, .copy-btn:focus-visible { background: var(--accent); color: #ffffff; outline: none; }
+.copy-btn.done { background: var(--accent); color: #ffffff; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.95rem; }
+th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+th { background: var(--soft); }
+@media print {
+  main { max-width: none; padding: 0; }
+  .copy-btn, .codebar, nav.toc { display: none; }
+  .codeblock { border-color: #999999; }
+  .codeblock pre { white-space: pre-wrap; word-break: break-word; }
+  .codeblock pre code { white-space: pre-wrap; }
+  h2 { break-after: avoid; }
+  .codeblock, table { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<main>
+<h1 id="ai-harness-setup-for-github-copilot-cli-and-opencode-desktop">AI Harness Setup for GitHub Copilot CLI and OpenCode Desktop</h1>
+<p>This guide sets up a full AI coding harness on a Windows PC. You run one line in PowerShell, then sign in with GitHub. The guide is written for engineers who are new to these tools.</p><nav class="toc" aria-label="Contents"><strong>Contents</strong><ol><li><a href="#1-what-you-get">1. What you get</a></li><li><a href="#2-before-you-start">2. Before you start</a></li><li><a href="#3-install">3. Install</a></li><li><a href="#4-sign-in-with-github">4. Sign in with GitHub</a></li><li><a href="#5-check-it-works">5. Check it works</a></li><li><a href="#6-daily-use">6. Daily use</a></li><li><a href="#7-update">7. Update</a></li><li><a href="#8-troubleshooting">8. Troubleshooting</a></li><li><a href="#9-undo">9. Undo</a></li><li><a href="#10-for-maintainers">10. For maintainers</a></li></ol></nav>
+<h2 id="1-what-you-get">1. What you get</h2>
+<p>You get OpenCode Desktop and GitHub Copilot CLI, both set up with the same rules, skills and tools. Work is split across small agents, so large tasks stay organized and each result is checked.</p>
+<ul>
+<li>OpenCode Desktop and Copilot CLI share the same rules.</li>
+<li>CaveCrew multi-agent work. In OpenCode the default agent is <code>orchestrator</code>. It plans the task and runs <code>investigator</code>, <code>builder</code> and <code>reviewer</code> lanes. It cannot edit files itself. The <code>build</code> agent is for quick edits.</li>
+<li>38 skills, loaded automatically when a task fits.</li>
+<li><code>graphify</code>, <code>local-rag</code> and <code>token-goat</code> to find code and documents without reading whole files.</li>
+<li>The Playwright and rustwright browser tools.</li>
+<li>GitHub Copilot models, plus Google Vertex models if you have access.</li>
+</ul>
+<h2 id="2-before-you-start">2. Before you start</h2>
+<ul>
+<li>Windows 10 or 11.</li>
+<li>A GitHub account with a Copilot seat.</li>
+<li><code>winget</code> (the App Installer). Check with <code>winget --version</code>.</li>
+<li>About 2 GB of free disk space and 15 to 20 minutes.</li>
+<li>For Vertex models only: the Vertex AI User role on the Google Cloud project. Ask the project owner. The project id is <code>&lt;vertex-project-id&gt;</code>.</li>
+</ul>
+<h2 id="3-install">3. Install</h2>
+<p>Open PowerShell (not as administrator) and run one of these lines.</p>
+<p>Copilot models only:</p>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">irm https://raw.githubusercontent.com/Charlesganu2004/Master-Repo-Use/main/harness/install.ps1 | iex
+</code></pre></div>
+<p>With Google Vertex models:</p>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">&amp; ([scriptblock]::Create((irm https://raw.githubusercontent.com/Charlesganu2004/Master-Repo-Use/main/harness/install.ps1))) -VertexProject &lt;vertex-project-id&gt;
+</code></pre></div>
+<p>The installer does these 7 steps:</p>
+<ol>
+<li>Checks Windows, PowerShell and <code>winget</code>. Only a Restricted execution policy is changed automatically, to RemoteSigned for your user. With AllSigned the installer asks first. If you say no, the npm command shims will not run.</li>
+<li>Installs the apps, per user where possible: Git, GitHub CLI, GitHub Copilot CLI, Python 3.12 and OpenCode Desktop 2.2.7. With <code>-VertexProject</code> it also installs the Google Cloud SDK. With <code>-WithClaudeCode</code> it installs Claude Code. OpenCode Desktop comes from the GitHub release, because opencode.ai is blocked on some corporate networks.</li>
+<li>Clones or updates the Master Repo (public, git over HTTPS, with a zip fallback).</li>
+<li>Installs the tools into <code>%USERPROFILE%\.local</code> and adds <code>.local\node</code> and <code>.local\bin</code> to your user PATH. The tools are portable Node 24.20.0, uv, graphify 0.9.79 (with graphify-mcp), token-goat 2.9.1, Playwright MCP 0.0.80 with Chromium, rustwright-mcp 0.1.0 and the local-rag engine (in <code>.local\lib\kb</code>, with its own Python 3.12 environment, plus the <code>local-rag</code> command).</li>
+<li>Writes the harness files, after a backup. For OpenCode it writes the <code>AGENTS.md</code> rule blocks, merges <code>opencode.json</code> (orchestrator as default agent, the three lanes, MCP servers, the Copilot skills folder, the Vertex provider if chosen), and adds the <code>graphify.js</code> and <code>rate-limit-wait.js</code> plugins and the graphify skill. For Copilot CLI it writes the <code>copilot-instructions.md</code> rule blocks, the CaveCrew agents, the hooks, a merged <code>mcp-config.json</code>, 38 skills and <code>bin/rustwright-launch.js</code>. It also adds the token-goat skill to <code>~/.claude/skills</code>.</li>
+<li>Asks you to sign in (see section 4). Skip this with <code>-NoSignIn</code>.</li>
+<li>Prints a summary: versions, counts and the backup folder.</li>
+</ol>
+<p>The installer is safe to rerun. Backups go to <code>%USERPROFILE%\.harness-backup\&lt;timestamp&gt;</code>.</p>
+<p>The OpenCode Desktop installer, uv and Node downloads are checked against pinned SHA-256 hashes before anything runs.</p>
+<h3 id="options">Options</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-RepoPath</code></td>
+<td>Where the Master Repo lives. Default <code>$HOME\Master-Repo-Use</code>.</td>
+</tr>
+<tr>
+<td><code>-Branch</code></td>
+<td>Branch to use. Default <code>main</code>.</td>
+</tr>
+<tr>
+<td><code>-VertexProject</code></td>
+<td>Adds Google Vertex models and installs the Google Cloud SDK.</td>
+</tr>
+<tr>
+<td><code>-VertexLocation</code></td>
+<td>Vertex location. Default <code>us</code>.</td>
+</tr>
+<tr>
+<td><code>-OpenCodeVersion</code></td>
+<td>OpenCode Desktop version. Default <code>2.2.7</code>.</td>
+</tr>
+<tr>
+<td><code>-WithClaudeCode</code></td>
+<td>Also installs Claude Code. Only needed for the signed-in Edge browser flow.</td>
+</tr>
+<tr>
+<td><code>-SkipApps</code></td>
+<td>Skips app installs.</td>
+</tr>
+<tr>
+<td><code>-SkipTools</code></td>
+<td>Skips tool installs.</td>
+</tr>
+<tr>
+<td><code>-NoSignIn</code></td>
+<td>Skips the sign-in prompts.</td>
+</tr>
+<tr>
+<td><code>-NoPathUpdate</code></td>
+<td>Advanced. Skips writing the user PATH. Implied by <code>-TargetHome</code>.</td>
+</tr>
+<tr>
+<td><code>-TargetHome</code></td>
+<td>Writes to another home folder. For testing only.</td>
+</tr>
+<tr>
+<td><code>-SandboxTools</code></td>
+<td>Testing. With <code>-TargetHome</code>, also installs the tools inside the target folder.</td>
+</tr>
+<tr>
+<td><code>-DryRun</code></td>
+<td>Lists what would happen and changes nothing. On a PC without the repo it skips the harness file details until the repo is cloned.</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>irm | iex</code> line cannot take options. To change a setting with that line, set these environment variables first: <code>HARNESS_REPO_PATH</code>, <code>HARNESS_BRANCH</code>, <code>HARNESS_VERTEX_PROJECT</code>, <code>HARNESS_VERTEX_LOCATION</code> and <code>HARNESS_NO_PATH_UPDATE</code> (set it to <code>1</code> to skip the PATH update). For example:</p>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">$env:HARNESS_VERTEX_PROJECT = &quot;&lt;vertex-project-id&gt;&quot;
+irm https://raw.githubusercontent.com/Charlesganu2004/Master-Repo-Use/main/harness/install.ps1 | iex
+</code></pre></div>
+<h2 id="4-sign-in-with-github">4. Sign in with GitHub</h2>
+<p>The installer prompts you to sign in. If you skipped it, or a code expired, sign in by hand.</p>
+<p>Copilot CLI:</p>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">copilot login
+</code></pre></div>
+<p>You can also type <code>/login</code> inside <code>copilot</code>.</p>
+<p>OpenCode:</p>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">&amp; (Get-ChildItem &quot;$env:APPDATA\ai.opencode.desktop\cli\*\opencode-cli.exe&quot; | Select-Object -Last 1).FullName auth login github-copilot --method device --answer deploymentType=github.com
+</code></pre></div>
+<p>The command prints a code. Enter it at https://github.com/login/device and approve the sign-in.</p>
+<p>In OpenCode Desktop you can also connect GitHub Copilot from the provider settings. Menu names can differ by version. The command above always works.</p>
+<p>GitHub CLI (optional):</p>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">gh auth login
+</code></pre></div>
+<p>Google Vertex (only if you installed with <code>-VertexProject</code>):</p>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">gcloud auth application-default login
+</code></pre></div>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">gcloud auth application-default set-quota-project &lt;vertex-project-id&gt;
+</code></pre></div>
+<h2 id="5-check-it-works">5. Check it works</h2>
+<p>Open a new terminal, then run:</p>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">graphify --version
+</code></pre></div>
+<p>Expect <code>0.9.79</code>.</p>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">token-goat --version
+</code></pre></div>
+<p>Expect <code>2.9.1</code>.</p>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">copilot --version
+</code></pre></div>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">local-rag memory-search test
+</code></pre></div>
+<p>This returns results or none, without errors.</p>
+<p>In OpenCode Desktop, start a new session. The agent picker shows <code>orchestrator</code>. Ask "list your subagents". The answer names <code>investigator</code>, <code>builder</code> and <code>reviewer</code>.</p>
+<h2 id="6-daily-use">6. Daily use</h2>
+<p>OpenCode Desktop:</p>
+<ul>
+<li>A new session starts in <code>orchestrator</code>. Describe the task. It plans and hands work to its lanes.</li>
+<li>Switch to <code>build</code> for a quick one-line edit.</li>
+<li>Pick a model in the model picker. Copilot models appear after sign-in, Vertex models if you installed with <code>-VertexProject</code>.</li>
+<li>The first time you open a repo, the agent builds the graphify graph by itself.</li>
+</ul>
+<p>Copilot CLI:</p>
+<ul>
+<li>Open a terminal in a repo folder and run <code>copilot</code>.</li>
+<li>The agents and skills load automatically.</li>
+</ul>
+<h2 id="7-update">7. Update</h2>
+<p>Rerun the same line you used to install. It updates the repo, the tools and the harness files. Your old files are backed up first.</p>
+<h2 id="8-troubleshooting">8. Troubleshooting</h2>
+<ul>
+<li><strong>opencode.ai is blocked.</strong> The installer already downloads OpenCode Desktop from GitHub, so no action is needed.</li>
+<li><strong>"running scripts is disabled".</strong> Run <code>Set-ExecutionPolicy -Scope CurrentUser RemoteSigned</code>, then run the install line again.</li>
+<li><strong>Command not found right after install.</strong> Open a new terminal so the new PATH loads.</li>
+<li><strong><code>winget</code> is missing.</strong> Install App Installer from the Microsoft Store, then rerun.</li>
+<li><strong>Vertex shows 403 or 404.</strong> You need access to the project. Ask the project owner for the Vertex AI User role. Keep the location at <code>us</code>.</li>
+<li><strong>The <code>ollama</code> entry shows as failed in OpenCode, or clashes with the Ollama tray app.</strong> The installer adds an optional <code>ollama</code> entry only on PCs that already have Ollama installed. It starts Ollama's own server (<code>ollama serve</code>), which is not an MCP server. OpenCode may show it as failed, or it may clash with the Ollama tray app on port 11434. If that happens, set <code>"disabled": true</code> on <code>mcp.servers.ollama</code> in <code>%USERPROFILE%\.config\opencode\opencode.json</code>.</li>
+<li><strong>The sign-in code expired.</strong> Rerun the sign-in command to get a new code.</li>
+</ul>
+<h2 id="9-undo">9. Undo</h2>
+<p>Restore your old files from <code>%USERPROFILE%\.harness-backup\&lt;timestamp&gt;</code>. Copy the saved files back over the ones in <code>~/.config/opencode</code>, <code>~/.copilot</code> and <code>~/.claude</code>. To remove the apps, use Settings &gt; Apps.</p>
+<h2 id="10-for-maintainers">10. For maintainers</h2>
+<ul>
+<li>Refresh the snapshot with <code>pwsh harness/export-harness.ps1</code> (PowerShell 7; Windows PowerShell 5.1 is refused). It needs a local leak-terms file at <code>%USERPROFILE%\.config\harness\leak-terms.txt</code> or semicolon-separated terms in <code>$env:HARNESS_LEAK_TERMS</code> (not a file path), and it refuses to export without it.</li>
+<li>Do not run the installer on the owner's PC. It asks before it changes anything.</li>
+<li>Render the guide to HTML with:</li>
+</ul>
+<div class="codeblock"><div class="codebar"><button type="button" class="copy-btn" aria-label="Copy command">Copy</button></div><pre><code class="language-powershell">uv run --no-project --with markdown python harness/tools/render_guide.py --in harness/SETUP.md --out-dir harness --html-name SETUP.html --no-md
+</code></pre></div>
+<ul>
+<li>For a copy with a real project id, add <code>--set vertex-project-id=&lt;your-project-id&gt;</code> and a different <code>--out-dir</code>. Keep that copy out of the repo.</li>
+</ul>
+</main>
+<script>
+(function () {
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).catch(function () { fallbackCopy(text); });
+    }
+    fallbackCopy(text);
+    return Promise.resolve();
+  }
+  var buttons = document.querySelectorAll('.copy-btn');
+  Array.prototype.forEach.call(buttons, function (btn) {
+    btn.addEventListener('click', function () {
+      var block = btn.closest('.codeblock');
+      var code = block ? block.querySelector('pre code') : null;
+      var text = code ? code.textContent.replace(/\n$/, '') : '';
+      copyText(text).then(function () {
+        btn.textContent = 'Copied';
+        btn.classList.add('done');
+        setTimeout(function () {
+          btn.textContent = 'Copy';
+          btn.classList.remove('done');
+        }, 1500);
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

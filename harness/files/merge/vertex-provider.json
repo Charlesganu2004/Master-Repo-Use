@@ -1,0 +1,8 @@
+{
+  "google-vertex": {
+    "settings": {
+      "project": "{{VERTEX_PROJECT}}",
+      "location": "{{VERTEX_LOCATION}}"
+    }
+  }
+}

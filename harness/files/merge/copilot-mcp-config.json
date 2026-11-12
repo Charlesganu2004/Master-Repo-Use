@@ -1,0 +1,57 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "type": "local",
+      "command": "{{HOME_JSON}}\\.local\\node\\node.exe",
+      "args": [
+        "{{HOME_JSON}}\\.local\\node\\node_modules\\@playwright\\mcp\\cli.js",
+        "--isolated",
+        "--browser",
+        "chromium"
+      ],
+      "deferTools": "auto",
+      "timeout": 120000,
+      "tools": [
+        "*"
+      ]
+    },
+    "local-rag": {
+      "type": "local",
+      "command": "{{HOME_JSON}}\\.local\\lib\\kb\\.venv\\Scripts\\python.exe",
+      "args": [
+        "{{HOME_JSON}}\\.local\\lib\\kb\\kb.py",
+        "mcp"
+      ],
+      "env": {
+        "BASE_DIR": "{{HOME_JSON}}"
+      },
+      "deferTools": "auto",
+      "timeout": 120000,
+      "tools": [
+        "*"
+      ]
+    },
+    "graphify": {
+      "type": "local",
+      "command": "{{HOME_JSON}}\\.local\\bin\\graphify-mcp.exe",
+      "args": [],
+      "deferTools": "auto",
+      "timeout": 120000,
+      "tools": [
+        "*"
+      ]
+    },
+    "rustwright": {
+      "type": "local",
+      "command": "{{HOME_JSON}}\\.local\\node\\node.exe",
+      "args": [
+        "{{HOME_JSON}}\\.copilot\\bin\\rustwright-launch.js"
+      ],
+      "deferTools": "auto",
+      "timeout": 120000,
+      "tools": [
+        "*"
+      ]
+    }
+  }
+}
