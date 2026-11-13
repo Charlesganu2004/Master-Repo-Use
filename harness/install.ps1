@@ -1067,17 +1067,8 @@ function Update-OpenCodeConfig {
 
     $mcp = Get-OrAddObject $cfg 'mcp'
     $servers = Get-OrAddObject $mcp 'servers'
+    # Only the harness servers are set; any other server the colleague has stays as it is.
     foreach ($p in $ours.mcp.servers.PSObject.Properties) { Set-Prop $servers $p.Name $p.Value }
-    $ollama = Join-Path $LocalAppData 'Programs\Ollama\ollama.exe'
-    if (Test-Path $ollama) {
-        $optional = Read-MergeJson 'opencode-optional-mcp.json'
-        if ($optional.PSObject.Properties['ollama']) {
-            $server = $optional.ollama
-            $server.command = @($ollama, 'serve')
-            Set-Prop $servers 'ollama' $server
-            Write-Log 'Ollama found; ollama MCP server added'
-        }
-    }
 
     $skills = @()
     if ($cfg.PSObject.Properties['skills'] -and $cfg.skills) { $skills = @($cfg.skills) }

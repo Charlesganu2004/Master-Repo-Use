@@ -206,8 +206,16 @@ class MergeFragmentTests(unittest.TestCase):
         copilot = self.load("copilot-mcp-config.json")
         self.assertEqual(OUR_SERVERS, set(copilot["mcpServers"]))
         self.assertEqual({"enabledPlugins": {"computer-use": True}}, self.load("copilot-settings.json"))
-        optional = self.load("opencode-optional-mcp.json")
-        self.assertLessEqual(set(optional), {"ollama"})
+
+    def test_the_bundle_never_configures_ollama(self):
+        # The rule text that forbids it stays in the rule files and skills; only
+        # configuration is checked here.
+        self.assertFalse((MERGE / "opencode-optional-mcp.json").exists())
+        self.assertEqual({"opencode.json", "copilot-mcp-config.json", "copilot-settings.json", "vertex-provider.json"},
+                         {p.name for p in MERGE.iterdir()})
+        for path in [HARNESS / "install.ps1", HARNESS / "export-harness.ps1"] + sorted(MERGE.iterdir()):
+            with self.subTest(path=path.name):
+                self.assertNotIn("ollama", path.read_text(encoding="utf-8").lower())
 
 
 class InstallerSourceTests(unittest.TestCase):

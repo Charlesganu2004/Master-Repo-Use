@@ -205,7 +205,6 @@ irm https://raw.githubusercontent.com/Charlesganu2004/Master-Repo-Use/main/harne
 <li><strong>Command not found right after install.</strong> Open a new terminal so the new PATH loads.</li>
 <li><strong><code>winget</code> is missing.</strong> Install App Installer from the Microsoft Store, then rerun.</li>
 <li><strong>Vertex shows 403 or 404.</strong> You need access to the project. Ask the project owner for the Vertex AI User role. Keep the location at <code>us</code>.</li>
-<li><strong>The <code>ollama</code> entry shows as failed in OpenCode, or clashes with the Ollama tray app.</strong> The installer adds an optional <code>ollama</code> entry only on PCs that already have Ollama installed. It starts Ollama's own server (<code>ollama serve</code>), which is not an MCP server. OpenCode may show it as failed, or it may clash with the Ollama tray app on port 11434. If that happens, set <code>"disabled": true</code> on <code>mcp.servers.ollama</code> in <code>%USERPROFILE%\.config\opencode\opencode.json</code>.</li>
 <li><strong>The sign-in code expired.</strong> Rerun the sign-in command to get a new code.</li>
 </ul>
 <h2 id="9-undo">9. Undo</h2>

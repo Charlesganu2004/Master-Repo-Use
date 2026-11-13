@@ -246,8 +246,11 @@ function ConvertTo-V2Mcp($server, [int]$execution) {
     return $out
 }
 
+# Allowlist: only these servers are exported. Any other server in the owner's live
+# configs (a local model runner, say) stays on that PC and never reaches the bundle.
+$HarnessServers = @('local-rag', 'graphify', 'playwright', 'rustwright')
 $servers = [ordered]@{}
-foreach ($name in 'local-rag', 'graphify', 'playwright', 'rustwright') {
+foreach ($name in $HarnessServers) {
     if (-not $liveConfig.mcp.PSObject.Properties[$name]) { throw "opencode.json has no mcp server '$name'" }
     $exec = 120000
     if ($name -eq 'local-rag') { $exec = 600000 }
@@ -262,20 +265,22 @@ $opencode = [ordered]@{
 }
 Write-Staged 'merge\opencode.json' (Convert-ToTemplate ($opencode | ConvertTo-Json -Depth 32))
 
-# Optional servers, added by the installer only when the program exists on the PC.
-$optional = [ordered]@{}
-if ($liveConfig.mcp.PSObject.Properties['ollama']) { $optional['ollama'] = ConvertTo-V2Mcp $liveConfig.mcp.ollama 120000 }
-Write-Staged 'merge\opencode-optional-mcp.json' (Convert-ToTemplate ($optional | ConvertTo-Json -Depth 32))
-
 $vertex = [ordered]@{ 'google-vertex' = [ordered]@{ settings = [ordered]@{ project = '{{VERTEX_PROJECT}}'; location = '{{VERTEX_LOCATION}}' } } }
 Write-Staged 'merge\vertex-provider.json' ($vertex | ConvertTo-Json -Depth 32)
 
 $copilotMcp = Get-Content (Require (Join-Path $CopilotDir 'mcp-config.json')) -Raw | ConvertFrom-Json
-Write-Staged 'merge\copilot-mcp-config.json' (Convert-ToTemplate ([ordered]@{ mcpServers = $copilotMcp.mcpServers } | ConvertTo-Json -Depth 32))
+foreach ($name in $HarnessServers) {
+    if (-not $copilotMcp.mcpServers.PSObject.Properties[$name]) { throw "mcp-config.json has no server '$name'" }
+}
+$copilotServers = [ordered]@{}
+foreach ($p in $copilotMcp.mcpServers.PSObject.Properties) {
+    if ($HarnessServers -contains $p.Name) { $copilotServers[$p.Name] = $p.Value }
+}
+Write-Staged 'merge\copilot-mcp-config.json' (Convert-ToTemplate ([ordered]@{ mcpServers = $copilotServers } | ConvertTo-Json -Depth 32))
 
 $copilotSettings = Get-Content (Require (Join-Path $CopilotDir 'settings.json')) -Raw | ConvertFrom-Json
 Write-Staged 'merge\copilot-settings.json' ([ordered]@{ enabledPlugins = $copilotSettings.enabledPlugins } | ConvertTo-Json -Depth 32)
-$Counts['merge'] = 5
+$Counts['merge'] = 4
 
 # ---- leak gate -----------------------------------------------------------------
 $leaks = New-Object System.Collections.ArrayList

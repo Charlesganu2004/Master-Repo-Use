@@ -169,7 +169,6 @@ Rerun the same line you used to install. It updates the repo, the tools and the 
 - **Command not found right after install.** Open a new terminal so the new PATH loads.
 - **`winget` is missing.** Install App Installer from the Microsoft Store, then rerun.
 - **Vertex shows 403 or 404.** You need access to the project. Ask the project owner for the Vertex AI User role. Keep the location at `us`.
-- **The `ollama` entry shows as failed in OpenCode, or clashes with the Ollama tray app.** The installer adds an optional `ollama` entry only on PCs that already have Ollama installed. It starts Ollama's own server (`ollama serve`), which is not an MCP server. OpenCode may show it as failed, or it may clash with the Ollama tray app on port 11434. If that happens, set `"disabled": true` on `mcp.servers.ollama` in `%USERPROFILE%\.config\opencode\opencode.json`.
 - **The sign-in code expired.** Rerun the sign-in command to get a new code.
 
 ## 9. Undo
